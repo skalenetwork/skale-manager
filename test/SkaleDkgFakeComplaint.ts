@@ -22,7 +22,7 @@ const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
-import { BigNumber } from "ethers";
+import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
@@ -48,6 +48,16 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
+    const hash = web3.utils.soliditySha3(validatorId.toString());
+    if (hash) {
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
+    } else {
+        return "";
+    }
+}
+
 function stringValue(value: string | null) {
     if (value) {
         return value;
@@ -56,11 +66,12 @@ function stringValue(value: string | null) {
     }
 }
 
-describe("SkaleDKG", () => {
+describe("SkaleDkgFakeComplaint", () => {
     let owner: SignerWithAddress;
     let validator1: SignerWithAddress;
     let validator2: SignerWithAddress;
-    let validatorsAccount: SignerWithAddress[];
+    let nodeAddress1: Wallet;
+    let nodeAddress2: Wallet;
 
     let contractManager: ContractManager;
     let keyStorage: KeyStorage
@@ -80,11 +91,6 @@ describe("SkaleDKG", () => {
     const failedDkgPenalty = 5;
 
     let snapshot: number;
-
-    const validatorsPrivateKey = [
-        privateKeys[1],
-        privateKeys[2]
-    ];
 
     const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
         [
@@ -869,9 +875,27 @@ describe("SkaleDKG", () => {
     let schainName = "";
     const delegatedAmount = 1e7;
 
+    let validators: {nodePublicKey: string, nodeAddress: Wallet}[];
+
     before(async () => {
         [owner, validator1, validator2] = await ethers.getSigners();
-        validatorsAccount = [ validator1, validator2 ];
+
+        nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
+        nodeAddress2 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
+
+        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+
+        validators = [
+            {
+                nodePublicKey: ec.keyFromPrivate(String(nodeAddress1.privateKey).slice(2)).getPublic(),
+                nodeAddress: nodeAddress1
+            },
+            {
+                nodePublicKey: ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic(),
+                nodeAddress: nodeAddress2
+            }
+        ];
 
         contractManager = await deployContractManager();
 
@@ -910,14 +934,18 @@ describe("SkaleDKG", () => {
         await delegationController.connect(validator2).delegate(validator2Id, delegatedAmount, 2, "D2 is even more even");
         await delegationController.connect(validator1).acceptPendingDelegation(0);
         await delegationController.connect(validator2).acceptPendingDelegation(1);
+        const signature1 = await getValidatorIdSignature(validator1Id, nodeAddress1);
+        await validatorService.connect(validator1).linkNodeAddress(nodeAddress1.address, signature1);
+        const signature2 = await getValidatorIdSignature(validator2Id, nodeAddress2);
+        await validatorService.connect(validator2).linkNodeAddress(nodeAddress2.address, signature2);
 
         await skipTime(ethers, 60 * 60 * 24 * 31);
 
         const nodesCount = 4;
         for (const index of Array.from(Array(nodesCount).keys())) {
             const hexIndex = ("0" + index.toString(16)).slice(-2);
-            const pubKey = ec.keyFromPrivate(String(validatorsPrivateKey[index % 2]).slice(2)).getPublic();
-            await nodes.createNode(validatorsAccount[index % 2].address,
+            const pubKey = ec.keyFromPrivate(String(validators[index % 2].nodeAddress.privateKey).slice(2)).getPublic();
+            await nodes.createNode(validators[index % 2].nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -979,7 +1007,7 @@ describe("SkaleDKG", () => {
             const nodesCount = 4;
             it("should not revert after successful complaint", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
-                    await skaleDKG.connect(validatorsAccount[i % 2]).broadcast(
+                    await skaleDKG.connect(validators[i % 2].nodeAddress).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         i,
                         verificationVectors[i],
@@ -988,7 +1016,7 @@ describe("SkaleDKG", () => {
 
                 for (let i = 0; i < nodesCount; ++i) {
                     if (i !== 1) {
-                        const result = await skaleDKG.connect(validatorsAccount[i % 2]).alright(
+                        await skaleDKG.connect(validators[i % 2].nodeAddress).alright(
                             stringValue(web3.utils.soliditySha3(schainName)),
                             i);
                     }
@@ -996,20 +1024,20 @@ describe("SkaleDKG", () => {
 
                 await skipTime(ethers, 1800);
 
-                let isComplaintPossible = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                let isComplaintPossible = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1);
 
                 assert(isComplaintPossible.should.be.true);
 
-                await skaleDKG.connect(validatorsAccount[0]).complaint(
+                await skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1
                 );
 
-                isComplaintPossible = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                isComplaintPossible = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     1
@@ -1020,7 +1048,7 @@ describe("SkaleDKG", () => {
 
             it("should proceed response", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
-                    await skaleDKG.connect(validatorsAccount[i % 2]).broadcast(
+                    await skaleDKG.connect(validators[i % 2].nodeAddress).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         i,
                         verificationVectors[i],
@@ -1030,20 +1058,20 @@ describe("SkaleDKG", () => {
 
                 for (let i = 0; i < nodesCount; ++i) {
                     if (i !== 1) {
-                        const result = await skaleDKG.connect(validatorsAccount[i % 2]).alright(
+                        await skaleDKG.connect(validators[i % 2].nodeAddress).alright(
                             stringValue(web3.utils.soliditySha3(schainName)),
                             i
                         );
                     }
                 }
 
-                const complaintResult = await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
+                await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     1,
                     2
                 );
 
-                const preResponseResult = await skaleDKG.connect(validatorsAccount[0]).preResponse(
+                await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     verificationVectors[2],
@@ -1051,7 +1079,7 @@ describe("SkaleDKG", () => {
                     encryptedSecretKeyContributions[2]
                 );
 
-                await skaleDKG.connect(validatorsAccount[0]).response(
+                await skaleDKG.connect(validators[0].nodeAddress).response(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     secretNumbers[2][1],
