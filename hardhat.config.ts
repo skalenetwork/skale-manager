@@ -32,23 +32,7 @@ task("accounts", "Prints the list of accounts", async (_, { web3 }) => {
 
 function getAccounts() {
   const accounts: HardhatNetworkAccountUserConfig[] = [];
-  const defaultBalance = utils.parseEther("1000000").toString();
-
-  [
-    process.env.INSECURE_PRIVATE_KEY_1,
-    process.env.INSECURE_PRIVATE_KEY_2,
-    process.env.INSECURE_PRIVATE_KEY_3,
-    process.env.INSECURE_PRIVATE_KEY_4,
-    process.env.INSECURE_PRIVATE_KEY_5,
-    process.env.INSECURE_PRIVATE_KEY_6
-  ].forEach( (key) => {
-    if (key) {
-      accounts.push({
-        privateKey: key,
-        balance: defaultBalance
-      });
-    }
-  });
+  const defaultBalance = utils.parseEther("2000000").toString();
 
   const n = 10;
   for (let i = 0; i < n; ++i) {

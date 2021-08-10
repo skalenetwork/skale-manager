@@ -34,7 +34,7 @@ import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { skipTime, currentTime } from "./tools/time";
 import { deployBounty } from "./tools/deploy/bounty";
-import { BigNumber } from "ethers";
+import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
 import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
 import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
@@ -43,25 +43,18 @@ import { solidity } from "ethereum-waffle";
 import { deployWallets } from "./tools/deploy/wallets";
 import chaiAlmost from "chai-almost";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
+import { EthereumProvider } from "hardhat/types";
+import { HardhatEthersHelpers } from "@nomiclabs/hardhat-ethers/types";
 
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     const hash = web3.utils.soliditySha3(validatorId.toString());
     if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
     } else {
         return "";
     }
@@ -89,10 +82,10 @@ async function getBalance(address: string) {
 
 describe("SkaleManager", () => {
     let owner: SignerWithAddress;
-    let validator: SignerWithAddress
+    let validator: Wallet
     let developer: SignerWithAddress
     let hacker: SignerWithAddress
-    let nodeAddress: SignerWithAddress
+    let nodeAddress: Wallet
 
     let contractManager: ContractManager;
     let constantsHolder: ConstantsHolder;
@@ -112,7 +105,12 @@ describe("SkaleManager", () => {
 
     before(async() => {
         chai.use(chaiAlmost(0.002));
-        [owner, validator, developer, hacker, nodeAddress] = await ethers.getSigners();
+        [owner, developer, hacker] = await ethers.getSigners();
+
+        validator = new Wallet(String(privateKeys[1])).connect(ethers.provider);
+        nodeAddress = new Wallet(String(privateKeys[4])).connect(ethers.provider);
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: validator.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
@@ -166,8 +164,14 @@ describe("SkaleManager", () => {
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
-        await skaleManager.connect(validator).tokensReceived(hacker.address, validator.address, developer.address, 5, "0x11", "0x11").
-            should.be.eventually.rejectedWith("Message sender is invalid");
+        await skaleManager.connect(validator).tokensReceived(
+            hacker.address,
+            validator.address,
+            developer.address,
+            5,
+            "0x11",
+            "0x11"
+        ).should.be.eventually.rejectedWith("Message sender is invalid");
     });
 
     it("should transfer ownership", async () => {
@@ -215,7 +219,7 @@ describe("SkaleManager", () => {
         });
 
         it("should create a node", async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
@@ -234,7 +238,7 @@ describe("SkaleManager", () => {
             await constantsHolder.setMSR(100);
 
             await validatorService.disableValidator(validatorId);
-            const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
@@ -242,8 +246,7 @@ describe("SkaleManager", () => {
                 "0x7f000001", // public ip
                 ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                 "d2", // name
-                "some.domain.name")
-                .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
+                "some.domain.name").should.be.eventually.rejectedWith("Validator is not authorized to create a node");
             await validatorService.enableValidator(validatorId);
             await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
@@ -259,7 +262,7 @@ describe("SkaleManager", () => {
             let nodeIsCreated: number;
             before(async () => {
                 nodeIsCreated = await makeSnapshot();
-                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
@@ -268,7 +271,7 @@ describe("SkaleManager", () => {
                     ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                     "d2", // name
                     "some.domain.name");
-                    await wallets.rechargeValidatorWallet(validatorId, {value: 1e18.toString()});
+                await wallets.rechargeValidatorWallet(validatorId, {value: 1e18.toString()});
             });
 
             after(async () => {
@@ -282,8 +285,7 @@ describe("SkaleManager", () => {
 
             it("should reject if node in maintenance call nodeExit", async () => {
                 await nodesContract.setNodeInMaintenance(0);
-                await skaleManager.connect(nodeAddress).nodeExit(0)
-                    .should.be.eventually.rejectedWith("Node should be Leaving");
+                await skaleManager.connect(nodeAddress).nodeExit(0).should.be.eventually.rejectedWith("Node should be Leaving");
             });
 
             it("should initiate exiting", async () => {
@@ -318,7 +320,7 @@ describe("SkaleManager", () => {
 
             it("should create and remove node from validator address", async () => {
                 (await validatorService.getValidatorIdByNodeAddress(validator.address)).should.be.equal(1);
-                const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(validator.privateKey).slice(2)).getPublic();
                 await skaleManager.connect(validator).createNode(
                     8545, // port
                     0, // nonce
@@ -369,8 +371,7 @@ describe("SkaleManager", () => {
                 await nodesContract.setNodeIncompliant(nodeIndex);
 
                 await skipTime(ethers, month);
-                await skaleManager.connect(nodeAddress).getBounty(nodeIndex)
-                    .should.be.eventually.rejectedWith("The node is incompliant");
+                await skaleManager.connect(nodeAddress).getBounty(nodeIndex).should.be.eventually.rejectedWith("The node is incompliant");
             });
 
             it("should pay bounty according to the schedule", async () => {
@@ -421,7 +422,7 @@ describe("SkaleManager", () => {
             let twoNodesAreCreated: number;
             before(async () => {
                 twoNodesAreCreated = await makeSnapshot();
-                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
@@ -527,7 +528,7 @@ describe("SkaleManager", () => {
             before(async () => {
                 when18NodesAreCreated = await makeSnapshot();
                 await skaleToken.transfer(validator.address, "0x3635c9adc5dea00000");
-                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (let i = 0; i < 18; ++i) {
                     await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
@@ -551,7 +552,7 @@ describe("SkaleManager", () => {
 
             it("should fail to create schain if validator doesn't meet MSR", async () => {
                 await constantsHolder.setMSR(delegatedAmount + 1);
-                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
@@ -719,7 +720,7 @@ describe("SkaleManager", () => {
                 when32Nodes = await makeSnapshot();
                 await constantsHolder.setMSR(3);
 
-                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (let i = 0; i < 32; ++i) {
                     await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
@@ -834,7 +835,7 @@ describe("SkaleManager", () => {
 
                 await skaleToken.transfer(validator.address, "0x32D26D12E980B600000");
 
-                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (let i = 0; i < 16; ++i) {
                     await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
@@ -844,7 +845,7 @@ describe("SkaleManager", () => {
                         ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                         "d2-" + i, // name
                         "some.domain.name");
-                    }
+                }
 
                 await skaleToken.transfer(developer.address, "0x3635C9ADC5DEA000000");
 

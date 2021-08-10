@@ -4,6 +4,7 @@ bignumber
 bignumberish
 crytic
 divn
+dotenv
 ecsign
 hexlify
 libff
@@ -13,3 +14,4 @@ nomiclabs
 solhint
 solidity-docgen
 typechain
+codecov

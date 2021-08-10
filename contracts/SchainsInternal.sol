@@ -101,6 +101,16 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
 
+    /**
+     * @dev Emitted when schain type added.
+     */
+    event SchainTypeAdded(uint indexed schainType, uint partOfNode, uint numberOfNodes);
+
+    /**
+     * @dev Emitted when schain type removed.
+     */
+    event SchainTypeRemoved(uint indexed schainType);
+
     modifier onlySchainTypeManager() {
         require(hasRole(SCHAIN_TYPE_MANAGER_ROLE, msg.sender), "SCHAIN_TYPE_MANAGER_ROLE is required");
         _;
@@ -296,6 +306,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         schainTypes[numberOfSchainTypes + 1].partOfNode = partOfNode;
         schainTypes[numberOfSchainTypes + 1].numberOfNodes = numberOfNodes;
         numberOfSchainTypes++;
+        emit SchainTypeAdded(numberOfSchainTypes, partOfNode, numberOfNodes);
     }
 
     /**
@@ -305,6 +316,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         require(_keysOfSchainTypes.remove(typeOfSchain), "Schain type is already removed");
         delete schainTypes[typeOfSchain].partOfNode;
         delete schainTypes[typeOfSchain].numberOfNodes;
+        emit SchainTypeRemoved(typeOfSchain);
     }
 
     /**
