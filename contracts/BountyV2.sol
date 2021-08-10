@@ -65,7 +65,11 @@ contract BountyV2 is Permissions {
 
     // validatorId => BountyHistory
     mapping (uint => BountyHistory) private _bountyHistory;
-
+    
+    /**
+     * @dev Emitted when bounty reduction is turned on or turned off.
+     */
+    event BountyReduction(bool status);
     /**
      * @dev Emitted when a node creation window was changed.
      */
@@ -133,10 +137,12 @@ contract BountyV2 is Permissions {
 
     function enableBountyReduction() external onlyBountyReductionManager {
         bountyReduction = true;
+        emit BountyReduction(true);
     }
 
     function disableBountyReduction() external onlyBountyReductionManager {
         bountyReduction = false;
+        emit BountyReduction(false);
     }
 
     function setNodeCreationWindowSeconds(uint window) external allow("Nodes") {

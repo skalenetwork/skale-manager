@@ -62,9 +62,7 @@ contract Schains is Permissions, ISchains {
         uint numberOfNodes,
         uint deposit,
         uint16 nonce,
-        bytes32 schainHash,
-        uint time,
-        uint gasSpend
+        bytes32 schainHash
     );
 
     /**
@@ -99,9 +97,7 @@ contract Schains is Permissions, ISchains {
     event SchainNodes(
         string name,
         bytes32 schainHash,
-        uint[] nodesInGroup,
-        uint time,
-        uint gasSpend
+        uint[] nodesInGroup
     );
 
     /**
@@ -347,9 +343,7 @@ contract Schains is Permissions, ISchains {
         emit SchainNodes(
             schainName,
             schainHash,
-            nodesInGroup,
-            block.timestamp,
-            gasleft());
+            nodesInGroup);
     }
 
     /**
@@ -394,9 +388,7 @@ contract Schains is Permissions, ISchains {
             numberOfNodes,
             deposit,
             schainParameters.nonce,
-            keccak256(abi.encodePacked(schainParameters.name)),
-            block.timestamp,
-            gasleft());
+            keccak256(abi.encodePacked(schainParameters.name)));
     }
 
     function _deleteSchain(string calldata name, SchainsInternal schainsInternal) private {

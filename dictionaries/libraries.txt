@@ -4,6 +4,7 @@ bignumber
 bignumberish
 crytic
 divn
+dotenv
 ecsign
 hexlify
 libff

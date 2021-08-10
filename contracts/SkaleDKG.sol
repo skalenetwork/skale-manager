@@ -151,8 +151,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     /**
      * @dev Emitted when a complaint is sent.
      */
-    event ComplaintSent(
-        bytes32 indexed schainHash, uint indexed fromNodeIndex, uint indexed toNodeIndex);
+    event ComplaintSent(bytes32 indexed schainHash, uint indexed fromNodeIndex, uint indexed toNodeIndex);
 
     modifier correctGroup(bytes32 schainHash) {
         require(channels[schainHash].active, "Group is not created");

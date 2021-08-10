@@ -173,6 +173,22 @@ contract DelegationController is Permissions, ILocker {
     mapping (address => ValidatorsStatistics) private _numberOfValidatorsPerDelegator;
 
     /**
+     * @dev Emitted when validator was confiscated.
+     */
+    event Confiscated(
+        uint indexed validatorId,
+        uint amount
+    );
+
+    /**
+     * @dev Emitted when validator was confiscated.
+     */
+    event SlashesProcessed(
+        address indexed holder,
+        uint limit
+    );
+
+    /**
      * @dev Emitted when a delegation is proposed to a validator.
      */
     event DelegationProposed(
@@ -424,6 +440,7 @@ contract DelegationController is Permissions, ILocker {
                 currentMonth.add(i).add(1)
             );
         }
+        emit Confiscated(validatorId, amount);
     }
 
     /**
@@ -495,6 +512,7 @@ contract DelegationController is Permissions, ILocker {
      */
     function processSlashes(address holder, uint limit) public {
         _sendSlashingSignals(_processSlashesWithoutSignals(holder, limit));
+        emit SlashesProcessed(holder, limit);
     }
 
     /**

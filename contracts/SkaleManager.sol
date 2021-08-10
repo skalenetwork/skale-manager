@@ -54,6 +54,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
     bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
 
     /**
+     * @dev Emitted when the version was updated
+     */
+    event VersionUpdated(string oldVersion, string newVersion);
+
+    /**
      * @dev Emitted when bounty is received.
      */
     event BountyReceived(
@@ -62,9 +67,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageDowntime,
         uint averageLatency,
         uint bounty,
-        uint previousBlockEvent,
-        uint time,
-        uint gasSpend
+        uint previousBlockEvent
     );
 
     function tokensReceived(
@@ -183,14 +186,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
             0,
             0,
             bounty,
-            uint(-1),
-            block.timestamp,
-            gasleft());
+            uint(-1));
         
         _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());
     }
 
     function setVersion(string calldata newVersion) external onlyOwner {
+        emit VersionUpdated(version, newVersion);
         version = newVersion;
     }
 
