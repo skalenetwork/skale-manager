@@ -286,13 +286,13 @@ contract ConstantsHolder is Permissions {
         minimalSchainLifetime = lifetime;
     }
 
-    function setComplaintTimelimit(uint timelimit) external onlyConstantsHolderManager {
+    function setComplaintTimeLimit(uint timeLimit) external onlyConstantsHolderManager {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("ComplaintTimeLimit")),
             uint(complaintTimeLimit),
-            uint(timelimit)
+            uint(timeLimit)
         );
-        complaintTimeLimit = timelimit;
+        complaintTimeLimit = timeLimit;
     }
 
     function initialize(address contractsAddress) public override initializer {

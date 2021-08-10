@@ -166,7 +166,7 @@ contract Nodes is Permissions {
     );
 
     /**
-     * @dev Emitted when a node set to in maintenance or from in maintenace.
+     * @dev Emitted when a node set to in maintenance or from in maintenance.
      */
     event MaintenanceNode(
         uint indexed nodeIndex,
