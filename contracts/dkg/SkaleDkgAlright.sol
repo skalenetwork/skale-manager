@@ -36,42 +36,49 @@ import "../KeyStorage.sol";
  */
 library SkaleDkgAlright {
 
-    using SafeMath for uint;
-
-    event AllDataReceived(bytes32 indexed schainId, uint nodeIndex);
-    event SuccessfulDKG(bytes32 indexed schainId);
+    event AllDataReceived(bytes32 indexed schainHash, uint nodeIndex);
+    event SuccessfulDKG(bytes32 indexed schainHash);
 
     function alright(
-        bytes32 schainId,
+        bytes32 schainHash,
         uint fromNodeIndex,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
-        mapping(bytes32 => uint) storage lastSuccesfulDKG
+        mapping(bytes32 => uint) storage lastSuccessfulDKG,
+        mapping(bytes32 => uint) storage startAlrightTimestamp
         
     )
         external
     {
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
-        (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
-        uint numberOfParticipant = channels[schainId].n;
-        require(numberOfParticipant == dkgProcess[schainId].numberOfBroadcasted, "Still Broadcasting phase");
+        (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        uint numberOfParticipant = channels[schainHash].n;
+        require(numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted, "Still Broadcasting phase");
         require(
-            complaints[schainId].fromNodeToComplaint != fromNodeIndex ||
-            (fromNodeIndex == 0 && complaints[schainId].startComplaintBlockTimestamp == 0),
+            startAlrightTimestamp[schainHash] + _getComplaintTimeLimit(contractManager) > block.timestamp,
+            "Incorrect time for alright"
+        );
+        require(
+            complaints[schainHash].fromNodeToComplaint != fromNodeIndex ||
+            (fromNodeIndex == 0 && complaints[schainHash].startComplaintBlockTimestamp == 0),
             "Node has already sent complaint"
         );
-        require(!dkgProcess[schainId].completed[index], "Node is already alright");
-        dkgProcess[schainId].completed[index] = true;
-        dkgProcess[schainId].numberOfCompleted++;
-        emit AllDataReceived(schainId, fromNodeIndex);
-        if (dkgProcess[schainId].numberOfCompleted == numberOfParticipant) {
-            lastSuccesfulDKG[schainId] = block.timestamp;
-            channels[schainId].active = false;
-            KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
-            emit SuccessfulDKG(schainId);
+        require(!dkgProcess[schainHash].completed[index], "Node is already alright");
+        dkgProcess[schainHash].completed[index] = true;
+        dkgProcess[schainHash].numberOfCompleted++;
+        emit AllDataReceived(schainHash, fromNodeIndex);
+        if (dkgProcess[schainHash].numberOfCompleted == numberOfParticipant) {
+            lastSuccessfulDKG[schainHash] = block.timestamp;
+            channels[schainHash].active = false;
+            KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
+            emit SuccessfulDKG(schainHash);
         }
+    }
+
+    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

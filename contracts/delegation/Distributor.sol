@@ -44,6 +44,17 @@ contract Distributor is Permissions, IERC777Recipient {
     using MathUtils for uint;
     using SafeMath for uint;
 
+    IERC1820Registry private _erc1820;
+
+    // validatorId =>        month => token
+    mapping (uint => mapping (uint => uint)) private _bountyPaid;
+    // validatorId =>        month => token
+    mapping (uint => mapping (uint => uint)) private _feePaid;
+    //        holder =>   validatorId => month
+    mapping (address => mapping (uint => uint)) private _firstUnwithdrawnMonth;
+    // validatorId => month
+    mapping (uint => uint) private _firstUnwithdrawnMonthForValidator;
+
     /**
      * @dev Emitted when bounty is withdrawn.
      */
@@ -70,17 +81,6 @@ contract Distributor is Permissions, IERC777Recipient {
         uint validatorId,
         uint amount
     );
-
-    IERC1820Registry private _erc1820;
-
-    // validatorId =>        month => token
-    mapping (uint => mapping (uint => uint)) private _bountyPaid;
-    // validatorId =>        month => token
-    mapping (uint => mapping (uint => uint)) private _feePaid;
-    //        holder =>   validatorId => month
-    mapping (address => mapping (uint => uint)) private _firstUnwithdrawnMonth;
-    // validatorId => month
-    mapping (uint => uint) private _firstUnwithdrawnMonthForValidator;
 
     /**
      * @dev Return and update the amount of earned bounty from a validator.

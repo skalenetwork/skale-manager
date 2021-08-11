@@ -8,7 +8,7 @@ import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deployReentrancyTester } from "./tools/deploy/test/reentracyTester";
+import { deployReentrancyTester } from "./tools/deploy/test/reentrancyTester";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
@@ -210,7 +210,7 @@ describe("SkaleToken", () => {
     await skaleToken.mint(holder.address, amount, "0x", "0x");
 
     const reentrancyTester = await deployReentrancyTester(contractManager);
-    await reentrancyTester.prepareToReentracyCheck();
+    await reentrancyTester.prepareToReentrancyCheck();
 
     await skaleToken.connect(holder).transfer(reentrancyTester.address, amount)
       .should.be.eventually.rejectedWith("ReentrancyGuard: reentrant call");
@@ -222,6 +222,9 @@ describe("SkaleToken", () => {
   it("should not allow to delegate burned tokens", async () => {
     const reentrancyTester = await deployReentrancyTester(contractManager);
     const validatorService = await deployValidatorService(contractManager);
+
+    const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+    await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
 
     await validatorService.registerValidator("Regular validator", "I love D2", 0, 0);
     const validatorId = 1;

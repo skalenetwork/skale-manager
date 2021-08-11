@@ -55,54 +55,54 @@ contract KeyStorage is Permissions {
 
     mapping(bytes32 => G2Operations.G2Point[]) private _previousSchainsPublicKeys;
 
-    function deleteKey(bytes32 schainId) external allow("SkaleDKG") {
-        _previousSchainsPublicKeys[schainId].push(_schainsPublicKeys[schainId]);
-        delete _schainsPublicKeys[schainId];
-        delete _data[schainId][0];
-        delete _schainsNodesPublicKeys[schainId];
+    function deleteKey(bytes32 schainHash) external allow("SkaleDKG") {
+        _previousSchainsPublicKeys[schainHash].push(_schainsPublicKeys[schainHash]);
+        delete _schainsPublicKeys[schainHash];
+        delete _data[schainHash][0];
+        delete _schainsNodesPublicKeys[schainHash];
     }
 
-    function initPublicKeyInProgress(bytes32 schainId) external allow("SkaleDKG") {
-        _publicKeysInProgress[schainId] = G2Operations.getG2Zero();
+    function initPublicKeyInProgress(bytes32 schainHash) external allow("SkaleDKG") {
+        _publicKeysInProgress[schainHash] = G2Operations.getG2Zero();
     }
 
-    function adding(bytes32 schainId, G2Operations.G2Point memory value) external allow("SkaleDKG") {
+    function adding(bytes32 schainHash, G2Operations.G2Point memory value) external allow("SkaleDKG") {
         require(value.isG2(), "Incorrect g2 point");
-        _publicKeysInProgress[schainId] = value.addG2(_publicKeysInProgress[schainId]);
+        _publicKeysInProgress[schainHash] = value.addG2(_publicKeysInProgress[schainHash]);
     }
 
-    function finalizePublicKey(bytes32 schainId) external allow("SkaleDKG") {
-        if (!_isSchainsPublicKeyZero(schainId)) {
-            _previousSchainsPublicKeys[schainId].push(_schainsPublicKeys[schainId]);
+    function finalizePublicKey(bytes32 schainHash) external allow("SkaleDKG") {
+        if (!_isSchainsPublicKeyZero(schainHash)) {
+            _previousSchainsPublicKeys[schainHash].push(_schainsPublicKeys[schainHash]);
         }
-        _schainsPublicKeys[schainId] = _publicKeysInProgress[schainId];
-        delete _publicKeysInProgress[schainId];
+        _schainsPublicKeys[schainHash] = _publicKeysInProgress[schainHash];
+        delete _publicKeysInProgress[schainHash];
     }
 
-    function getCommonPublicKey(bytes32 schainId) external view returns (G2Operations.G2Point memory) {
-        return _schainsPublicKeys[schainId];
+    function getCommonPublicKey(bytes32 schainHash) external view returns (G2Operations.G2Point memory) {
+        return _schainsPublicKeys[schainHash];
     }
 
-    function getPreviousPublicKey(bytes32 schainId) external view returns (G2Operations.G2Point memory) {
-        uint length = _previousSchainsPublicKeys[schainId].length;
+    function getPreviousPublicKey(bytes32 schainHash) external view returns (G2Operations.G2Point memory) {
+        uint length = _previousSchainsPublicKeys[schainHash].length;
         if (length == 0) {
             return G2Operations.getG2Zero();
         }
-        return _previousSchainsPublicKeys[schainId][length - 1];
+        return _previousSchainsPublicKeys[schainHash][length - 1];
     }
 
-    function getAllPreviousPublicKeys(bytes32 schainId) external view returns (G2Operations.G2Point[] memory) {
-        return _previousSchainsPublicKeys[schainId];
+    function getAllPreviousPublicKeys(bytes32 schainHash) external view returns (G2Operations.G2Point[] memory) {
+        return _previousSchainsPublicKeys[schainHash];
     }
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
     }
 
-    function _isSchainsPublicKeyZero(bytes32 schainId) private view returns (bool) {
-        return _schainsPublicKeys[schainId].x.a == 0 &&
-            _schainsPublicKeys[schainId].x.b == 0 &&
-            _schainsPublicKeys[schainId].y.a == 0 &&
-            _schainsPublicKeys[schainId].y.b == 0;
+    function _isSchainsPublicKeyZero(bytes32 schainHash) private view returns (bool) {
+        return _schainsPublicKeys[schainHash].x.a == 0 &&
+            _schainsPublicKeys[schainHash].x.b == 0 &&
+            _schainsPublicKeys[schainHash].y.a == 0 &&
+            _schainsPublicKeys[schainHash].y.b == 0;
     }
 }

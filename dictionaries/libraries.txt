@@ -1,0 +1,17 @@
+addmod
+arrayify
+bignumber
+bignumberish
+crytic
+divn
+dotenv
+ecsign
+hexlify
+libff
+mulmod
+muln
+nomiclabs
+solhint
+solidity-docgen
+typechain
+codecov

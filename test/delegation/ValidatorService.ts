@@ -67,6 +67,8 @@ describe("ValidatorService", () => {
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
     });
 
     beforeEach(async () => {
@@ -102,9 +104,9 @@ describe("ValidatorService", () => {
             .should.be.eventually.rejectedWith("Fee rate of validator should be lower than 100%");
     });
 
-    it("should allow only owner to call disableWhitelits", async() => {
+    it("should allow only owner to call disableWhitelist", async() => {
         await validatorService.connect(validator1).disableWhitelist()
-            .should.be.eventually.rejectedWith("Caller is not the owner");
+            .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
         await validatorService.connect(owner).disableWhitelist();
     });
 
@@ -262,20 +264,22 @@ describe("ValidatorService", () => {
                 .should.be.eventually.rejectedWith("Validator with such ID does not exist");
         });
 
-        it("should allow only admin to enable validator", async () => {
+        it("should allow only VALIDATOR_MANAGER_ROLE to enable validator", async () => {
             await validatorService.connect(holder).enableValidator(1)
-                .should.be.eventually.rejectedWith("Caller is not an admin");
+                .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
             const skaleManager = await deploySkaleManager(contractManager);
-            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder.address);
+            const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+            await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, holder.address);
             await validatorService.connect(holder).enableValidator(1);
         });
 
-        it("should allow only admin to disable validator", async () => {
+        it("should allow only VALIDATOR_MANAGER_ROLE to disable validator", async () => {
             await validatorService.enableValidator(1);
             await validatorService.connect(holder).disableValidator(1)
-                .should.be.eventually.rejectedWith("Caller is not an admin");
+                .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
             const skaleManager = await deploySkaleManager(contractManager);
-            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder.address);
+            const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+            await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, holder.address);
             await validatorService.connect(holder).disableValidator(1);
         });
 
@@ -329,13 +333,13 @@ describe("ValidatorService", () => {
 
             it("should allow to enable validator in whitelist", async () => {
                 await validatorService.connect(validator1).enableValidator(validatorId)
-                    .should.be.eventually.rejectedWith("Caller is not an admin");
+                    .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
                 await validatorService.enableValidator(validatorId);
             });
 
             it("should allow to disable validator from whitelist", async () => {
                 await validatorService.connect(validator1).disableValidator(validatorId)
-                    .should.be.eventually.rejectedWith("Caller is not an admin");
+                    .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
                 await validatorService.disableValidator(validatorId)
                     .should.be.eventually.rejectedWith("Validator is already disabled");
 

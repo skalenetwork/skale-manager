@@ -23,6 +23,7 @@ pragma solidity 0.8.2;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 import "./utils/StringUtils.sol";
 
@@ -32,7 +33,7 @@ import "./utils/StringUtils.sol";
  * @dev Contract contains the actual current mapping from contract IDs
  * (in the form of human-readable strings) to addresses.
  */
-contract ContractManager is OwnableUpgradeable {
+contract ContractManager is OwnableUpgradeable, IContractManager {
     using StringUtils for string;
     using AddressUpgradeable for address;
 
@@ -68,7 +69,14 @@ contract ContractManager is OwnableUpgradeable {
      * - Contract is not already added.
      * - Contract address contains code.
      */
-    function setContractsAddress(string calldata contractsName, address newContractsAddress) external onlyOwner {
+    function setContractsAddress(
+        string calldata contractsName,
+        address newContractsAddress
+    )
+        external
+        override
+        onlyOwner
+    {
         // check newContractsAddress is not equal to zero
         require(newContractsAddress != address(0), "New address is equal zero");
         // create hash of contractsName
@@ -120,7 +128,7 @@ contract ContractManager is OwnableUpgradeable {
         return getContract(PUNISHER);
     }
 
-    function getContract(string memory name) public view returns (address contractAddress) {
+    function getContract(string memory name) public view override returns (address contractAddress) {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
         if (contractAddress == address(0)) {
             revert(name.strConcat(" contract has not been found"));

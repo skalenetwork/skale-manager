@@ -83,7 +83,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
         }
     }
 
-    function prepareToReentracyCheck() external {
+    function prepareToReentrancyCheck() external {
         _reentrancyCheck = true;
     }
 

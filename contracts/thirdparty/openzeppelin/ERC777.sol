@@ -1,5 +1,7 @@
 pragma solidity ^0.8.0;
 
+// cSpell:words adoc
+
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -388,7 +390,7 @@ contract ERC777 is Context, IERC777, IERC20 {
 
         address operator = _msgSender();
 
-        /* Chaged by SKALE: we swapped these lines to prevent delegation of burning tokens */
+        /* Changed by SKALE: we swapped these lines to prevent delegation of burning tokens */
 
         _callTokensToSend(operator, from, address(0), amount, data, operatorData);
 
@@ -453,7 +455,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory userData,
         bytes memory operatorData
     )
-        /* Chaged by SKALE from private */ internal /* End of changed by SKALE */
+        /* Changed by SKALE from private */ internal /* End of changed by SKALE */
         /* Added by SKALE */ virtual /* End of added by SKALE */
     {
         address implementer = _ERC1820_REGISTRY.getInterfaceImplementer(from, _TOKENS_SENDER_INTERFACE_HASH);
@@ -482,7 +484,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory operatorData,
         bool requireReceptionAck
     )
-        /* Chaged by SKALE from private */ internal /* End of changed by SKALE */
+        /* Changed by SKALE from private */ internal /* End of changed by SKALE */
         /* Added by SKALE */ virtual /* End of added by SKALE */
     {
         address implementer = _ERC1820_REGISTRY.getInterfaceImplementer(to, _TOKENS_RECIPIENT_INTERFACE_HASH);

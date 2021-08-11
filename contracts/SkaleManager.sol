@@ -54,6 +54,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     string public version;
 
+    bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
+
+    /**
+     * @dev Emitted when the version was updated
+     */
+    event VersionUpdated(string oldVersion, string newVersion);
+
     /**
      * @dev Emitted when bounty is received.
      */
@@ -63,9 +70,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageDowntime,
         uint averageLatency,
         uint bounty,
-        uint previousBlockEvent,
-        uint time,
-        uint gasSpend
+        uint previousBlockEvent
     );
 
     function tokensReceived(
@@ -155,7 +160,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         schains.deleteSchain(msg.sender, name);
     }
 
-    function deleteSchainByRoot(string calldata name) external onlyAdmin {
+    function deleteSchainByRoot(string calldata name) external {
+        require(hasRole(SCHAIN_REMOVAL_ROLE, msg.sender), "SCHAIN_REMOVAL_ROLE is required");
         Schains schains = Schains(contractManager.getContract("Schains"));
         schains.deleteSchainByRoot(name);
     }
@@ -166,6 +172,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
         require(!nodes.isNodeLeft(nodeIndex), "The node must not be in Left state");
+        require(!nodes.incompliant(nodeIndex), "The node is incompliant");
         BountyV2 bountyContract = BountyV2(contractManager.getContract("Bounty"));
 
         uint bounty = bountyContract.calculateBounty(nodeIndex);
@@ -182,14 +189,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
             0,
             0,
             bounty,
-            type(uint).max,
-            block.timestamp,
-            gasleft());
+            type(uint).max);
         
         _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
     }
 
     function setVersion(string calldata newVersion) external onlyOwner {
+        emit VersionUpdated(version, newVersion);
         version = newVersion;
     }
 

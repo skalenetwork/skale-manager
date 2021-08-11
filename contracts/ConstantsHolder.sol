@@ -76,12 +76,12 @@ contract ConstantsHolder is Permissions {
 
     uint public constant BOUNTY_LOCKUP_MONTHS = 2;
 
-    uint public constant ALRIGHT_DELTA = 54640;
-    uint public constant BROADCAST_DELTA = 122660;
-    uint public constant COMPLAINT_BAD_DATA_DELTA = 40720;
-    uint public constant PRE_RESPONSE_DELTA = 67780;
-    uint public constant COMPLAINT_DELTA = 67100;
-    uint public constant RESPONSE_DELTA = 215000;
+    uint public constant ALRIGHT_DELTA = 62893;
+    uint public constant BROADCAST_DELTA = 131000;
+    uint public constant COMPLAINT_BAD_DATA_DELTA = 49580;
+    uint public constant PRE_RESPONSE_DELTA = 74500;
+    uint public constant COMPLAINT_DELTA = 76221;
+    uint public constant RESPONSE_DELTA = 183000;
 
     // MSR - Minimum staking requirement
     uint public msr;
@@ -124,18 +124,44 @@ contract ConstantsHolder is Permissions {
 
     uint public minimalSchainLifetime;
 
-    uint public complaintTimelimit;
+    uint public complaintTimeLimit;
+
+    bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
+
+    /**
+     * @dev Emitted when constants updated.
+     */
+    event ConstantUpdated(
+        bytes32 indexed constantHash,
+        uint previousValue,
+        uint newValue
+    );
+
+    modifier onlyConstantsHolderManager() {
+        require(hasRole(CONSTANTS_HOLDER_MANAGER_ROLE, msg.sender), "CONSTANTS_HOLDER_MANAGER_ROLE is required");
+        _;
+    }
 
     /**
      * @dev Allows the Owner to set new reward and delta periods
      * This function is only for tests.
      */
-    function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyOwner {
+    function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyConstantsHolderManager {
         require(
             newRewardPeriod >= newDeltaPeriod && newRewardPeriod - newDeltaPeriod >= checkTime,
             "Incorrect Periods"
         );
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("RewardPeriod")),
+            uint(rewardPeriod),
+            uint(newRewardPeriod)
+        );
         rewardPeriod = newRewardPeriod;
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("DeltaPeriod")),
+            uint(deltaPeriod),
+            uint(newDeltaPeriod)
+        );
         deltaPeriod = newDeltaPeriod;
     }
 
@@ -143,8 +169,13 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the new check time.
      * This function is only for tests.
      */
-    function setCheckTime(uint newCheckTime) external onlyOwner {
+    function setCheckTime(uint newCheckTime) external onlyConstantsHolderManager {
         require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("CheckTime")),
+            uint(checkTime),
+            uint(newCheckTime)
+        );
         checkTime = newCheckTime;
     }    
 
@@ -152,24 +183,39 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the allowable latency in milliseconds.
      * This function is only for testing purposes.
      */
-    function setLatency(uint32 newAllowableLatency) external onlyOwner {
+    function setLatency(uint32 newAllowableLatency) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("AllowableLatency")),
+            uint(allowableLatency),
+            uint(newAllowableLatency)
+        );
         allowableLatency = newAllowableLatency;
     }
 
     /**
      * @dev Allows the Owner to set the minimum stake requirement.
      */
-    function setMSR(uint newMSR) external onlyOwner {
+    function setMSR(uint newMSR) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("MSR")),
+            uint(msr),
+            uint(newMSR)
+        );
         msr = newMSR;
     }
 
     /**
      * @dev Allows the Owner to set the launch timestamp.
      */
-    function setLaunchTimestamp(uint timestamp) external onlyOwner {
+    function setLaunchTimestamp(uint timestamp) external onlyConstantsHolderManager {
         require(
             block.timestamp < launchTimestamp,
             "Cannot set network launch timestamp because network is already launched"
+        );
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("LaunchTimestamp")),
+            uint(launchTimestamp),
+            uint(timestamp)
         );
         launchTimestamp = timestamp;
     }
@@ -177,14 +223,24 @@ contract ConstantsHolder is Permissions {
     /**
      * @dev Allows the Owner to set the node rotation delay.
      */
-    function setRotationDelay(uint newDelay) external onlyOwner {
+    function setRotationDelay(uint newDelay) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("RotationDelay")),
+            uint(rotationDelay),
+            uint(newDelay)
+        );
         rotationDelay = newDelay;
     }
 
     /**
      * @dev Allows the Owner to set the proof-of-use lockup period.
      */
-    function setProofOfUseLockUpPeriod(uint periodDays) external onlyOwner {
+    function setProofOfUseLockUpPeriod(uint periodDays) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("ProofOfUseLockUpPeriodDays")),
+            uint(proofOfUseLockUpPeriodDays),
+            uint(periodDays)
+        );
         proofOfUseLockUpPeriodDays = periodDays;
     }
 
@@ -192,8 +248,13 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the proof-of-use delegation percentage
      * requirement.
      */
-    function setProofOfUseDelegationPercentage(uint percentage) external onlyOwner {
+    function setProofOfUseDelegationPercentage(uint percentage) external onlyConstantsHolderManager {
         require(percentage <= 100, "Percentage value is incorrect");
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("ProofOfUseDelegationPercentage")),
+            uint(proofOfUseDelegationPercentage),
+            uint(percentage)
+        );
         proofOfUseDelegationPercentage = percentage;
     }
 
@@ -201,20 +262,40 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the maximum number of validators that a
      * single delegator can delegate to.
      */
-    function setLimitValidatorsPerDelegator(uint newLimit) external onlyOwner {
+    function setLimitValidatorsPerDelegator(uint newLimit) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("LimitValidatorsPerDelegator")),
+            uint(limitValidatorsPerDelegator),
+            uint(newLimit)
+        );
         limitValidatorsPerDelegator = newLimit;
     }
 
-    function setSchainCreationTimeStamp(uint timestamp) external onlyOwner {
+    function setSchainCreationTimeStamp(uint timestamp) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("SchainCreationTimeStamp")),
+            uint(schainCreationTimeStamp),
+            uint(timestamp)
+        );
         schainCreationTimeStamp = timestamp;
     }
 
-    function setMinimalSchainLifetime(uint lifetime) external onlyOwner {
+    function setMinimalSchainLifetime(uint lifetime) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("MinimalSchainLifetime")),
+            uint(minimalSchainLifetime),
+            uint(lifetime)
+        );
         minimalSchainLifetime = lifetime;
     }
 
-    function setComplaintTimelimit(uint timelimit) external onlyOwner {
-        complaintTimelimit = timelimit;
+    function setComplaintTimeLimit(uint timeLimit) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("ComplaintTimeLimit")),
+            uint(complaintTimeLimit),
+            uint(timeLimit)
+        );
+        complaintTimeLimit = timeLimit;
     }
 
     function initialize(address contractsAddress) public override initializer {
@@ -231,6 +312,6 @@ contract ConstantsHolder is Permissions {
         proofOfUseDelegationPercentage = 50;
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
-        complaintTimelimit = 1800;
+        complaintTimeLimit = 1800;
     }
 }

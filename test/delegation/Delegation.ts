@@ -111,6 +111,15 @@ describe("Delegation", () => {
 
         // each test will start from Nov 10
         await skipTimeToDate(ethers, 10, 10);
+
+        const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
+        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
+        const DELEGATION_PERIOD_SETTER_ROLE = await delegationPeriodManager.DELEGATION_PERIOD_SETTER_ROLE();
+        await delegationPeriodManager.grantRole(DELEGATION_PERIOD_SETTER_ROLE, owner.address);
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const FORGIVER_ROLE = await punisher.FORGIVER_ROLE();
+        await punisher.grantRole(FORGIVER_ROLE, owner.address);
     });
 
     beforeEach(async () => {
@@ -127,19 +136,19 @@ describe("Delegation", () => {
         await contractManager.setContractsAddress("D2", lockerMock.address);
 
         await tokenState.connect(validator).addLocker("D2")
-            .should.be.eventually.rejectedWith("Caller is not the owner");
+            .should.be.eventually.rejectedWith("LOCKER_MANAGER_ROLE is required");
         await tokenState.addLocker("D2");
         // TODO: consider on transfer optimization. Locker are turned of for non delegated wallets
         // (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(13);
         await tokenState.connect(validator).removeLocker("D2")
-            .should.be.eventually.rejectedWith("Caller is not the owner");
+            .should.be.eventually.rejectedWith("LOCKER_MANAGER_ROLE is required");
         await tokenState.removeLocker("D2");
         (await tokenState.callStatic.getAndUpdateLockedAmount(owner.address)).toNumber().should.be.equal(0);
     });
 
     it("should allow owner to set new delegation period", async () => {
         await delegationPeriodManager.connect(validator).setDelegationPeriod(13, 13)
-            .should.be.eventually.rejectedWith("Caller is not the owner");
+            .should.be.eventually.rejectedWith("DELEGATION_PERIOD_SETTER_ROLE is required");
         await delegationPeriodManager.setDelegationPeriod(13, 13);
         (await delegationPeriodManager.stakeMultipliers(13)).toNumber()
             .should.be.equal(13);
@@ -155,7 +164,7 @@ describe("Delegation", () => {
             await skaleToken.mint(holder2.address, defaultAmount.toString(), "0x", "0x");
             await skaleToken.mint(holder3.address, defaultAmount.toString(), "0x", "0x");
             await validatorService.connect(validator).registerValidator(
-                "First validator", "Super-pooper validator", 150, 0);
+                "First validator", "Super-duper validator", 150, 0);
             await validatorService.enableValidator(validatorId);
             await delegationPeriodManager.setDelegationPeriod(12, 200);
             await delegationPeriodManager.setDelegationPeriod(6, 150);
@@ -340,7 +349,7 @@ describe("Delegation", () => {
             const validator1Id = 1;
             const validator2Id = 2;
             await validatorService.connect(validator2).registerValidator(
-                "Second validator", "Super-pooper validator", 150, 0);
+                "Second validator", "Super-duper validator", 150, 0);
             await validatorService.enableValidator(validator2Id);
             await delegationController.connect(validator2).delegate(
                 validator1Id, 200, 2, "D2 is even");
@@ -373,6 +382,8 @@ describe("Delegation", () => {
             await constantsHolder.setMSR(ten18.muln(2000).toString(10));
 
             const slashingTable: SlashingTable = await deploySlashingTable(contractManager);
+            const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
+            await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
             slashingTable.setPenalty("FailedDKG", ten18.muln(10000).toString(10));
 
             await constantsHolder.setLaunchTimestamp((await currentTime(web3)) - 4 * month);
@@ -575,15 +586,16 @@ describe("Delegation", () => {
                         holder3.address)).toNumber().should.be.equal(delegatedAmount3 - 5);
                 });
 
-                it("should allow only ADMIN to return slashed tokens", async() => {
+                it("should allow only FORGIVER_ROLE to return slashed tokens", async() => {
                     const skaleManager = await deploySkaleManager(contractManager);
 
                     await punisher.slash(validatorId, 10);
                     await delegationController.processAllSlashes(holder3.address);
 
                     await punisher.connect(holder1).forgive(holder3.address, 3)
-                        .should.be.eventually.rejectedWith("Caller is not an admin");
-                    skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder1.address);
+                        .should.be.eventually.rejectedWith("FORGIVER_ROLE is required");
+                    const FORGIVER_ROLE = await punisher.FORGIVER_ROLE();
+                    await punisher.grantRole(FORGIVER_ROLE, holder1.address);
                     await punisher.connect(holder1).forgive(holder3.address, 3);
                 });
 
@@ -843,10 +855,10 @@ describe("Delegation", () => {
             // console.log("Not delegated to 3");
         });
 
-        it("should be possible to distribute bounty accross thousands of holders", async () => {
+        it("should be possible to distribute bounty across thousands of holders", async () => {
             let holdersAmount = 1000;
             if (process.env.CI) {
-                console.log("Reduce holders amount to fit GitHub timelimit");
+                console.log("Reduce holders amount to fit GitHub time limit");
                 holdersAmount = 10;
             }
             const delegatedAmount = 1e7;

@@ -15,7 +15,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { BigNumber } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
@@ -25,20 +25,11 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     const hash = web3.utils.soliditySha3(validatorId.toString());
     if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
     } else {
         return "";
     }
@@ -55,7 +46,7 @@ function stringValue(value: string | null) {
 describe("NodesData", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
-    let nodeAddress: SignerWithAddress;
+    let nodeAddress: Wallet;
     let admin: SignerWithAddress;
     let hacker: SignerWithAddress;
 
@@ -64,7 +55,11 @@ describe("NodesData", () => {
     let validatorService: ValidatorService;
 
     beforeEach(async () => {
-        [owner, validator, nodeAddress, admin, hacker] = await ethers.getSigners();
+        [owner, validator, admin, hacker] = await ethers.getSigners();
+
+        nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
+
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
@@ -82,10 +77,13 @@ describe("NodesData", () => {
         const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
         await skaleManagerMock.grantRole(await skaleManagerMock.ADMIN_ROLE(), admin.address);
+
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
     });
 
     it("should add node", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
         await nodes.createNode(
             nodeAddress.address,
             {
@@ -95,7 +93,7 @@ describe("NodesData", () => {
                 publicIp: "0x7f000002",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                 name: "d2",
-                domainName: "somedomain.name"
+                domainName: "some.domain.name"
             });
 
         const node = await nodes.nodes(0);
@@ -124,7 +122,7 @@ describe("NodesData", () => {
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -134,7 +132,7 @@ describe("NodesData", () => {
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
         });
 
@@ -215,35 +213,37 @@ describe("NodesData", () => {
 
         it("should check node domain name", async () => {
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("somedomain.name");
+            nodeDomainName.should.be.equal("some.domain.name");
         });
 
         it("should modify node domain name by node owner", async () => {
-            await nodes.connect(nodeAddress).setDomainName(0, "newdomain.name");
+            await nodes.connect(nodeAddress).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should modify node domain name by validator", async () => {
-            await nodes.connect(validator).setDomainName(0, "newdomain.name");
+            await nodes.connect(validator).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should modify node domain name by contract owner", async () => {
-            await nodes.setDomainName(0, "newdomain.name");
+            await nodes.setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
-        it("should modify node domain name by contract admin", async () => {
-            await nodes.connect(admin).setDomainName(0, "newdomain.name");
+        it("should modify node domain name by NODE_MANAGER_ROLE", async () => {
+            const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+            await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
+            await nodes.connect(admin).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should not modify node domain name by hacker", async () => {
-            await nodes.connect(hacker).setDomainName(0, "newdomain.name")
+            await nodes.connect(hacker).setDomainName(0, "new.domain.name")
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
@@ -326,7 +326,9 @@ describe("NodesData", () => {
             assert.equal(status, 0);
         });
 
-        it("should set node status In Maintenance from admin", async () => {
+        it("should set node status In Maintenance from NODE_MANAGER_ROLE", async () => {
+            const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+            await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
             let status = await nodes.getNodeStatus(0);
             assert.equal(status, 0);
             await nodes.connect(admin).setNodeInMaintenance(0);
@@ -336,7 +338,9 @@ describe("NodesData", () => {
             assert.equal(boolStatus, true);
         });
 
-        it("should set node status From In Maintenance from admin", async () => {
+        it("should set node status From In Maintenance from NODE_MANAGER_ROLE", async () => {
+            const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+            await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
             let status = await nodes.getNodeStatus(0);
             assert.equal(status, 0);
             await nodes.connect(admin).setNodeInMaintenance(0);
@@ -450,7 +454,7 @@ describe("NodesData", () => {
 
         describe("when node is registered", async () => {
             beforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress.address,
                     {
@@ -460,7 +464,7 @@ describe("NodesData", () => {
                         publicIp: "0x7f000004",
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d3",
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             });
 
@@ -497,7 +501,7 @@ describe("NodesData", () => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -507,7 +511,7 @@ describe("NodesData", () => {
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d1",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
             await nodes.createNode(
                 nodeAddress.address,
@@ -518,7 +522,7 @@ describe("NodesData", () => {
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
         });
 
@@ -552,7 +556,7 @@ describe("NodesData", () => {
 
         describe("when nodes are registered", async () => {
             beforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress.address,
                     {
@@ -562,7 +566,7 @@ describe("NodesData", () => {
                         publicIp: "0x7f000003",
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d3",
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
                 await nodes.createNode(
                     nodeAddress.address,
@@ -573,7 +577,7 @@ describe("NodesData", () => {
                         publicIp: "0x7f000004",
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d4",
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             });
 

@@ -97,6 +97,9 @@ contract Nodes is Permissions {
         string domainName;
     }
 
+    bytes32 constant public COMPLIANCE_ROLE = keccak256("COMPLIANCE_ROLE");
+    bytes32 public constant NODE_MANAGER_ROLE = keccak256("NODE_MANAGER_ROLE");
+
     // array which contain all Nodes
     Node[] public nodes;
 
@@ -125,6 +128,8 @@ contract Nodes is Permissions {
 
     SegmentTree.Tree private _nodesAmountBySpace;
 
+    mapping (uint => bool) public incompliant;
+
     /**
      * @dev Emitted when a node is created.
      */
@@ -136,18 +141,14 @@ contract Nodes is Permissions {
         bytes4 publicIP,
         uint16 port,
         uint16 nonce,
-        string domainName,
-        uint time,
-        uint gasSpend
+        string domainName
     );
 
     /**
      * @dev Emitted when a node completes a network exit.
      */
     event ExitCompleted(
-        uint nodeIndex,
-        uint time,
-        uint gasSpend
+        uint nodeIndex
     );
 
     /**
@@ -155,9 +156,32 @@ contract Nodes is Permissions {
      */
     event ExitInitialized(
         uint nodeIndex,
-        uint startLeavingPeriod,
-        uint time,
-        uint gasSpend
+        uint startLeavingPeriod
+    );
+
+    /**
+     * @dev Emitted when a node set to in compliant or compliant.
+     */
+    event IncompliantNode(
+        uint indexed nodeIndex,
+        bool status
+    );
+
+    /**
+     * @dev Emitted when a node set to in maintenance or from in maintenance.
+     */
+    event MaintenanceNode(
+        uint indexed nodeIndex,
+        bool status
+    );
+
+    /**
+     * @dev Emitted when a node status changed.
+     */
+    event IPChanged(
+        uint indexed nodeIndex,
+        bytes4 previousIP,
+        bytes4 newIP
     );
 
     modifier checkNodeExists(uint nodeIndex) {
@@ -165,24 +189,19 @@ contract Nodes is Permissions {
         _;
     }
 
-    modifier onlyNodeOrAdmin(uint nodeIndex) {
-        _checkNodeOrAdmin(nodeIndex, msg.sender);
+    modifier onlyNodeOrNodeManager(uint nodeIndex) {
+        _checkNodeOrNodeManager(nodeIndex, msg.sender);
         _;
     }
 
-    function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
-        for (uint i = 0; i < nodes.length; i++) {
-            if (nodes[i].status != NodeStatus.Active && nodes[i].status != NodeStatus.Left) {
-                _invisible[i] = true;
-                _removeNodeFromSpaceToNodes(i, spaceOfNodes[i].freeSpace);
-            }
-        }
-        uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
-        _nodesAmountBySpace.create(totalSpace);
-        for (uint8 i = 1; i <= totalSpace; i++) {
-            if (spaceToNodes[i].length > 0)
-                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length);
-        }
+    modifier onlyCompliance() {
+        require(hasRole(COMPLIANCE_ROLE, msg.sender), "COMPLIANCE_ROLE is required");
+        _;
+    }
+
+    modifier nonZeroIP(bytes4 ip) {
+        require(ip != 0x0 && !nodesIPCheck[ip], "IP address is zero or is not available");
+        _;
     }
 
     /**
@@ -265,9 +284,9 @@ contract Nodes is Permissions {
     function createNode(address from, NodeCreationParams calldata params)
         external
         allow("SkaleManager")
+        nonZeroIP(params.ip)
     {
         // checks that Node has correct data
-        require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
         require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name is already registered");
         require(params.port > 0, "Port is zero");
         require(from == _publicKeyToAddress(params.publicKey), "Public Key is incorrect");
@@ -308,9 +327,7 @@ contract Nodes is Permissions {
             params.publicIp,
             params.port,
             params.nonce,
-            params.domainName,
-            block.timestamp,
-            gasleft());
+            params.domainName);
     }
 
     /**
@@ -330,11 +347,7 @@ contract Nodes is Permissions {
     
         _setNodeLeaving(nodeIndex);
 
-        emit ExitInitialized(
-            nodeIndex,
-            block.timestamp,
-            block.timestamp,
-            gasleft());
+        emit ExitInitialized(nodeIndex, block.timestamp);
         return true;
     }
 
@@ -359,10 +372,7 @@ contract Nodes is Permissions {
 
         _setNodeLeft(nodeIndex);
 
-        emit ExitCompleted(
-            nodeIndex,
-            block.timestamp,
-            gasleft());
+        emit ExitCompleted(nodeIndex);
         return true;
     }
 
@@ -450,9 +460,10 @@ contract Nodes is Permissions {
      * - Node must already be Active.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function setNodeInMaintenance(uint nodeIndex) external onlyNodeOrAdmin(nodeIndex) {
+    function setNodeInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         _setNodeInMaintenance(nodeIndex);
+        emit MaintenanceNode(nodeIndex, true);
     }
 
     /**
@@ -463,24 +474,69 @@ contract Nodes is Permissions {
      * - Node must already be In Maintenance.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function removeNodeFromInMaintenance(uint nodeIndex) external onlyNodeOrAdmin(nodeIndex) {
+    function removeNodeFromInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
         _setNodeActive(nodeIndex);
+        emit MaintenanceNode(nodeIndex, false);
+    }
+
+    /**
+     * @dev Marks the node as incompliant
+     * 
+     */
+    function setNodeIncompliant(uint nodeIndex) external onlyCompliance checkNodeExists(nodeIndex) {
+        if (!incompliant[nodeIndex]) {
+            incompliant[nodeIndex] = true;
+            _makeNodeInvisible(nodeIndex);
+            emit IncompliantNode(nodeIndex, true);
+        }
+    }
+
+    /**
+     * @dev Marks the node as compliant
+     * 
+     */
+    function setNodeCompliant(uint nodeIndex) external onlyCompliance checkNodeExists(nodeIndex) {
+        if (incompliant[nodeIndex]) {
+            incompliant[nodeIndex] = false;
+            _tryToMakeNodeVisible(nodeIndex);
+            emit IncompliantNode(nodeIndex, false);
+        }
     }
 
     function setDomainName(uint nodeIndex, string memory domainName)
         external
-        onlyNodeOrAdmin(nodeIndex)
+        onlyNodeOrNodeManager(nodeIndex)
     {
         domainNames[nodeIndex] = domainName;
     }
     
     function makeNodeVisible(uint nodeIndex) external allow("SchainsInternal") {
-        _makeNodeVisible(nodeIndex);
+        _tryToMakeNodeVisible(nodeIndex);
     }
 
     function makeNodeInvisible(uint nodeIndex) external allow("SchainsInternal") {
         _makeNodeInvisible(nodeIndex);
+    }
+
+    function changeIP(
+        uint nodeIndex,
+        bytes4 newIP,
+        bytes4 newPublicIP
+    )
+        external
+        onlyAdmin
+        checkNodeExists(nodeIndex)
+        nonZeroIP(newIP)
+    {
+        if (newPublicIP != 0x0) {
+            require(newIP == newPublicIP, "IP address is not the same");
+            nodes[nodeIndex].publicIP = newPublicIP;
+        }
+        nodesIPCheck[nodes[nodeIndex].ip] = false;
+        nodesIPCheck[newIP] = true;
+        emit IPChanged(nodeIndex, nodes[nodeIndex].ip, newIP);
+        nodes[nodeIndex].ip = newIP;
     }
 
     function getRandomNodeWithFreeSpace(
@@ -779,23 +835,6 @@ contract Nodes is Permissions {
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
-    function _getNodesAmountBySpace() internal view returns (SegmentTree.Tree storage) {
-        return _nodesAmountBySpace;
-    }
-
-    /**
-     * @dev Returns the index of a given node within the validator's node index.
-     */
-    function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
-        uint i;
-        for (i = 0; i < validatorNodeIndexes.length; i++) {
-            if (validatorNodeIndexes[i] == nodeIndex) {
-                return i;
-            }
-        }
-        return validatorNodeIndexes.length;
-    }
-
     /**
      * @dev Moves a node to a new space mapping.
      */
@@ -817,7 +856,7 @@ contract Nodes is Permissions {
         nodes[nodeIndex].status = NodeStatus.Active;
         numberOfActiveNodes = numberOfActiveNodes.add(1);
         if (_invisible[nodeIndex]) {
-            _makeNodeVisible(nodeIndex);
+            _tryToMakeNodeVisible(nodeIndex);
         } else {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _addNodeToSpaceToNodes(nodeIndex, space);
@@ -870,6 +909,12 @@ contract Nodes is Permissions {
         }
     }
 
+    function _tryToMakeNodeVisible(uint nodeIndex) private {
+        if (_invisible[nodeIndex] && _canBeVisible(nodeIndex)) {
+            _makeNodeVisible(nodeIndex);
+        }
+    }
+
     function _makeNodeVisible(uint nodeIndex) private {
         if (_invisible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
@@ -909,15 +954,32 @@ contract Nodes is Permissions {
         require(nodeIndex < nodes.length, "Node with such index does not exist");
     }
 
-    function _checkNodeOrAdmin(uint nodeIndex, address sender) private view {
+    function _checkNodeOrNodeManager(uint nodeIndex, address sender) private view {
         ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
 
         require(
             isNodeExist(sender, nodeIndex) ||
-            _isAdmin(sender) ||
+            hasRole(NODE_MANAGER_ROLE, msg.sender) ||
             getValidatorId(nodeIndex) == validatorService.getValidatorId(sender),
             "Sender is not permitted to call this function"
         );
+    }
+
+    function _canBeVisible(uint nodeIndex) private view returns (bool) {
+        return !incompliant[nodeIndex] && nodes[nodeIndex].status == NodeStatus.Active;
+    }
+
+    /**
+     * @dev Returns the index of a given node within the validator's node index.
+     */
+    function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
+        uint i;
+        for (i = 0; i < validatorNodeIndexes.length; i++) {
+            if (validatorNodeIndexes[i] == nodeIndex) {
+                return i;
+            }
+        }
+        return validatorNodeIndexes.length;
     }
 
     function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address) {
@@ -927,13 +989,5 @@ contract Nodes is Permissions {
             addr |= bytes20(hash[i] & 0xFF) >> ((i - 12) * 8);
         }
         return address(addr);
-    }
-
-    function _min(uint a, uint b) private pure returns (uint) {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
     }
 }

@@ -13,6 +13,9 @@ import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-
 import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
 import { getVersion } from "./tools/version";
+import util from 'util';
+import { exec as execSync } from 'child_process';
+const exec = util.promisify(execSync);
 
 export async function getContractFactoryAndUpdateManifest(contract: string) {
     const manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8"));
@@ -151,7 +154,7 @@ export async function upgrade(
                 name: contract,
                 abi: getAbi(contractFactory.interface)
             });
-            await verify(contract, newImplementationAddress);
+            await verify(contract, newImplementationAddress, []);
         } else {
             console.log(chalk.gray(`Contract ${contract} is up to date`));
         }
@@ -221,99 +224,15 @@ export async function upgrade(
     console.log("Done");
 }
 
-
 async function main() {
-    // remove Wallets from list
-    contracts.pop();
-
     await upgrade(
-        "1.7.2-stable.0",
+        "1.8.1",
         ["ContractManager"].concat(contracts),
         async (safeTransactions, abi, contractManager) => {
-            const safe = await contractManager.owner();
-            const [ deployer ] = await ethers.getSigners();
-
-            // Deploy Wallets
-            const walletsName = "Wallets";
-            console.log(chalk.green("Deploy", walletsName));
-            const walletsFactory = await ethers.getContractFactory(walletsName);
-            const wallets = (await upgrades.deployProxy(walletsFactory, [contractManager.address])) as Wallets;
-            await wallets.deployTransaction.wait();
-            console.log(chalk.green("Transfer ownership"));
-            await (await wallets.grantRole(await wallets.DEFAULT_ADMIN_ROLE(), safe)).wait();
-            await (await wallets.revokeRole(await wallets.DEFAULT_ADMIN_ROLE(), deployer.address)).wait();
-            console.log(chalk.yellowBright("Prepare transaction to register", walletsName));
-            safeTransactions.push(encodeTransaction(
-                0,
-                contractManager.address,
-                0,
-                contractManager.interface.encodeFunctionData("setContractsAddress", [walletsName, wallets.address])
-            ));
-            abi[getContractKeyInAbiFile(walletsName) + "_address"] = wallets.address;
-            abi[getContractKeyInAbiFile(walletsName) + "_abi"] = getAbi(wallets.interface);
-            await verifyProxy(walletsName, wallets.address);
+            await exec("sed -i 's/complaintTimelimit/complaintTimeLimit/g' .openzeppelin/*.json");
         },
-        async (safeTransactions, abi) => {
-
-            // Initialize SegmentTree in Nodes
-            const nodesName = "Nodes";
-            const nodesContractFactory = await getContractFactoryAndUpdateManifest(nodesName);
-            const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
-            if (nodesAddress) {
-                console.log(chalk.yellowBright("Prepare transaction to initialize", nodesName));
-                const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    nodes.address,
-                    0,
-                    nodes.interface.encodeFunctionData("initializeSegmentTreeAndInvisibleNodes")
-                ));
-            } else {
-                console.log(chalk.red("Nodes address was not found!"));
-                console.log(chalk.red("Check your abi!"));
-                process.exit(1);
-            }
-
-            // Initialize schain types
-            const schainsInternalName = "SchainsInternal";
-            const schainsInternalFactory = await getContractFactoryAndUpdateManifest(schainsInternalName);
-            const schainsInternalAddress = abi[getContractKeyInAbiFile(schainsInternalName) + "_address"];
-            if (schainsInternalAddress) {
-                console.log(chalk.yellowBright("Prepare transactions to initialize schains types"));
-                const schainsInternal = (schainsInternalFactory.attach(schainsInternalAddress)) as SchainsInternal;
-                console.log(chalk.yellowBright("Number of Schain types will be set to 0"));
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    schainsInternal.address,
-                    0,
-                    schainsInternal.interface.encodeFunctionData("setNumberOfSchainTypes", [0]),
-                ));
-
-                console.log(chalk.yellowBright("Schain Type Small will be added"));
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    schainsInternal.address,
-                    0,
-                    schainsInternal.interface.encodeFunctionData("addSchainType", [1, 16]),
-                ));
-
-                console.log(chalk.yellowBright("Schain Type Medium will be added"));
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    schainsInternal.address,
-                    0,
-                    schainsInternal.interface.encodeFunctionData("addSchainType", [4, 16]),
-                ));
-
-                console.log(chalk.yellowBright("Schain Type Large will be added"));
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    schainsInternal.address,
-                    0,
-                    schainsInternal.interface.encodeFunctionData("addSchainType", [128, 16]),
-                ));
-            }
-        });
+        async (safeTransactions, abi) => undefined
+    );
 }
 
 if (require.main === module) {

@@ -53,6 +53,8 @@ contract TokenState is Permissions, ILocker {
 
     DelegationController private _delegationController;
 
+    bytes32 public constant LOCKER_MANAGER_ROLE = keccak256("LOCKER_MANAGER_ROLE");
+
     /**
      * @dev Emitted when a contract is added to the locker.
      */
@@ -66,6 +68,11 @@ contract TokenState is Permissions, ILocker {
     event LockerWasRemoved(
         string locker
     );
+
+    modifier onlyLockerManager() {
+        require(hasRole(LOCKER_MANAGER_ROLE, msg.sender), "LOCKER_MANAGER_ROLE is required");
+        _;
+    }
 
     /**
      *  @dev See {ILocker-getAndUpdateLockedAmount}.
@@ -103,7 +110,7 @@ contract TokenState is Permissions, ILocker {
      * 
      * Emits a {LockerWasRemoved} event.
      */
-    function removeLocker(string calldata locker) external onlyOwner {
+    function removeLocker(string calldata locker) external onlyLockerManager {
         uint index;
         bytes32 hash = keccak256(abi.encodePacked(locker));
         for (index = 0; index < _lockers.length; ++index) {
@@ -123,6 +130,7 @@ contract TokenState is Permissions, ILocker {
 
     function initialize(address contractManagerAddress) public override initializer {
         Permissions.initialize(contractManagerAddress);
+        _setupRole(LOCKER_MANAGER_ROLE, msg.sender);
         addLocker("DelegationController");
         addLocker("Punisher");
     }
@@ -132,7 +140,7 @@ contract TokenState is Permissions, ILocker {
      * 
      * Emits a {LockerWasAdded} event.
      */
-    function addLocker(string memory locker) public onlyOwner {
+    function addLocker(string memory locker) public onlyLockerManager {
         _lockers.push(locker);
         emit LockerWasAdded(locker);
     }

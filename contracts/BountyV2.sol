@@ -41,6 +41,7 @@ contract BountyV2 is Permissions {
         uint bountyPaid;
     }
     
+    // TODO: replace with an array when solidity starts supporting it
     uint public constant YEAR1_BOUNTY = 3850e5 * 1e18;
     uint public constant YEAR2_BOUNTY = 3465e5 * 1e18;
     uint public constant YEAR3_BOUNTY = 3080e5 * 1e18;
@@ -50,6 +51,8 @@ contract BountyV2 is Permissions {
     uint public constant EPOCHS_PER_YEAR = 12;
     uint public constant SECONDS_PER_DAY = 24 * 60 * 60;
     uint public constant BOUNTY_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
+
+    bytes32 public constant BOUNTY_REDUCTION_MANAGER_ROLE = keccak256("BOUNTY_REDUCTION_MANAGER_ROLE");
     
     uint private _nextEpoch;
     uint private _epochPool;
@@ -63,6 +66,23 @@ contract BountyV2 is Permissions {
 
     // validatorId => BountyHistory
     mapping (uint => BountyHistory) private _bountyHistory;
+    
+    /**
+     * @dev Emitted when bounty reduction is turned on or turned off.
+     */
+    event BountyReduction(bool status);
+    /**
+     * @dev Emitted when a node creation window was changed.
+     */
+    event NodeCreationWindowWasChanged(
+        uint oldValue,
+        uint newValue
+    );
+
+    modifier onlyBountyReductionManager() {
+        require(hasRole(BOUNTY_REDUCTION_MANAGER_ROLE, msg.sender), "BOUNTY_REDUCTION_MANAGER_ROLE is required");
+        _;
+    }
 
     function calculateBounty(uint nodeIndex)
         external
@@ -116,15 +136,18 @@ contract BountyV2 is Permissions {
         return bounty;
     }
 
-    function enableBountyReduction() external onlyOwner {
+    function enableBountyReduction() external onlyBountyReductionManager {
         bountyReduction = true;
+        emit BountyReduction(true);
     }
 
-    function disableBountyReduction() external onlyOwner {
+    function disableBountyReduction() external onlyBountyReductionManager {
         bountyReduction = false;
+        emit BountyReduction(false);
     }
 
     function setNodeCreationWindowSeconds(uint window) external allow("Nodes") {
+        emit NodeCreationWindowWasChanged(nodeCreationWindowSeconds, window);
         nodeCreationWindowSeconds = window;
     }
 
@@ -146,53 +169,6 @@ contract BountyV2 is Permissions {
         allow("DelegationController")
     {
         _effectiveDelegatedSum.subtractFromValue(amount, month);
-    }
-
-    function populate() external onlyOwner {
-        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
-        DelegationController delegationController = DelegationController(
-            contractManager.getContract("DelegationController")
-        );
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getTimeHelpers());
-
-        uint currentMonth = timeHelpers.getCurrentMonth();
-
-        // clean existing data
-        for (
-            uint i = _effectiveDelegatedSum.firstUnprocessedMonth;
-            i < _effectiveDelegatedSum.lastChangedMonth.add(1);
-            ++i
-        )
-        {
-            delete _effectiveDelegatedSum.addDiff[i];
-            delete _effectiveDelegatedSum.subtractDiff[i];
-        }
-        delete _effectiveDelegatedSum.value;
-        delete _effectiveDelegatedSum.lastChangedMonth;
-        _effectiveDelegatedSum.firstUnprocessedMonth = currentMonth;
-        
-        uint[] memory validators = validatorService.getTrustedValidators();
-        for (uint i = 0; i < validators.length; ++i) {
-            uint validatorId = validators[i];
-            uint currentEffectiveDelegated =
-                delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
-            uint[] memory effectiveDelegated = delegationController.getEffectiveDelegatedValuesByValidator(validatorId);
-            if (effectiveDelegated.length > 0) {
-                assert(currentEffectiveDelegated == effectiveDelegated[0]);
-            }
-            uint added = 0;
-            for (uint j = 0; j < effectiveDelegated.length; ++j) {
-                if (effectiveDelegated[j] != added) {
-                    if (effectiveDelegated[j] > added) {
-                        _effectiveDelegatedSum.addToValue(effectiveDelegated[j].sub(added), currentMonth + j);
-                    } else {
-                        _effectiveDelegatedSum.subtractFromValue(added.sub(effectiveDelegated[j]), currentMonth + j);
-                    }
-                    added = effectiveDelegated[j];
-                }
-            }
-            delete effectiveDelegated;
-        }
     }
 
     function estimateBounty(uint nodeIndex) external view returns (uint) {
@@ -245,6 +221,43 @@ contract BountyV2 is Permissions {
 
     // private
 
+    function _refillEpochPool(uint currentMonth, TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private {
+        uint epochPool;
+        uint nextEpoch;
+        (epochPool, nextEpoch) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
+        if (_nextEpoch < nextEpoch) {
+            (_epochPool, _nextEpoch) = (epochPool, nextEpoch);
+            _bountyWasPaidInCurrentEpoch = 0;
+        }
+    }
+
+    function _reduceBounty(
+        uint bounty,
+        uint nodeIndex,
+        Nodes nodes,
+        ConstantsHolder constants
+    )
+        private
+        returns (uint reducedBounty)
+    {
+        if (!bountyReduction) {
+            return bounty;
+        }
+
+        reducedBounty = bounty;
+
+        if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
+            reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
+        }
+    }
+
+    function _prepareBountyHistory(uint validatorId, uint currentMonth) private {
+        if (_bountyHistory[validatorId].month < currentMonth) {
+            _bountyHistory[validatorId].month = currentMonth;
+            delete _bountyHistory[validatorId].bountyPaid;
+        }
+    }
+
     function _calculateMaximumBountyAmount(
         uint epochPoolSize,
         uint effectiveDelegatedSum,
@@ -290,30 +303,6 @@ contract BountyV2 is Permissions {
         return bounty;
     }
 
-    function _calculateBountyShare(
-        uint monthBounty,
-        uint effectiveDelegated,
-        uint effectiveDelegatedSum,
-        uint maxNodesAmount,
-        uint paidToValidator
-    )
-        private
-        pure
-        returns (uint)
-    {
-        if (maxNodesAmount > 0) {
-            uint totalBountyShare = monthBounty
-                .mul(effectiveDelegated)
-                .div(effectiveDelegatedSum);
-            return _min(
-                totalBountyShare.div(maxNodesAmount),
-                totalBountyShare.sub(paidToValidator)
-            );
-        } else {
-            return 0;
-        }
-    }
-
     function _getFirstEpoch(TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private view returns (uint) {
         return timeHelpers.timestampToMonth(constantsHolder.launchTimestamp());
     }
@@ -330,16 +319,6 @@ contract BountyV2 is Permissions {
         epochPool = _epochPool;
         for (nextEpoch = _nextEpoch; nextEpoch <= currentMonth; ++nextEpoch) {
             epochPool = epochPool.add(_getEpochReward(nextEpoch, timeHelpers, constantsHolder));
-        }
-    }
-
-    function _refillEpochPool(uint currentMonth, TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private {
-        uint epochPool;
-        uint nextEpoch;
-        (epochPool, nextEpoch) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
-        if (_nextEpoch < nextEpoch) {
-            (_epochPool, _nextEpoch) = (epochPool, nextEpoch);
-            _bountyWasPaidInCurrentEpoch = 0;
         }
     }
 
@@ -375,33 +354,6 @@ contract BountyV2 is Permissions {
                 YEAR6_BOUNTY
             ];
             return customBounties[year].div(EPOCHS_PER_YEAR);
-        }
-    }
-
-    function _reduceBounty(
-        uint bounty,
-        uint nodeIndex,
-        Nodes nodes,
-        ConstantsHolder constants
-    )
-        private
-        returns (uint reducedBounty)
-    {
-        if (!bountyReduction) {
-            return bounty;
-        }
-
-        reducedBounty = bounty;
-
-        if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
-            reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
-        }
-    }
-
-    function _prepareBountyHistory(uint validatorId, uint currentMonth) private {
-        if (_bountyHistory[validatorId].month < currentMonth) {
-            _bountyHistory[validatorId].month = currentMonth;
-            delete _bountyHistory[validatorId].bountyPaid;
         }
     }
 
@@ -443,6 +395,30 @@ contract BountyV2 is Permissions {
         }
     }
 
+    function _calculateBountyShare(
+        uint monthBounty,
+        uint effectiveDelegated,
+        uint effectiveDelegatedSum,
+        uint maxNodesAmount,
+        uint paidToValidator
+    )
+        private
+        pure
+        returns (uint)
+    {
+        if (maxNodesAmount > 0) {
+            uint totalBountyShare = monthBounty
+                .mul(effectiveDelegated)
+                .div(effectiveDelegatedSum);
+            return _min(
+                totalBountyShare.div(maxNodesAmount),
+                totalBountyShare.sub(paidToValidator)
+            );
+        } else {
+            return 0;
+        }
+    }
+
     function _min(uint a, uint b) private pure returns (uint) {
         if (a < b) {
             return a;
@@ -458,4 +434,5 @@ contract BountyV2 is Permissions {
             return a;
         }
     }
+
 }
