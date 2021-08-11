@@ -22,7 +22,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.2;
+pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
