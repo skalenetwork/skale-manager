@@ -35,7 +35,7 @@ contract SkaleManagerMock is Permissions, IERC777Recipient {
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    constructor (address contractManagerAddress) public {
+    constructor (address contractManagerAddress) {
         Permissions.initialize(contractManagerAddress);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }

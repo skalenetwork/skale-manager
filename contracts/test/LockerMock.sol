@@ -24,11 +24,11 @@ pragma solidity 0.8.2;
 import "../interfaces/delegation/ILocker.sol";
 
 contract LockerMock is ILocker {
-    function getAndUpdateLockedAmount(address) external override returns (uint) {
+    function getAndUpdateLockedAmount(address) external pure override returns (uint) {
         return 13;
     }
     
-    function getAndUpdateForbiddenForDelegationAmount(address) external override returns (uint) {
+    function getAndUpdateForbiddenForDelegationAmount(address) external pure override returns (uint) {
         return 13;
     }
 }

@@ -24,7 +24,7 @@ pragma solidity 0.8.2;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract SafeMock is OwnableUpgradeable {
-    constructor() public {
+    constructor() {
         OwnableUpgradeable.__Ownable_init();
         multiSend(""); // this is needed to remove slither warning
     }

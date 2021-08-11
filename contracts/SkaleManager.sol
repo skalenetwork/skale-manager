@@ -205,7 +205,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
 
-    function _payBounty(uint bounty, uint validatorId) private returns (bool) {        
+    function _payBounty(uint bounty, uint validatorId) private {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
         

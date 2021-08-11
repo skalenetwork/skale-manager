@@ -48,7 +48,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
 
     uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
-    constructor(address contractsAddress, address[] memory defOps) public
+    constructor(address contractsAddress, address[] memory defOps)
     ERC777("SKALE", "SKL", defOps)
     {
         Permissions.initialize(contractsAddress);

@@ -44,14 +44,6 @@ contract TimeHelpers {
         return timestampToMonth(block.timestamp);
     }
 
-    function timestampToDay(uint timestamp) external view returns (uint) {
-        uint wholeDays = timestamp / BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY;
-        uint zeroDay = BokkyPooBahsDateTimeLibrary.timestampFromDate(_ZERO_YEAR, 1, 1) /
-            BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY;
-        require(wholeDays >= zeroDay, "Timestamp is too far in the past");
-        return wholeDays - zeroDay;
-    }
-
     function timestampToYear(uint timestamp) external view virtual returns (uint) {
         uint year;
         (year, , ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);

@@ -694,7 +694,7 @@ contract DelegationController is Permissions, ILocker {
         return _delegatedByHolderToValidator[holder][validatorId].getAndUpdateValue(month);
     }
 
-    function _addToLockedInPendingDelegations(address holder, uint amount) private returns (uint) {
+    function _addToLockedInPendingDelegations(address holder, uint amount) private {
         uint currentMonth = _getCurrentMonth();
         if (_lockedInPendingDelegations[holder].month < currentMonth) {
             _lockedInPendingDelegations[holder].amount = amount;
@@ -705,7 +705,7 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    function _subtractFromLockedInPendingDelegations(address holder, uint amount) private returns (uint) {
+    function _subtractFromLockedInPendingDelegations(address holder, uint amount) private {
         uint currentMonth = _getCurrentMonth();
         assert(_lockedInPendingDelegations[holder].month == currentMonth);
         _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount.sub(amount);
@@ -988,7 +988,7 @@ contract DelegationController is Permissions, ILocker {
      * - Delegator must not have reached the validator limit.
      * - Delegation must be made in or after the first delegation month.
      */
-    function _checkIfDelegationIsAllowed(address holder, uint validatorId) private view returns (bool) {
+    function _checkIfDelegationIsAllowed(address holder, uint validatorId) private view {
         require(
             _numberOfValidatorsPerDelegator[holder].delegated[validatorId] > 0 ||
                 (

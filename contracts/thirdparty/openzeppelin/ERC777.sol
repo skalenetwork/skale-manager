@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 // cSpell:words adoc
@@ -71,14 +73,14 @@ contract ERC777 is Context, IERC777, IERC20 {
      * @dev `defaultOperators` may be an empty array.
      */
     constructor(
-        string memory name,
-        string memory symbol,
-        address[] memory defaultOperators
-    ) public {
-        _name = name;
-        _symbol = symbol;
+        string memory tokenName,
+        string memory tokenSymbol,
+        address[] memory tokenDefaultOperators
+    ) {
+        _name = tokenName;
+        _symbol = tokenSymbol;
 
-        _defaultOperatorsArray = defaultOperators;
+        _defaultOperatorsArray = tokenDefaultOperators;
         for (uint256 i = 0; i < _defaultOperatorsArray.length; i++) {
             _defaultOperators[_defaultOperatorsArray[i]] = true;
         }
@@ -117,7 +119,7 @@ contract ERC777 is Context, IERC777, IERC20 {
      *
      * This implementation always returns `1`.
      */
-    function granularity() public view override returns (uint256) {
+    function granularity() public pure override returns (uint256) {
         return 1;
     }
 
