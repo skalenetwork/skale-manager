@@ -220,10 +220,10 @@ describe("Wallets", () => {
             await schainsInternal.addSchainType(0, 2);
             await schainsInternal.addSchainType(32, 4);
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address);
+            await schains.addSchainByFoundation(schain1Name, validator1.address, SchainType.TEST, 0);
             await skaleDKG.setSuccessfulDKGPublic(stringValue(schain1Id));
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address);
+            await schains.addSchainByFoundation(schain2Name, validator2.address, SchainType.TEST, 0);
             await skaleDKG.setSuccessfulDKGPublic(stringValue(schain2Id));
         });
 
@@ -233,7 +233,7 @@ describe("Wallets", () => {
 
         it("should automatically recharge wallet after creating schain by foundation", async () => {
             const amount = 1e9;
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, {value: amount.toString()});
+            await schains.addSchainByFoundation("schain-3", validator2.address, SchainType.TEST, 0, {value: amount.toString()});
             const schainBalance = await wallets.getSchainBalance(stringValue(web3.utils.soliditySha3("schain-3")));
             amount.should.be.equal(schainBalance.toNumber());
         });

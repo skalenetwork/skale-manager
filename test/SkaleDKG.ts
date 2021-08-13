@@ -336,6 +336,7 @@ describe("SkaleDKG", () => {
         const indexes = [0, 1];
         let schainName = "";
         const delegatedAmount = 1e7;
+        let amountOfMonths: number;
 
         let cleanContracts: number;
         before(async () => {
@@ -380,6 +381,11 @@ describe("SkaleDKG", () => {
             await schainsInternal.addSchainType(128, 16);
             await schainsInternal.addSchainType(0, 2);
             await schainsInternal.addSchainType(32, 4);
+            amountOfMonths = 6;
+
+            const premined = "5000000000000000000000000000"; // 5e9 * 1e18
+            await skaleToken.mint(validator1.address, premined, "0x", "0x");
+            await skaleToken.connect(validator1).approve(schains.address, premined);
         });
 
         after(async () => {
@@ -387,35 +393,26 @@ describe("SkaleDKG", () => {
         });
 
         it("should create schain and open a DKG channel", async () => {
-            const deposit = await schains.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            const res = await (await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]))).wait();
+            const res = await (await schains.connect(validator1).addSchain("d2", deposit, 4)).wait();
 
             assert((await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")))).should.be.true);
             (await skaleDKG.getChannelStartedBlock(stringValue(web3.utils.soliditySha3("d2")))).should.be.equal(res.blockNumber);
         });
 
         it("should create schain and reopen a DKG channel", async () => {
-            const deposit = await schains.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+            await schains.connect(validator1).addSchain("d2", deposit, 4);
 
             assert((await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")))).should.be.true);
         });
 
         it("should create & delete schain and open & close a DKG channel", async () => {
-            const deposit = await schains.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+            await schains.connect(validator1).addSchain("d2", deposit, 4);
 
             assert((await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")))).should.be.true);
 
@@ -429,12 +426,9 @@ describe("SkaleDKG", () => {
             let twoSchainAreCreated: number;
             before(async () => {
                 twoNodesAreCreated = await makeSnapshot();
-                const deposit = await schains.getSchainPrice(4, 5);
+                const deposit = await schains.getSchainPrice(amountOfMonths);
 
-                await schains.addSchain(
-                    validator1.address,
-                    deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                await schains.connect(validator1).addSchain("d2", deposit, 4);
 
                 let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
                 schainName = "d2";
@@ -444,10 +438,7 @@ describe("SkaleDKG", () => {
                     await schains.deleteSchainByRoot(schainName);
                     schainName = "d" + index;
                     index++;
-                    await schains.addSchain(
-                        validator1.address,
-                        deposit,
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
+                    await schains.connect(validator1).addSchain(schainName, deposit, 4);
                     nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
                     await wallets.rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
                 }
@@ -1415,12 +1406,9 @@ describe("SkaleDKG", () => {
         });
 
         it("should reopen channel correctly", async () => {
-            const deposit = await schains.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+            await schains.connect(validator1).addSchain("d2", deposit, 4);
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
             schainName = "d2";
@@ -1429,10 +1417,7 @@ describe("SkaleDKG", () => {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = "d" + index;
                 index++;
-                await schains.addSchain(
-                    validator1.address,
-                    deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
+                await schains.connect(validator1).addSchain(schainName, deposit, 4);
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
             }
 
@@ -1590,12 +1575,9 @@ describe("SkaleDKG", () => {
         });
 
         it("should process nodeExit 2 times correctly", async () => {
-            const deposit = await schains.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+            await schains.connect(validator1).addSchain("d2", deposit, 4);
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
             schainName = "d2";
@@ -1604,10 +1586,7 @@ describe("SkaleDKG", () => {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = "d" + index;
                 index++;
-                await schains.addSchain(
-                    validator1.address,
-                    deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
+                await schains.connect(validator1).addSchain(schainName, deposit, 4);
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
             }
 
@@ -1795,12 +1774,9 @@ describe("SkaleDKG", () => {
                     });
             }
 
-            const deposit = await schains.getSchainPrice(3, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+            await schains.connect(validator1).addSchain("New16NodeSchain", deposit, 3);
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -1902,12 +1878,9 @@ describe("SkaleDKG", () => {
                     });
             }
 
-            const deposit = await schains.getSchainPrice(3, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+            await schains.connect(validator1).addSchain("New16NodeSchain", deposit, 3);
 
             await nodes.createNode(validators[0].nodeAddress.address,
                 {
@@ -2253,12 +2226,10 @@ describe("SkaleDKG", () => {
                     });
             }
 
-            const deposit = await schains.getSchainPrice(3, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+            await schains.connect(validator1).addSchain("New16NodeSchain", deposit, 3);
+
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -2330,12 +2301,10 @@ describe("SkaleDKG", () => {
                     });
             }
 
-            const deposit = await schains.getSchainPrice(3, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+            await schains.connect(validator1).addSchain("New16NodeSchain", deposit, 3);
+
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -2459,12 +2428,10 @@ describe("SkaleDKG", () => {
                     });
             }
 
-            const deposit = await schains.getSchainPrice(3, 5);
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "New16NodeSchain"]));
+            await schains.connect(validator1).addSchain("New16NodeSchain", deposit, 1);
+
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -2528,11 +2495,7 @@ describe("SkaleDKG", () => {
             //     }
             // );
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "New16NodeSchain1"])
-            );
+            await schains.connect(validator1).addSchain("New16NodeSchain1", deposit, 1);
 
             await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain1")), {value: 1e20.toString()});
 

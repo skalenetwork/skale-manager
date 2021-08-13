@@ -5,6 +5,7 @@ import { ContractManager,
          Nodes,
          Schains,
          SchainsInternal,
+         SkaleToken,
          SkaleVerifier,
          ValidatorService } from "../typechain";
 
@@ -25,6 +26,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { assert } from "chai";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
+import { deploySkaleToken } from "./tools/deploy/skaleToken";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -53,6 +55,7 @@ describe("SkaleVerifier", () => {
     let nodes: Nodes;
     let keyStorage: KeyStorage;
     let schainsInternal: SchainsInternal;
+    let skaleToken: SkaleToken;
 
     beforeEach(async () => {
         [validator1, owner, developer, hacker] = await ethers.getSigners();
@@ -68,6 +71,7 @@ describe("SkaleVerifier", () => {
         skaleVerifier = await deploySkaleVerifier(contractManager);
         keyStorage = await deployKeyStorage(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
+        skaleToken = await deploySkaleToken(contractManager);
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
@@ -255,13 +259,12 @@ describe("SkaleVerifier", () => {
                         domainName: "some.domain.name"
                     });
             }
+            const amountOfMonths = 6;
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            const deposit = await schains.getSchainPrice(4, 5);
-
-            await schains.connect(validator1).addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
+            await skaleToken.mint(validator1.address, deposit, "0x", "0x");
+            await skaleToken.connect(validator1).approve(schains.address, deposit);
+            await schains.connect(validator1).addSchain("Bob", deposit, 4);
 
             const bobHash = web3.utils.soliditySha3("Bob");
             if (bobHash) {

@@ -102,6 +102,7 @@ describe("SkaleManager", () => {
     let bountyContract: BountyV2;
     let wallets: Wallets;
     let snapshot: number;
+    let amountOfMonths: number;
 
     before(async() => {
         chai.use(chaiAlmost(0.002));
@@ -153,6 +154,10 @@ describe("SkaleManager", () => {
         await schainsInternal.addSchainType(128, 16);
         await schainsInternal.addSchainType(0, 2);
         await schainsInternal.addSchainType(32, 4);
+        amountOfMonths = 6;
+
+        await skaleToken.mint(developer.address, premined, "0x", "0x");
+        await skaleToken.connect(developer).approve(schains.address, premined);
     });
 
     beforeEach(async () => {
@@ -575,80 +580,18 @@ describe("SkaleManager", () => {
                 });
 
                 it("should create schain", async () => {
-                    await skaleToken.connect(developer).send(
-                        skaleManager.address,
-                        "0x1cc2d6d04a2ca",
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                            5, // lifetime
-                            3, // type of schain
-                            0, // nonce
-                            "d2"])); // name
+                    await schains.connect(developer).addSchain("d2", "0x1cc2d6d04a2ca", 3);
 
                     const schain = await schainsInternal.schains(d2SchainHash);
                     schain[0].should.be.equal("d2");
-                });
-
-                it("should not create schain if schain admin set too low schain lifetime", async () => {
-                    const SECONDS_TO_YEAR = 31622400;
-                    constantsHolder.setMinimalSchainLifetime(SECONDS_TO_YEAR);
-                    await skaleToken.connect(developer).send(
-                        skaleManager.address,
-                        "0x1cc2d6d04a2ca",
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                            0, // lifetime
-                            3, // type of schain
-                            0, // nonce
-                            "d2"]), // name
-                        )
-                        .should.be.eventually.rejectedWith("Minimal schain lifetime should be satisfied");
-
-                    constantsHolder.setMinimalSchainLifetime(4);
-                    await skaleToken.connect(developer).send(
-                        skaleManager.address,
-                        "0x1cc2d6d04a2ca",
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                            5, // lifetime
-                            3, // type of schain
-                            0, // nonce
-                            "d2"]), // name
-                        );
-
-                    const schain = await schainsInternal.schains(d2SchainHash);
-                    schain[0].should.be.equal("d2");
-                });
-
-
-                it("should not allow to create schain if certain date has not reached", async () => {
-                    const unreachableDate = BigNumber.from(2).pow(256).sub(1);
-                    await constantsHolder.setSchainCreationTimeStamp(unreachableDate);
-                    await skaleToken.connect(developer).send(
-                        skaleManager.address,
-                        "0x1cc2d6d04a2ca",
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                            4, // lifetime
-                            3, // type of schain
-                            0, // nonce
-                            "d2"]), // name
-                        )
-                        .should.be.eventually.rejectedWith("It is not a time for creating Schain");
                 });
 
                 describe("when schain is created", async () => {
                     let schainIsCreated: number;
                     before(async () => {
                         schainIsCreated = await makeSnapshot();
-                        await skaleToken.connect(developer).send(
-                            skaleManager.address,
-                            "0x1cc2d6d04a2ca",
-                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                                5, // lifetime
-                                3, // type of schain
-                                0, // nonce
-                                "d2"]), // name
-                            );
-                        await skaleDKG.setSuccessfulDKGPublic(
-                            d2SchainHash
-                        );
+                        await schains.connect(developer).addSchain("d2", "0x1cc2d6d04a2ca", 3);
+                        await skaleDKG.setSuccessfulDKGPublic(d2SchainHash);
                     });
 
                     after(async () => {
@@ -680,15 +623,7 @@ describe("SkaleManager", () => {
                     let anotherSchainIsCreated: number;
                     before(async () => {
                         anotherSchainIsCreated = await makeSnapshot();
-                        await skaleToken.connect(developer).send(
-                            skaleManager.address,
-                            "0x1cc2d6d04a2ca",
-                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                                5, // lifetime
-                                3, // type of schain
-                                0, // nonce
-                                "d3"]), // name
-                            );
+                        await schains.connect(developer).addSchain("d3", "0x1cc2d6d04a2ca", 3);
                     });
 
                     after(async () => {
@@ -758,29 +693,13 @@ describe("SkaleManager", () => {
                 });
 
                 it("should create 2 medium schains", async () => {
-                    const price = await schains.getSchainPrice(3, 5)
-                    await skaleToken.connect(developer).send(
-                        skaleManager.address,
-                        price,
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                            5, // lifetime
-                            3, // type of schain
-                            0, // nonce
-                            "d2"]), // name
-                        );
+                    const price = await schains.getSchainPrice(amountOfMonths);
+                    await schains.connect(developer).addSchain("d2", price, 3);
 
                     const schain1 = await schainsInternal.schains(d2SchainHash);
                     schain1[0].should.be.equal("d2");
 
-                    await skaleToken.connect(developer).send(
-                        skaleManager.address,
-                        price,
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                            5, // lifetime
-                            3, // type of schain
-                            0, // nonce
-                            "d3"]), // name
-                        );
+                    await schains.connect(developer).addSchain("d3", price, 3);
 
                     const schain2 = await schainsInternal.schains(d3SchainHash);
                     schain2[0].should.be.equal("d3");
@@ -790,25 +709,8 @@ describe("SkaleManager", () => {
                     let whenSchainsAreCreated: number;
                     before(async () => {
                         whenSchainsAreCreated = await makeSnapshot();
-                        await skaleToken.connect(developer).send(
-                            skaleManager.address,
-                            "0x1cc2d6d04a2ca",
-                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                                5, // lifetime
-                                3, // type of schain
-                                0, // nonce
-                                "d2"]), // name
-                            );
-
-                        await skaleToken.connect(developer).send(
-                            skaleManager.address,
-                            "0x1cc2d6d04a2ca",
-                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                                5, // lifetime
-                                3, // type of schain
-                                0, // nonce
-                                "d3"]), // name
-                            );
+                        await schains.connect(developer).addSchain("d2", "0x1cc2d6d04a2ca", 3);
+                        await schains.connect(developer).addSchain("d3", "0x1cc2d6d04a2ca", 3);
                     });
 
                     after(async () => {
@@ -849,16 +751,8 @@ describe("SkaleManager", () => {
 
                 await skaleToken.transfer(developer.address, "0x3635C9ADC5DEA000000");
 
-                let price = await schains.getSchainPrice(1, 5);
-                await skaleToken.connect(developer).send(
-                    skaleManager.address,
-                    price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                        5, // lifetime
-                        1, // type of schain
-                        0, // nonce
-                        "d2"]), // name
-                    );
+                let price = await schains.getSchainPrice(amountOfMonths);
+                await schains.connect(developer).addSchain("d2", price, 1);
 
                 let schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d2")));
                 schain1[0].should.be.equal("d2");
@@ -866,17 +760,8 @@ describe("SkaleManager", () => {
                 await skaleManager.connect(developer).deleteSchain("d2");
 
                 (await schainsInternal.numberOfSchains()).should.be.equal(0);
-                price = await schains.getSchainPrice(2, 5);
-
-                await skaleToken.connect(developer).send(
-                    skaleManager.address,
-                    price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                        5, // lifetime
-                        2, // type of schain
-                        0, // nonce
-                        "d3"]), // name
-                    );
+                price = await schains.getSchainPrice(amountOfMonths);
+                await schains.connect(developer).addSchain("d3", price, 2);
 
                 schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d3")));
                 schain1[0].should.be.equal("d3");
@@ -884,16 +769,8 @@ describe("SkaleManager", () => {
                 await skaleManager.connect(developer).deleteSchain("d3");
 
                 (await schainsInternal.numberOfSchains()).should.be.equal(0);
-                price = await schains.getSchainPrice(3, 5);
-                await skaleToken.connect(developer).send(
-                    skaleManager.address,
-                    price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                        5, // lifetime
-                        3, // type of schain
-                        0, // nonce
-                        "d4"]), // name
-                    );
+                price = await schains.getSchainPrice(amountOfMonths);
+                await schains.connect(developer).addSchain("d4", price, 3);
 
                 schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d4")));
                 schain1[0].should.be.equal("d4");
@@ -901,16 +778,8 @@ describe("SkaleManager", () => {
                 await skaleManager.connect(developer).deleteSchain("d4");
 
                 (await schainsInternal.numberOfSchains()).should.be.equal(0);
-                price = await schains.getSchainPrice(4, 5);
-                await skaleToken.connect(developer).send(
-                    skaleManager.address,
-                    price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                        5, // lifetime
-                        4, // type of schain
-                        0, // nonce
-                        "d5"]), // name
-                    );
+                price = await schains.getSchainPrice(amountOfMonths);
+                await schains.connect(developer).addSchain("d5", price, 4);
 
                 schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d5")));
                 schain1[0].should.be.equal("d5");
@@ -918,16 +787,8 @@ describe("SkaleManager", () => {
                 await skaleManager.connect(developer).deleteSchain("d5");
 
                 (await schainsInternal.numberOfSchains()).should.be.equal(0);
-                price = await schains.getSchainPrice(5, 5);
-                await skaleToken.connect(developer).send(
-                    skaleManager.address,
-                    price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
-                        5, // lifetime
-                        5, // type of schain
-                        0, // nonce
-                        "d6"]), // name
-                    );
+                price = await schains.getSchainPrice(amountOfMonths);
+                await schains.connect(developer).addSchain("d6", price, 5);
 
                 schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d6")));
                 schain1[0].should.be.equal("d6");

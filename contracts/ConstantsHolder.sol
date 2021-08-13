@@ -126,6 +126,9 @@ contract ConstantsHolder is Permissions {
 
     uint public complaintTimeLimit;
 
+    // month is 30 days
+    uint public schainCostPerMonth;
+
     bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
 
     /**
@@ -310,5 +313,7 @@ contract ConstantsHolder is Permissions {
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
         complaintTimeLimit = 1800;
+        minimalSchainLifetime = 180 days;
+        schainCostPerMonth = 100;
     }
 }

@@ -961,6 +961,10 @@ describe("SkaleDkgFakeComplaint", () => {
         await schainsInternal.addSchainType(128, 16);
         await schainsInternal.addSchainType(0, 2);
         await schainsInternal.addSchainType(32, 4);
+
+        const premined = "5000000000000000000000000000"; // 5e9 * 1e18
+        await skaleToken.mint(validator1.address, premined, "0x", "0x");
+        await skaleToken.connect(validator1).approve(schains.address, premined);
     });
 
     beforeEach(async () => {
@@ -975,12 +979,10 @@ describe("SkaleDkgFakeComplaint", () => {
         let cleanContracts: number;
         before(async () => {
             cleanContracts = await makeSnapshot();
-            const deposit = await schains.getSchainPrice(5, 5);
+            const amountOfMonths = 6;
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]));
+            await schains.connect(validator1).addSchain("d2", deposit, 5);
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
             schainName = "d2";
@@ -990,10 +992,7 @@ describe("SkaleDkgFakeComplaint", () => {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = "d" + index;
                 index++;
-                await schains.addSchain(
-                    validator1.address,
-                    deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, schainName]));
+                await schains.connect(validator1).addSchain(schainName, deposit, 5);
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
                 await wallets.rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
             }

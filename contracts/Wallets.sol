@@ -39,6 +39,7 @@ contract Wallets is Permissions, IWallets {
     mapping (uint => uint) private _validatorWallets;
     mapping (bytes32 => uint) private _schainWallets;
     mapping (bytes32 => uint) private _schainDebts;
+    mapping (bytes32 => uint) private _schainDeposits;
 
     /**
      * @dev Emitted when the validator wallet was funded
@@ -208,6 +209,14 @@ contract Wallets is Permissions, IWallets {
         _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
         emit WithdrawFromValidatorWallet(validatorId, amount);
         msg.sender.transfer(amount);
+    }
+
+    function storeSchainDeposit(bytes32 schainHash, uint deposit) external allow("Schains") {
+        _schainDeposits[schainHash] += deposit;
+    }
+
+    function getSchainDeposit(bytes32 schainHash) external view returns (uint) {
+        return _schainDeposits[schainHash];
     }
 
     function getSchainBalance(bytes32 schainHash) external view override returns (uint) {
