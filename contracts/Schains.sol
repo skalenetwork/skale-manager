@@ -110,14 +110,14 @@ contract Schains is Permissions, ISchains {
      * - There is sufficient deposit to create type of schain.
      */
     function addSchain(
-        string memory name,
+        string memory schainName,
         uint deposit,
         uint8 typeOfSchain
     )
         external
         payable
     {
-        bytes32 schainHash = keccak256(abi.encodePacked(name));
+        bytes32 schainHash = keccak256(abi.encodePacked(schainName));
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         Wallets wallets = Wallets(payable(contractManager.getContract("Wallets")));
@@ -128,7 +128,7 @@ contract Schains is Permissions, ISchains {
         wallets.storeSchainDeposit(schainHash, deposit);
         uint lifetime = calculateSchainLifeTime(deposit, constantsHolder.schainCostPerMonth());
         require(lifetime >= constantsHolder.minimalSchainLifetime(), "Schain lifetime is too short");
-        _addSchain(msg.sender, name, deposit, typeOfSchain, lifetime);
+        _addSchain(msg.sender, schainName, deposit, typeOfSchain, lifetime);
         wallets.rechargeSchainWallet{value: msg.value}(schainHash);
     }
 

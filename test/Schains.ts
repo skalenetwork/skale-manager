@@ -216,8 +216,10 @@ describe("Schains", () => {
                 const deposit = await schains.getSchainPrice(amountOfMonths);
 
                 await schains.connect(holder).addSchain("d2", deposit, 4);
+                expect(await wallets.getSchainDeposit("d2")).be.equal(deposit);
 
                 await schains.connect(holder).addSchain("d3", deposit, 4);
+                expect(await wallets.getSchainDeposit("d3")).be.equal(deposit);
 
                 await schains.deleteSchain(holder.address, "d2");
 

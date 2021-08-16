@@ -215,7 +215,8 @@ contract Wallets is Permissions, IWallets {
         _schainDeposits[schainHash] += deposit;
     }
 
-    function getSchainDeposit(bytes32 schainHash) external view returns (uint) {
+    function getSchainDeposit(string calldata schainName) external view returns (uint) {
+        bytes32 schainHash = keccak256(abi.encodePacked(schainName));
         return _schainDeposits[schainHash];
     }
 
