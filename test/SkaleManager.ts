@@ -168,17 +168,6 @@ describe("SkaleManager", () => {
         await applySnapshot(snapshot);
     });
 
-    it("should fail to process token fallback if sent not from SkaleToken", async () => {
-        await skaleManager.connect(validator).tokensReceived(
-            hacker.address,
-            validator.address,
-            developer.address,
-            5,
-            "0x11",
-            "0x11"
-        ).should.be.eventually.rejectedWith("Message sender is invalid");
-    });
-
     it("should transfer ownership", async () => {
         await skaleManager.connect(hacker).grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker.address)
             .should.be.eventually.rejectedWith("AccessControl: sender must be an admin to grant");

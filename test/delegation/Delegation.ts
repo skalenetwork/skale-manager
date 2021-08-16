@@ -856,7 +856,7 @@ describe("Delegation", () => {
         });
 
         it("should be possible to distribute bounty across thousands of holders", async () => {
-            let holdersAmount = 10;
+            let holdersAmount = 1000;
             if (process.env.CI) {
                 console.log("Reduce holders amount to fit GitHub time limit");
                 holdersAmount = 10;
