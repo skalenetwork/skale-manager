@@ -797,7 +797,6 @@ describe("Schains", () => {
                     nodesAreRegistered = await makeSnapshot();
                     const deposit = await schains.getSchainPrice(amountOfMonths);
                     await schains.connect(holder).addSchain("D2", deposit, 1);
-
                 });
 
                 after(async () => {
