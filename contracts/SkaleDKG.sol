@@ -637,7 +637,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
         } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 7e5) {
             wallets.refundGasBySchain(
-                schainHash, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(159464), context.isDebt
+                schainHash, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(152214), context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Response){
             wallets.refundGasBySchain(
