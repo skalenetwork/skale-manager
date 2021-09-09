@@ -42,7 +42,7 @@
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@openzeppelin/contracts": "^3.4.1",
+    "@openzeppelin/contracts": "^3.4.2",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
     "@openzeppelin/hardhat-upgrades": "^1.9.0",
     "@skalenetwork/skale-manager-interfaces": "^0.1.2",
@@ -51,7 +51,7 @@
     "ethereumjs-util": "^7.1.0",
     "ethers": "^5.4.4",
     "ethers-eip712": "^0.2.0",
-    "hardhat": "^2.4.3",
+    "hardhat": "^2.6.1",
     "web3": "^1.5.1"
   },
   "devDependencies": {
@@ -74,7 +74,7 @@
     "ganache-cli": "^6.11.0",
     "hardhat-typechain": "^0.3.4",
     "solhint": "3.3.6",
-    "solidity-coverage": "^0.7.14",
+    "solidity-coverage": "^0.7.17",
     "solidity-docgen": "^0.5.7",
     "ts-generator": "^0.1.1",
     "ts-node": "9.0.0",
