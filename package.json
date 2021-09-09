@@ -52,7 +52,7 @@
     "ethers": "^5.4.4",
     "ethers-eip712": "^0.2.0",
     "hardhat": "^2.6.1",
-    "web3": "^1.5.1"
+    "web3": "^1.5.2"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.1",
