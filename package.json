@@ -44,7 +44,7 @@
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.2",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
-    "@openzeppelin/hardhat-upgrades": "^1.9.0",
+    "@openzeppelin/hardhat-upgrades": "^1.10.0",
     "@skalenetwork/skale-manager-interfaces": "^0.1.2",
     "axios": "^0.21.1",
     "dotenv": "^10.0.0",
