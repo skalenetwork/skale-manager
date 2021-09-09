@@ -45,7 +45,7 @@ function hexValue(value: string) {
     }
 }
 
-describe("createSchains", () => {
+describe("Schain creation test", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
     let nodeAddress: Wallet
@@ -75,7 +75,7 @@ describe("createSchains", () => {
         await schainsInternal.addSchainType(32, 4);
     });
 
-    it("gas based on nodes amount", async () => {
+    it("create and delete medium schains", async () => {
         await validatorService.grantRole(await validatorService.VALIDATOR_MANAGER_ROLE(), owner.address);
         await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
         const validatorId = await validatorService.getValidatorId(validator.address);
@@ -83,10 +83,7 @@ describe("createSchains", () => {
         const signature = await getValidatorIdSignature(validatorId, nodeAddress);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature);
         await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-
-        const maxNodesAmount = 1000;
-        const gasLimit = 12e6;
-        const measurements = []
+        const maxNodesAmount = 20;
         const publicKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
         for (let nodeId = 0; nodeId < maxNodesAmount; ++nodeId) {
             await skaleManager.connect(nodeAddress).createNode(
@@ -96,13 +93,15 @@ describe("createSchains", () => {
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
                 ["0x" + hexValue(publicKey.x.toString('hex')), "0x" + hexValue(publicKey.y.toString('hex'))], // public key
                 "d2-" + nodeId, // name)
-                "some.domain.name");
-
-            const nodesAmount = nodeId + 1;
-            if (nodesAmount >= 16) {
-                const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner.address)).wait();
+                "some.domain.name"
+            );
+        }
+        for (let tries = 0; tries < 10; tries++) {
+            const type = 2;;
+            console.log(type);
+            for (let try1 = 0; try1 < 32; try1++) {
+                const result = await (await schains.addSchainByFoundation(0, type, 0, "schain-" + tries + try1, owner.address)).wait();
                 const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
-                console.log("Nodes in Schain:");
                 const setOfNodes = new Set();
                 for (const nodeOfSchain of nodeInGroup) {
                     if (!setOfNodes.has(nodeOfSchain.toNumber())) {
@@ -113,15 +112,56 @@ describe("createSchains", () => {
                     }
                     console.log(nodeOfSchain.toNumber());
                 }
+                console.log("create schain-" + tries + try1, result.gasUsed.toNumber(), "gu");
+            }
 
-                measurements.push({nodesAmount, gasUsed: result.gasUsed});
-                console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
-                if (result.gasUsed.toNumber() > gasLimit) {
-                    break;
-                }
+            for (let try2 = 0; try2 < 32; try2++) {
+                const resDel = await (await skaleManager.deleteSchain("schain-" + tries + try2)).wait();
+                console.log("delete schain-" + tries + try2, resDel.gasUsed.toNumber(), "gu");
             }
         }
+    });
 
-        fs.writeFileSync("createSchain.json", JSON.stringify(measurements, null, 4));
-    })
+    it("create and delete schains", async () => {
+        await validatorService.grantRole(await validatorService.VALIDATOR_MANAGER_ROLE(), owner.address);
+        await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
+        const validatorId = await validatorService.getValidatorId(validator.address);
+        await validatorService.disableWhitelist();
+        const signature = await getValidatorIdSignature(validatorId, nodeAddress);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature);
+        await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
+        const maxNodesAmount = 20;
+        const publicKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
+        for (let nodeId = 0; nodeId < maxNodesAmount; ++nodeId) {
+            await skaleManager.connect(nodeAddress).createNode(
+                1, // port
+                0, // nonce
+                "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
+                "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
+                ["0x" + hexValue(publicKey.x.toString('hex')), "0x" + hexValue(publicKey.y.toString('hex'))], // public key
+                "d2-" + nodeId, // name)
+                "some.domain.name"
+            );
+        }
+        for(let tries = 0; tries < 200; tries++) {
+            const type = Math.floor(Math.random() * 2) + 1;
+            console.log(type);
+            const result = await (await schains.addSchainByFoundation(0, type, 0, "schain-" + tries, owner.address)).wait();
+            const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
+            const setOfNodes = new Set();
+            for (const nodeOfSchain of nodeInGroup) {
+                if (!setOfNodes.has(nodeOfSchain.toNumber())) {
+                    setOfNodes.add(nodeOfSchain.toNumber());
+                } else {
+                    console.log("Node", nodeOfSchain.toNumber(), "already exist");
+                    process.exit();
+                }
+                console.log(nodeOfSchain.toNumber());
+            }
+
+            console.log("create schain-" + tries, result.gasUsed.toNumber(), "gu");
+            const resDel = await (await skaleManager.deleteSchain("schain-" + tries)).wait();
+            console.log("delete schain-" + tries, resDel.gasUsed.toNumber(), "gu");
+        }
+    });
 });

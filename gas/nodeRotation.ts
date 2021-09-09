@@ -62,7 +62,7 @@ function findEvent(events: Event[] | undefined, eventName: string) {
     }
 }
 
-describe("createSchains", () => {
+describe("nodeRotation", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
     let node: SignerWithAddress;
@@ -155,7 +155,7 @@ describe("createSchains", () => {
         }
     });
 
-    it.only("max node rotation on 17 nodes", async () => {
+    it("max node rotation on 17 nodes", async () => {
         const validatorId = 1;
 
         await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
@@ -309,6 +309,6 @@ describe("createSchains", () => {
 
         }
 
-        fs.writeFileSync("createSchain.json", JSON.stringify(measurementsSchainCreation, null, 4));
+        fs.writeFileSync("nodeRotation.json", JSON.stringify(measurementsSchainCreation, null, 4));
     })
 });
