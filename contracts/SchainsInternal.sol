@@ -243,6 +243,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         uint schainIndexOnNode = findSchainAtSchainsForNode(nodeIndex, schainHash);
         removeSchainForNode(nodeIndex, schainIndexOnNode);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        nodes.addSpaceToNode(nodeIndex, schains[schainHash].partOfNode);
     }
 
     /**

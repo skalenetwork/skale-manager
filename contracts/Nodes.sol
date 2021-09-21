@@ -234,7 +234,7 @@ contract Nodes is Permissions {
     function addSpaceToNode(uint nodeIndex, uint8 space)
         external
         checkNodeExists(nodeIndex)
-        allowTwo("Schains", "NodeRotation")
+        allow("SchainsInternal")
     {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
