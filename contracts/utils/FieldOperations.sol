@@ -200,6 +200,13 @@ library G2Operations {
         if (isEqual(value1, value2)) {
             return doubleG2(value1);
         }
+        if (value1.x.isEqual(value2.x)) {
+            sum.x.a = 0;
+            sum.x.b = 0;
+            sum.y.a = 1;
+            sum.y.b = 0;
+            return sum;
+        }
 
         Fp2Operations.Fp2Point memory s = value2.y.minusFp2(value1.y).mulFp2(value2.x.minusFp2(value1.x).inverseFp2());
         sum.x = s.squaredFp2().minusFp2(value1.x.addFp2(value2.x));

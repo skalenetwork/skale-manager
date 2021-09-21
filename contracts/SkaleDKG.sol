@@ -634,11 +634,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
         } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 14e5) {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(590000), context.isDebt
+                schainHash, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(341979), context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 7e5) {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(250000), context.isDebt
+                schainHash, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(152214), context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Response){
             wallets.refundGasBySchain(

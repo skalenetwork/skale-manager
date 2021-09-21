@@ -34,9 +34,9 @@ chai.use(chaiAsPromised);
 chai.use(solidity);
 
 async function ethSpent(response: ContractTransaction) {
-    const gasUsed = (await response.wait()).gasUsed;
-    if (response.gasPrice) {
-        const cost = response.gasPrice.toNumber() * gasUsed.toNumber();
+    const receipt = await response.wait();
+    if (receipt.effectiveGasPrice) {
+        const cost = receipt.effectiveGasPrice.toNumber() * receipt.gasUsed.toNumber();
         return parseFloat(web3.utils.fromWei(cost.toString()));
     } else {
         throw new ReferenceError("gasPrice is undefined");
