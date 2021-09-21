@@ -393,13 +393,10 @@ contract Schains is Permissions, ISchains {
             if (schainsInternal.checkHoleForSchain(schainHash, i)) {
                 continue;
             }
-            uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
-                nodesInGroup[i],
-                schainHash
-            );
             require(
-                schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
-                "Some Node does not contain given Schain");
+                schainsInternal.checkSchainOnNode(nodesInGroup[i], schainHash),
+                "Some Node does not contain given Schain"
+            );
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainHash);
             schainsInternal.removeNodeFromExceptions(schainHash, nodesInGroup[i]);
         }
