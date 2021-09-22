@@ -228,15 +228,6 @@ contract Schains is Permissions, ISchains {
         emit NodeAdded(schainHash, newNodeIndex);
     }
 
-    /**
-     * @dev addSpace - return occupied space to Node
-     * nodeIndex - index of Node at common array of Nodes
-     * partOfNode - divisor of given type of Schain
-     */
-    function addSpace(uint nodeIndex, uint8 partOfNode) external allowTwo("Schains", "NodeRotation") {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        nodes.addSpaceToNode(nodeIndex, partOfNode);
-    }
 
     /**
      * @dev Checks whether schain group signature is valid.
@@ -398,21 +389,16 @@ contract Schains is Permissions, ISchains {
         require(schainsInternal.isSchainExist(schainHash), "Schain does not exist");
 
         uint[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
-        uint8 partOfNode = schainsInternal.getSchainsPartOfNode(schainHash);
         for (uint i = 0; i < nodesInGroup.length; i++) {
-            uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
-                nodesInGroup[i],
-                schainHash
-            );
             if (schainsInternal.checkHoleForSchain(schainHash, i)) {
                 continue;
             }
             require(
-                schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
-                "Some Node does not contain given Schain");
+                schainsInternal.checkSchainOnNode(nodesInGroup[i], schainHash),
+                "Some Node does not contain given Schain"
+            );
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainHash);
             schainsInternal.removeNodeFromExceptions(schainHash, nodesInGroup[i]);
-            this.addSpace(nodesInGroup[i], partOfNode);
         }
         schainsInternal.deleteGroup(schainHash);
         address from = schainsInternal.getSchainOwner(schainHash);

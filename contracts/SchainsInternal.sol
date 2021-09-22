@@ -240,9 +240,10 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             }
         }
 
-        uint schainIndexOnNode = findSchainAtSchainsForNode(nodeIndex, schainHash);
-        removeSchainForNode(nodeIndex, schainIndexOnNode);
+        removeSchainForNode(nodeIndex, placeOfSchainOnNode[schainHash][nodeIndex] - 1);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        nodes.addSpaceToNode(nodeIndex, schains[schainHash].partOfNode);
     }
 
     /**
@@ -324,20 +325,6 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      */
     function setNumberOfSchainTypes(uint newNumberOfSchainTypes) external onlySchainTypeManager {
         numberOfSchainTypes = newNumberOfSchainTypes;
-    }
-
-    /**
-     * @dev Allows Admin to move schain to placeOfSchainOnNode map
-     */
-    function moveToPlaceOfSchainOnNode(bytes32 schainHash) external onlyDebugger {
-        for (uint i = 0; i < schainsGroups[schainHash].length; i++) {
-            uint nodeIndex = schainsGroups[schainHash][i];
-            for (uint j = 0; j < schainsForNodes[nodeIndex].length; j++) {
-                if (schainsForNodes[nodeIndex][j] == schainHash) {
-                    placeOfSchainOnNode[schainHash][nodeIndex] = j + 1;
-                }
-            }
-        }
     }
 
     function removeNodeFromAllExceptionSchains(uint nodeIndex) external allow("SkaleManager") {
@@ -552,11 +539,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         return false;
     }
 
-    /**
-     * @dev Returns number of Schains on a node.
-     */
-    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint) {
-        return schainsForNodes[nodeIndex].length;
+    function checkSchainOnNode(uint nodeIndex, bytes32 schainHash) external view returns (bool) {
+        return placeOfSchainOnNode[schainHash][nodeIndex] != 0;
     }
 
     function getSchainType(uint typeOfSchain) external view returns(uint8, uint) {
@@ -638,15 +622,6 @@ contract SchainsInternal is Permissions, ISchainsInternal {
                 break;
             }
         }
-    }
-
-    /**
-     * @dev Returns index of Schain in list of schains for a given node.
-     */
-    function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainHash) public view returns (uint) {
-        if (placeOfSchainOnNode[schainHash][nodeIndex] == 0)
-            return schainsForNodes[nodeIndex].length;
-        return placeOfSchainOnNode[schainHash][nodeIndex] - 1;
     }
 
     function _getNodeToLockedSchains() internal view returns (mapping(uint => bytes32[]) storage) {
