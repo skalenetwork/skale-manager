@@ -2377,6 +2377,8 @@ describe("SkaleDKG", () => {
             let balance = await getBalance(validators[0].nodeAddress.address);
             balance.should.not.be.lessThan(balanceBefore);
             balance.should.be.almost(balanceBefore);
+            const space = await nodes.spaceOfNodes(accusedNode);
+            space.freeSpace.should.be.equal(128);
 
             balanceBefore = await getBalance(validators[0].nodeAddress.address);
             await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
