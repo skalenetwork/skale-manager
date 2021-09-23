@@ -21,8 +21,7 @@
 
 pragma solidity 0.8.6;
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-
+import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
 import "./ContractManager.sol";
 
 
@@ -30,7 +29,7 @@ import "./ContractManager.sol";
  * @title Permissions
  * @dev Contract is connected module for Upgradeable approach, knows ContractManager
  */
-contract Permissions is AccessControlUpgradeable {
+contract Permissions is AccessControlUpgradeableLegacy {
     using AddressUpgradeable for address;
     
     ContractManager public contractManager;
@@ -111,7 +110,7 @@ contract Permissions is AccessControlUpgradeable {
     }
 
     function initialize(address contractManagerAddress) public virtual initializer {
-        AccessControlUpgradeable.__AccessControl_init();
+        AccessControlUpgradeableLegacy.__AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setContractManager(contractManagerAddress);
     }
@@ -123,7 +122,7 @@ contract Permissions is AccessControlUpgradeable {
     function _isAdmin(address account) internal view returns (bool) {
         address skaleManagerAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleManager")));
         if (skaleManagerAddress != address(0)) {
-            AccessControlUpgradeable skaleManager = AccessControlUpgradeable(skaleManagerAddress);
+            AccessControlUpgradeableLegacy skaleManager = AccessControlUpgradeableLegacy(skaleManagerAddress);
             return skaleManager.hasRole(keccak256("ADMIN_ROLE"), account) || _isOwner();
         } else {
             return _isOwner();

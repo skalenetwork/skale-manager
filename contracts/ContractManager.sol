@@ -26,14 +26,14 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 import "./utils/StringUtils.sol";
-
+import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
 
 /**
  * @title ContractManager
  * @dev Contract contains the actual current mapping from contract IDs
  * (in the form of human-readable strings) to addresses.
  */
-contract ContractManager is OwnableUpgradeable, IContractManager {
+contract ContractManager is Initializable, InitializableGap, OwnableUpgradeable, IContractManager {
     using StringUtils for string;
     using AddressUpgradeable for address;
 

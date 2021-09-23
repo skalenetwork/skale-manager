@@ -144,7 +144,14 @@ export async function upgrade(
         const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
 
         console.log(`Prepare upgrade of ${contract}`);
-        const newImplementationAddress = await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+        const newImplementationAddress = await upgrades.prepareUpgrade(
+            proxyAddress,
+            contractFactory,
+            {
+                unsafeAllowLinkedLibraries: true,
+                unsafeAllowRenames: true
+            }
+        );
         const currentImplementationAddress = await getImplementationAddress(network.provider, proxyAddress);
         if (newImplementationAddress !== currentImplementationAddress)
         {
