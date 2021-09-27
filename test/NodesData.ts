@@ -15,7 +15,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { BigNumber } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
@@ -25,20 +25,11 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     const hash = web3.utils.soliditySha3(validatorId.toString());
     if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
     } else {
         return "";
     }
@@ -55,7 +46,7 @@ function stringValue(value: string | null) {
 describe("NodesData", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
-    let nodeAddress: SignerWithAddress;
+    let nodeAddress: Wallet;
     let admin: SignerWithAddress;
     let hacker: SignerWithAddress;
 
@@ -64,7 +55,11 @@ describe("NodesData", () => {
     let validatorService: ValidatorService;
 
     beforeEach(async () => {
-        [owner, validator, nodeAddress, admin, hacker] = await ethers.getSigners();
+        [owner, validator, admin, hacker] = await ethers.getSigners();
+
+        nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
+
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
@@ -88,7 +83,7 @@ describe("NodesData", () => {
     });
 
     it("should add node", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
         await nodes.createNode(
             nodeAddress.address,
             {
@@ -127,7 +122,7 @@ describe("NodesData", () => {
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -459,7 +454,7 @@ describe("NodesData", () => {
 
         describe("when node is registered", async () => {
             beforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress.address,
                     {
@@ -506,7 +501,7 @@ describe("NodesData", () => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -561,7 +556,7 @@ describe("NodesData", () => {
 
         describe("when nodes are registered", async () => {
             beforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress.address,
                     {

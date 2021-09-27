@@ -39,6 +39,7 @@ contract Wallets is Permissions, IWallets {
     mapping (uint => uint) private _validatorWallets;
     mapping (bytes32 => uint) private _schainWallets;
     mapping (bytes32 => uint) private _schainDebts;
+    mapping (bytes32 => uint) private _schainDeposits;
 
     /**
      * @dev Emitted when the validator wallet was funded
@@ -59,6 +60,16 @@ contract Wallets is Permissions, IWallets {
      * @dev Emitted when the node received a refund from schain to its wallet
      */
     event NodeRefundedBySchain(address node, bytes32 schainHash, uint amount);
+
+    /**
+     * @dev Emitted when the validator withdrawn funds from validator wallet
+     */
+    event WithdrawFromValidatorWallet(uint indexed validatorId, uint amount);
+
+    /**
+     * @dev Emitted when the schain owner withdrawn funds from schain wallet
+     */
+    event WithdrawFromSchainWallet(bytes32 indexed schainHash, uint amount);
 
     /**
      * @dev Is executed on a call to the contract with empty calldata. 
@@ -180,6 +191,7 @@ contract Wallets is Permissions, IWallets {
         require(schainOwner != address(0), "Schain owner must be specified");
         uint amount = _schainWallets[schainHash];
         delete _schainWallets[schainHash];
+        emit WithdrawFromSchainWallet(schainHash, amount);
         schainOwner.transfer(amount);
     }
     
@@ -195,7 +207,17 @@ contract Wallets is Permissions, IWallets {
         uint validatorId = validatorService.getValidatorId(msg.sender);
         require(amount <= _validatorWallets[validatorId], "Balance is too low");
         _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
+        emit WithdrawFromValidatorWallet(validatorId, amount);
         msg.sender.transfer(amount);
+    }
+
+    function storeSchainDeposit(bytes32 schainHash, uint deposit) external allow("Schains") {
+        _schainDeposits[schainHash] += deposit;
+    }
+
+    function getSchainDeposit(string calldata schainName) external view returns (uint) {
+        bytes32 schainHash = keccak256(abi.encodePacked(schainName));
+        return _schainDeposits[schainHash];
     }
 
     function getSchainBalance(bytes32 schainHash) external view override returns (uint) {

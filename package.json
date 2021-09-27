@@ -49,10 +49,10 @@
     "axios": "^0.21.1",
     "dotenv": "^10.0.0",
     "ethereumjs-util": "^7.1.0",
-    "ethers": "^5.4.1",
+    "ethers": "^5.4.4",
     "ethers-eip712": "^0.2.0",
     "hardhat": "^2.4.3",
-    "web3": "^1.4.0"
+    "web3": "^1.5.1"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.1",

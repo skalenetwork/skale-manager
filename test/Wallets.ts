@@ -26,7 +26,7 @@ import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
 import { solidity } from "ethereum-waffle";
-import { ContractTransaction } from "ethers";
+import { ContractTransaction, Wallet } from "ethers";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 
 chai.should();
@@ -59,20 +59,11 @@ function hexValue(value: string) {
     }
 }
 
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     const hash = web3.utils.soliditySha3(validatorId.toString());
     if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
     } else {
         return "";
     }
@@ -94,8 +85,8 @@ describe("Wallets", () => {
     let owner: SignerWithAddress;
     let validator1: SignerWithAddress;
     let validator2: SignerWithAddress;
-    let node1: SignerWithAddress;
-    let node2: SignerWithAddress;
+    let nodeAddress1: Wallet;
+    let nodeAddress2: Wallet;
 
     let contractManager: ContractManager;
     let wallets: Wallets;
@@ -110,8 +101,13 @@ describe("Wallets", () => {
     let snapshot: number;
 
     before(async() => {
-        chai.use(chaiAlmost(0.002));
-        [owner, validator1, validator2, node1, node2] = await ethers.getSigners();
+        chai.use(chaiAlmost(0.003));
+        [owner, validator1, validator2] = await ethers.getSigners();
+
+        nodeAddress1 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
+        nodeAddress2 = new Wallet(String(privateKeys[4])).connect(ethers.provider);
+        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
         wallets = await deployWallets(contractManager);
@@ -186,20 +182,20 @@ describe("Wallets", () => {
         before(async () => {
             snapshotOfDeployedContracts = await makeSnapshot();
             await validatorService.disableWhitelist();
-            let signature = await getValidatorIdSignature(new BigNumber(validator1Id), node1);
-            await validatorService.connect(validator1).linkNodeAddress(node1.address, signature);
-            signature = await getValidatorIdSignature(new BigNumber(validator2Id), node2);
-            await validatorService.connect(validator2).linkNodeAddress(node2.address, signature);
+            let signature = await getValidatorIdSignature(new BigNumber(validator1Id), nodeAddress1);
+            await validatorService.connect(validator1).linkNodeAddress(nodeAddress1.address, signature);
+            signature = await getValidatorIdSignature(new BigNumber(validator2Id), nodeAddress2);
+            await validatorService.connect(validator2).linkNodeAddress(nodeAddress2.address, signature);
 
             const nodesPerValidator = 2;
             const validators = [
                 {
-                    nodePublicKey: ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic(),
-                    nodeAddress: node1
+                    nodePublicKey: ec.keyFromPrivate(String(nodeAddress1.privateKey).slice(2)).getPublic(),
+                    nodeAddress: nodeAddress1
                 },
                 {
-                    nodePublicKey: ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic(),
-                    nodeAddress: node2
+                    nodePublicKey: ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic(),
+                    nodeAddress: nodeAddress2
                 }
             ];
             for (const [validatorIndex, validator] of validators.entries()) {
@@ -224,10 +220,10 @@ describe("Wallets", () => {
             await schainsInternal.addSchainType(0, 2);
             await schainsInternal.addSchainType(32, 4);
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address);
+            await schains.addSchainByFoundation(schain1Name, validator1.address, SchainType.TEST, 0);
             await skaleDKG.setSuccessfulDKGPublic(stringValue(schain1Id));
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address);
+            await schains.addSchainByFoundation(schain2Name, validator2.address, SchainType.TEST, 0);
             await skaleDKG.setSuccessfulDKGPublic(stringValue(schain2Id));
         });
 
@@ -237,7 +233,7 @@ describe("Wallets", () => {
 
         it("should automatically recharge wallet after creating schain by foundation", async () => {
             const amount = 1e9;
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, {value: amount.toString()});
+            await schains.addSchainByFoundation("schain-3", validator2.address, SchainType.TEST, 0, {value: amount.toString()});
             const schainBalance = await wallets.getSchainBalance(stringValue(web3.utils.soliditySha3("schain-3")));
             amount.should.be.equal(schainBalance.toNumber());
         });
@@ -290,9 +286,9 @@ describe("Wallets", () => {
             });
 
             it("should reimburse gas for node exit", async() => {
-                const balanceBefore = await getBalance(node1.address);
-                const response = await skaleManager.connect(node1).nodeExit(0);
-                const balance = await getBalance(node1.address);
+                const balanceBefore = await getBalance(nodeAddress1.address);
+                const response = await skaleManager.connect(nodeAddress1).nodeExit(0);
+                const balance = await getBalance(nodeAddress1.address);
                 balance.should.not.be.lessThan(balanceBefore);
                 balance.should.be.almost(balanceBefore);
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);

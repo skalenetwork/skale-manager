@@ -126,7 +126,19 @@ contract ConstantsHolder is Permissions {
 
     uint public complaintTimeLimit;
 
+    // month is 30 days
+    uint public schainCostPerMonth;
+
     bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
+
+    /**
+     * @dev Emitted when constants updated.
+     */
+    event ConstantUpdated(
+        bytes32 indexed constantHash,
+        uint previousValue,
+        uint newValue
+    );
 
     modifier onlyConstantsHolderManager() {
         require(hasRole(CONSTANTS_HOLDER_MANAGER_ROLE, msg.sender), "CONSTANTS_HOLDER_MANAGER_ROLE is required");
@@ -142,7 +154,17 @@ contract ConstantsHolder is Permissions {
             newRewardPeriod >= newDeltaPeriod && newRewardPeriod - newDeltaPeriod >= checkTime,
             "Incorrect Periods"
         );
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("RewardPeriod")),
+            uint(rewardPeriod),
+            uint(newRewardPeriod)
+        );
         rewardPeriod = newRewardPeriod;
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("DeltaPeriod")),
+            uint(deltaPeriod),
+            uint(newDeltaPeriod)
+        );
         deltaPeriod = newDeltaPeriod;
     }
 
@@ -152,6 +174,11 @@ contract ConstantsHolder is Permissions {
      */
     function setCheckTime(uint newCheckTime) external onlyConstantsHolderManager {
         require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("CheckTime")),
+            uint(checkTime),
+            uint(newCheckTime)
+        );
         checkTime = newCheckTime;
     }    
 
@@ -160,6 +187,11 @@ contract ConstantsHolder is Permissions {
      * This function is only for testing purposes.
      */
     function setLatency(uint32 newAllowableLatency) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("AllowableLatency")),
+            uint(allowableLatency),
+            uint(newAllowableLatency)
+        );
         allowableLatency = newAllowableLatency;
     }
 
@@ -167,6 +199,11 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the minimum stake requirement.
      */
     function setMSR(uint newMSR) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("MSR")),
+            uint(msr),
+            uint(newMSR)
+        );
         msr = newMSR;
     }
 
@@ -175,6 +212,11 @@ contract ConstantsHolder is Permissions {
      */
     function setLaunchTimestamp(uint timestamp) external onlyConstantsHolderManager {
         require(now < launchTimestamp, "Cannot set network launch timestamp because network is already launched");
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("LaunchTimestamp")),
+            uint(launchTimestamp),
+            uint(timestamp)
+        );
         launchTimestamp = timestamp;
     }
 
@@ -182,6 +224,11 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the node rotation delay.
      */
     function setRotationDelay(uint newDelay) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("RotationDelay")),
+            uint(rotationDelay),
+            uint(newDelay)
+        );
         rotationDelay = newDelay;
     }
 
@@ -189,6 +236,11 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the proof-of-use lockup period.
      */
     function setProofOfUseLockUpPeriod(uint periodDays) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("ProofOfUseLockUpPeriodDays")),
+            uint(proofOfUseLockUpPeriodDays),
+            uint(periodDays)
+        );
         proofOfUseLockUpPeriodDays = periodDays;
     }
 
@@ -198,6 +250,11 @@ contract ConstantsHolder is Permissions {
      */
     function setProofOfUseDelegationPercentage(uint percentage) external onlyConstantsHolderManager {
         require(percentage <= 100, "Percentage value is incorrect");
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("ProofOfUseDelegationPercentage")),
+            uint(proofOfUseDelegationPercentage),
+            uint(percentage)
+        );
         proofOfUseDelegationPercentage = percentage;
     }
 
@@ -206,18 +263,38 @@ contract ConstantsHolder is Permissions {
      * single delegator can delegate to.
      */
     function setLimitValidatorsPerDelegator(uint newLimit) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("LimitValidatorsPerDelegator")),
+            uint(limitValidatorsPerDelegator),
+            uint(newLimit)
+        );
         limitValidatorsPerDelegator = newLimit;
     }
 
     function setSchainCreationTimeStamp(uint timestamp) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("SchainCreationTimeStamp")),
+            uint(schainCreationTimeStamp),
+            uint(timestamp)
+        );
         schainCreationTimeStamp = timestamp;
     }
 
     function setMinimalSchainLifetime(uint lifetime) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("MinimalSchainLifetime")),
+            uint(minimalSchainLifetime),
+            uint(lifetime)
+        );
         minimalSchainLifetime = lifetime;
     }
 
     function setComplaintTimeLimit(uint timeLimit) external onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("ComplaintTimeLimit")),
+            uint(complaintTimeLimit),
+            uint(timeLimit)
+        );
         complaintTimeLimit = timeLimit;
     }
 
@@ -236,5 +313,7 @@ contract ConstantsHolder is Permissions {
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
         complaintTimeLimit = 1800;
+        minimalSchainLifetime = 180 days;
+        schainCostPerMonth = 100;
     }
 }

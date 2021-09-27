@@ -113,7 +113,7 @@ describe("createSchains", () => {
 
         const numberOfSchains = 64;
         for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
-            const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner.address)).wait();
+            const result = await (await schains.addSchainByFoundation("schain-" + schainNumber, owner.address, 1, 0)).wait();
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("schain-" + schainNumber))
             );
@@ -180,7 +180,7 @@ describe("createSchains", () => {
 
         const numberOfSchains = 128;
         for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
-            const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner.address)).wait();
+            const result = await (await schains.addSchainByFoundation("schain-" + schainNumber, owner.address, 1, 0)).wait();
             const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
                 console.log("Nodes in Schain:");
                 const setOfNodes = new Set();
@@ -265,7 +265,7 @@ describe("createSchains", () => {
 
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
-                const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner.address)).wait();
+                const result = await (await schains.addSchainByFoundation("schain-" + nodeId, owner.address, 1, 0)).wait();
                 await skaleDKG.setSuccessfulDKGPublic(
                     stringValue(web3.utils.soliditySha3("schain-" + nodeId))
                 );

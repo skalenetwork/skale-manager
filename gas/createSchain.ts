@@ -88,7 +88,7 @@ describe("createSchains", () => {
 
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
-                const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner.address)).wait();
+                const result = await (await schains.addSchainByFoundation("schain-" + nodeId, owner.address, 1, 0)).wait();
                 const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
                 console.log("Nodes in Schain:");
                 const setOfNodes = new Set();

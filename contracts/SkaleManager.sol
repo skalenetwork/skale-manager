@@ -41,7 +41,7 @@ import "./Wallets.sol";
  * @dev Contract contains functions for node registration and exit, bounty
  * management, and monitoring verdicts.
  */
-contract SkaleManager is IERC777Recipient, Permissions {
+contract SkaleManager is Permissions {
     IERC1820Registry private _erc1820;
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
@@ -54,6 +54,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
     bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
 
     /**
+     * @dev Emitted when the version was updated
+     */
+    event VersionUpdated(string oldVersion, string newVersion);
+
+    /**
      * @dev Emitted when bounty is received.
      */
     event BountyReceived(
@@ -62,29 +67,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageDowntime,
         uint averageLatency,
         uint bounty,
-        uint previousBlockEvent,
-        uint time,
-        uint gasSpend
+        uint previousBlockEvent
     );
-
-    function tokensReceived(
-        address, // operator
-        address from,
-        address to,
-        uint256 value,
-        bytes calldata userData,
-        bytes calldata // operator data
-    )
-        external override
-        allow("SkaleToken")
-    {
-        require(to == address(this), "Receiver is incorrect");
-        if (userData.length > 0) {
-            Schains schains = Schains(
-                contractManager.getContract("Schains"));
-            schains.addSchain(from, value, userData);
-        }
-    }
 
     function createNode(
         uint16 port,
@@ -183,14 +167,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
             0,
             0,
             bounty,
-            uint(-1),
-            block.timestamp,
-            gasleft());
+            uint(-1));
         
         _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());
     }
 
     function setVersion(string calldata newVersion) external onlyOwner {
+        emit VersionUpdated(version, newVersion);
         version = newVersion;
     }
 

@@ -5,6 +5,7 @@ import { ContractManager,
          Nodes,
          Schains,
          SchainsInternal,
+         SkaleToken,
          SkaleVerifier,
          ValidatorService } from "../typechain";
 
@@ -24,15 +25,28 @@ import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
+import { deploySkaleToken } from "./tools/deploy/skaleToken";
 
 chai.should();
 chai.use(chaiAsPromised);
+
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
+    const hash = web3.utils.soliditySha3(validatorId.toString());
+    if (hash) {
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
+    } else {
+        return "";
+    }
+}
 
 describe("SkaleVerifier", () => {
     let validator1: SignerWithAddress;
     let owner: SignerWithAddress;
     let developer: SignerWithAddress;
     let hacker: SignerWithAddress;
+    let nodeAddress: Wallet;
 
     let contractManager: ContractManager;
     let schains: Schains;
@@ -41,9 +55,13 @@ describe("SkaleVerifier", () => {
     let nodes: Nodes;
     let keyStorage: KeyStorage;
     let schainsInternal: SchainsInternal;
+    let skaleToken: SkaleToken;
 
     beforeEach(async () => {
         [validator1, owner, developer, hacker] = await ethers.getSigners();
+
+        nodeAddress = new Wallet(String(privateKeys[0])).connect(ethers.provider);
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
@@ -53,10 +71,17 @@ describe("SkaleVerifier", () => {
         skaleVerifier = await deploySkaleVerifier(contractManager);
         keyStorage = await deployKeyStorage(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
+        skaleToken = await deploySkaleToken(contractManager);
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
         await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const validatorIndex = await validatorService.getValidatorId(validator1.address);
+        await validatorService.connect(owner).enableValidator(validatorIndex);
+        const signature = await getValidatorIdSignature(validatorIndex, nodeAddress);
+        await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, signature);
 
         const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
         await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, validator1.address);
@@ -222,8 +247,8 @@ describe("SkaleVerifier", () => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const pubKey = ec.keyFromPrivate(String(privateKeys[0]).slice(2)).getPublic();
-                await nodes.connect(validator1).createNode(validator1.address,
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
+                await nodes.connect(validator1).createNode(nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -234,13 +259,12 @@ describe("SkaleVerifier", () => {
                         domainName: "some.domain.name"
                     });
             }
+            const amountOfMonths = 6;
+            const deposit = await schains.getSchainPrice(amountOfMonths);
 
-            const deposit = await schains.getSchainPrice(4, 5);
-
-            await schains.connect(validator1).addSchain(
-                validator1.address,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
+            await skaleToken.mint(validator1.address, deposit, "0x", "0x");
+            await skaleToken.connect(validator1).approve(schains.address, deposit);
+            await schains.connect(validator1).addSchain("Bob", deposit, 4);
 
             const bobHash = web3.utils.soliditySha3("Bob");
             if (bobHash) {
