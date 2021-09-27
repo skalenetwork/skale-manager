@@ -80,8 +80,8 @@ contract ConstantsHolder is Permissions {
     uint public constant BROADCAST_DELTA = 131000;
     uint public constant COMPLAINT_BAD_DATA_DELTA = 49580;
     uint public constant PRE_RESPONSE_DELTA = 74500;
-    uint public constant COMPLAINT_DELTA = 79415;
-    uint public constant RESPONSE_DELTA = 71562;
+    uint public constant COMPLAINT_DELTA = 83069;
+    uint public constant RESPONSE_DELTA = 64461;
 
     // MSR - Minimum staking requirement
     uint public msr;
