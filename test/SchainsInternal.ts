@@ -174,7 +174,7 @@ describe("SchainsInternal", () => {
 
             it("should remove schain from node", async () => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
-                (await schainsInternal.getLengthOfSchainsForNode(nodeIndex)).should.be.equal(0);
+                await schainsInternal.getSchainHashesForNode(nodeIndex).should.be.eventually.empty;
             });
 
             it("should add another schain to the node and remove first correctly", async () => {
@@ -281,49 +281,7 @@ describe("SchainsInternal", () => {
             });
 
             it("should return number of schains per node", async () => {
-                const count = await schainsInternal.getLengthOfSchainsForNode(nodeIndex);
-                count.should.be.equal(1);
-            });
-
-            it("should successfully move to placeOfSchainOnNode", async () => {
-                const DEBUGGER_ROLE = await schainsInternal.DEBUGGER_ROLE();
-                await schainsInternal.grantRole(DEBUGGER_ROLE, owner.address);
-                await schainsInternal.removeSchainForNode(nodeIndex, 0);
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
-                const nodesCount = 15;
-                for (const index of Array.from(Array(nodesCount).keys())) {
-                    const hexIndex = ("2" + index.toString(16)).slice(-2);
-                    await nodes.createNode(nodeAddress.address,
-                        {
-                            port: 8545,
-                            nonce: 0,
-                            ip: "0x7f0000" + hexIndex,
-                            publicIp: "0x7f0000" + hexIndex,
-                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                            name: "D2-" + hexIndex,
-                            domainName: "some.domain.name"
-                        }
-                    );
-                }
-                const schainName2 = "TestSchain2";
-                const schainNameHash2 = stringValue(web3.utils.soliditySha3(schainName2));
-                await schainsInternal.initializeSchain(schainName2, holder.address, 5, 5);
-                await schainsInternal.setSchainIndex(schainNameHash2, holder.address);
-                await schainsInternal.createGroupForSchain(schainNameHash2, 16, 32);
-                const res = await schainsInternal.getNodesInGroup(schainNameHash2);
-                for (const index of res) {
-                    await schainsInternal.removePlaceOfSchainOnNode(schainNameHash2, index);
-                }
-                for (const index of res) {
-                    const place = await schainsInternal.findSchainAtSchainsForNode(index, schainNameHash2);
-                    const lengthOfSchainsForNode = await schainsInternal.getLengthOfSchainsForNode(index);
-                    place.toString().should.be.equal(lengthOfSchainsForNode.toString());
-                }
-                await schainsInternal.moveToPlaceOfSchainOnNode(schainNameHash2);
-                for (const index of res) {
-                    const place = await schainsInternal.findSchainAtSchainsForNode(index, schainNameHash2);
-                    place.toString().should.be.equal("0");
-                }
+                (await schainsInternal.checkSchainOnNode(nodeIndex, schainNameHash)).should.be.equal(true);
             });
 
         });
