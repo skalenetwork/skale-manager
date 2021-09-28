@@ -10,4 +10,6 @@ premined
 reentrancy
 secp256k1
 untrusted
-Initializable
+initializable
+mixedcase
+camelcase

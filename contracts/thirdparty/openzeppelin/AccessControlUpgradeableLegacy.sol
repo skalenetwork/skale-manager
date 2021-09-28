@@ -1,4 +1,4 @@
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 
 
-contract InitializableGap is Initializable {
+contract InitializableWithGap is Initializable {
     uint256[50] private ______gap;
 }
 
@@ -41,7 +41,7 @@ contract InitializableGap is Initializable {
  * roles. More complex role relationships can be created by using
  * {_setRoleAdmin}.
  */
-abstract contract AccessControlUpgradeableLegacy is Initializable, InitializableGap, ContextUpgradeable {
+abstract contract AccessControlUpgradeableLegacy is InitializableWithGap, ContextUpgradeable {
     function __AccessControl_init() internal initializer {
         __Context_init_unchained();
         __AccessControl_init_unchained();

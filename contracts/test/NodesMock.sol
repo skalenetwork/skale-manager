@@ -18,7 +18,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
-pragma solidity 0.8.6;
+pragma solidity 0.8.7;
 
 import "../BountyV2.sol";
 import "../Permissions.sol";

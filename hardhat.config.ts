@@ -74,23 +74,14 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: '0.8.6',
+        version: '0.8.7',
         settings: {
           optimizer:{
             enabled: true,
             runs: 200
           }
         }
-      },
-      {
-        version: '0.6.10',
-        settings: {
-          optimizer:{
-            enabled: true,
-            runs: 200
-          }
-        }
-      },
+      }
     ]
   },
   mocha: {

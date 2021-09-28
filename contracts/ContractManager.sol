@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.6;
+pragma solidity 0.8.7;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
@@ -33,7 +33,7 @@ import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
  * @dev Contract contains the actual current mapping from contract IDs
  * (in the form of human-readable strings) to addresses.
  */
-contract ContractManager is Initializable, InitializableGap, OwnableUpgradeable, IContractManager {
+contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractManager {
     using StringUtils for string;
     using AddressUpgradeable for address;
 

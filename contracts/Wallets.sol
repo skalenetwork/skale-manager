@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.6;
+pragma solidity 0.8.7;
 
 import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
