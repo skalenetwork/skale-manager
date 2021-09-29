@@ -59,7 +59,7 @@ contract NodesMock is Permissions {
         return nodeLeft[nodeId];
     }
     function getNumberOnlineNodes() external view returns (uint) {
-        return nodesCount.sub(nodesLeft);
+        return nodesCount - nodesLeft;
     }
     function getValidatorId(uint nodeId) external view returns (uint) {
         return owner[nodeId];

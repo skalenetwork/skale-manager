@@ -89,7 +89,7 @@ contract ECDH {
         pure
         returns (uint256 x3, uint256 z3)
     {
-        (x3, z3) = (addmod(mulmod(z2, x1, _N), mulmod(_N.sub(x2), z1, _N), _N), mulmod(z1, z2, _N));
+        (x3, z3) = (addmod(mulmod(z2, x1, _N), mulmod(_N - x2, z1, _N), _N), mulmod(z1, z2, _N));
     }
 
     function jMul(
@@ -127,7 +127,7 @@ contract ECDH {
         uint256 q;
         while (newR != 0) {
             q = r.div(newR);
-            (t, newT) = (newT, addmod(t, (_N.sub(mulmod(q, newT, _N))), _N));
+            (t, newT) = (newT, addmod(t, (_N - mulmod(q, newT, _N)), _N));
             (r, newR) = (newR, r % newR);
         }
         return t;

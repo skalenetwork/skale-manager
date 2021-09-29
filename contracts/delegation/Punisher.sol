@@ -98,7 +98,7 @@ contract Punisher is Permissions, ILocker {
         if (amount > _locked[holder]) {
             delete _locked[holder];
         } else {
-            _locked[holder] = _locked[holder].sub(amount);
+            _locked[holder] = _locked[holder] - amount;
         }
 
         emit Forgive(holder, amount);

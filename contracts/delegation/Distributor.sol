@@ -268,8 +268,8 @@ contract Distributor is Permissions, IERC777Recipient {
         uint currentMonth = timeHelpers.getCurrentMonth();
         uint feeRate = validatorService.getValidator(validatorId).feeRate;
 
-        uint fee = amount.mul(feeRate).div(1000);
-        uint bounty = amount.sub(fee);
+        uint fee = amount * feeRate / 1000;
+        uint bounty = amount - fee;
         _bountyPaid[validatorId][currentMonth] = _bountyPaid[validatorId][currentMonth] + bounty;
         _feePaid[validatorId][currentMonth] = _feePaid[validatorId][currentMonth] + fee;
 

@@ -326,7 +326,7 @@ library PartialDifferences {
         if (end <= begin) {
             end = begin + 1;
         }
-        values = new uint[](end.sub(begin));
+        values = new uint[](end - begin);
         values[0] = sequence.value[sequence.firstUnprocessedMonth - 1];
         for (uint i = 0; i + 1 < values.length; ++i) {
             uint month = sequence.firstUnprocessedMonth + i;
@@ -362,7 +362,7 @@ library PartialDifferences {
         if (end <= begin) {
             end = begin + 1;
         }
-        values = new uint[](end.sub(begin));
+        values = new uint[](end - begin);
         values[0] = sequence.value;
         for (uint i = 0; i + 1 < values.length; ++i) {
             uint month = sequence.firstUnprocessedMonth + i;

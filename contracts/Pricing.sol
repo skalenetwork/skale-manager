@@ -65,15 +65,15 @@ contract Pricing is Permissions {
         bool networkIsOverloaded = load.mul(100) > constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity);
         uint loadDiff;
         if (networkIsOverloaded) {
-            loadDiff = load.mul(100).sub(constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity));
+            loadDiff = load * 100 - constantsHolder.OPTIMAL_LOAD_PERCENTAGE() * capacity;
         } else {
-            loadDiff = constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity).sub(load.mul(100));
+            loadDiff = constantsHolder.OPTIMAL_LOAD_PERCENTAGE() * capacity - load * 100;
         }
 
         uint priceChangeSpeedMultipliedByCapacityAndMinPrice =
             constantsHolder.ADJUSTMENT_SPEED().mul(loadDiff).mul(price);
         
-        uint timeSkipped = block.timestamp.sub(lastUpdated);
+        uint timeSkipped = block.timestamp - lastUpdated;
         
         uint priceChange = priceChangeSpeedMultipliedByCapacityAndMinPrice
             .mul(timeSkipped)
@@ -88,7 +88,7 @@ contract Pricing is Permissions {
             if (priceChange > price) {
                 price = constantsHolder.MIN_PRICE();
             } else {
-                price = price.sub(priceChange);
+                price = price - priceChange;
                 if (price < constantsHolder.MIN_PRICE()) {
                     price = constantsHolder.MIN_PRICE();
                 }

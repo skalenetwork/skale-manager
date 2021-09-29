@@ -222,7 +222,7 @@ contract Nodes is Permissions {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
-                uint(spaceOfNodes[nodeIndex].freeSpace).sub(space).toUint8()
+                (uint(spaceOfNodes[nodeIndex].freeSpace) - space).toUint8()
             );
         }
         return true;

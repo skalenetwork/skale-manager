@@ -150,7 +150,7 @@ library G1Operations {
     }
 
     function negate(uint y) internal pure returns (uint) {
-        return Fp2Operations.P.sub(y).mod(Fp2Operations.P);
+        return (Fp2Operations.P - y) % Fp2Operations.P;
     }
 
 }

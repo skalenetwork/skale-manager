@@ -415,7 +415,7 @@ contract DelegationController is Permissions, ILocker {
         uint[] memory initialSubtractions = new uint[](0);
         if (currentMonth < _effectiveDelegatedToValidator[validatorId].lastChangedMonth) {
             initialSubtractions = new uint[](
-                _effectiveDelegatedToValidator[validatorId].lastChangedMonth.sub(currentMonth)
+                _effectiveDelegatedToValidator[validatorId].lastChangedMonth - currentMonth
             );
             for (uint i = 0; i < initialSubtractions.length; ++i) {
                 initialSubtractions[i] = _effectiveDelegatedToValidator[validatorId]
@@ -429,16 +429,14 @@ contract DelegationController is Permissions, ILocker {
 
         BountyV2 bounty = _getBounty();
         bounty.handleDelegationRemoving(
-            initialEffectiveDelegated.sub(
-                _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth)
-            ),
+            initialEffectiveDelegated - 
+                _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth),
             currentMonth
         );
         for (uint i = 0; i < initialSubtractions.length; ++i) {
             bounty.handleDelegationAdd(
-                initialSubtractions[i].sub(
-                    _effectiveDelegatedToValidator[validatorId].subtractDiff[currentMonth + i + 1]
-                ),
+                initialSubtractions[i] - 
+                    _effectiveDelegatedToValidator[validatorId].subtractDiff[currentMonth + i + 1],
                 currentMonth + i + 1
             );
         }
@@ -708,7 +706,7 @@ contract DelegationController is Permissions, ILocker {
     function _subtractFromLockedInPendingDelegations(address holder, uint amount) private {
         uint currentMonth = _getCurrentMonth();
         assert(_lockedInPendingDelegations[holder].month == currentMonth);
-        _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount.sub(amount);
+        _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount - amount;
     }
 
     /**
@@ -770,7 +768,7 @@ contract DelegationController is Permissions, ILocker {
             if (limit > 0 && (index + limit) < end) {
                 end = index + limit;
             }
-            slashingSignals = new SlashingSignal[](end.sub(index));
+            slashingSignals = new SlashingSignal[](end - index);
             uint begin = index;
             for (; index < end; ++index) {
                 uint validatorId = _slashes[index].validatorId;
@@ -784,8 +782,8 @@ contract DelegationController is Permissions, ILocker {
                     _effectiveDelegatedByHolderToValidator[holder][validatorId].reduceSequence(
                         _slashes[index].reducingCoefficient,
                         month);
-                    slashingSignals[index.sub(begin)].holder = holder;
-                    slashingSignals[index.sub(begin)].penalty
+                    slashingSignals[index - begin].holder = holder;
+                    slashingSignals[index - begin].penalty
                         = oldValue.boundedSub(_getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
                 }
             }
@@ -950,7 +948,7 @@ contract DelegationController is Permissions, ILocker {
         if (currentMonth < started) {
             return started + delegations[delegationId].delegationPeriod;
         } else {
-            uint completedPeriods = currentMonth.sub(started).div(delegations[delegationId].delegationPeriod);
+            uint completedPeriods = (currentMonth - started) / delegations[delegationId].delegationPeriod;
             return started + (completedPeriods + 1) * delegations[delegationId].delegationPeriod;
         }
     }

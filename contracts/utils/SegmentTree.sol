@@ -119,7 +119,7 @@ library SegmentTree {
         uint leftBound = 1;
         uint rightBound = getSize(self);
         uint step = 1;
-        self.tree[0] = self.tree[0].sub(delta);
+        self.tree[0] = self.tree[0] - delta;
         while(leftBound < rightBound) {
             uint middle = (leftBound + rightBound) / 2;
             if (place > middle) {
@@ -129,7 +129,7 @@ library SegmentTree {
                 rightBound = middle;
                 step = step + step;
             }
-            self.tree[step - 1] = self.tree[step - 1].sub(delta);
+            self.tree[step - 1] = self.tree[step - 1] - delta;
         }
     }
 
@@ -181,7 +181,7 @@ library SegmentTree {
                 rightBoundMove = middleMove;
                 stepMove = stepMove + stepMove;
             }
-            self.tree[stepMove - 1] = self.tree[stepMove - 1].sub(delta);
+            self.tree[stepMove - 1] = self.tree[stepMove - 1] - delta;
             middle = (leftBound + rightBound) / 2;
             if (toPlace > middle) {
                 leftBound = middle + 1;
@@ -228,7 +228,7 @@ library SegmentTree {
                 leftBound = _middle(leftBound, rightBound);
             } else {
                 uint rightSum = self.tree[_right(vertex) - 1];
-                uint leftSum = currentSum.sub(rightSum);
+                uint leftSum = currentSum - rightSum;
                 if (Random.random(randomGenerator, currentSum) < leftSum) {
                     // go left
                     vertex = _left(vertex);
