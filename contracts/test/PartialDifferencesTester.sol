@@ -21,15 +21,12 @@
 
 pragma solidity 0.8.7;
 
-import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
-
 import "../delegation/PartialDifferences.sol";
 
 
 contract PartialDifferencesTester {
     using PartialDifferences for PartialDifferences.Sequence;
     using PartialDifferences for PartialDifferences.Value;
-    using SafeMathUpgradeable for uint;
 
     PartialDifferences.Sequence[] private _sequences;
     // PartialDifferences.Value[] private _values;

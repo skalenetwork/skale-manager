@@ -39,7 +39,6 @@ import "./Nodes.sol";
 contract SchainsInternal is Permissions, ISchainsInternal {
 
     using Random for Random.RandomGenerator;
-    using SafeMath for uint;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
     struct Schain {

@@ -43,8 +43,6 @@ import "./Wallets.sol";
  */
 contract SkaleManager is IERC777Recipient, Permissions {
 
-    using SafeMath for uint;
-
     IERC1820Registry private _erc1820;
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =

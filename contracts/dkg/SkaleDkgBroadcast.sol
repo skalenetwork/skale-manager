@@ -35,8 +35,6 @@ import "../utils/FieldOperations.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgBroadcast {
-    
-    using SafeMath for uint;
 
     /**
      * @dev Emitted when a node broadcasts key share.

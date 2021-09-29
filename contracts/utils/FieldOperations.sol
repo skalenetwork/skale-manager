@@ -24,13 +24,10 @@
 
 pragma solidity 0.8.7;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import "./Precompiled.sol";
 
 
 library Fp2Operations {
-    using SafeMath for uint;
 
     struct Fp2Point {
         uint a;
@@ -47,11 +44,11 @@ library Fp2Operations {
         if (t0 >= t2) {
             t2 = addmod(t0, p - t2, p);
         } else {
-            t2 = (p - addmod(t2, p - t0, p)).mod(p);
+            t2 = (p - addmod(t2, p - t0, p)) % p;
         }
         uint t3 = Precompiled.bigModExp(t2, p - 2, p);
         result.a = mulmod(value.a, t3, p);
-        result.b = (p - mulmod(value.b, t3, p)).mod(p);
+        result.b = (p - mulmod(value.b, t3, p)) % p;
     }
 
     function addFp2(Fp2Point memory value1, Fp2Point memory value2) internal pure returns (Fp2Point memory) {
@@ -69,12 +66,12 @@ library Fp2Operations {
         if (diminished.a >= subtracted.a) {
             difference.a = addmod(diminished.a, p - subtracted.a, p);
         } else {
-            difference.a = (p - addmod(subtracted.a, p - diminished.a, p)).mod(p);
+            difference.a = (p - addmod(subtracted.a, p - diminished.a, p)) % p;
         }
         if (diminished.b >= subtracted.b) {
             difference.b = addmod(diminished.b, p - subtracted.b, p);
         } else {
-            difference.b = (p - addmod(subtracted.b, p - diminished.b, p)).mod(p);
+            difference.b = (p - addmod(subtracted.b, p - diminished.b, p)) % p;
         }
     }
 
@@ -124,7 +121,6 @@ library Fp2Operations {
 
 library G1Operations {
     using Fp2Operations for Fp2Operations.Fp2Point;
-    using SafeMath for uint;
 
     function getG1Generator() internal pure returns (Fp2Operations.Fp2Point memory) {
         // Current solidity version does not support Constants of non-value type
@@ -158,7 +154,6 @@ library G1Operations {
 
 library G2Operations {
     using Fp2Operations for Fp2Operations.Fp2Point;
-    using SafeMath for uint;
 
     struct G2Point {
         Fp2Operations.Fp2Point x;
@@ -178,8 +173,8 @@ library G2Operations {
             result.x = s.squaredFp2().minusFp2(value.x.addFp2(value.x));
             result.y = value.y.addFp2(s.mulFp2(result.x.minusFp2(value.x)));
             uint p = Fp2Operations.P;
-            result.y.a = (p - result.y.a).mod(p);
-            result.y.b = (p - result.y.b).mod(p);
+            result.y.a = (p - result.y.a) % p;
+            result.y.b = (p - result.y.b) % p;
         }
     }
 
@@ -212,8 +207,8 @@ library G2Operations {
         sum.x = s.squaredFp2().minusFp2(value1.x.addFp2(value2.x));
         sum.y = value1.y.addFp2(s.mulFp2(sum.x.minusFp2(value1.x)));
         uint p = Fp2Operations.P;
-        sum.y.a = (p - sum.y.a).mod(p);
-        sum.y.b = (p - sum.y.b).mod(p);
+        sum.y.a = (p - sum.y.a) % p;
+        sum.y.b = (p - sum.y.b) % p;
     }
 
     function getTWISTB() internal pure returns (Fp2Operations.Fp2Point memory) {

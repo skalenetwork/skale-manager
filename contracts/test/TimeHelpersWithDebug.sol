@@ -28,8 +28,6 @@ import "../delegation/TimeHelpers.sol";
 
 contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
 
-    using SafeMath for uint;
-
     struct TimeShift {
         uint pointInTime;
         uint shift;

@@ -32,8 +32,6 @@ import "./Nodes.sol";
  */
 contract Pricing is Permissions {
 
-    using SafeMath for uint;
-
     uint public constant INITIAL_PRICE = 5 * 10**6;
 
     uint public price;

@@ -23,15 +23,12 @@
 pragma solidity 0.8.7;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 
 /**
  * @title Random
  * @dev The library for generating of pseudo random numbers
  */
 library Random {
-    using SafeMath for uint;
 
     struct RandomGenerator {
         uint seed;
@@ -61,15 +58,15 @@ library Random {
      */
     function random(RandomGenerator memory self, uint max) internal pure returns (uint) {
         assert(max > 0);
-        uint maxRand = type(uint).max - type(uint).max.mod(max);
+        uint maxRand = type(uint).max - type(uint).max % max;
         if (type(uint).max - maxRand == max - 1) {
-            return random(self).mod(max);
+            return random(self) % max;
         } else {
             uint rand = random(self);
             while (rand >= maxRand) {
                 rand = random(self);
             }
-            return rand.mod(max);
+            return rand % max;
         }
     }
 }

@@ -35,7 +35,6 @@ import "../utils/FieldOperations.sol";
  */
 library SkaleDkgPreResponse {
     using G2Operations for G2Operations.G2Point;
-    using SafeMath for uint;
 
     function preResponse(
         bytes32 schainHash,

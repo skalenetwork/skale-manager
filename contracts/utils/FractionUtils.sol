@@ -21,12 +21,8 @@
 
 pragma solidity 0.8.7;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 
 library FractionUtils {
-
-    using SafeMath for uint;
 
     struct Fraction {
         uint numerator;
@@ -46,8 +42,8 @@ library FractionUtils {
 
     function reduceFraction(Fraction memory fraction) internal pure {
         uint _gcd = gcd(fraction.numerator, fraction.denominator);
-        fraction.numerator = fraction.numerator.div(_gcd);
-        fraction.denominator = fraction.denominator.div(_gcd);
+        fraction.numerator = fraction.numerator / _gcd;
+        fraction.denominator = fraction.denominator / _gcd;
     }
     
     // numerator - is limited by 7*10^27, we could multiply it numerator * numerator - it would less than 2^256-1
@@ -62,7 +58,7 @@ library FractionUtils {
             (_a, _b) = swap(_a, _b);
         }
         while (_b > 0) {
-            _a = _a.mod(_b);
+            _a = _a % _b;
             (_a, _b) = swap (_a, _b);
         }
         return _a;

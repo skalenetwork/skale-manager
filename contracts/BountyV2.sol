@@ -34,7 +34,6 @@ import "./Permissions.sol";
 contract BountyV2 is Permissions {
     using PartialDifferences for PartialDifferences.Value;
     using PartialDifferences for PartialDifferences.Sequence;
-    using SafeMath for uint;
 
     struct BountyHistory {
         uint month;
@@ -247,7 +246,7 @@ contract BountyV2 is Permissions {
         reducedBounty = bounty;
 
         if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
-            reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
+            reducedBounty = reducedBounty / constants.MSR_REDUCING_COEFFICIENT();
         }
     }
 
@@ -296,7 +295,7 @@ contract BountyV2 is Permissions {
             epochPoolSize + bountyWasPaidInCurrentEpoch,
             effectiveDelegated,
             effectiveDelegatedSum,
-            delegated.div(constantsHolder.msr()),
+            delegated / constantsHolder.msr(),
             bountyPaidToTheValidator
         );
 
@@ -336,11 +335,11 @@ contract BountyV2 is Permissions {
             return 0;
         }
         uint epochIndex = epoch - firstEpoch;
-        uint year = epochIndex.div(EPOCHS_PER_YEAR);
+        uint year = epochIndex / EPOCHS_PER_YEAR;
         if (year >= 6) {
             uint power = (year - 6) / 3 + 1;
             if (power < 256) {
-                return YEAR6_BOUNTY.div(2 ** power).div(EPOCHS_PER_YEAR);
+                return YEAR6_BOUNTY / 2 ** power / EPOCHS_PER_YEAR;
             } else {
                 return 0;
             }
@@ -353,7 +352,7 @@ contract BountyV2 is Permissions {
                 YEAR5_BOUNTY,
                 YEAR6_BOUNTY
             ];
-            return customBounties[year].div(EPOCHS_PER_YEAR);
+            return customBounties[year] / EPOCHS_PER_YEAR;
         }
     }
 

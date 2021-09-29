@@ -33,8 +33,6 @@ import "./utils/FieldOperations.sol";
  */
 contract SkaleVerifier is Permissions {  
     using Fp2Operations for Fp2Operations.Fp2Point;
-    using SafeMath for uint;
-
 
     /**
     * @dev Verifies a BLS signature.
@@ -113,7 +111,7 @@ contract SkaleVerifier is Permissions {
             3,
             Fp2Operations.P
         );
-        if (hashB < Fp2Operations.P.div(2) || mulmod(hashB, hashB, Fp2Operations.P) != ySquared || xCoord != hashA) {
+        if (hashB < Fp2Operations.P / 2 || mulmod(hashB, hashB, Fp2Operations.P) != ySquared || xCoord != hashA) {
             return false;
         }
 

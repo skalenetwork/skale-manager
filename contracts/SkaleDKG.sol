@@ -47,7 +47,6 @@ import "./dkg/SkaleDkgResponse.sol";
 contract SkaleDKG is Permissions, ISkaleDKG {
     using Fp2Operations for Fp2Operations.Fp2Point;
     using G2Operations for G2Operations.G2Point;
-    using SafeMath for uint;
 
     enum DkgFunction {Broadcast, Alright, ComplaintBadData, PreResponse, Complaint, Response}
 

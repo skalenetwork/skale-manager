@@ -21,8 +21,6 @@
 
 pragma solidity 0.8.7;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
 /**
@@ -32,7 +30,6 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
  * These functions are used to calculate monthly and Proof of Use epochs.
  */
 contract TimeHelpers {
-    using SafeMath for uint;
 
     uint constant private _ZERO_YEAR = 2020;
 

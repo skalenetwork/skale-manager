@@ -36,8 +36,6 @@ import "./Nodes.sol";
  */
 contract Wallets is Permissions, IWallets {
 
-    using SafeMath for uint;
-
     mapping (uint => uint) private _validatorWallets;
     mapping (bytes32 => uint) private _schainWallets;
     mapping (bytes32 => uint) private _schainDebts;

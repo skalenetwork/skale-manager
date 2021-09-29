@@ -24,7 +24,6 @@
 pragma solidity 0.8.7;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
 import "./delegation/DelegationController.sol";
@@ -54,7 +53,6 @@ import "./Permissions.sol";
  */
 contract Nodes is Permissions {
     
-    using SafeMath for uint;
     using Random for Random.RandomGenerator;
     using SafeCastUpgradeable for uint;
     using SegmentTree for SegmentTree.Tree;

@@ -26,8 +26,6 @@ import "../Permissions.sol";
 
 contract NodesMock is Permissions {
 
-    using SafeMath for uint;
-
     uint public nodesCount = 0;
     uint public nodesLeft = 0;
     //     nodeId => timestamp

@@ -36,8 +36,6 @@ import "../Nodes.sol";
  */
 library SkaleDkgComplaint {
 
-    using SafeMath for uint;
-
     /**
      * @dev Emitted when an incorrect complaint is sent.
      */

@@ -21,8 +21,6 @@
 
 pragma solidity 0.8.7;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
 
@@ -34,8 +32,6 @@ import "./DelegationController.sol";
  * @dev This contract handles all slashing and forgiving operations.
  */
 contract Punisher is Permissions, ILocker {
-
-    using SafeMath for uint;
 
     //        holder => tokens
     mapping (address => uint) private _locked;

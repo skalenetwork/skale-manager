@@ -42,7 +42,6 @@ import "./TimeHelpers.sol";
  */
 contract Distributor is Permissions, IERC777Recipient {
     using MathUtils for uint;
-    using SafeMath for uint;
 
     IERC1820Registry private _erc1820;
 

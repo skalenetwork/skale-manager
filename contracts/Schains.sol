@@ -42,8 +42,6 @@ import "./Wallets.sol";
  */
 contract Schains is Permissions, ISchains {
 
-    using SafeMath for uint;
-
     struct SchainParameters {
         uint lifetime;
         uint8 typeOfSchain;

@@ -59,7 +59,6 @@ import "./Random.sol";
  * +----+----+----+---+---+----+----+---+---+---+---+---+---+---+---+
  */
 library SegmentTree {
-    using SafeMath for uint;
     using Random for Random.RandomGenerator;   
 
     struct Tree {
@@ -280,7 +279,7 @@ library SegmentTree {
      */
     function getSize(Tree storage segmentTree) internal view returns (uint) {
         if (segmentTree.tree.length > 0) {
-            return segmentTree.tree.length.div(2) + 1;
+            return segmentTree.tree.length / 2 + 1;
         } else {
             return 0;
         }

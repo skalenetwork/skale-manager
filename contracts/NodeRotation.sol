@@ -38,7 +38,6 @@ import "./Schains.sol";
  */
 contract NodeRotation is Permissions {
     using Random for Random.RandomGenerator;
-    using SafeMath for uint;
 
     /**
      * nodeIndex - index of Node which is in process of rotation (left from schain)

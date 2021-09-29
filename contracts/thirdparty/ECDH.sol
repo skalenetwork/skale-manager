@@ -11,8 +11,6 @@
 
 pragma solidity 0.8.7;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 
 /**
  * @title ECDH
@@ -20,8 +18,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
  * support the DKG process.
  */
 contract ECDH {
-
-    using SafeMath for uint;
 
     uint256 constant private _GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
     uint256 constant private _GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
@@ -126,7 +122,7 @@ contract ECDH {
         uint256 newR = a;
         uint256 q;
         while (newR != 0) {
-            q = r.div(newR);
+            q = r / newR;
             (t, newT) = (newT, addmod(t, (_N - mulmod(q, newT, _N)), _N));
             (r, newR) = (newR, r % newR);
         }
@@ -239,7 +235,7 @@ contract ECDH {
                     pz
                 );
             }
-            remaining = remaining.div(2);
+            remaining = remaining / 2;
             (px, py, pz) = ecDouble(px, py, pz);
         }
 

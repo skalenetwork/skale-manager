@@ -41,7 +41,6 @@ import "../utils/FractionUtils.sol";
  * adding values from partial differences.
  */
 library PartialDifferences {
-    using SafeMath for uint;
     using MathUtils for uint;
 
     struct Sequence {

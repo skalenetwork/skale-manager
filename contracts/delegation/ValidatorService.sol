@@ -24,7 +24,6 @@
 pragma solidity 0.8.7;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 import "../Permissions.sol";
@@ -46,7 +45,6 @@ import "./TimeHelpers.sol";
  */
 contract ValidatorService is Permissions {
 
-    using SafeMath for uint;
     using ECDSAUpgradeable for bytes32;
 
     struct Validator {

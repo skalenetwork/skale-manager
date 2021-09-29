@@ -47,8 +47,6 @@ import "./TimeHelpers.sol";
  */
 contract TokenState is Permissions, ILocker {
 
-    using SafeMath for uint;
-
     string[] private _lockers;
 
     DelegationController private _delegationController;
