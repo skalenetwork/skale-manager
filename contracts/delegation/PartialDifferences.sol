@@ -133,13 +133,13 @@ library PartialDifferences {
         }
 
         sequence.value[month] = sequence.value[month]
-            .mul(reducingCoefficient.numerator)
-            .div(reducingCoefficient.denominator);
+            * reducingCoefficient.numerator
+            / reducingCoefficient.denominator;
 
         for (uint i = month + 1; i <= sequence.lastChangedMonth; ++i) {
             sequence.subtractDiff[i] = sequence.subtractDiff[i]
-                .mul(reducingCoefficient.numerator)
-                .div(reducingCoefficient.denominator);
+                * reducingCoefficient.numerator
+                / reducingCoefficient.denominator;
         }
     }
 
@@ -283,7 +283,7 @@ library PartialDifferences {
             return;
         }
 
-        uint newValue = sequence.value.mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
+        uint newValue = sequence.value * reducingCoefficient.numerator / reducingCoefficient.denominator;
         if (hasSumSequence) {
             subtractFromValue(sumSequence, sequence.value.boundedSub(newValue), month);
         }
@@ -291,8 +291,8 @@ library PartialDifferences {
 
         for (uint i = month + 1; i <= sequence.lastChangedMonth; ++i) {
             uint newDiff = sequence.subtractDiff[i]
-                .mul(reducingCoefficient.numerator)
-                .div(reducingCoefficient.denominator);
+                * reducingCoefficient.numerator
+                / reducingCoefficient.denominator;
             if (hasSumSequence) {
                 sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i]
                     .boundedSub(sequence.subtractDiff[i].boundedSub(newDiff));

@@ -563,7 +563,7 @@ describe("SkaleManager", () => {
                     "some.domain.name").should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
 
-            describe("when developer has SKALE tokens", async () => {
+            describe.only("when developer has SKALE tokens", async () => {
                 let developerHasTokens: number;
                 before(async () => {
                     developerHasTokens = await makeSnapshot();
@@ -591,6 +591,7 @@ describe("SkaleManager", () => {
                 it("should not create schain if schain admin set too low schain lifetime", async () => {
                     const SECONDS_TO_YEAR = 31622400;
                     constantsHolder.setMinimalSchainLifetime(SECONDS_TO_YEAR);
+
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",

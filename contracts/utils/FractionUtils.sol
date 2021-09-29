@@ -52,7 +52,7 @@ library FractionUtils {
     
     // numerator - is limited by 7*10^27, we could multiply it numerator * numerator - it would less than 2^256-1
     function multiplyFraction(Fraction memory a, Fraction memory b) internal pure returns (Fraction memory) {
-        return createFraction(a.numerator.mul(b.numerator), a.denominator.mul(b.denominator));
+        return createFraction(a.numerator * b.numerator, a.denominator * b.denominator);
     }
 
     function gcd(uint a, uint b) internal pure returns (uint) {

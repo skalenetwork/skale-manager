@@ -62,7 +62,7 @@ contract Pricing is Permissions {
         uint load = _getTotalLoad();
         uint capacity = _getTotalCapacity();
 
-        bool networkIsOverloaded = load.mul(100) > constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity);
+        bool networkIsOverloaded = load * 100 > constantsHolder.OPTIMAL_LOAD_PERCENTAGE() * capacity;
         uint loadDiff;
         if (networkIsOverloaded) {
             loadDiff = load * 100 - constantsHolder.OPTIMAL_LOAD_PERCENTAGE() * capacity;
@@ -71,15 +71,15 @@ contract Pricing is Permissions {
         }
 
         uint priceChangeSpeedMultipliedByCapacityAndMinPrice =
-            constantsHolder.ADJUSTMENT_SPEED().mul(loadDiff).mul(price);
+            constantsHolder.ADJUSTMENT_SPEED() * loadDiff * price;
         
         uint timeSkipped = block.timestamp - lastUpdated;
         
         uint priceChange = priceChangeSpeedMultipliedByCapacityAndMinPrice
-            .mul(timeSkipped)
-            .div(constantsHolder.COOLDOWN_TIME())
-            .div(capacity)
-            .div(constantsHolder.MIN_PRICE());
+            * timeSkipped
+            / constantsHolder.COOLDOWN_TIME()
+            / capacity
+            / constantsHolder.MIN_PRICE();
 
         if (networkIsOverloaded) {
             assert(priceChange > 0);
@@ -101,7 +101,7 @@ contract Pricing is Permissions {
      * @dev Returns the total load percentage.
      */
     function getTotalLoadPercentage() external view returns (uint) {
-        return _getTotalLoad().mul(100).div(_getTotalCapacity());
+        return _getTotalLoad() * 100 / _getTotalCapacity();
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -127,7 +127,7 @@ contract Pricing is Permissions {
             bytes32 schain = schainsInternal.schainsAtSystem(i);
             uint numberOfNodesInSchain = schainsInternal.getNumberOfNodesInGroup(schain);
             uint part = schainsInternal.getSchainsPartOfNode(schain);
-            load = load + numberOfNodesInSchain.mul(part);
+            load = load + numberOfNodesInSchain * part;
         }
         return load;
     }
@@ -136,6 +136,6 @@ contract Pricing is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        return nodes.getNumberOnlineNodes().mul(constantsHolder.TOTAL_SPACE_ON_NODE());
+        return nodes.getNumberOnlineNodes() * constantsHolder.TOTAL_SPACE_ON_NODE();
     }
 }

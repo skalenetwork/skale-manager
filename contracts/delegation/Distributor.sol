@@ -224,9 +224,9 @@ contract Distributor is Permissions, IERC777Recipient {
                 delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
             if (effectiveDelegatedToValidator.muchGreater(0)) {
                 earned = earned + 
-                    _bountyPaid[validatorId][i].mul(
-                        delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i))
-                            .div(effectiveDelegatedToValidator);
+                    _bountyPaid[validatorId][i] *
+                    delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i) /
+                    effectiveDelegatedToValidator;
             }
         }
     }

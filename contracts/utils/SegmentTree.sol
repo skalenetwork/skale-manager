@@ -77,7 +77,7 @@ library SegmentTree {
     function create(Tree storage segmentTree, uint size) external {
         require(size > 0, "Size can't be 0");
         require(size & size - 1 == 0, "Size is not power of 2");
-        segmentTree.tree = new uint[](size.mul(2) - 1);
+        segmentTree.tree = new uint[](size * 2 - 1);
     }
 
     /**
@@ -297,14 +297,14 @@ library SegmentTree {
      * @dev Calculates index of left child of the vertex
      */
     function _left(uint vertex) private pure returns (uint) {
-        return vertex.mul(2);
+        return vertex * 2;
     }
 
     /**
      * @dev Calculates index of right child of the vertex
      */
     function _right(uint vertex) private pure returns (uint) {
-        return vertex.mul(2) + 1;
+        return vertex * 2 + 1;
     }
 
     /**

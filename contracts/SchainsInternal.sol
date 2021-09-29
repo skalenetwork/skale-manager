@@ -161,7 +161,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         schains[schainHash].partOfNode = partOfNode;
         if (partOfNode > 0) {
             sumOfSchainsResources = sumOfSchainsResources +
-                numberOfNodes.mul(constantsHolder.TOTAL_SPACE_ON_NODE()).div(partOfNode);
+                numberOfNodes * constantsHolder.TOTAL_SPACE_ON_NODE() / partOfNode;
         }
         return _generateGroup(schainHash, numberOfNodes);
     }

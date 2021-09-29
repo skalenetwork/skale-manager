@@ -407,11 +407,9 @@ contract BountyV2 is Permissions {
         returns (uint)
     {
         if (maxNodesAmount > 0) {
-            uint totalBountyShare = monthBounty
-                .mul(effectiveDelegated)
-                .div(effectiveDelegatedSum);
+            uint totalBountyShare = monthBounty * effectiveDelegated / effectiveDelegatedSum;
             return _min(
-                totalBountyShare.div(maxNodesAmount),
+                totalBountyShare / maxNodesAmount,
                 totalBountyShare - paidToValidator
             );
         } else {

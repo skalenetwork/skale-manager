@@ -282,13 +282,13 @@ contract Schains is Permissions, ISchains {
         if (divisor == 0) {
             return 1e18;
         } else {
-            uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
+            uint up = nodeDeposit * numberOfNodes * lifetime * 2;
             uint down = uint(
                 uint(constantsHolder.SMALL_DIVISOR())
-                    .mul(uint(constantsHolder.SECONDS_TO_YEAR()))
-                    .div(divisor)
+                * uint(constantsHolder.SECONDS_TO_YEAR())
+                / divisor
             );
-            return up.div(down);
+            return up / down;
         }
     }
 

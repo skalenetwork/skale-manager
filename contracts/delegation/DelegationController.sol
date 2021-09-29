@@ -842,8 +842,8 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             currentMonth + 1);
-        uint effectiveAmount = delegations[delegationId].amount.mul(
-            _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod));
+        uint effectiveAmount = delegations[delegationId].amount * 
+            _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod);
         _addToEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
             effectiveAmount,
@@ -874,8 +874,8 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId,
             amountAfterSlashing,
             delegations[delegationId].finished);
-        uint effectiveAmount = amountAfterSlashing.mul(
-                _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod));
+        uint effectiveAmount = amountAfterSlashing *
+                _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod);
         _removeFromEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
             effectiveAmount,
@@ -915,9 +915,8 @@ contract DelegationController is Permissions, ILocker {
         
         uint amount = delegations[delegationId].amount;
 
-        uint effectiveAmount = amount.mul(
-            _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod)
-        );
+        uint effectiveAmount = amount * 
+            _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod);
         _getBounty().handleDelegationAdd(
             effectiveAmount,
             delegations[delegationId].started
@@ -971,8 +970,8 @@ contract DelegationController is Permissions, ILocker {
             i = _slashesOfValidator[validatorId].slashes[i].nextMonth) {
             if (i >= delegations[delegationId].started) {
                 amount = amount
-                    .mul(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.numerator)
-                    .div(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.denominator);
+                    * _slashesOfValidator[validatorId].slashes[i].reducingCoefficient.numerator
+                    / _slashesOfValidator[validatorId].slashes[i].reducingCoefficient.denominator;
             }
         }
         return amount;
