@@ -384,7 +384,7 @@ contract DelegationController is Permissions, ILocker {
         delegations[delegationId].finished = _calculateDelegationEndMonth(delegationId);
 
         require(
-            block.timestamp.add(UNDELEGATION_PROHIBITION_WINDOW_SECONDS)
+            block.timestamp + UNDELEGATION_PROHIBITION_WINDOW_SECONDS
                 < _getTimeHelpers().monthToTimestamp(delegations[delegationId].finished),
             "Undelegation requests must be sent 3 days before the end of delegation period"
         );
@@ -419,7 +419,7 @@ contract DelegationController is Permissions, ILocker {
             );
             for (uint i = 0; i < initialSubtractions.length; ++i) {
                 initialSubtractions[i] = _effectiveDelegatedToValidator[validatorId]
-                    .subtractDiff[currentMonth.add(i).add(1)];
+                    .subtractDiff[currentMonth + i + 1];
             }
         }
 
@@ -437,9 +437,9 @@ contract DelegationController is Permissions, ILocker {
         for (uint i = 0; i < initialSubtractions.length; ++i) {
             bounty.handleDelegationAdd(
                 initialSubtractions[i].sub(
-                    _effectiveDelegatedToValidator[validatorId].subtractDiff[currentMonth.add(i).add(1)]
+                    _effectiveDelegatedToValidator[validatorId].subtractDiff[currentMonth + i + 1]
                 ),
-                currentMonth.add(i).add(1)
+                currentMonth + i + 1
             );
         }
         emit Confiscated(validatorId, amount);
@@ -635,10 +635,10 @@ contract DelegationController is Permissions, ILocker {
 
     function _addValidatorToValidatorsPerDelegators(address holder, uint validatorId) private {
         if (_numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 0) {
-            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number.add(1);
+            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number + 1;
         }
         _numberOfValidatorsPerDelegator[holder].
-            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId].add(1);
+            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId] + 1;
     }
 
     function _removeFromDelegatedByHolder(address holder, uint amount, uint month) private {
@@ -653,10 +653,10 @@ contract DelegationController is Permissions, ILocker {
 
     function _removeValidatorFromValidatorsPerDelegators(address holder, uint validatorId) private {
         if (_numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 1) {
-            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number.sub(1);
+            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number - 1;
         }
         _numberOfValidatorsPerDelegator[holder].
-            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId].sub(1);
+            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId] - 1;
     }
 
     function _addToEffectiveDelegatedByHolderToValidator(
@@ -701,7 +701,7 @@ contract DelegationController is Permissions, ILocker {
             _lockedInPendingDelegations[holder].month = currentMonth;
         } else {
             assert(_lockedInPendingDelegations[holder].month == currentMonth);
-            _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount.add(amount);
+            _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount + amount;
         }
     }
 
@@ -715,7 +715,7 @@ contract DelegationController is Permissions, ILocker {
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
-        return _getAndUpdateDelegatedByHolder(wallet).add(getLockedInPendingDelegations(wallet));
+        return _getAndUpdateDelegatedByHolder(wallet) + getLockedInPendingDelegations(wallet);
     }
 
     function _updateFirstDelegationMonth(address holder, uint validatorId, uint month) private {
@@ -767,8 +767,8 @@ contract DelegationController is Permissions, ILocker {
         if (hasUnprocessedSlashes(holder)) {
             uint index = _firstUnprocessedSlashByHolder[holder];
             uint end = _slashes.length;
-            if (limit > 0 && index.add(limit) < end) {
-                end = index.add(limit);
+            if (limit > 0 && (index + limit) < end) {
+                end = index + limit;
             }
             slashingSignals = new SlashingSignal[](end.sub(index));
             uint begin = index;
@@ -811,7 +811,7 @@ contract DelegationController is Permissions, ILocker {
                 previousHolder = slashingSignals[i].holder;
                 accumulatedPenalty = slashingSignals[i].penalty;
             } else {
-                accumulatedPenalty = accumulatedPenalty.add(slashingSignals[i].penalty);
+                accumulatedPenalty = accumulatedPenalty + slashingSignals[i].penalty;
             }
         }
         if (accumulatedPenalty > 0) {
@@ -821,7 +821,7 @@ contract DelegationController is Permissions, ILocker {
 
     function _addToAllStatistics(uint delegationId) private {
         uint currentMonth = _getCurrentMonth();
-        delegations[delegationId].started = currentMonth.add(1);
+        delegations[delegationId].started = currentMonth + 1;
         if (_slashesOfValidator[delegations[delegationId].validatorId].lastMonth > 0) {
             _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation =
                 _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
@@ -830,31 +830,31 @@ contract DelegationController is Permissions, ILocker {
         _addToDelegatedToValidator(
             delegations[delegationId].validatorId,
             delegations[delegationId].amount,
-            currentMonth.add(1));
+            currentMonth + 1);
         _addToDelegatedByHolder(
             delegations[delegationId].holder,
             delegations[delegationId].amount,
-            currentMonth.add(1));
+            currentMonth + 1);
         _addToDelegatedByHolderToValidator(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             delegations[delegationId].amount,
-            currentMonth.add(1));
+            currentMonth + 1);
         _updateFirstDelegationMonth(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
-            currentMonth.add(1));
+            currentMonth + 1);
         uint effectiveAmount = delegations[delegationId].amount.mul(
             _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod));
         _addToEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
             effectiveAmount,
-            currentMonth.add(1));
+            currentMonth + 1);
         _addToEffectiveDelegatedByHolderToValidator(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             effectiveAmount,
-            currentMonth.add(1));
+            currentMonth + 1);
         _addValidatorToValidatorsPerDelegators(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId
@@ -948,10 +948,10 @@ contract DelegationController is Permissions, ILocker {
         uint started = delegations[delegationId].started;
 
         if (currentMonth < started) {
-            return started.add(delegations[delegationId].delegationPeriod);
+            return started + delegations[delegationId].delegationPeriod;
         } else {
             uint completedPeriods = currentMonth.sub(started).div(delegations[delegationId].delegationPeriod);
-            return started.add(completedPeriods.add(1).mul(delegations[delegationId].delegationPeriod));
+            return started + (completedPeriods + 1) * delegations[delegationId].delegationPeriod;
         }
     }
 

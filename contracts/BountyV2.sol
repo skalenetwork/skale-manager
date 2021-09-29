@@ -121,7 +121,7 @@ contract BountyV2 is Permissions {
             constantsHolder,
             nodes
         );
-        _bountyHistory[validatorId].bountyPaid = _bountyHistory[validatorId].bountyPaid.add(bounty);
+        _bountyHistory[validatorId].bountyPaid = _bountyHistory[validatorId].bountyPaid + bounty;
 
         bounty = _reduceBounty(
             bounty,
@@ -131,7 +131,7 @@ contract BountyV2 is Permissions {
         );
         
         _epochPool = _epochPool.sub(bounty);
-        _bountyWasPaidInCurrentEpoch = _bountyWasPaidInCurrentEpoch.add(bounty);
+        _bountyWasPaidInCurrentEpoch = _bountyWasPaidInCurrentEpoch + bounty;
 
         return bounty;
     }
@@ -188,7 +188,7 @@ contract BountyV2 is Permissions {
         return _calculateMaximumBountyAmount(
             stagePoolSize,
             _effectiveDelegatedSum.getValue(currentMonth),
-            _nextEpoch == currentMonth.add(1) ? _bountyWasPaidInCurrentEpoch : 0,
+            _nextEpoch == currentMonth + 1 ? _bountyWasPaidInCurrentEpoch : 0,
             nodeIndex,
             _getBountyPaid(validatorId, currentMonth),
             delegationController.getEffectiveDelegatedToValidator(validatorId, currentMonth),
@@ -293,7 +293,7 @@ contract BountyV2 is Permissions {
         }
 
         uint bounty = _calculateBountyShare(
-            epochPoolSize.add(bountyWasPaidInCurrentEpoch),
+            epochPoolSize + bountyWasPaidInCurrentEpoch,
             effectiveDelegated,
             effectiveDelegatedSum,
             delegated.div(constantsHolder.msr()),
@@ -318,7 +318,7 @@ contract BountyV2 is Permissions {
     {
         epochPool = _epochPool;
         for (nextEpoch = _nextEpoch; nextEpoch <= currentMonth; ++nextEpoch) {
-            epochPool = epochPool.add(_getEpochReward(nextEpoch, timeHelpers, constantsHolder));
+            epochPool = epochPool + _getEpochReward(nextEpoch, timeHelpers, constantsHolder);
         }
     }
 
@@ -338,7 +338,7 @@ contract BountyV2 is Permissions {
         uint epochIndex = epoch.sub(firstEpoch);
         uint year = epochIndex.div(EPOCHS_PER_YEAR);
         if (year >= 6) {
-            uint power = year.sub(6).div(3).add(1);
+            uint power = year.sub(6).div(3) + 1;
             if (power < 256) {
                 return YEAR6_BOUNTY.div(2 ** power).div(EPOCHS_PER_YEAR);
             } else {
@@ -375,23 +375,23 @@ contract BountyV2 is Permissions {
         assert(lastRewardMonth <= currentMonth);
 
         if (lastRewardMonth == currentMonth) {
-            uint nextMonthStart = timeHelpers.monthToTimestamp(currentMonth.add(1));
-            uint nextMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth.add(2));
-            if (lastRewardTimestamp < lastRewardMonthStart.add(nodeCreationWindowSeconds)) {
+            uint nextMonthStart = timeHelpers.monthToTimestamp(currentMonth + 1);
+            uint nextMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth + 2);
+            if (lastRewardTimestamp < lastRewardMonthStart + nodeCreationWindowSeconds) {
                 return nextMonthStart.sub(BOUNTY_WINDOW_SECONDS);
             } else {
-                return _min(nextMonthStart.add(timePassedAfterMonthStart), nextMonthFinish.sub(BOUNTY_WINDOW_SECONDS));
+                return _min(nextMonthStart + timePassedAfterMonthStart, nextMonthFinish.sub(BOUNTY_WINDOW_SECONDS));
             }
-        } else if (lastRewardMonth.add(1) == currentMonth) {
+        } else if (lastRewardMonth + 1 == currentMonth) {
             uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
-            uint currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth.add(1));
+            uint currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth + 1);
             return _min(
-                currentMonthStart.add(_max(timePassedAfterMonthStart, nodeCreationWindowSeconds)),
+                currentMonthStart + _max(timePassedAfterMonthStart, nodeCreationWindowSeconds),
                 currentMonthFinish.sub(BOUNTY_WINDOW_SECONDS)
             );
         } else {
             uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
-            return currentMonthStart.add(nodeCreationWindowSeconds);
+            return currentMonthStart + nodeCreationWindowSeconds;
         }
     }
 

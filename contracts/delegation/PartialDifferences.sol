@@ -74,7 +74,7 @@ library PartialDifferences {
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
         }
-        sequence.addDiff[month] = sequence.addDiff[month].add(diff);
+        sequence.addDiff[month] = sequence.addDiff[month] + diff;
         if (sequence.lastChangedMonth != month) {
             sequence.lastChangedMonth = month;
         }
@@ -85,7 +85,7 @@ library PartialDifferences {
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
         }
-        sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
+        sequence.subtractDiff[month] = sequence.subtractDiff[month] + diff;
         if (sequence.lastChangedMonth != month) {
             sequence.lastChangedMonth = month;
         }
@@ -98,7 +98,7 @@ library PartialDifferences {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                uint nextValue = sequence.value[i.sub(1)].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                uint nextValue = (sequence.value[i - 1] + sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 if (sequence.value[i] != nextValue) {
                     sequence.value[i] = nextValue;
                 }
@@ -109,7 +109,7 @@ library PartialDifferences {
                     delete sequence.subtractDiff[i];
                 }
             }
-            sequence.firstUnprocessedMonth = month.add(1);
+            sequence.firstUnprocessedMonth = month + 1;
         }
 
         return sequence.value[month];
@@ -120,7 +120,7 @@ library PartialDifferences {
         FractionUtils.Fraction memory reducingCoefficient,
         uint month) internal
     {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
+        require(month + 1 >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         require(
             reducingCoefficient.numerator <= reducingCoefficient.denominator,
             "Increasing of values is not implemented");
@@ -136,7 +136,7 @@ library PartialDifferences {
             .mul(reducingCoefficient.numerator)
             .div(reducingCoefficient.denominator);
 
-        for (uint i = month.add(1); i <= sequence.lastChangedMonth; ++i) {
+        for (uint i = month + 1; i <= sequence.lastChangedMonth; ++i) {
             sequence.subtractDiff[i] = sequence.subtractDiff[i]
                 .mul(reducingCoefficient.numerator)
                 .div(reducingCoefficient.denominator);
@@ -156,14 +156,14 @@ library PartialDifferences {
         }
 
         if (month >= sequence.firstUnprocessedMonth) {
-            sequence.addDiff[month] = sequence.addDiff[month].add(diff);
+            sequence.addDiff[month] = sequence.addDiff[month] + diff;
         } else {
-            sequence.value = sequence.value.add(diff);
+            sequence.value = sequence.value + diff;
         }
     }
 
     function subtractFromValue(Value storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month.add(1), "Cannot subtract from the past");
+        require(sequence.firstUnprocessedMonth <= month + 1, "Cannot subtract from the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -173,7 +173,7 @@ library PartialDifferences {
         }
 
         if (month >= sequence.firstUnprocessedMonth) {
-            sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
+            sequence.subtractDiff[month] = sequence.subtractDiff[month] + diff;
         } else {
             sequence.value = sequence.value.boundedSub(diff);
         }
@@ -181,7 +181,7 @@ library PartialDifferences {
 
     function getAndUpdateValue(Value storage sequence, uint month) internal returns (uint) {
         require(
-            month.add(1) >= sequence.firstUnprocessedMonth,
+            month + 1 >= sequence.firstUnprocessedMonth,
             "Cannot calculate value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
@@ -190,7 +190,7 @@ library PartialDifferences {
         if (sequence.firstUnprocessedMonth <= month) {
             uint value = sequence.value;
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                value = value.add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                value = (value + sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 if (sequence.addDiff[i] > 0) {
                     delete sequence.addDiff[i];
                 }
@@ -201,7 +201,7 @@ library PartialDifferences {
             if (sequence.value != value) {
                 sequence.value = value;
             }
-            sequence.firstUnprocessedMonth = month.add(1);
+            sequence.firstUnprocessedMonth = month + 1;
         }
 
         return sequence.value;
@@ -213,7 +213,7 @@ library PartialDifferences {
         uint month)
         internal returns (FractionUtils.Fraction memory)
     {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
+        require(month + 1 >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return FractionUtils.createFraction(0);
         }
@@ -268,9 +268,9 @@ library PartialDifferences {
         uint month,
         bool hasSumSequence) internal
     {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
+        require(month + 1 >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         if (hasSumSequence) {
-            require(month.add(1) >= sumSequence.firstUnprocessedMonth, "Cannot reduce value in the past");
+            require(month + 1 >= sumSequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         }
         require(
             reducingCoefficient.numerator <= reducingCoefficient.denominator,
@@ -289,7 +289,7 @@ library PartialDifferences {
         }
         sequence.value = newValue;
 
-        for (uint i = month.add(1); i <= sequence.lastChangedMonth; ++i) {
+        for (uint i = month + 1; i <= sequence.lastChangedMonth; ++i) {
             uint newDiff = sequence.subtractDiff[i]
                 .mul(reducingCoefficient.numerator)
                 .div(reducingCoefficient.denominator);
@@ -307,9 +307,9 @@ library PartialDifferences {
         }
 
         if (sequence.firstUnprocessedMonth <= month) {
-            uint value = sequence.value[sequence.firstUnprocessedMonth.sub(1)];
+            uint value = sequence.value[sequence.firstUnprocessedMonth - 1];
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                value = value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                value = value + sequence.addDiff[i] - sequence.subtractDiff[i];
             }
             return value;
         } else {
@@ -321,22 +321,22 @@ library PartialDifferences {
         if (sequence.firstUnprocessedMonth == 0) {
             return values;
         }
-        uint begin = sequence.firstUnprocessedMonth.sub(1);
-        uint end = sequence.lastChangedMonth.add(1);
+        uint begin = sequence.firstUnprocessedMonth - 1;
+        uint end = sequence.lastChangedMonth + 1;
         if (end <= begin) {
-            end = begin.add(1);
+            end = begin + 1;
         }
         values = new uint[](end.sub(begin));
-        values[0] = sequence.value[sequence.firstUnprocessedMonth.sub(1)];
-        for (uint i = 0; i.add(1) < values.length; ++i) {
-            uint month = sequence.firstUnprocessedMonth.add(i);
-            values[i.add(1)] = values[i].add(sequence.addDiff[month]).sub(sequence.subtractDiff[month]);
+        values[0] = sequence.value[sequence.firstUnprocessedMonth - 1];
+        for (uint i = 0; i + 1 < values.length; ++i) {
+            uint month = sequence.firstUnprocessedMonth + i;
+            values[i + 1] = values[i] + sequence.addDiff[month] - sequence.subtractDiff[month];
         }
     }
 
     function getValue(Value storage sequence, uint month) internal view returns (uint) {
         require(
-            month.add(1) >= sequence.firstUnprocessedMonth,
+            month + 1 >= sequence.firstUnprocessedMonth,
             "Cannot calculate value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
@@ -345,7 +345,7 @@ library PartialDifferences {
         if (sequence.firstUnprocessedMonth <= month) {
             uint value = sequence.value;
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                value = value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                value = value + sequence.addDiff[i] - sequence.subtractDiff[i];
             }
             return value;
         } else {
@@ -357,16 +357,16 @@ library PartialDifferences {
         if (sequence.firstUnprocessedMonth == 0) {
             return values;
         }
-        uint begin = sequence.firstUnprocessedMonth.sub(1);
-        uint end = sequence.lastChangedMonth.add(1);
+        uint begin = sequence.firstUnprocessedMonth - 1;
+        uint end = sequence.lastChangedMonth + 1;
         if (end <= begin) {
-            end = begin.add(1);
+            end = begin + 1;
         }
         values = new uint[](end.sub(begin));
         values[0] = sequence.value;
-        for (uint i = 0; i.add(1) < values.length; ++i) {
-            uint month = sequence.firstUnprocessedMonth.add(i);
-            values[i.add(1)] = values[i].add(sequence.addDiff[month]).sub(sequence.subtractDiff[month]);
+        for (uint i = 0; i + 1 < values.length; ++i) {
+            uint month = sequence.firstUnprocessedMonth + i;
+            values[i + 1] = values[i] + sequence.addDiff[month] - sequence.subtractDiff[month];
         }
     }
 }

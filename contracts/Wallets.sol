@@ -139,7 +139,7 @@ contract Wallets is Permissions, IWallets {
             debtAmount = validatorWallet;
             delete _validatorWallets[validatorId];
         }
-        _schainWallets[schainHash] = _schainWallets[schainHash].add(debtAmount);
+        _schainWallets[schainHash] = _schainWallets[schainHash] + debtAmount;
         delete _schainDebts[schainHash];
     }
 
@@ -171,7 +171,7 @@ contract Wallets is Permissions, IWallets {
         uint amount = tx.gasprice * spentGas;
         if (isDebt) {
             amount += (_schainDebts[schainHash] == 0 ? 21000 : 6000) * tx.gasprice;
-            _schainDebts[schainHash] = _schainDebts[schainHash].add(amount);
+            _schainDebts[schainHash] = _schainDebts[schainHash] + amount;
         }
         require(schainHash != bytes32(0), "SchainHash cannot be null");
         require(amount <= _schainWallets[schainHash], "Schain wallet has not enough funds");
@@ -232,7 +232,7 @@ contract Wallets is Permissions, IWallets {
     function rechargeValidatorWallet(uint validatorId) public payable {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator does not exists");
-        _validatorWallets[validatorId] = _validatorWallets[validatorId].add(msg.value);
+        _validatorWallets[validatorId] = _validatorWallets[validatorId] + msg.value;
         emit ValidatorWalletRecharged(msg.sender, msg.value, validatorId);
     }
 
@@ -248,7 +248,7 @@ contract Wallets is Permissions, IWallets {
     function rechargeSchainWallet(bytes32 schainHash) public payable override {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isSchainActive(schainHash), "Schain should be active for recharging");
-        _schainWallets[schainHash] = _schainWallets[schainHash].add(msg.value);
+        _schainWallets[schainHash] = _schainWallets[schainHash] + msg.value;
         emit SchainWalletRecharged(msg.sender, msg.value, schainHash);
     }
 

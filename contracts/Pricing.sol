@@ -55,7 +55,7 @@ contract Pricing is Permissions {
     function adjustPrice() external {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         require(
-            block.timestamp > lastUpdated.add(constantsHolder.COOLDOWN_TIME()),
+            block.timestamp > lastUpdated + constantsHolder.COOLDOWN_TIME(),
             "It's not a time to update a price"
         );
         checkAllNodes();
@@ -83,7 +83,7 @@ contract Pricing is Permissions {
 
         if (networkIsOverloaded) {
             assert(priceChange > 0);
-            price = price.add(priceChange);
+            price = price + priceChange;
         } else {
             if (priceChange > price) {
                 price = constantsHolder.MIN_PRICE();
@@ -127,9 +127,7 @@ contract Pricing is Permissions {
             bytes32 schain = schainsInternal.schainsAtSystem(i);
             uint numberOfNodesInSchain = schainsInternal.getNumberOfNodesInGroup(schain);
             uint part = schainsInternal.getSchainsPartOfNode(schain);
-            load = load.add(
-                numberOfNodesInSchain.mul(part)
-            );
+            load = load + numberOfNodesInSchain.mul(part);
         }
         return load;
     }

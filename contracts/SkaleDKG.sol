@@ -474,7 +474,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[schainHash].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
-            channels[schainHash].startedBlockTimestamp.add(_getComplaintTimeLimit()) > block.timestamp &&
+            channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit() > block.timestamp &&
             !dkgProcess[schainHash].broadcasted[index];
     }
 
@@ -501,20 +501,20 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             ) ||
             (
                 dkgProcess[schainHash].broadcasted[indexTo] &&
-                complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimeLimit()) <= block.timestamp &&
+                complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit() <= block.timestamp &&
                 complaints[schainHash].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !dkgProcess[schainHash].broadcasted[indexTo] &&
                 complaints[schainHash].nodeToComplaint == type(uint).max &&
-                channels[schainHash].startedBlockTimestamp.add(_getComplaintTimeLimit()) <= block.timestamp
+                channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit() <= block.timestamp
             ) ||
             (
                 complaints[schainHash].nodeToComplaint == type(uint).max &&
                 isEveryoneBroadcasted(schainHash) &&
                 dkgProcess[schainHash].completed[indexFrom] &&
                 !dkgProcess[schainHash].completed[indexTo] &&
-                startAlrightTimestamp[schainHash].add(_getComplaintTimeLimit()) <= block.timestamp
+                startAlrightTimestamp[schainHash] + _getComplaintTimeLimit() <= block.timestamp
             );
         return channels[schainHash].active &&
             dkgProcess[schainHash].broadcasted[indexFrom] &&
@@ -533,7 +533,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             channels[schainHash].n == dkgProcess[schainHash].numberOfBroadcasted &&
             (complaints[schainHash].fromNodeToComplaint != nodeIndex ||
             (nodeIndex == 0 && complaints[schainHash].startComplaintBlockTimestamp == 0)) &&
-            startAlrightTimestamp[schainHash].add(_getComplaintTimeLimit()) > block.timestamp &&
+            startAlrightTimestamp[schainHash] + _getComplaintTimeLimit() > block.timestamp &&
             !dkgProcess[schainHash].completed[index];
     }
 
@@ -546,7 +546,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
             complaints[schainHash].nodeToComplaint == nodeIndex &&
-            complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimeLimit()) > block.timestamp &&
+            complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit() > block.timestamp &&
             !complaints[schainHash].isResponse;
     }
 
@@ -559,7 +559,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
             complaints[schainHash].nodeToComplaint == nodeIndex &&
-            complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimeLimit()) > block.timestamp &&
+            complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit() > block.timestamp &&
             complaints[schainHash].isResponse;
     }
 
@@ -630,23 +630,23 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bool isLastNode = channels[schainHash].n == dkgProcess[schainHash].numberOfCompleted;
         if (context.dkgFunction == DkgFunction.Alright && isLastNode) {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(74800), context.isDebt
+                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta - 74800, context.isDebt
             );
-        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 14e5) {
+        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal - gasleft() > 14e5) {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(341979), context.isDebt
+                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta - 341979, context.isDebt
             );
-        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 7e5) {
+        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal - gasleft() > 7e5) {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(152214), context.isDebt
+                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta - 152214, context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Response){
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal.sub(gasleft()).sub(context.delta), context.isDebt
+                schainHash, payable(msg.sender), gasTotal - gasleft() - context.delta, context.isDebt
             );
         } else {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta), context.isDebt
+                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta, context.isDebt
             );
         }
     }

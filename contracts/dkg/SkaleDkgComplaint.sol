@@ -128,7 +128,7 @@ library SkaleDkgComplaint {
             if (
                 skaleDKG.isEveryoneBroadcasted(schainHash) &&
                 !skaleDKG.isAllDataReceived(schainHash, toNodeIndex) &&
-                startAlrightTimestamp[schainHash].add(_getComplaintTimeLimit(contractManager)) <= block.timestamp
+                startAlrightTimestamp[schainHash] + _getComplaintTimeLimit(contractManager) <= block.timestamp
             ) {
                 // missing alright
                 skaleDKG.finalizeSlashing(schainHash, toNodeIndex);
@@ -142,9 +142,9 @@ library SkaleDkgComplaint {
             return;
         } else if (complaints[schainHash].nodeToComplaint == toNodeIndex) {
             // 30 min after incorrect data complaint
-            if (complaints[schainHash].startComplaintBlockTimestamp.add(
-                _getComplaintTimeLimit(contractManager)
-            ) <= block.timestamp) {
+            if (complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit(contractManager)
+                <= block.timestamp
+            ) {
                 skaleDKG.finalizeSlashing(schainHash, complaints[schainHash].nodeToComplaint);
                 return;
             }
@@ -163,9 +163,7 @@ library SkaleDkgComplaint {
     ) 
         private
     {
-        if (channels[schainHash].startedBlockTimestamp.add(
-                _getComplaintTimeLimit(contractManager)
-            ) <= block.timestamp) {
+        if (channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit(contractManager) <= block.timestamp) {
             SkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainHash, toNodeIndex);
             return;
         }

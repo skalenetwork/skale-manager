@@ -66,6 +66,6 @@ contract PartialDifferencesTester {
 
     function latestSequence() external view returns (uint id) {
         require(_sequences.length > 0, "There are no _sequences");
-        return _sequences.length.sub(1);
+        return _sequences.length - 1;
     }
 }

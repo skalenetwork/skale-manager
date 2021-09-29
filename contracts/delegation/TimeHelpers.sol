@@ -68,7 +68,7 @@ contract TimeHelpers {
         uint month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
         require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
-        month = month.sub(1).add(year.sub(_ZERO_YEAR).mul(12));
+        month = month - 1 + (year - _ZERO_YEAR) * 12;
         require(month > 0, "Timestamp is too far in the past");
         return month;
     }
@@ -76,9 +76,9 @@ contract TimeHelpers {
     function monthToTimestamp(uint month) public view virtual returns (uint timestamp) {
         uint year = _ZERO_YEAR;
         uint _month = month;
-        year = year.add(_month.div(12));
-        _month = _month.mod(12);
-        _month = _month.add(1);
+        year = year + _month / 12;
+        _month = _month % 12;
+        _month = _month + 1;
         return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, _month, 1);
     }
 }

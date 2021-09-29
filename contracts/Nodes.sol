@@ -241,7 +241,7 @@ contract Nodes is Permissions {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
-                uint(spaceOfNodes[nodeIndex].freeSpace).add(space).toUint8()
+                (uint(spaceOfNodes[nodeIndex].freeSpace) + space).toUint8()
             );
         }
     }
@@ -305,7 +305,7 @@ contract Nodes is Permissions {
             status: NodeStatus.Active,
             validatorId: validatorId
         }));
-        uint nodeIndex = nodes.length.sub(1);
+        uint nodeIndex = nodes.length - 1;
         validatorToNodeIndexes[validatorId].push(nodeIndex);
         bytes32 nodeId = keccak256(abi.encodePacked(params.name));
         nodesIPCheck[params.ip] = true;
@@ -394,7 +394,7 @@ contract Nodes is Permissions {
         uint position = _findNode(validatorNodes, nodeIndex);
         if (position < validatorNodes.length) {
             validatorToNodeIndexes[validatorId][position] =
-                validatorToNodeIndexes[validatorId][validatorNodes.length.sub(1)];
+                validatorToNodeIndexes[validatorId][validatorNodes.length - 1];
         }
         validatorToNodeIndexes[validatorId].pop();
         address nodeOwner = _publicKeyToAddress(nodes[nodeIndex].publicKey);
@@ -711,7 +711,7 @@ contract Nodes is Permissions {
      * Note: Online nodes are equal to the number of active plus leaving nodes.
      */
     function getNumberOnlineNodes() external view returns (uint) {
-        return numberOfActiveNodes.add(numberOfLeavingNodes);
+        return numberOfActiveNodes + numberOfLeavingNodes ;
     }
 
     /**
@@ -825,7 +825,7 @@ contract Nodes is Permissions {
 
     function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) internal {
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        uint len = spaceToNodes[space].length.sub(1);
+        uint len = spaceToNodes[space].length - 1;
         if (indexInArray < len) {
             uint shiftedIndex = spaceToNodes[space][len];
             spaceToNodes[space][indexInArray] = shiftedIndex;
@@ -854,7 +854,7 @@ contract Nodes is Permissions {
      */
     function _setNodeActive(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.Active;
-        numberOfActiveNodes = numberOfActiveNodes.add(1);
+        numberOfActiveNodes = numberOfActiveNodes + 1;
         if (_invisible[nodeIndex]) {
             _tryToMakeNodeVisible(nodeIndex);
         } else {
@@ -869,7 +869,7 @@ contract Nodes is Permissions {
      */
     function _setNodeInMaintenance(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.In_Maintenance;
-        numberOfActiveNodes = numberOfActiveNodes.sub(1);
+        numberOfActiveNodes = numberOfActiveNodes - 1;
         _makeNodeInvisible(nodeIndex);
     }
 
@@ -926,7 +926,7 @@ contract Nodes is Permissions {
 
     function _addNodeToSpaceToNodes(uint nodeIndex, uint8 space) private {
         spaceToNodes[space].push(nodeIndex);
-        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length - 1;
     }
 
     function _addNodeToTree(uint8 space) private {
@@ -947,7 +947,7 @@ contract Nodes is Permissions {
         );
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = ConstantsHolder(contractManager.getConstantsHolder()).msr();
-        return position.add(1).mul(msr) <= delegationsTotal;
+        return (position + 1) * msr <= delegationsTotal;
     }
 
     function _checkNodeIndex(uint nodeIndex) private view {

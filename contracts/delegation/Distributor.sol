@@ -216,18 +216,17 @@ contract Distributor is Permissions, IERC777Recipient {
 
         earned = 0;
         endMonth = currentMonth;
-        if (endMonth > startMonth.add(12)) {
-            endMonth = startMonth.add(12);
+        if (endMonth > startMonth + 12) {
+            endMonth = startMonth + 12;
         }
         for (uint i = startMonth; i < endMonth; ++i) {
             uint effectiveDelegatedToValidator =
                 delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
             if (effectiveDelegatedToValidator.muchGreater(0)) {
-                earned = earned.add(
+                earned = earned + 
                     _bountyPaid[validatorId][i].mul(
                         delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i))
-                            .div(effectiveDelegatedToValidator)
-                    );
+                            .div(effectiveDelegatedToValidator);
             }
         }
     }
@@ -247,11 +246,11 @@ contract Distributor is Permissions, IERC777Recipient {
 
         earned = 0;
         endMonth = currentMonth;
-        if (endMonth > startMonth.add(12)) {
-            endMonth = startMonth.add(12);
+        if (endMonth > startMonth + 12) {
+            endMonth = startMonth + 12;
         }
         for (uint i = startMonth; i < endMonth; ++i) {
-            earned = earned.add(_feePaid[validatorId][i]);
+            earned = earned + _feePaid[validatorId][i];
         }
     }
 
@@ -271,8 +270,8 @@ contract Distributor is Permissions, IERC777Recipient {
 
         uint fee = amount.mul(feeRate).div(1000);
         uint bounty = amount.sub(fee);
-        _bountyPaid[validatorId][currentMonth] = _bountyPaid[validatorId][currentMonth].add(bounty);
-        _feePaid[validatorId][currentMonth] = _feePaid[validatorId][currentMonth].add(fee);
+        _bountyPaid[validatorId][currentMonth] = _bountyPaid[validatorId][currentMonth] + bounty;
+        _feePaid[validatorId][currentMonth] = _feePaid[validatorId][currentMonth] + fee;
 
         if (_firstUnwithdrawnMonthForValidator[validatorId] == 0) {
             _firstUnwithdrawnMonthForValidator[validatorId] = currentMonth;

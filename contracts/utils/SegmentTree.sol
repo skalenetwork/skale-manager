@@ -76,8 +76,8 @@ library SegmentTree {
      */
     function create(Tree storage segmentTree, uint size) external {
         require(size > 0, "Size can't be 0");
-        require(size & size.sub(1) == 0, "Size is not power of 2");
-        segmentTree.tree = new uint[](size.mul(2).sub(1));
+        require(size & size - 1 == 0, "Size is not power of 2");
+        segmentTree.tree = new uint[](size.mul(2) - 1);
     }
 
     /**
@@ -92,17 +92,17 @@ library SegmentTree {
         uint leftBound = 1;
         uint rightBound = getSize(self);
         uint step = 1;
-        self.tree[0] = self.tree[0].add(delta);
+        self.tree[0] = self.tree[0] + delta;
         while(leftBound < rightBound) {
-            uint middle = leftBound.add(rightBound).div(2);
+            uint middle = (leftBound + rightBound) / 2;
             if (place > middle) {
-                leftBound = middle.add(1);
-                step = step.add(step).add(1);
+                leftBound = middle + 1;
+                step = step + step + 1;
             } else {
                 rightBound = middle;
-                step = step.add(step);
+                step = step + step;
             }
-            self.tree[step.sub(1)] = self.tree[step.sub(1)].add(delta);
+            self.tree[step - 1] = self.tree[step - 1] + delta;
         }
     }
 
@@ -121,15 +121,15 @@ library SegmentTree {
         uint step = 1;
         self.tree[0] = self.tree[0].sub(delta);
         while(leftBound < rightBound) {
-            uint middle = leftBound.add(rightBound).div(2);
+            uint middle = (leftBound + rightBound) / 2;
             if (place > middle) {
-                leftBound = middle.add(1);
-                step = step.add(step).add(1);
+                leftBound = middle + 1;
+                step = step + step + 1;
             } else {
                 rightBound = middle;
-                step = step.add(step);
+                step = step + step;
             }
-            self.tree[step.sub(1)] = self.tree[step.sub(1)].sub(delta);
+            self.tree[step - 1] = self.tree[step - 1].sub(delta);
         }
     }
 
@@ -155,42 +155,42 @@ library SegmentTree {
         uint leftBound = 1;
         uint rightBound = getSize(self);
         uint step = 1;
-        uint middle = leftBound.add(rightBound).div(2);
+        uint middle = (leftBound + rightBound) / 2;
         uint fromPlaceMove = fromPlace > toPlace ? toPlace : fromPlace;
         uint toPlaceMove = fromPlace > toPlace ? fromPlace : toPlace;
         while (toPlaceMove <= middle || middle < fromPlaceMove) {
             if (middle < fromPlaceMove) {
-                leftBound = middle.add(1);
-                step = step.add(step).add(1);
+                leftBound = middle + 1;
+                step = step + step + 1;
             } else {
                 rightBound = middle;
-                step = step.add(step);
+                step = step + step;
             }
-            middle = leftBound.add(rightBound).div(2);
+            middle = (leftBound + rightBound) / 2;
         }
 
         uint leftBoundMove = leftBound;
         uint rightBoundMove = rightBound;
         uint stepMove = step;
         while(leftBoundMove < rightBoundMove && leftBound < rightBound) {
-            uint middleMove = leftBoundMove.add(rightBoundMove).div(2);
+            uint middleMove = (leftBoundMove + rightBoundMove) / 2;
             if (fromPlace > middleMove) {
-                leftBoundMove = middleMove.add(1);
-                stepMove = stepMove.add(stepMove).add(1);
+                leftBoundMove = middleMove + 1;
+                stepMove = stepMove + stepMove + 1;
             } else {
                 rightBoundMove = middleMove;
-                stepMove = stepMove.add(stepMove);
+                stepMove = stepMove + stepMove;
             }
-            self.tree[stepMove.sub(1)] = self.tree[stepMove.sub(1)].sub(delta);
-            middle = leftBound.add(rightBound).div(2);
+            self.tree[stepMove - 1] = self.tree[stepMove - 1].sub(delta);
+            middle = (leftBound + rightBound) / 2;
             if (toPlace > middle) {
-                leftBound = middle.add(1);
-                step = step.add(step).add(1);
+                leftBound = middle + 1;
+                step = step + step + 1;
             } else {
                 rightBound = middle;
-                step = step.add(step);
+                step = step + step;
             }
-            self.tree[step.sub(1)] = self.tree[step.sub(1)].add(delta);
+            self.tree[step - 1] = self.tree[step - 1] + delta;
         }
     }
 
@@ -217,17 +217,17 @@ library SegmentTree {
         uint vertex = 1;
         uint leftBound = 0;
         uint rightBound = getSize(self);
-        uint currentFrom = place.sub(1);
+        uint currentFrom = place - 1;
         uint currentSum = sumFromPlaceToLast(self, place);
         if (currentSum == 0) {
             return 0;
         }
-        while(leftBound.add(1) < rightBound) {
+        while(leftBound + 1 < rightBound) {
             if (_middle(leftBound, rightBound) <= currentFrom) {
                 vertex = _right(vertex);
                 leftBound = _middle(leftBound, rightBound);
             } else {
-                uint rightSum = self.tree[_right(vertex).sub(1)];
+                uint rightSum = self.tree[_right(vertex) - 1];
                 uint leftSum = currentSum.sub(rightSum);
                 if (Random.random(randomGenerator, currentSum) < leftSum) {
                     // go left
@@ -243,7 +243,7 @@ library SegmentTree {
                 }
             }
         }
-        return leftBound.add(1);
+        return leftBound + 1;
     }
 
     /**
@@ -262,17 +262,17 @@ library SegmentTree {
         uint rightBound = getSize(self);
         uint step = 1;
         while(leftBound < rightBound) {
-            uint middle = leftBound.add(rightBound).div(2);
+            uint middle = (leftBound + rightBound) / 2;
             if (place > middle) {
-                leftBound = middle.add(1);
-                step = step.add(step).add(1);
+                leftBound = middle + 1;
+                step = step + step + 1;
             } else {
                 rightBound = middle;
-                step = step.add(step);
-                sum = sum.add(self.tree[step]);
+                step = step + step;
+                sum = sum + self.tree[step];
             }
         }
-        sum = sum.add(self.tree[step.sub(1)]);
+        sum = sum + self.tree[step - 1];
     }
 
     /**
@@ -280,7 +280,7 @@ library SegmentTree {
      */
     function getSize(Tree storage segmentTree) internal view returns (uint) {
         if (segmentTree.tree.length > 0) {
-            return segmentTree.tree.length.div(2).add(1);
+            return segmentTree.tree.length.div(2) + 1;
         } else {
             return 0;
         }
@@ -304,13 +304,13 @@ library SegmentTree {
      * @dev Calculates index of right child of the vertex
      */
     function _right(uint vertex) private pure returns (uint) {
-        return vertex.mul(2).add(1);
+        return vertex.mul(2) + 1;
     }
 
     /**
      * @dev Calculates arithmetical mean of 2 numbers
      */
     function _middle(uint left, uint right) private pure returns (uint) {
-        return left.add(right).div(2);
+        return (left + right) / 2;
     }
 }

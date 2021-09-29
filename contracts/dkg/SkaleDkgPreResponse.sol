@@ -137,7 +137,7 @@ library SkaleDkgPreResponse {
         Fp2Operations.Fp2Point memory value = G1Operations.getG1Generator();
         Fp2Operations.Fp2Point memory tmp = G1Operations.getG1Generator();
         for (uint i = 0; i < verificationVector.length; i++) {
-            (tmp.a, tmp.b) = Precompiled.bn256ScalarMul(value.a, value.b, indexOnSchain.add(1) ** i);
+            (tmp.a, tmp.b) = Precompiled.bn256ScalarMul(value.a, value.b, (indexOnSchain + 1) ** i);
             if (!_checkPairing(tmp, verificationVector[i], verificationVectorMultiplication[i])) {
                 return false;
             }

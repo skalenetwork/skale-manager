@@ -106,7 +106,7 @@ contract SkaleVerifier is Permissions {
             return false;
         }
         uint xCoord = uint(hash) % Fp2Operations.P;
-        xCoord = (xCoord.add(counter)) % Fp2Operations.P;
+        xCoord = (xCoord + counter) % Fp2Operations.P;
 
         uint ySquared = addmod(
             mulmod(mulmod(xCoord, xCoord, Fp2Operations.P), xCoord, Fp2Operations.P),

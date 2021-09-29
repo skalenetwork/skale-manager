@@ -123,7 +123,7 @@ contract Punisher is Permissions, ILocker {
      * delegations.
      */
     function handleSlash(address holder, uint amount) external allow("DelegationController") {
-        _locked[holder] = _locked[holder].add(amount);
+        _locked[holder] = _locked[holder] + amount;
     }
 
     function initialize(address contractManagerAddress) public override initializer {

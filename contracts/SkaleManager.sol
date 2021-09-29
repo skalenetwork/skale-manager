@@ -143,7 +143,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(
                 nodeIndex,
-                block.timestamp.add(
+                block.timestamp + (
                     isSchains ?
                     ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay() :
                     0

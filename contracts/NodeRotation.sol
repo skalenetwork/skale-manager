@@ -223,7 +223,7 @@ contract NodeRotation is Permissions {
     function _startWaiting(bytes32 schainIndex, uint nodeIndex) private {
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
-        rotations[schainIndex].freezeUntil = block.timestamp.add(constants.rotationDelay());
+        rotations[schainIndex].freezeUntil = block.timestamp + constants.rotationDelay();
     }
 
     /**
@@ -239,9 +239,9 @@ contract NodeRotation is Permissions {
         leavingHistory[nodeIndex].push(
             LeavingHistory(
                 schainIndex,
-                shouldDelay ? block.timestamp.add(
+                shouldDelay ? block.timestamp + 
                     ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay()
-                ) : block.timestamp
+                : block.timestamp
             )
         );
         rotations[schainIndex].newNodeIndex = newNodeIndex;

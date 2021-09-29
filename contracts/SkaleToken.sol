@@ -120,7 +120,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     {
         uint locked = getAndUpdateLockedAmount(from);
         if (locked > 0) {
-            require(balanceOf(from) >= locked.add(tokenId), "Token should be unlocked for transferring");
+            require(balanceOf(from) >= locked + tokenId, "Token should be unlocked for transferring");
         }
     }
 

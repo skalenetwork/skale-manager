@@ -41,7 +41,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
         if (_timeShift.length > 0) {
             _timeShift.push(TimeShift({
                 pointInTime: block.timestamp,
-                shift: _timeShift[_timeShift.length.sub(1)].shift.add(sec)
+                shift: _timeShift[_timeShift.length - 1].shift + sec
             }));
         } else {
             _timeShift.push(TimeShift({pointInTime: block.timestamp, shift: sec}));
@@ -53,7 +53,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
     }
 
     function timestampToMonth(uint timestamp) public view override returns (uint) {
-        return super.timestampToMonth(timestamp.add(_getTimeShift(timestamp)));
+        return super.timestampToMonth(timestamp + _getTimeShift(timestamp));
     }
 
     function monthToTimestamp(uint month) public view override returns (uint) {
@@ -71,13 +71,13 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
         if (_timeShift.length > 0) {
             if (timestamp < _timeShift[0].pointInTime) {
                 return 0;
-            } else if (timestamp >= _timeShift[_timeShift.length.sub(1)].pointInTime) {
-                return _timeShift[_timeShift.length.sub(1)].shift;
+            } else if (timestamp >= _timeShift[_timeShift.length - 1].pointInTime) {
+                return _timeShift[_timeShift.length - 1].shift;
             } else {
                 uint left = 0;
-                uint right = _timeShift.length.sub(1);
+                uint right = _timeShift.length - 1;
                 while (left + 1 < right) {
-                    uint middle = left.add(right).div(2);
+                    uint middle = (left + right) / 2;
                     if (timestamp < _timeShift[middle].pointInTime) {
                         right = middle;
                     } else {
@@ -92,12 +92,11 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
     }
 
     function _findTimeBeforeTimeShift(uint shiftedTimestamp) private view returns (uint) {
-        uint lastTimeShiftIndex = _timeShift.length.sub(1);
-        if (_timeShift[lastTimeShiftIndex].pointInTime.add(_timeShift[lastTimeShiftIndex].shift)
-            < shiftedTimestamp) {
+        uint lastTimeShiftIndex = _timeShift.length - 1;
+        if (_timeShift[lastTimeShiftIndex].pointInTime + _timeShift[lastTimeShiftIndex].shift < shiftedTimestamp) {
             return shiftedTimestamp.sub(_timeShift[lastTimeShiftIndex].shift);
         } else {
-            if (shiftedTimestamp <= _timeShift[0].pointInTime.add(_timeShift[0].shift)) {
+            if (shiftedTimestamp <= _timeShift[0].pointInTime + _timeShift[0].shift) {
                 if (shiftedTimestamp < _timeShift[0].pointInTime) {
                     return shiftedTimestamp;
                 } else {
@@ -107,14 +106,14 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
                 uint left = 0;
                 uint right = lastTimeShiftIndex;
                 while (left + 1 < right) {
-                    uint middle = left.add(right).div(2);
-                    if (_timeShift[middle].pointInTime.add(_timeShift[middle].shift) < shiftedTimestamp) {
+                    uint middle = (left + right) / 2;
+                    if (_timeShift[middle].pointInTime + _timeShift[middle].shift < shiftedTimestamp) {
                         left = middle;
                     } else {
                         right = middle;
                     }
                 }
-                if (shiftedTimestamp < _timeShift[right].pointInTime.add(_timeShift[left].shift)) {
+                if (shiftedTimestamp < _timeShift[right].pointInTime + _timeShift[left].shift) {
                     return shiftedTimestamp.sub(_timeShift[left].shift);
                 } else {
                     return _timeShift[right].pointInTime;
