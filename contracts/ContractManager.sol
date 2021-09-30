@@ -26,7 +26,7 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 import "./utils/StringUtils.sol";
-import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
+import "./thirdparty/openzeppelin/InitializableWithGap.sol";
 
 /**
  * @title ContractManager
