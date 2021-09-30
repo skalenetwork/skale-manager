@@ -563,7 +563,7 @@ describe("SkaleManager", () => {
                     "some.domain.name").should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
 
-            describe.only("when developer has SKALE tokens", async () => {
+            describe("when developer has SKALE tokens", async () => {
                 let developerHasTokens: number;
                 before(async () => {
                     developerHasTokens = await makeSnapshot();
