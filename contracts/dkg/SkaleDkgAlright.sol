@@ -22,7 +22,7 @@
 */
 
 pragma solidity 0.8.7;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 import "../SkaleDKG.sol";
 import "../ContractManager.sol";
