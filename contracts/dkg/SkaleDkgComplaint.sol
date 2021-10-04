@@ -22,7 +22,6 @@
 */
 
 pragma solidity 0.8.7;
-pragma abicoder v2;
 
 import "../SkaleDKG.sol";
 import "../ConstantsHolder.sol";

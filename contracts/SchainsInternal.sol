@@ -20,7 +20,6 @@
 */
 
 pragma solidity 0.8.7;
-pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";

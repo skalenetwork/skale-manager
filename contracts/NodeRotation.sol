@@ -19,8 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.7;
-pragma abicoder v2;
+pragma solidity 0.8.7; 
 
 import "./interfaces/ISkaleDKG.sol";
 import "./utils/Random.sol";

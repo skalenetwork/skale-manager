@@ -20,7 +20,6 @@
 */
 
 pragma solidity 0.8.7;
-pragma abicoder v2;
 
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
