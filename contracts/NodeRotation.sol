@@ -175,10 +175,6 @@ contract NodeRotation is Permissions {
             schainsInternal.removeNodeFromExceptions(schainHash, nodeIndex);
         }
         newNode = selectNodeToGroup(schainHash);
-        Nodes(contractManager.getContract("Nodes")).addSpaceToNode(
-            nodeIndex,
-            schainsInternal.getSchainsPartOfNode(schainHash)
-        );
         _finishRotation(schainHash, nodeIndex, newNode, shouldDelay);
     }
 
