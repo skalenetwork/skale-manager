@@ -337,7 +337,7 @@ describe("SkaleManager", () => {
                 (await validatorService.getValidatorIdByNodeAddress(validator.address)).should.be.equal(1);
             });
 
-            it.only("should pay bounty if Node is In Active state", async () => {
+            it("should pay bounty if Node is In Active state", async () => {
                 await skipTime(ethers, month);
                 const balanceBefore = await getBalance(nodeAddress.address);
                 await skaleManager.connect(nodeAddress).getBounty(0);

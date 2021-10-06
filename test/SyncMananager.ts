@@ -55,7 +55,7 @@ describe("SyncManager", () => {
             .should.be.eventually.rejectedWith("Invalid IP ranges provided");
     });
 
-    it.only("should add and remove IP address range", async () => {
+    it("should add and remove IP address range", async () => {
         let receipt: any;
         let event: any;
         const rangeName = "range";
