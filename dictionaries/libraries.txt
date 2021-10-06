@@ -18,3 +18,4 @@ codecov
 initializable
 mixedcase
 camelcase
+ethersproject
