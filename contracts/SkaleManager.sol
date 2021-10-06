@@ -213,7 +213,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function _refundGasByValidator(uint validatorId, address payable spender, uint spentGas) private {
-        uint gasCostOfRefundGasByValidator = 41030;
+        uint gasCostOfRefundGasByValidator = 41130;
         Wallets(payable(contractManager.getContract("Wallets")))
         .refundGasByValidator(validatorId, spender, spentGas + gasCostOfRefundGasByValidator);
     }
