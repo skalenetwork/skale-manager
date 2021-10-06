@@ -19,8 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
 
@@ -115,7 +114,7 @@ contract Schains is Permissions, ISchains {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
         uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
-        require(now >= schainCreationTimeStamp, "It is not a time for creating Schain");
+        require(block.timestamp >= schainCreationTimeStamp, "It is not a time for creating Schain");
         require(
             schainParameters.lifetime >= minSchainLifetime,
             "Minimal schain lifetime should be satisfied"
@@ -228,15 +227,6 @@ contract Schains is Permissions, ISchains {
         emit NodeAdded(schainHash, newNodeIndex);
     }
 
-    /**
-     * @dev addSpace - return occupied space to Node
-     * nodeIndex - index of Node at common array of Nodes
-     * partOfNode - divisor of given type of Schain
-     */
-    function addSpace(uint nodeIndex, uint8 partOfNode) external allowTwo("Schains", "NodeRotation") {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        nodes.addSpaceToNode(nodeIndex, partOfNode);
-    }
 
     /**
      * @dev Checks whether schain group signature is valid.
@@ -289,13 +279,13 @@ contract Schains is Permissions, ISchains {
         if (divisor == 0) {
             return 1e18;
         } else {
-            uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
+            uint up = nodeDeposit * numberOfNodes * lifetime * 2;
             uint down = uint(
                 uint(constantsHolder.SMALL_DIVISOR())
-                    .mul(uint(constantsHolder.SECONDS_TO_YEAR()))
-                    .div(divisor)
+                * uint(constantsHolder.SECONDS_TO_YEAR())
+                / divisor
             );
-            return up.div(down);
+            return up / down;
         }
     }
 
@@ -398,21 +388,16 @@ contract Schains is Permissions, ISchains {
         require(schainsInternal.isSchainExist(schainHash), "Schain does not exist");
 
         uint[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
-        uint8 partOfNode = schainsInternal.getSchainsPartOfNode(schainHash);
         for (uint i = 0; i < nodesInGroup.length; i++) {
-            uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
-                nodesInGroup[i],
-                schainHash
-            );
             if (schainsInternal.checkHoleForSchain(schainHash, i)) {
                 continue;
             }
             require(
-                schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
-                "Some Node does not contain given Schain");
+                schainsInternal.checkSchainOnNode(nodesInGroup[i], schainHash),
+                "Some Node does not contain given Schain"
+            );
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainHash);
             schainsInternal.removeNodeFromExceptions(schainHash, nodesInGroup[i]);
-            this.addSpace(nodesInGroup[i], partOfNode);
         }
         schainsInternal.deleteGroup(schainHash);
         address from = schainsInternal.getSchainOwner(schainHash);

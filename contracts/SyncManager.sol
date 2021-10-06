@@ -19,29 +19,30 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/EnumerableSet.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+
 /**
  * @title SyncManager
  * @dev SyncManager is a contract on the mainnet 
  * that keeps a list of allowed sync IP address ranges.
  */
 contract SyncManager {
-    using EnumerableSet for EnumerableSet.UintSet;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.Bytes32Set;
 
     struct IPAddressRange {
         bytes4 startIP;
         bytes4 endIP;
     }
 
-    EnumerableSet.UintSet public ipRangeNames;
+    EnumerableSetUpgradeable.Bytes32Set private _ipRangeNames;
     mapping (bytes32 => IPAddressRange) public ipAddressRanges;
 
     function addIPAddressRange(string memory name, bytes4 startIP, bytes4 endIP) external {
-        uint256 ipRangeNameHash = uint256(keccak256(abi.encodePacked(name)));
+        bytes32 ipRangeNameHash = keccak256(abi.encodePacked(name));
+        require(_ipRangeNames.add(ipRangeNameHash), "The range name is already taken");
         ipAddressRanges[ipRangeNameHash] = IPAddressRange(startIP, endIP);
-        ipRangeNames.add(ipRangeNameHash);
     }
 
 

@@ -13,9 +13,6 @@ import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-
 import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
 import { getVersion } from "./tools/version";
-import util from 'util';
-import { exec as execSync } from 'child_process';
-const exec = util.promisify(execSync);
 
 export async function getContractFactoryAndUpdateManifest(contract: string) {
     const manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8"));
@@ -144,7 +141,14 @@ export async function upgrade(
         const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
 
         console.log(`Prepare upgrade of ${contract}`);
-        const newImplementationAddress = await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+        const newImplementationAddress = await upgrades.prepareUpgrade(
+            proxyAddress,
+            contractFactory,
+            {
+                unsafeAllowLinkedLibraries: true,
+                unsafeAllowRenames: true
+            }
+        );
         const currentImplementationAddress = await getImplementationAddress(network.provider, proxyAddress);
         if (newImplementationAddress !== currentImplementationAddress)
         {
@@ -228,9 +232,7 @@ async function main() {
     await upgrade(
         "1.8.1",
         ["ContractManager"].concat(contracts),
-        async (safeTransactions, abi, contractManager) => {
-            await exec("sed -i 's/complaintTimelimit/complaintTimeLimit/g' .openzeppelin/*.json");
-        },
+        async (safeTransactions, abi, contractManager) => undefined,
         async (safeTransactions, abi) => undefined
     );
 }
