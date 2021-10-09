@@ -51,7 +51,7 @@
     "ethereumjs-util": "^7.1.0",
     "ethers": "^5.4.4",
     "ethers-eip712": "^0.2.0",
-    "hardhat": "^2.6.1",
+    "hardhat": "^2.6.5",
     "web3": "^1.5.2"
   },
   "devDependencies": {
