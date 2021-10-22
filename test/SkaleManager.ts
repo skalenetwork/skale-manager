@@ -342,7 +342,6 @@ describe("SkaleManager", () => {
                 const balanceBefore = await getBalance(nodeAddress.address);
                 await skaleManager.connect(nodeAddress).getBounty(0);
                 const balance = await getBalance(nodeAddress.address);
-                console.log((balance-balanceBefore))
                 balance.should.not.be.lessThan(balanceBefore);
                 balance.should.be.almost(balanceBefore);
             });
