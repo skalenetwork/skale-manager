@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
 import "./delegation/DelegationController.sol";
 import "./delegation/PartialDifferences.sol";
@@ -96,7 +96,7 @@ contract BountyV2 is Permissions {
         );
         
         require(
-            _getNextRewardTimestamp(nodeIndex, nodes, timeHelpers) <= now,
+            _getNextRewardTimestamp(nodeIndex, nodes, timeHelpers) <= block.timestamp,
             "Transaction is sent too early"
         );
 
@@ -120,7 +120,7 @@ contract BountyV2 is Permissions {
             constantsHolder,
             nodes
         );
-        _bountyHistory[validatorId].bountyPaid = _bountyHistory[validatorId].bountyPaid.add(bounty);
+        _bountyHistory[validatorId].bountyPaid = _bountyHistory[validatorId].bountyPaid + bounty;
 
         bounty = _reduceBounty(
             bounty,
@@ -129,8 +129,8 @@ contract BountyV2 is Permissions {
             constantsHolder
         );
         
-        _epochPool = _epochPool.sub(bounty);
-        _bountyWasPaidInCurrentEpoch = _bountyWasPaidInCurrentEpoch.add(bounty);
+        _epochPool = _epochPool - bounty;
+        _bountyWasPaidInCurrentEpoch = _bountyWasPaidInCurrentEpoch + bounty;
 
         return bounty;
     }
@@ -187,7 +187,7 @@ contract BountyV2 is Permissions {
         return _calculateMaximumBountyAmount(
             stagePoolSize,
             _effectiveDelegatedSum.getValue(currentMonth),
-            _nextEpoch == currentMonth.add(1) ? _bountyWasPaidInCurrentEpoch : 0,
+            _nextEpoch == currentMonth + 1 ? _bountyWasPaidInCurrentEpoch : 0,
             nodeIndex,
             _getBountyPaid(validatorId, currentMonth),
             delegationController.getEffectiveDelegatedToValidator(validatorId, currentMonth),
@@ -246,7 +246,7 @@ contract BountyV2 is Permissions {
         reducedBounty = bounty;
 
         if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
-            reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
+            reducedBounty = reducedBounty / constants.MSR_REDUCING_COEFFICIENT();
         }
     }
 
@@ -276,7 +276,7 @@ contract BountyV2 is Permissions {
             return 0;
         }
 
-        if (now < constantsHolder.launchTimestamp()) {
+        if (block.timestamp < constantsHolder.launchTimestamp()) {
             // network is not launched
             // bounty is turned off
             return 0;
@@ -292,10 +292,10 @@ contract BountyV2 is Permissions {
         }
 
         uint bounty = _calculateBountyShare(
-            epochPoolSize.add(bountyWasPaidInCurrentEpoch),
+            epochPoolSize + bountyWasPaidInCurrentEpoch,
             effectiveDelegated,
             effectiveDelegatedSum,
-            delegated.div(constantsHolder.msr()),
+            delegated / constantsHolder.msr(),
             bountyPaidToTheValidator
         );
 
@@ -317,7 +317,7 @@ contract BountyV2 is Permissions {
     {
         epochPool = _epochPool;
         for (nextEpoch = _nextEpoch; nextEpoch <= currentMonth; ++nextEpoch) {
-            epochPool = epochPool.add(_getEpochReward(nextEpoch, timeHelpers, constantsHolder));
+            epochPool = epochPool + _getEpochReward(nextEpoch, timeHelpers, constantsHolder);
         }
     }
 
@@ -334,12 +334,12 @@ contract BountyV2 is Permissions {
         if (epoch < firstEpoch) {
             return 0;
         }
-        uint epochIndex = epoch.sub(firstEpoch);
-        uint year = epochIndex.div(EPOCHS_PER_YEAR);
+        uint epochIndex = epoch - firstEpoch;
+        uint year = epochIndex / EPOCHS_PER_YEAR;
         if (year >= 6) {
-            uint power = year.sub(6).div(3).add(1);
+            uint power = (year - 6) / 3 + 1;
             if (power < 256) {
-                return YEAR6_BOUNTY.div(2 ** power).div(EPOCHS_PER_YEAR);
+                return YEAR6_BOUNTY / 2 ** power / EPOCHS_PER_YEAR;
             } else {
                 return 0;
             }
@@ -352,7 +352,7 @@ contract BountyV2 is Permissions {
                 YEAR5_BOUNTY,
                 YEAR6_BOUNTY
             ];
-            return customBounties[year].div(EPOCHS_PER_YEAR);
+            return customBounties[year] / EPOCHS_PER_YEAR;
         }
     }
 
@@ -369,28 +369,28 @@ contract BountyV2 is Permissions {
         uint lastRewardTimestamp = nodes.getNodeLastRewardDate(nodeIndex);
         uint lastRewardMonth = timeHelpers.timestampToMonth(lastRewardTimestamp);
         uint lastRewardMonthStart = timeHelpers.monthToTimestamp(lastRewardMonth);
-        uint timePassedAfterMonthStart = lastRewardTimestamp.sub(lastRewardMonthStart);
+        uint timePassedAfterMonthStart = lastRewardTimestamp - lastRewardMonthStart;
         uint currentMonth = timeHelpers.getCurrentMonth();
         assert(lastRewardMonth <= currentMonth);
 
         if (lastRewardMonth == currentMonth) {
-            uint nextMonthStart = timeHelpers.monthToTimestamp(currentMonth.add(1));
-            uint nextMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth.add(2));
-            if (lastRewardTimestamp < lastRewardMonthStart.add(nodeCreationWindowSeconds)) {
-                return nextMonthStart.sub(BOUNTY_WINDOW_SECONDS);
+            uint nextMonthStart = timeHelpers.monthToTimestamp(currentMonth + 1);
+            uint nextMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth + 2);
+            if (lastRewardTimestamp < lastRewardMonthStart + nodeCreationWindowSeconds) {
+                return nextMonthStart - BOUNTY_WINDOW_SECONDS;
             } else {
-                return _min(nextMonthStart.add(timePassedAfterMonthStart), nextMonthFinish.sub(BOUNTY_WINDOW_SECONDS));
+                return _min(nextMonthStart + timePassedAfterMonthStart, nextMonthFinish - BOUNTY_WINDOW_SECONDS);
             }
-        } else if (lastRewardMonth.add(1) == currentMonth) {
+        } else if (lastRewardMonth + 1 == currentMonth) {
             uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
-            uint currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth.add(1));
+            uint currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth + 1);
             return _min(
-                currentMonthStart.add(_max(timePassedAfterMonthStart, nodeCreationWindowSeconds)),
-                currentMonthFinish.sub(BOUNTY_WINDOW_SECONDS)
+                currentMonthStart + _max(timePassedAfterMonthStart, nodeCreationWindowSeconds),
+                currentMonthFinish - BOUNTY_WINDOW_SECONDS
             );
         } else {
             uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
-            return currentMonthStart.add(nodeCreationWindowSeconds);
+            return currentMonthStart + nodeCreationWindowSeconds;
         }
     }
 
@@ -406,12 +406,10 @@ contract BountyV2 is Permissions {
         returns (uint)
     {
         if (maxNodesAmount > 0) {
-            uint totalBountyShare = monthBounty
-                .mul(effectiveDelegated)
-                .div(effectiveDelegatedSum);
+            uint totalBountyShare = monthBounty * effectiveDelegated / effectiveDelegatedSum;
             return _min(
-                totalBountyShare.div(maxNodesAmount),
-                totalBountyShare.sub(paidToValidator)
+                totalBountyShare / maxNodesAmount,
+                totalBountyShare - paidToValidator
             );
         } else {
             return 0;

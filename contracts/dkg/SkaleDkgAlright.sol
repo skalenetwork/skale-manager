@@ -21,10 +21,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../SkaleDKG.sol";
 import "../ContractManager.sol";
 import "../Wallets.sol";
@@ -36,7 +34,6 @@ import "../KeyStorage.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgAlright {
-    using SafeMath for uint;
 
     event AllDataReceived(bytes32 indexed schainHash, uint nodeIndex);
     event SuccessfulDKG(bytes32 indexed schainHash);
@@ -59,7 +56,7 @@ library SkaleDkgAlright {
         uint numberOfParticipant = channels[schainHash].n;
         require(numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted, "Still Broadcasting phase");
         require(
-            startAlrightTimestamp[schainHash].add(_getComplaintTimeLimit(contractManager)) > block.timestamp,
+            startAlrightTimestamp[schainHash] + _getComplaintTimeLimit(contractManager) > block.timestamp,
             "Incorrect time for alright"
         );
         require(
@@ -72,7 +69,7 @@ library SkaleDkgAlright {
         dkgProcess[schainHash].numberOfCompleted++;
         emit AllDataReceived(schainHash, fromNodeIndex);
         if (dkgProcess[schainHash].numberOfCompleted == numberOfParticipant) {
-            lastSuccessfulDKG[schainHash] = now;
+            lastSuccessfulDKG[schainHash] = block.timestamp;
             channels[schainHash].active = false;
             KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
             emit SuccessfulDKG(schainHash);

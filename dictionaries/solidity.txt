@@ -5,3 +5,4 @@ mload
 selfdestruct
 staticcall
 struct
+abicoder

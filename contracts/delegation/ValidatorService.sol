@@ -21,10 +21,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 import "../Permissions.sol";
 import "../ConstantsHolder.sol";
@@ -45,7 +44,7 @@ import "./TimeHelpers.sol";
  */
 contract ValidatorService is Permissions {
 
-    using ECDSA for bytes32;
+    using ECDSAUpgradeable for bytes32;
 
     struct Validator {
         string name;
@@ -186,7 +185,7 @@ contract ValidatorService is Permissions {
             address(0),
             description,
             feeRate,
-            now,
+            block.timestamp,
             minimumDelegationAmount,
             true
         );
@@ -228,7 +227,7 @@ contract ValidatorService is Permissions {
         uint position = _find(trustedValidatorsList, validatorId);
         if (position < trustedValidatorsList.length) {
             trustedValidatorsList[position] =
-                trustedValidatorsList[trustedValidatorsList.length.sub(1)];
+                trustedValidatorsList[trustedValidatorsList.length - 1];
         }
         trustedValidatorsList.pop();
         emit ValidatorWasDisabled(validatorId);
@@ -397,9 +396,9 @@ contract ValidatorService is Permissions {
             if (_nodeAddresses[validatorId][i] == nodeAddress) {
                 if (i + 1 < _nodeAddresses[validatorId].length) {
                     _nodeAddresses[validatorId][i] =
-                        _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
+                        _nodeAddresses[validatorId][_nodeAddresses[validatorId].length - 1];
                 }
-                delete _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
+                delete _nodeAddresses[validatorId][_nodeAddresses[validatorId].length - 1];
                 _nodeAddresses[validatorId].pop();
                 break;
             }

@@ -1,4 +1,4 @@
 {
     "detectors_to_exclude": "similar-names,reentrancy-events,solc-version,assembly,timestamp,calls-loop,reentrancy-no-eth,public-mappings-nested,incorrect-equality",
-    "filter_paths": "@openzeppelin/upgrades/contracts/|@openzeppelin/contracts-ethereum-package/contracts/|@openzeppelin/contracts/|thirdparty|test/"
+    "filter_paths": "@openzeppelin/contracts/|@openzeppelin/contracts-upgradeable/|thirdparty|test/"
 }
