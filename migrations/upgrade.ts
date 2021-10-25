@@ -1,8 +1,8 @@
-import { contracts, getContractKeyInAbiFile, getManifestFile } from "./deploy";
+import { contracts, getContractKeyInAbiFile, getManifestFile, getContractFactory } from "./deploy";
 import { ethers, network, upgrades, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, Nodes, SchainsInternal, SkaleManager, Wallets } from "../typechain";
+import { ContractManager, Nodes, SchainsInternal, SkaleManager, SyncManager } from "../typechain";
 import { getImplementationAddress, hashBytecode } from "@openzeppelin/upgrades-core";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from "./tools/abi";
@@ -13,9 +13,6 @@ import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-
 import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
 import { getVersion } from "./tools/version";
-import util from 'util';
-import { exec as execSync } from 'child_process';
-const exec = util.promisify(execSync);
 
 export async function getContractFactoryAndUpdateManifest(contract: string) {
     const manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8"));
@@ -115,7 +112,7 @@ export async function upgrade(
         await (await contractManager.transferOwnership(safe)).wait();
         for (const contractName of
             ["SkaleToken"].concat(contractNamesToUpgrade
-                .filter(name => !['ContractManager', 'TimeHelpers', 'Decryption', 'ECDH', 'Wallets'].includes(name)))) {
+                .filter(name => !['ContractManager', 'TimeHelpers', 'Decryption', 'ECDH', 'SyncManager'].includes(name)))) {
                     const contractFactory = await getContractFactoryAndUpdateManifest(contractName);
                     let _contract = contractName;
                     if (contractName === "BountyV2") {
@@ -144,7 +141,14 @@ export async function upgrade(
         const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
 
         console.log(`Prepare upgrade of ${contract}`);
-        const newImplementationAddress = await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+        const newImplementationAddress = await upgrades.prepareUpgrade(
+            proxyAddress,
+            contractFactory,
+            {
+                unsafeAllowLinkedLibraries: true,
+                unsafeAllowRenames: true
+            }
+        );
         const currentImplementationAddress = await getImplementationAddress(network.provider, proxyAddress);
         if (newImplementationAddress !== currentImplementationAddress)
         {
@@ -229,9 +233,29 @@ async function main() {
         "1.8.1",
         ["ContractManager"].concat(contracts),
         async (safeTransactions, abi, contractManager) => {
-            await exec("sed -i 's/complaintTimelimit/complaintTimeLimit/g' .openzeppelin/*.json");
+            const safe = await contractManager.owner();
+            const [ deployer ] = await ethers.getSigners();
+
+            const syncManagerName = "SyncManager";
+            const syncManagerFactory = await getContractFactory(syncManagerName);
+            console.log("Deploy", syncManagerName);
+            const syncManager = (await upgrades.deployProxy(syncManagerFactory, [contractManager.address])) as SyncManager;
+            await syncManager.deployTransaction.wait();
+            await (await syncManager.grantRole(await syncManager.DEFAULT_ADMIN_ROLE(), safe)).wait();
+            await (await syncManager.revokeRole(await syncManager.DEFAULT_ADMIN_ROLE(), deployer.address)).wait();
+            console.log(chalk.yellowBright("Prepare transaction to register", syncManagerName));
+            console.log("Register", syncManagerName, "as", syncManagerName, "=>", syncManager.address);
+            safeTransactions.push(encodeTransaction(
+                0,
+                contractManager.address,
+                0,
+                contractManager.interface.encodeFunctionData("setContractsAddress", [syncManagerName, syncManager.address]),
+            ));
+            await verifyProxy(syncManagerName, syncManager.address, []);
+            abi[getContractKeyInAbiFile(syncManagerName) + "_abi"] = syncManager.interface;
+            abi[getContractKeyInAbiFile(syncManagerName) + "_address"] = syncManager.address;
         },
-        async (safeTransactions, abi) => undefined
+        async (safeTransactions, abi, contractManager) => undefined
     );
 }
 

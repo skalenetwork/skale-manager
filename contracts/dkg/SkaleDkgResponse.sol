@@ -21,10 +21,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../SkaleDKG.sol";
 import "../Wallets.sol";
 import "../Decryption.sol";
@@ -38,7 +36,6 @@ import "../utils/FieldOperations.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgResponse {
-    using SafeMath for uint;
     using G2Operations for G2Operations.G2Point;
 
     function response(
@@ -57,9 +54,8 @@ library SkaleDkgResponse {
         require(index < channels[schainHash].n, "Node is not in this group");
         require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(
-            complaints[schainHash].startComplaintBlockTimestamp.add(
-                _getComplaintTimeLimit(contractManager)
-            ) > block.timestamp,
+            complaints[schainHash].startComplaintBlockTimestamp
+                + _getComplaintTimeLimit(contractManager) > block.timestamp,
             "Incorrect time for response"
         );
         require(complaints[schainHash].isResponse, "Have not submitted pre-response data");

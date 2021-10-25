@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
@@ -94,7 +94,7 @@ contract Punisher is Permissions, ILocker {
         if (amount > _locked[holder]) {
             delete _locked[holder];
         } else {
-            _locked[holder] = _locked[holder].sub(amount);
+            _locked[holder] = _locked[holder] - amount;
         }
 
         emit Forgive(holder, amount);
@@ -119,7 +119,7 @@ contract Punisher is Permissions, ILocker {
      * delegations.
      */
     function handleSlash(address holder, uint amount) external allow("DelegationController") {
-        _locked[holder] = _locked[holder].add(amount);
+        _locked[holder] = _locked[holder] + amount;
     }
 
     function initialize(address contractManagerAddress) public override initializer {

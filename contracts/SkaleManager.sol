@@ -19,12 +19,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
@@ -42,6 +41,7 @@ import "./Wallets.sol";
  * management, and monitoring verdicts.
  */
 contract SkaleManager is IERC777Recipient, Permissions {
+
     IERC1820Registry private _erc1820;
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
@@ -140,7 +140,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(
                 nodeIndex,
-                now.add(
+                block.timestamp + (
                     isSchains ?
                     ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay() :
                     0
@@ -148,7 +148,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             );
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
-        _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());
+        _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
     }
 
     function deleteSchain(string calldata name) external {
@@ -186,9 +186,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
             0,
             0,
             bounty,
-            uint(-1));
+            type(uint).max);
         
-        _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());
+        _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
     }
 
     function setVersion(string calldata newVersion) external onlyOwner {
@@ -202,7 +202,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
 
-    function _payBounty(uint bounty, uint validatorId) private returns (bool) {        
+    function _payBounty(uint bounty, uint validatorId) private {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
         
@@ -213,7 +213,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function _refundGasByValidator(uint validatorId, address payable spender, uint spentGas) private {
-        uint gasCostOfRefundGasByValidator = 37564;
+        uint gasCostOfRefundGasByValidator = 41130;
         Wallets(payable(contractManager.getContract("Wallets")))
         .refundGasByValidator(validatorId, spender, spentGas + gasCostOfRefundGasByValidator);
     }

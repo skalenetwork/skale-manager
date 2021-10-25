@@ -19,23 +19,23 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 import "./utils/StringUtils.sol";
-
+import "./thirdparty/openzeppelin/InitializableWithGap.sol";
 
 /**
  * @title ContractManager
  * @dev Contract contains the actual current mapping from contract IDs
  * (in the form of human-readable strings) to addresses.
  */
-contract ContractManager is OwnableUpgradeSafe, IContractManager {
+contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractManager {
     using StringUtils for string;
-    using Address for address;
+    using AddressUpgradeable for address;
 
     string public constant BOUNTY = "Bounty";
     string public constant CONSTANTS_HOLDER = "ConstantsHolder";
@@ -55,7 +55,7 @@ contract ContractManager is OwnableUpgradeSafe, IContractManager {
     event ContractUpgraded(string contractsName, address contractsAddress);
 
     function initialize() external initializer {
-        OwnableUpgradeSafe.__Ownable_init();
+        OwnableUpgradeable.__Ownable_init();
     }
 
     /**
