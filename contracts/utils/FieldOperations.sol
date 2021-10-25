@@ -281,6 +281,11 @@ library G2Operations {
         // return isG2ZeroPoint(value.x, value.y);
     }
 
+    /**
+     * @dev Checks are G2 points identical.
+     * This function will return false if following coordinates
+     * of points are different, even if its different on P.
+     */
     function isEqual(
         G2Point memory value1,
         G2Point memory value2
