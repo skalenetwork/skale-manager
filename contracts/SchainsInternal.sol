@@ -19,10 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/EnumerableSet.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 
 import "./interfaces/ISkaleDKG.sol";
@@ -39,7 +38,7 @@ import "./Nodes.sol";
 contract SchainsInternal is Permissions, ISchainsInternal {
 
     using Random for Random.RandomGenerator;
-    using EnumerableSet for EnumerableSet.UintSet;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
     struct Schain {
         string name;
@@ -96,7 +95,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
     mapping (bytes32 => uint[]) private _schainToExceptionNodes;
 
-    EnumerableSet.UintSet private _keysOfSchainTypes;
+    EnumerableSetUpgradeable.UintSet private _keysOfSchainTypes;
 
     bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
@@ -159,9 +158,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         schains[schainHash].partOfNode = partOfNode;
         if (partOfNode > 0) {
-            sumOfSchainsResources = sumOfSchainsResources.add(
-                numberOfNodes.mul(constantsHolder.TOTAL_SPACE_ON_NODE()).div(partOfNode)
-            );
+            sumOfSchainsResources = sumOfSchainsResources +
+                numberOfNodes * constantsHolder.TOTAL_SPACE_ON_NODE() / partOfNode;
         }
         return _generateGroup(schainHash, numberOfNodes);
     }
@@ -179,8 +177,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * an additional SKL token deposit.
      */
     function changeLifetime(bytes32 schainHash, uint lifetime, uint deposit) external allow("Schains") {
-        schains[schainHash].deposit = schains[schainHash].deposit.add(deposit);
-        schains[schainHash].lifetime = schains[schainHash].lifetime.add(lifetime);
+        schains[schainHash].deposit = schains[schainHash].deposit + deposit;
+        schains[schainHash].lifetime = schains[schainHash].lifetime + lifetime;
     }
 
     /**
@@ -192,8 +190,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         isSchainActive[schainHash] = false;
         uint length = schainIndexes[from].length;
         uint index = schains[schainHash].indexInOwnerList;
-        if (index != length.sub(1)) {
-            bytes32 lastSchainHash = schainIndexes[from][length.sub(1)];
+        if (index != length - 1) {
+            bytes32 lastSchainHash = schainIndexes[from][length - 1];
             schains[lastSchainHash].indexInOwnerList = index;
             schainIndexes[from][index] = lastSchainHash;
         }
@@ -203,7 +201,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         // optimize
         for (uint i = 0; i + 1 < schainsAtSystem.length; i++) {
             if (schainsAtSystem[i] == schainHash) {
-                schainsAtSystem[i] = schainsAtSystem[schainsAtSystem.length.sub(1)];
+                schainsAtSystem[i] = schainsAtSystem[schainsAtSystem.length - 1];
                 break;
             }
         }
@@ -225,7 +223,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         allowThree("NodeRotation", "SkaleDKG", "Schains")
     {
         uint indexOfNode = _findNode(schainHash, nodeIndex);
-        uint indexOfLastNode = schainsGroups[schainHash].length.sub(1);
+        uint indexOfLastNode = schainsGroups[schainHash].length - 1;
 
         if (indexOfNode == indexOfLastNode) {
             schainsGroups[schainHash].pop();
@@ -273,7 +271,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             schainsGroups[schainHash].push(nodeIndex);
         } else {
             schainsGroups[schainHash][holesForSchains[schainHash][0]] = nodeIndex;
-            uint min = uint(-1);
+            uint min = type(uint).max;
             uint index = 0;
             for (uint i = 1; i < holesForSchains[schainHash].length; i++) {
                 if (min > holesForSchains[schainHash][i]) {
@@ -281,7 +279,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
                     index = i;
                 }
             }
-            if (min == uint(-1)) {
+            if (min == type(uint).max) {
                 delete holesForSchains[schainHash];
             } else {
                 holesForSchains[schainHash][0] = min;
@@ -418,7 +416,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * @dev Checks whether schain lifetime has expired.
      */
     function isTimeExpired(bytes32 schainHash) external view returns (bool) {
-        return uint(schains[schainHash].startDate).add(schains[schainHash].lifetime) < block.timestamp;
+        return uint(schains[schainHash].startDate) + schains[schainHash].lifetime < block.timestamp;
     }
 
     /**
@@ -580,7 +578,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         allowThree("NodeRotation", "SkaleDKG", "Schains")
     {
         uint length = schainsForNodes[nodeIndex].length;
-        if (schainIndex == length.sub(1)) {
+        if (schainIndex == length - 1) {
             schainsForNodes[nodeIndex].pop();
         } else {
             delete schainsForNodes[nodeIndex][schainIndex];
@@ -642,7 +640,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
         require(nodes.countNodesWithFreeSpace(space) >= nodesInGroup.length, "Not enough nodes to create Schain");
         Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
-            abi.encodePacked(uint(blockhash(block.number.sub(1))), schainHash)
+            abi.encodePacked(uint(blockhash(block.number - 1)), schainHash)
         );
         for (uint i = 0; i < numberOfNodes; i++) {
             uint node = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);

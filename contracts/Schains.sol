@@ -19,8 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
 
@@ -115,7 +114,7 @@ contract Schains is Permissions, ISchains {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
         uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
-        require(now >= schainCreationTimeStamp, "It is not a time for creating Schain");
+        require(block.timestamp >= schainCreationTimeStamp, "It is not a time for creating Schain");
         require(
             schainParameters.lifetime >= minSchainLifetime,
             "Minimal schain lifetime should be satisfied"
@@ -280,13 +279,13 @@ contract Schains is Permissions, ISchains {
         if (divisor == 0) {
             return 1e18;
         } else {
-            uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
+            uint up = nodeDeposit * numberOfNodes * lifetime * 2;
             uint down = uint(
                 uint(constantsHolder.SMALL_DIVISOR())
-                    .mul(uint(constantsHolder.SECONDS_TO_YEAR()))
-                    .div(divisor)
+                * uint(constantsHolder.SECONDS_TO_YEAR())
+                / divisor
             );
-            return up.div(down);
+            return up / down;
         }
     }
 

@@ -19,9 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+pragma solidity 0.8.9;
 
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
@@ -32,7 +30,6 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
  * These functions are used to calculate monthly and Proof of Use epochs.
  */
 contract TimeHelpers {
-    using SafeMath for uint;
 
     uint constant private _ZERO_YEAR = 2020;
 
@@ -41,15 +38,7 @@ contract TimeHelpers {
     }
 
     function getCurrentMonth() external view virtual returns (uint) {
-        return timestampToMonth(now);
-    }
-
-    function timestampToDay(uint timestamp) external view returns (uint) {
-        uint wholeDays = timestamp / BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY;
-        uint zeroDay = BokkyPooBahsDateTimeLibrary.timestampFromDate(_ZERO_YEAR, 1, 1) /
-            BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY;
-        require(wholeDays >= zeroDay, "Timestamp is too far in the past");
-        return wholeDays - zeroDay;
+        return timestampToMonth(block.timestamp);
     }
 
     function timestampToYear(uint timestamp) external view virtual returns (uint) {
@@ -76,7 +65,7 @@ contract TimeHelpers {
         uint month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
         require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
-        month = month.sub(1).add(year.sub(_ZERO_YEAR).mul(12));
+        month = month - 1 + (year - _ZERO_YEAR) * 12;
         require(month > 0, "Timestamp is too far in the past");
         return month;
     }
@@ -84,9 +73,9 @@ contract TimeHelpers {
     function monthToTimestamp(uint month) public view virtual returns (uint timestamp) {
         uint year = _ZERO_YEAR;
         uint _month = month;
-        year = year.add(_month.div(12));
-        _month = _month.mod(12);
-        _month = _month.add(1);
+        year = year + _month / 12;
+        _month = _month % 12;
+        _month = _month + 1;
         return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, _month, 1);
     }
 }

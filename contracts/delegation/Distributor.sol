@@ -19,12 +19,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "../Permissions.sol";
 import "../ConstantsHolder.sol";
@@ -102,7 +101,7 @@ contract Distributor is Permissions, IERC777Recipient {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        require(now >= timeHelpers.addMonths(
+        require(block.timestamp >= timeHelpers.addMonths(
                 constantsHolder.launchTimestamp(),
                 constantsHolder.BOUNTY_LOCKUP_MONTHS()
             ), "Bounty is locked");
@@ -140,7 +139,7 @@ contract Distributor is Permissions, IERC777Recipient {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        require(now >= timeHelpers.addMonths(
+        require(block.timestamp >= timeHelpers.addMonths(
                 constantsHolder.launchTimestamp(),
                 constantsHolder.BOUNTY_LOCKUP_MONTHS()
             ), "Fee is locked");
@@ -215,18 +214,17 @@ contract Distributor is Permissions, IERC777Recipient {
 
         earned = 0;
         endMonth = currentMonth;
-        if (endMonth > startMonth.add(12)) {
-            endMonth = startMonth.add(12);
+        if (endMonth > startMonth + 12) {
+            endMonth = startMonth + 12;
         }
         for (uint i = startMonth; i < endMonth; ++i) {
             uint effectiveDelegatedToValidator =
                 delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
             if (effectiveDelegatedToValidator.muchGreater(0)) {
-                earned = earned.add(
-                    _bountyPaid[validatorId][i].mul(
-                        delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i))
-                            .div(effectiveDelegatedToValidator)
-                    );
+                earned = earned + 
+                    _bountyPaid[validatorId][i] *
+                    delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i) /
+                    effectiveDelegatedToValidator;
             }
         }
     }
@@ -246,11 +244,11 @@ contract Distributor is Permissions, IERC777Recipient {
 
         earned = 0;
         endMonth = currentMonth;
-        if (endMonth > startMonth.add(12)) {
-            endMonth = startMonth.add(12);
+        if (endMonth > startMonth + 12) {
+            endMonth = startMonth + 12;
         }
         for (uint i = startMonth; i < endMonth; ++i) {
-            earned = earned.add(_feePaid[validatorId][i]);
+            earned = earned + _feePaid[validatorId][i];
         }
     }
 
@@ -268,10 +266,10 @@ contract Distributor is Permissions, IERC777Recipient {
         uint currentMonth = timeHelpers.getCurrentMonth();
         uint feeRate = validatorService.getValidator(validatorId).feeRate;
 
-        uint fee = amount.mul(feeRate).div(1000);
-        uint bounty = amount.sub(fee);
-        _bountyPaid[validatorId][currentMonth] = _bountyPaid[validatorId][currentMonth].add(bounty);
-        _feePaid[validatorId][currentMonth] = _feePaid[validatorId][currentMonth].add(fee);
+        uint fee = amount * feeRate / 1000;
+        uint bounty = amount - fee;
+        _bountyPaid[validatorId][currentMonth] = _bountyPaid[validatorId][currentMonth] + bounty;
+        _feePaid[validatorId][currentMonth] = _feePaid[validatorId][currentMonth] + fee;
 
         if (_firstUnwithdrawnMonthForValidator[validatorId] == 0) {
             _firstUnwithdrawnMonthForValidator[validatorId] = currentMonth;

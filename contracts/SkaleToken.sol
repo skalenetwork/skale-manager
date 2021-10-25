@@ -19,9 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./thirdparty/openzeppelin/ERC777.sol";
 
@@ -48,7 +48,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
 
     uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
-    constructor(address contractsAddress, address[] memory defOps) public
+    constructor(address contractsAddress, address[] memory defOps)
     ERC777("SKALE", "SKL", defOps)
     {
         Permissions.initialize(contractsAddress);
@@ -147,13 +147,13 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         super._callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
     }
 
-    // we have to override _msgData() and _msgSender() functions because of collision in Context and ContextUpgradeSafe
+    // we have to override _msgData() and _msgSender() functions because of collision in Context and ContextUpgradeable
 
-    function _msgData() internal view override(Context, ContextUpgradeSafe) returns (bytes memory) {
+    function _msgData() internal view override(Context, ContextUpgradeable) returns (bytes memory) {
         return Context._msgData();
     }
 
-    function _msgSender() internal view override(Context, ContextUpgradeSafe) returns (address payable) {
+    function _msgSender() internal view override(Context, ContextUpgradeable) returns (address) {
         return Context._msgSender();
     }
 }

@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
 import "./Permissions.sol";
 
@@ -80,8 +80,8 @@ contract ConstantsHolder is Permissions {
     uint public constant BROADCAST_DELTA = 131000;
     uint public constant COMPLAINT_BAD_DATA_DELTA = 49580;
     uint public constant PRE_RESPONSE_DELTA = 74500;
-    uint public constant COMPLAINT_DELTA = 79415;
-    uint public constant RESPONSE_DELTA = 71562;
+    uint public constant COMPLAINT_DELTA = 83069;
+    uint public constant RESPONSE_DELTA = 64461;
 
     // MSR - Minimum staking requirement
     uint public msr;
@@ -208,7 +208,10 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the launch timestamp.
      */
     function setLaunchTimestamp(uint timestamp) external onlyConstantsHolderManager {
-        require(now < launchTimestamp, "Cannot set network launch timestamp because network is already launched");
+        require(
+            block.timestamp < launchTimestamp,
+            "Cannot set network launch timestamp because network is already launched"
+        );
         emit ConstantUpdated(
             keccak256(abi.encodePacked("LaunchTimestamp")),
             uint(launchTimestamp),
@@ -303,7 +306,7 @@ contract ConstantsHolder is Permissions {
         allowableLatency = 150000;
         deltaPeriod = 3600;
         checkTime = 300;
-        launchTimestamp = uint(-1);
+        launchTimestamp = type(uint).max;
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
         proofOfUseDelegationPercentage = 50;

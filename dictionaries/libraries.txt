@@ -15,3 +15,7 @@ solhint
 solidity-docgen
 typechain
 codecov
+initializable
+mixedcase
+camelcase
+ethersproject

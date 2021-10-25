@@ -19,8 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9; 
 
 import "./interfaces/ISkaleDKG.sol";
 import "./utils/Random.sol";
@@ -107,7 +106,7 @@ contract NodeRotation is Permissions {
                     ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schains[i]),
                     "DKG did not finish on Schain"
                 );
-                if (rotations[schains[i]].freezeUntil < now) {
+                if (rotations[schains[i]].freezeUntil < block.timestamp) {
                     _startWaiting(schains[i], nodeIndex);
                 } else {
                     if (rotations[schains[i]].nodeIndex != nodeIndex) {
@@ -129,7 +128,7 @@ contract NodeRotation is Permissions {
      * @dev Allows Owner to immediately rotate an schain.
      */
     function skipRotationDelay(bytes32 schainIndex) external onlyDebugger {
-        rotations[schainIndex].freezeUntil = now;
+        rotations[schainIndex].freezeUntil = block.timestamp;
         emit RotationDelaySkipped(schainIndex);
     }
 
@@ -148,7 +147,7 @@ contract NodeRotation is Permissions {
     }
 
     function isRotationInProgress(bytes32 schainIndex) external view returns (bool) {
-        return rotations[schainIndex].freezeUntil >= now && !waitForNewNode[schainIndex];
+        return rotations[schainIndex].freezeUntil >= block.timestamp && !waitForNewNode[schainIndex];
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -222,7 +221,7 @@ contract NodeRotation is Permissions {
     function _startWaiting(bytes32 schainIndex, uint nodeIndex) private {
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
-        rotations[schainIndex].freezeUntil = now.add(constants.rotationDelay());
+        rotations[schainIndex].freezeUntil = block.timestamp + constants.rotationDelay();
     }
 
     /**
@@ -238,9 +237,9 @@ contract NodeRotation is Permissions {
         leavingHistory[nodeIndex].push(
             LeavingHistory(
                 schainIndex,
-                shouldDelay ? now.add(
+                shouldDelay ? block.timestamp + 
                     ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay()
-                ) : now
+                : block.timestamp
             )
         );
         rotations[schainIndex].newNodeIndex = newNodeIndex;
