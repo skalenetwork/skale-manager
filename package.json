@@ -49,7 +49,7 @@
     "axios": "^0.21.2",
     "dotenv": "^10.0.0",
     "ethereumjs-util": "^7.1.3",
-    "ethers": "^5.4.7",
+    "ethers": "^5.5.1",
     "ethers-eip712": "^0.2.0",
     "hardhat": "^2.6.7",
     "web3": "^1.6.0"
