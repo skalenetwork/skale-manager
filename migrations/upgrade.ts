@@ -231,7 +231,47 @@ async function main() {
         async (safeTransactions, abi, contractManager) => {
             await exec("sed -i 's/lastSuccesfulDKG/lastSuccessfulDKG/g' .openzeppelin/*.json");
         },
-        async (safeTransactions, abi) => undefined
+        async (safeTransactions, abi) => {
+            const communityPoolName = "CommunityPool";
+            // Get address from https://github.com/skalenetwork/skale-network/blob/master/releases/mainnet/IMA/1.0.0-stable.1/contracts.json
+            const communityPoolAddress = "0x588801cA36558310D91234aFC2511502282b1621";
+            const contractManagerName = "ContractManager";
+            const contractManagerFactory = await ethers.getContractFactory(contractManagerName);
+            const contractManagerAddress = abi[getContractKeyInAbiFile(contractManagerName) + "_address"];
+            let contractManager;
+            if (contractManagerAddress) {
+                console.log(chalk.yellow("Will check community pool address"));
+                contractManager = contractManagerFactory.attach(contractManagerAddress) as ContractManager;
+                const constantSetterRole = await contractManager.CONSTANT_SETTER_ROLE();
+                let communityPoolAdded = false;
+                try {
+                    let communityPoolAddressFromContractManager = await contractManager.getContract(communityPoolName);
+                    if (communityPoolAddressFromContractManager === communityPoolAddress) {
+                        communityPoolAdded = true;
+                    } else {
+                        console.log(chalk.yellow("Incorrect community pool address was found"));
+                        console.log(chalk.yellow("Current community pool address " + communityPoolAddressFromContractManager));
+                        console.log(chalk.yellow("New community pool address     " + communityPoolAddress));
+                    }
+                } catch (e) {
+                    console.log(chalk.yellow("Looks like no address was found in community pool"));
+                    console.log(e);
+                }
+                if (!communityPoolAdded) {
+                    console.log(chalk.yellow("Prepare transaction to set community pool"));
+                    safeTransactions.push(encodeTransaction(
+                        0,
+                        contractManagerAddress,
+                        0,
+                        contractManager.interface.encodeFunctionData("setContractsAddress", [communityPoolName, communityPoolAddress])
+                    ));
+                }
+            } else {
+                console.log(chalk.red("MessageProxyForMainnet was not found!"));
+                console.log(chalk.red("Check your abi!!!"));
+                process.exit(1);
+            }
+        }
     );
 }
 
