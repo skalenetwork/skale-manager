@@ -233,8 +233,22 @@ async function main() {
         },
         async (safeTransactions, abi, contractManager) => {
             const communityPoolName = "CommunityPool";
+
             // Get address from https://github.com/skalenetwork/skale-network/blob/master/releases/mainnet/IMA/1.0.0-stable.1/contracts.json
-            const communityPoolAddress = "0x588801cA36558310D91234aFC2511502282b1621";
+            let communityPoolAddress = "0x588801cA36558310D91234aFC2511502282b1621";
+
+            const chainId = (await ethers.provider.getNetwork()).chainId;
+            if (chainId !== 1) {
+                console.log(chalk.yellow("Will deploy test contract to imitate community pool contract"));
+                const safeMockFactory = await ethers.getContractFactory("SafeMock");
+                const safeMock = (await safeMockFactory.deploy()) as SafeMock;
+                await safeMock.deployTransaction.wait();
+                communityPoolAddress = safeMock.address;
+            }
+            if (await ethers.provider.getCode(communityPoolAddress) === "0x") {
+                console.log(chalk.red("No community pool contract found"));
+                process.exit(1);
+            }
             console.log(chalk.yellow("Will check community pool address"));
             let communityPoolAdded = false;
             try {
