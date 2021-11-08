@@ -236,7 +236,6 @@ async function main() {
             // Get address from https://github.com/skalenetwork/skale-network/blob/master/releases/mainnet/IMA/1.0.0-stable.1/contracts.json
             const communityPoolAddress = "0x588801cA36558310D91234aFC2511502282b1621";
             console.log(chalk.yellow("Will check community pool address"));
-            const constantSetterRole = await contractManager.CONSTANT_SETTER_ROLE();
             let communityPoolAdded = false;
             try {
                 const communityPoolAddressFromContractManager = await contractManager.getContract(communityPoolName);
