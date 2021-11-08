@@ -239,7 +239,7 @@ async function main() {
             const constantSetterRole = await contractManager.CONSTANT_SETTER_ROLE();
             let communityPoolAdded = false;
             try {
-                let communityPoolAddressFromContractManager = await contractManager.getContract(communityPoolName);
+                const communityPoolAddressFromContractManager = await contractManager.getContract(communityPoolName);
                 if (communityPoolAddressFromContractManager === communityPoolAddress) {
                     communityPoolAdded = true;
                 } else {
