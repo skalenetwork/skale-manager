@@ -228,50 +228,47 @@ async function main() {
     await upgrade(
         "1.8.1",
         ["ContractManager"].concat(contracts),
-        async (safeTransactions, abi, contractManager) => {
-            await exec("sed -i 's/lastSuccesfulDKG/lastSuccessfulDKG/g' .openzeppelin/*.json");
-        },
+        async (safeTransactions, abi, contractManager) => undefined,
         async (safeTransactions, abi, contractManager) => {
             const communityPoolName = "CommunityPool";
 
-            // Get address from https://github.com/skalenetwork/skale-network/blob/master/releases/mainnet/IMA/1.0.0-stable.1/contracts.json
-            let communityPoolAddress = "0x588801cA36558310D91234aFC2511502282b1621";
-
+            let communityPoolAddress = process.env.COMMUNITY_POOL_ADDRESS;
             const chainId = (await ethers.provider.getNetwork()).chainId;
-            if (chainId !== 1) {
-                console.log(chalk.yellow("Will deploy test contract to imitate community pool contract"));
-                const safeMockFactory = await ethers.getContractFactory("SafeMock");
-                const safeMock = (await safeMockFactory.deploy()) as SafeMock;
-                await safeMock.deployTransaction.wait();
-                communityPoolAddress = safeMock.address;
+
+            if (!communityPoolAddress && chainId === 1) {
+                // Get address from https://github.com/skalenetwork/skale-network/blob/master/releases/mainnet/IMA/1.0.0-stable.1/contracts.json
+                communityPoolAddress = "0x588801cA36558310D91234aFC2511502282b1621";
             }
-            if (await ethers.provider.getCode(communityPoolAddress) === "0x") {
-                console.log(chalk.red("No community pool contract found"));
-                process.exit(1);
-            }
-            console.log(chalk.yellow("Will check community pool address"));
-            let communityPoolAdded = false;
-            try {
-                const communityPoolAddressFromContractManager = await contractManager.getContract(communityPoolName);
-                if (communityPoolAddressFromContractManager === communityPoolAddress) {
-                    communityPoolAdded = true;
-                } else {
-                    console.log(chalk.yellow("Incorrect community pool address was found"));
-                    console.log(chalk.yellow("Current community pool address " + communityPoolAddressFromContractManager));
-                    console.log(chalk.yellow("New community pool address     " + communityPoolAddress));
+
+            if (communityPoolAddress) {
+                if (await ethers.provider.getCode(communityPoolAddress) === "0x") {
+                    console.log(chalk.red("No community pool contract found"));
+                    process.exit(1);
                 }
-            } catch (e) {
-                console.log(chalk.yellow("Looks like no address was found in community pool"));
-                console.log(e);
-            }
-            if (!communityPoolAdded) {
-                console.log(chalk.yellow("Prepare transaction to set community pool"));
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    contractManager.address,
-                    0,
-                    contractManager.interface.encodeFunctionData("setContractsAddress", [communityPoolName, communityPoolAddress])
-                ));
+                console.log(chalk.yellow("Will check community pool address"));
+                let communityPoolAdded = false;
+                try {
+                    const communityPoolAddressFromContractManager = await contractManager.getContract(communityPoolName);
+                    if (communityPoolAddressFromContractManager === communityPoolAddress) {
+                        communityPoolAdded = true;
+                    } else {
+                        console.log(chalk.yellow("Incorrect community pool address was found"));
+                        console.log(chalk.yellow("Current community pool address " + communityPoolAddressFromContractManager));
+                        console.log(chalk.yellow("New community pool address     " + communityPoolAddress));
+                    }
+                } catch (e) {
+                    console.log(chalk.yellow("Looks like no address was found in community pool"));
+                    console.log(e);
+                }
+                if (!communityPoolAdded) {
+                    console.log(chalk.yellow("Prepare transaction to set community pool"));
+                    safeTransactions.push(encodeTransaction(
+                        0,
+                        contractManager.address,
+                        0,
+                        contractManager.interface.encodeFunctionData("setContractsAddress", [communityPoolName, communityPoolAddress])
+                    ));
+                }
             }
         }
     );
