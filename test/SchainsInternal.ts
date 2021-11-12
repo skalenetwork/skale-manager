@@ -117,8 +117,6 @@ describe("SchainsInternal", () => {
         });
 
         it("should register schain index for owner", async () => {
-            await schainsInternal.setSchainIndex(schainNameHash, holder.address);
-
             const schain = await schainsInternal.schains(schainNameHash);
             schain.indexInOwnerList.should.be.equal(0);
 
@@ -149,7 +147,6 @@ describe("SchainsInternal", () => {
         describe("on registered schain", async function() {
             const nodeIndex = 0;
             this.beforeEach(async () => {
-                await schainsInternal.setSchainIndex(schainNameHash, holder.address);
                 await schainsInternal.createGroupForSchain(schainNameHash, 1, 2);
             });
 

@@ -310,7 +310,6 @@ contract Schains is Permissions, ISchains {
 
         // initialize Schain
         schainsInternal.initializeSchain(name, from, lifetime, deposit);
-        schainsInternal.setSchainIndex(keccak256(abi.encodePacked(name)), from);
     }
 
     /**

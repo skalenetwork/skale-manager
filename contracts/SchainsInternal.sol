@@ -50,6 +50,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         uint startBlock;
         uint deposit;
         uint64 index;
+        uint generation;
     }
 
     struct SchainType {
@@ -97,8 +98,11 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
     EnumerableSetUpgradeable.UintSet private _keysOfSchainTypes;
 
+    uint public currentGeneration;
+
     bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
+    bytes32 public constant GENERATION_MANAGER_ROLE = keccak256("GENERATION_MANAGER_ROLE");
 
     /**
      * @dev Emitted when schain type added.
@@ -120,6 +124,11 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         _;
     }
 
+    modifier onlyGenerationManager() {
+        require(hasRole(GENERATION_MANAGER_ROLE, msg.sender), "GENERATION_MANAGER_ROLE is required");
+        _;
+    }
+
     /**
      * @dev Allows Schain contract to initialize an schain.
      */
@@ -130,15 +139,22 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         uint deposit) external allow("Schains")
     {
         bytes32 schainHash = keccak256(abi.encodePacked(name));
-        schains[schainHash].name = name;
-        schains[schainHash].owner = from;
-        schains[schainHash].startDate = block.timestamp;
-        schains[schainHash].startBlock = block.number;
-        schains[schainHash].lifetime = lifetime;
-        schains[schainHash].deposit = deposit;
-        schains[schainHash].index = numberOfSchains;
+
+        schains[schainHash] = Schain({
+            name: name,
+            owner: from,
+            indexInOwnerList: schainIndexes[from].length,
+            partOfNode: 0,
+            startDate: block.timestamp,            
+            startBlock: block.number,
+            lifetime: lifetime,
+            deposit: deposit,
+            index: numberOfSchains,
+            generation: currentGeneration
+        });
         isSchainActive[schainHash] = true;
         numberOfSchains++;
+        schainIndexes[from].push(schainHash);
         schainsAtSystem.push(schainHash);
         usedSchainNames[schainHash] = true;
     }
@@ -162,14 +178,6 @@ contract SchainsInternal is Permissions, ISchainsInternal {
                 numberOfNodes * constantsHolder.TOTAL_SPACE_ON_NODE() / partOfNode;
         }
         return _generateGroup(schainHash, numberOfNodes);
-    }
-
-    /**
-     * @dev Allows Schains contract to set index in owner list.
-     */
-    function setSchainIndex(bytes32 schainHash, address from) external allow("Schains") {
-        schains[schainHash].indexInOwnerList = schainIndexes[from].length;
-        schainIndexes[from].push(schainHash);
     }
 
     /**
@@ -343,6 +351,17 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
     function makeSchainNodesVisible(bytes32 schainHash) external allowTwo("NodeRotation", "SkaleDKG") {
         _makeSchainNodesVisible(schainHash);
+    }
+
+    /**
+     * @dev Increments generation for all new schains
+     *
+     * Requirements:
+     * 
+     * - Sender must be granted with GENERATION_MANAGER_ROLE
+     */
+    function newGeneration() external onlyGenerationManager {
+        currentGeneration += 1;
     }
 
     /**
@@ -544,6 +563,13 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     function getSchainType(uint typeOfSchain) external view returns(uint8, uint) {
         require(_keysOfSchainTypes.contains(typeOfSchain), "Invalid type of schain");
         return (schainTypes[typeOfSchain].partOfNode, schainTypes[typeOfSchain].numberOfNodes);
+    }
+
+    /**
+     * @dev Returns generation of a particular schain
+     */
+    function getGeneration(bytes32 schainHash) external view returns (uint) {
+        return schains[schainHash].generation;
     }
 
     function initialize(address newContractsAddress) public override initializer {
