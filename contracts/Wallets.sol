@@ -152,7 +152,7 @@ contract Wallets is Permissions, IWallets {
     )
         external
         override
-        allowTwo("SkaleDKG", "MessageProxyForMainnet")
+        allowTwo("SkaleDKG", "CommunityPool")
     {
         uint amount = tx.gasprice * spentGas;
         if (isDebt) {
@@ -195,7 +195,7 @@ contract Wallets is Permissions, IWallets {
         msg.sender.transfer(amount);
     }
 
-    function getSchainBalance(bytes32 schainHash) external view returns (uint) {
+    function getSchainBalance(bytes32 schainHash) external view override returns (uint) {
         return _schainWallets[schainHash];
     }
 

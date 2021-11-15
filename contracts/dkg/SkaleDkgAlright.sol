@@ -24,6 +24,7 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../SkaleDKG.sol";
 import "../ContractManager.sol";
 import "../Wallets.sol";
@@ -35,6 +36,7 @@ import "../KeyStorage.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgAlright {
+    using SafeMath for uint;
 
     event AllDataReceived(bytes32 indexed schainHash, uint nodeIndex);
     event SuccessfulDKG(bytes32 indexed schainHash);
@@ -46,7 +48,8 @@ library SkaleDkgAlright {
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
-        mapping(bytes32 => uint) storage lastSuccessfulDKG
+        mapping(bytes32 => uint) storage lastSuccessfulDKG,
+        mapping(bytes32 => uint) storage startAlrightTimestamp
         
     )
         external
@@ -55,6 +58,10 @@ library SkaleDkgAlright {
         (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
         uint numberOfParticipant = channels[schainHash].n;
         require(numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted, "Still Broadcasting phase");
+        require(
+            startAlrightTimestamp[schainHash].add(_getComplaintTimelimit(contractManager)) > block.timestamp,
+            "Incorrect time for alright"
+        );
         require(
             complaints[schainHash].fromNodeToComplaint != fromNodeIndex ||
             (fromNodeIndex == 0 && complaints[schainHash].startComplaintBlockTimestamp == 0),
@@ -70,6 +77,10 @@ library SkaleDkgAlright {
             KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
             emit SuccessfulDKG(schainHash);
         }
+    }
+
+    function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
     }
 
 }

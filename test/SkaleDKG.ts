@@ -701,6 +701,168 @@ describe("SkaleDKG", () => {
                 assert(res.should.be.false);
             });
 
+            describe("should not front run complaint with missing broadcast", async () => {
+                let resResp: any;
+                before(async () => {
+                    twoSchainAreCreated = await makeSnapshot();
+                    await skaleDKG.connect(validatorsAccount[0]).broadcast(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        0,
+                        verificationVectors[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]]
+                    );
+                    await skipTime(ethers, 1800);
+
+                    const res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        1
+                    );
+                    assert(res.should.be.false);
+                    // Simulate front-running complaint
+                    await skaleDKG.connect(validatorsAccount[1]).broadcast(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        1,
+                        verificationVectors[indexes[1]],
+                        encryptedSecretKeyContributions[indexes[1]]
+                    ).should.be.rejectedWith("Incorrect time for broadcast");
+                    resResp = await (await skaleDKG.connect(validatorsAccount[0]).complaint(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        0,
+                        1
+                    )).wait();
+
+
+                });
+
+                after(async () => {
+                    await applySnapshot(twoSchainAreCreated);
+                });
+
+                it("bad guy should not be complainer (index 0)", async () => {
+                    if (resResp.events) {
+                        assert.equal(resResp.events[0].event, "BadGuy");
+                        assert.equal(resResp.events[0].args?.nodeIndex.toString(), "1");
+                    }
+                });
+            });
+
+            describe("should not front run complaint with missing alright", async () => {
+                let resResp: any;
+                before(async () => {
+                    twoSchainAreCreated = await makeSnapshot();
+                    await skaleDKG.connect(validatorsAccount[0]).broadcast(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        0,
+                        verificationVectors[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]]
+                    );
+                    await skaleDKG.connect(validatorsAccount[1]).broadcast(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        1,
+                        verificationVectors[indexes[1]],
+                        encryptedSecretKeyContributions[indexes[1]]
+                    );
+                    await skaleDKG.connect(validatorsAccount[0]).alright(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        0
+                    );
+                    await skipTime(ethers, 1800);
+
+                    const res = await skaleDKG.connect(validatorsAccount[1]).isAlrightPossible(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        1
+                    );
+                    assert(res.should.be.false);
+                    // Simulate front-running complaint
+                    await skaleDKG.connect(validatorsAccount[1]).alright(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        1
+                    ).should.be.rejectedWith("Incorrect time for alright");
+                    resResp = await (await skaleDKG.connect(validatorsAccount[0]).complaint(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        0,
+                        1
+                    )).wait();
+
+
+                });
+
+                after(async () => {
+                    await applySnapshot(twoSchainAreCreated);
+                });
+
+                it("bad guy should not be complainer (index 0)", async () => {
+                    if (resResp.events) {
+                        assert.equal(resResp.events[0].event, "BadGuy");
+                        assert.equal(resResp.events[0].args?.nodeIndex.toString(), "1");
+                    }
+                });
+            });
+
+            describe("should not front run complaint with missing response", async () => {
+                let resResp: any;
+                before(async () => {
+                    twoSchainAreCreated = await makeSnapshot();
+                    await skaleDKG.connect(validatorsAccount[0]).broadcast(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        0,
+                        verificationVectors[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]]
+                    );
+                    await skaleDKG.connect(validatorsAccount[1]).broadcast(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        1,
+                        verificationVectors[indexes[1]],
+                        encryptedSecretKeyContributions[indexes[1]]
+                    );
+                    await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        1,
+                        0
+                    );
+                    await skaleDKG.connect(validatorsAccount[0]).preResponse(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        0,
+                        verificationVectors[indexes[0]],
+                        verificationVectorMult[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]]
+                    );
+                    await skipTime(ethers, 1800);
+
+                    const res = await skaleDKG.connect(validatorsAccount[0]).isResponsePossible(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        0
+                    );
+                    assert(res.should.be.false);
+                    // Simulate front-running complaint
+                    await skaleDKG.connect(validatorsAccount[0]).response(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        0,
+                        secretNumbers[indexes[0]],
+                        multipliedShares[indexes[0]]
+                    ).should.be.rejectedWith("Incorrect time for response");
+                    resResp = await (await skaleDKG.connect(validatorsAccount[1]).complaint(
+                        stringValue(web3.utils.soliditySha3(schainName)),
+                        1,
+                        0
+                    )).wait();
+
+
+                });
+
+                after(async () => {
+                    await applySnapshot(twoSchainAreCreated);
+                });
+
+                it("bad guy should not be complainer (index 0)", async () => {
+                    if (resResp.events) {
+                        assert.equal(resResp.events[0].event, "BadGuy");
+                        assert.equal(resResp.events[0].args?.nodeIndex.toString(), "0");
+                    }
+                });
+            });
+
+
             describe("after sending complaint after missing broadcast", async () => {
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
