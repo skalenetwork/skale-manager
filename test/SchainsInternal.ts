@@ -98,6 +98,40 @@ describe("SchainsInternal", () => {
         schain.deposit.should.be.equal(5);
     });
 
+    it("should increase generation number", async () => {
+        const generationBefore = await schainsInternal.currentGeneration();
+        await schainsInternal.grantRole(await schainsInternal.GENERATION_MANAGER_ROLE(), owner.address);
+
+        await schainsInternal.newGeneration();
+
+        const generationAfter = await schainsInternal.currentGeneration();
+
+        generationBefore.add(1).should.be.equal(generationAfter);
+    });
+
+    it("should allow to switch generation only to generation manager", async () => {
+        await schainsInternal.newGeneration()
+            .should.eventually.rejectedWith("GENERATION_MANAGER_ROLE is required");
+    })
+
+    it("should set generation to schain", async () => {
+        let generation = await schainsInternal.currentGeneration();
+        await schainsInternal.grantRole(await schainsInternal.GENERATION_MANAGER_ROLE(), owner.address);
+
+        const generation0Name = "Generation 0";
+        const generation1Name = "Generation 1";
+        const generation0Hash = ethers.utils.solidityKeccak256(["string"], [generation0Name]);
+        const generation1Hash = ethers.utils.solidityKeccak256(["string"], [generation1Name]);
+        await schainsInternal.initializeSchain(generation0Name, holder.address, 5, 5);
+        (await schainsInternal.getGeneration(generation0Hash)).should.be.equal(generation);
+
+        await schainsInternal.newGeneration();
+        generation = generation.add(1);
+
+        await schainsInternal.initializeSchain(generation1Name, holder.address, 5, 5);
+        (await schainsInternal.getGeneration(generation1Hash)).should.be.equal(generation);
+    });
+
     describe("on existing schain", async () => {
         const schainNameHash = stringValue(web3.utils.soliditySha3("TestSchain"));
 
