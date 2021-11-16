@@ -256,11 +256,22 @@ async function main() {
             abi[getContractKeyInAbiFile(syncManagerName) + "_address"] = syncManager.address;
         },
         async (safeTransactions, abi, contractManager) => {
+            const schainsInternal = (await ethers.getContractFactory("SchainsInternal"))
+                .attach(await contractManager.getContract("SchainsInternal")) as SchainsInternal;
             safeTransactions.push(encodeTransaction(
                 0,
-                await contractManager.getContract("SchainsInternal"),
+                schainsInternal.address,
                 0,
-                (await ethers.getContractFactory("SchainsInternal")).interface.encodeFunctionData("newGeneration", []),
+                schainsInternal.interface.encodeFunctionData("grantRole", [
+                    await schainsInternal.GENERATION_MANAGER_ROLE(),
+                    await contractManager.owner()
+                ])
+            ));
+            safeTransactions.push(encodeTransaction(
+                0,
+                schainsInternal.address,
+                0,
+                schainsInternal.interface.encodeFunctionData("newGeneration"),
             ));
         }
     );
