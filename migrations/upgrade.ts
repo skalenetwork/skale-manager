@@ -2,7 +2,7 @@ import { contracts, getContractKeyInAbiFile, getManifestFile, getContractFactory
 import { ethers, network, upgrades, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, Nodes, SchainsInternal, SkaleManager, SyncManager } from "../typechain";
+import { ContractManager, SchainsInternal, SkaleManager, SyncManager } from "../typechain";
 import { getImplementationAddress, hashBytecode } from "@openzeppelin/upgrades-core";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from "./tools/abi";
@@ -255,7 +255,14 @@ async function main() {
             abi[getContractKeyInAbiFile(syncManagerName) + "_abi"] = syncManager.interface;
             abi[getContractKeyInAbiFile(syncManagerName) + "_address"] = syncManager.address;
         },
-        async (safeTransactions, abi, contractManager) => undefined
+        async (safeTransactions, abi, contractManager) => {
+            safeTransactions.push(encodeTransaction(
+                0,
+                await contractManager.getContract("SchainsInternal"),
+                0,
+                (await ethers.getContractFactory("SchainsInternal")).interface.encodeFunctionData("newGeneration", []),
+            ));
+        }
     );
 }
 
