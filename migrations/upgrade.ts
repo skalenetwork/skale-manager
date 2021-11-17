@@ -258,15 +258,17 @@ async function main() {
         async (safeTransactions, abi, contractManager) => {
             const schainsInternal = (await ethers.getContractFactory("SchainsInternal"))
                 .attach(await contractManager.getContract("SchainsInternal")) as SchainsInternal;
+            const GENERATION_MANAGER_ROLE = ethers.utils.solidityKeccak256(["string"], ["GENERATION_MANAGER_ROLE"])
             safeTransactions.push(encodeTransaction(
                 0,
                 schainsInternal.address,
                 0,
                 schainsInternal.interface.encodeFunctionData("grantRole", [
-                    await schainsInternal.GENERATION_MANAGER_ROLE(),
+                    GENERATION_MANAGER_ROLE,
                     await contractManager.owner()
                 ])
             ));
+            console.log(chalk.yellowBright("Prepare transaction to switch generation"));
             safeTransactions.push(encodeTransaction(
                 0,
                 schainsInternal.address,
