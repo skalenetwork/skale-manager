@@ -400,9 +400,9 @@ contract Schains is Permissions, ISchains {
         }
         schainsInternal.deleteGroup(schainHash);
         address from = schainsInternal.getSchainOwner(schainHash);
-        schainsInternal.removeSchain(schainHash, from);
         schainsInternal.removeHolesForSchain(schainHash);
         nodeRotation.removeRotation(schainHash);
+        schainsInternal.removeSchain(schainHash, from);
         Wallets(
             payable(contractManager.getContract("Wallets"))
         ).withdrawFundsFromSchainWallet(payable(from), schainHash);
