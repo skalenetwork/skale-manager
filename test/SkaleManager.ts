@@ -34,9 +34,9 @@ import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { skipTime, currentTime } from "./tools/time";
 import { deployBounty } from "./tools/deploy/bounty";
-import { BigNumber, Wallet } from "ethers";
+import { BigNumber, BytesLike, Wallet } from "ethers";
 import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { solidity } from "ethereum-waffle";
 import { deployWallets } from "./tools/deploy/wallets";
@@ -47,34 +47,9 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
-async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
-        return signature.signature;
-    } else {
-        return "";
-    }
-}
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
-    }
-}
-
-function hexValue(value: string) {
-    if (value.length % 2 === 0) {
-        return value;
-    } else {
-        return "0" + value;
-    }
-}
-
-async function getBalance(address: string) {
-    return parseFloat(web3.utils.fromWei(await web3.eth.getBalance(address)));
+function getPublicKey(wallet: Wallet): [BytesLike, BytesLike] {
+    const publicKey = ec.keyFromPrivate(wallet.privateKey.slice(2)).getPublic();
+    return [ethers.utils.hexlify(publicKey.x.toBuffer()), ethers.utils.hexlify(publicKey.y.toBuffer())]
 }
 
 describe("SkaleManager", () => {
@@ -141,7 +116,7 @@ describe("SkaleManager", () => {
         const premined = "100000000000000000000000000";
         await skaleToken.mint(owner.address, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
-        await constantsHolder.setLaunchTimestamp(await currentTime(web3)); // to allow bounty withdrawing
+        await constantsHolder.setLaunchTimestamp(await currentTime(ethers)); // to allow bounty withdrawing
         await bountyContract.enableBountyReduction();
 
         await schainsInternal.addSchainType(1, 16);
@@ -188,7 +163,14 @@ describe("SkaleManager", () => {
         fastBeforeEach(async () => {
             await validatorService.connect(validator).registerValidator("D2", "D2 is even", 150, 0);
             const validatorIndex = await validatorService.getValidatorId(validator.address);
-            const signature = await getValidatorIdSignature(validatorIndex, nodeAddress);
+            const signature = await nodeAddress.signMessage(
+                ethers.utils.arrayify(
+                    ethers.utils.solidityKeccak256(
+                        ["uint"],
+                        [validatorIndex]
+                    )
+                )
+            );
             await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature);
 
             await skaleToken.transfer(validator.address, 10 * delegatedAmount);
@@ -202,13 +184,12 @@ describe("SkaleManager", () => {
         });
 
         it("should create a node", async () => {
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f000001", // ip
                 "0x7f000001", // public ip
-                ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                getPublicKey(nodeAddress), // public key
                 "d2", // name
                 "some.domain.name");
 
@@ -221,13 +202,12 @@ describe("SkaleManager", () => {
             await constantsHolder.setMSR(100);
 
             await validatorService.disableValidator(validatorId);
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f000001", // ip
                 "0x7f000001", // public ip
-                ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                getPublicKey(nodeAddress), // public key
                 "d2", // name
                 "some.domain.name").should.be.eventually.rejectedWith("Validator is not authorized to create a node");
             await validatorService.enableValidator(validatorId);
@@ -236,20 +216,19 @@ describe("SkaleManager", () => {
                 0, // nonce
                 "0x7f000001", // ip
                 "0x7f000001", // public ip
-                ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                getPublicKey(nodeAddress), // public key
                 "d2", // name
                 "some.domain.name");
         });
 
         describe("when node is created", async () => {
             fastBeforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000001", // ip
                     "0x7f000001", // public ip
-                    ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                    getPublicKey(nodeAddress), // public key
                     "d2", // name
                     "some.domain.name");
                 await wallets.rechargeValidatorWallet(validatorId, {value: 1e18.toString()});
@@ -297,13 +276,12 @@ describe("SkaleManager", () => {
 
             it("should create and remove node from validator address", async () => {
                 (await validatorService.getValidatorIdByNodeAddress(validator.address)).should.be.equal(1);
-                const pubKey = ec.keyFromPrivate(String(validator.privateKey).slice(2)).getPublic();
                 await skaleManager.connect(validator).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000002", // ip
                     "0x7f000002", // public ip
-                    ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                    getPublicKey(validator), // public key
                     "d3", // name
                     "some.domain.name"
                 );
@@ -316,11 +294,11 @@ describe("SkaleManager", () => {
 
             it("should pay bounty if Node is In Active state", async () => {
                 await skipTime(ethers, month);
-                const balanceBefore = await getBalance(nodeAddress.address);
+                const balanceBefore = await nodeAddress.getBalance();
                 await skaleManager.connect(nodeAddress).getBounty(0);
-                const balance = await getBalance(nodeAddress.address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
+                const balance = await nodeAddress.getBalance();
+                balance.sub(balanceBefore).toNumber().should.not.be.lessThan(0);
+                parseFloat(ethers.utils.formatEther(balance.sub(balanceBefore))).should.be.almost(0);
             });
 
             it("should pay bounty if Node is In Leaving state", async () => {
@@ -382,8 +360,8 @@ describe("SkaleManager", () => {
                 for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timeLimit; ++year) {
                     for (let monthIndex = 0; monthIndex < 12; ++monthIndex) {
                         const monthEnd = (await timeHelpers.monthToTimestamp(launchMonth + 12 * year + monthIndex + 1)).toNumber();
-                        if (await currentTime(web3) < monthEnd) {
-                            await skipTime(ethers, monthEnd - await currentTime(web3) - day);
+                        if (await currentTime(ethers) < monthEnd) {
+                            await skipTime(ethers, monthEnd - await currentTime(ethers) - day);
                             await skaleManager.connect(nodeAddress).getBounty(0);
                         }
                     }
@@ -397,13 +375,12 @@ describe("SkaleManager", () => {
 
         describe("when two nodes are created", async () => {
             fastBeforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000001", // ip
                     "0x7f000001", // public ip
-                    ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                    getPublicKey(nodeAddress), // public key
                     "d2", // name
                     "some.domain.name");
                 await skaleManager.connect(nodeAddress).createNode(
@@ -411,7 +388,7 @@ describe("SkaleManager", () => {
                     0, // nonce
                     "0x7f000002", // ip
                     "0x7f000002", // public ip
-                    ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                    getPublicKey(nodeAddress), // public key
                     "d3", // name
                     "some.domain.name");
             });
@@ -497,19 +474,18 @@ describe("SkaleManager", () => {
             };
             fastBeforeEach(async () => {
                 await skaleToken.transfer(validator.address, "0x3635c9adc5dea00000");
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (let i = 0; i < 18; ++i) {
                     await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
-                        ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                        getPublicKey(nodeAddress), // public key
                         "d2-" + i, // name
                         "some.domain.name");
                 }
 
-                const schainHash = web3.utils.soliditySha3("d2");
+                const schainHash = ethers.utils.solidityKeccak256(["string"], ["d2"]);
                 if (schainHash) {
                     d2SchainHash = schainHash;
                 }
@@ -517,13 +493,12 @@ describe("SkaleManager", () => {
 
             it("should fail to create schain if validator doesn't meet MSR", async () => {
                 await constantsHolder.setMSR(delegatedAmount + 1);
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000001", // ip
                     "0x7f000001", // public ip
-                    ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                    getPublicKey(nodeAddress), // public key
                     "d2", // name
                     "some.domain.name").should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
@@ -537,7 +512,7 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain
                             0, // nonce
@@ -554,7 +529,7 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                             0, // lifetime
                             3, // type of schain
                             0, // nonce
@@ -566,7 +541,7 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain
                             0, // nonce
@@ -584,7 +559,7 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                             4, // lifetime
                             3, // type of schain
                             0, // nonce
@@ -598,7 +573,7 @@ describe("SkaleManager", () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                                 5, // lifetime
                                 3, // type of schain
                                 0, // nonce
@@ -636,7 +611,7 @@ describe("SkaleManager", () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                                 5, // lifetime
                                 3, // type of schain
                                 0, // nonce
@@ -667,26 +642,19 @@ describe("SkaleManager", () => {
             fastBeforeEach(async () => {
                 await constantsHolder.setMSR(3);
 
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (let i = 0; i < 32; ++i) {
                     await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
-                        ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                        getPublicKey(nodeAddress), // public key
                         "d2-" + i, // name
                         "some.domain.name");
                 }
 
-                let schainHash = web3.utils.soliditySha3("d2");
-                if (schainHash) {
-                    d2SchainHash = schainHash;
-                }
-                schainHash = web3.utils.soliditySha3("d3");
-                if (schainHash) {
-                    d3SchainHash = schainHash;
-                }
+                d2SchainHash = ethers.utils.solidityKeccak256(["string"], ["d2"]);
+                d3SchainHash = ethers.utils.solidityKeccak256(["string"], ["d3"]);
             });
 
             describe("when developer has SKALE tokens", async () => {
@@ -700,7 +668,7 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         price,
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain
                             0, // nonce
@@ -713,7 +681,7 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         price,
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain
                             0, // nonce
@@ -730,7 +698,7 @@ describe("SkaleManager", () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                                 5, // lifetime
                                 3, // type of schain
                                 0, // nonce
@@ -740,7 +708,7 @@ describe("SkaleManager", () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                                 5, // lifetime
                                 3, // type of schain
                                 0, // nonce
@@ -768,14 +736,13 @@ describe("SkaleManager", () => {
 
                 await skaleToken.transfer(validator.address, "0x32D26D12E980B600000");
 
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (let i = 0; i < 16; ++i) {
                     await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
-                        ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                        getPublicKey(nodeAddress), // public key
                         "d2-" + i, // name
                         "some.domain.name");
                 }
@@ -786,14 +753,14 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                         5, // lifetime
                         1, // type of schain
                         0, // nonce
                         "d2"]), // name
                     );
 
-                let schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d2")));
+                let schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d2"]));
                 schain1[0].should.be.equal("d2");
 
                 await skaleManager.connect(developer).deleteSchain("d2");
@@ -804,14 +771,14 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                         5, // lifetime
                         2, // type of schain
                         0, // nonce
                         "d3"]), // name
                     );
 
-                schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d3")));
+                schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d3"]));
                 schain1[0].should.be.equal("d3");
 
                 await skaleManager.connect(developer).deleteSchain("d3");
@@ -821,14 +788,14 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                         5, // lifetime
                         3, // type of schain
                         0, // nonce
                         "d4"]), // name
                     );
 
-                schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d4")));
+                schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d4"]));
                 schain1[0].should.be.equal("d4");
 
                 await skaleManager.connect(developer).deleteSchain("d4");
@@ -838,14 +805,14 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                         5, // lifetime
                         4, // type of schain
                         0, // nonce
                         "d5"]), // name
                     );
 
-                schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d5")));
+                schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d5"]));
                 schain1[0].should.be.equal("d5");
 
                 await skaleManager.connect(developer).deleteSchain("d5");
@@ -855,14 +822,14 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
                         5, // lifetime
                         5, // type of schain
                         0, // nonce
                         "d6"]), // name
                     );
 
-                schain1 = await schainsInternal.schains(stringValue(web3.utils.soliditySha3("d6")));
+                schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d6"]));
                 schain1[0].should.be.equal("d6");
 
                 await skaleManager.connect(developer).deleteSchain("d6");

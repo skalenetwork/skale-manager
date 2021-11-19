@@ -1081,7 +1081,7 @@ describe("Schains", () => {
             await skaleManager.connect(nodeAddress).nodeExit(0);
             const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
             const _12hours = 43200;
-            assert.equal(await currentTime(web3), leavingTimeOfNode-_12hours);
+            assert.equal(await currentTime(ethers), leavingTimeOfNode-_12hours);
             const rotatedSchain = (await nodeRotation.getLeavingHistory(0))[0].schainIndex;
             const rotationForRotatedSchain = await nodeRotation.getRotation(rotatedSchain);
             rotationForRotatedSchain.newNodeIndex.should.be.not.equal(0);

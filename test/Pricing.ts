@@ -259,7 +259,7 @@ describe("Pricing", () => {
                             domainName: "some.domain.name"
                         });
                     const MINUTES_PASSED = 2;
-                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(ethers));
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();
@@ -298,7 +298,7 @@ describe("Pricing", () => {
                     await nodes.completeExit(nodeToExit);
 
                     const MINUTES_PASSED = 2;
-                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(ethers));
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();
@@ -324,7 +324,7 @@ describe("Pricing", () => {
                         });
 
                     const MINUTES_PASSED = 30;
-                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(ethers));
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();

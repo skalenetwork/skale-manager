@@ -1369,7 +1369,7 @@ describe("SkaleDKG", () => {
                         balance.should.be.almost(balanceBefore);
 
                         const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
-                        assert.equal(await currentTime(web3), leavingTimeOfNode);
+                        assert.equal(await currentTime(ethers), leavingTimeOfNode);
 
                         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
                             .should.be.equal(delegatedAmount);
