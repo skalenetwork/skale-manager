@@ -121,6 +121,11 @@ describe("SchainsInternal", () => {
         (await schainsInternal.getGeneration(generation1Hash)).should.be.equal(generation);
     });
 
+    it("should not return generation for non existing schain", async () => {
+        await schainsInternal.getGeneration("0xd2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2")
+            .should.be.eventually.rejectedWith("The schain does not exist");
+    })
+
     describe("on existing schain", async () => {
         const schainNameHash = ethers.utils.solidityKeccak256(["string"], ["TestSchain"]);
 

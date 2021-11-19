@@ -130,7 +130,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     }
 
     modifier schainExists(bytes32 schainHash) {
-        require(isSchainExist(schainHash), "The schain does not exits");
+        require(isSchainExist(schainHash), "The schain does not exist");
         _;
     }
 
