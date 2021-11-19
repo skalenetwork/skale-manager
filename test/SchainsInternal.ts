@@ -8,33 +8,23 @@ const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
-import { BigNumber, Wallet } from "ethers";
+import { Wallet } from "ethers";
 import chai = require("chai");
 import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { skipTime } from "./tools/time";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
+import { expect } from "chai";
 
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
-async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
-        return signature.signature;
-    } else {
-        return "";
-    }
-}
 
 describe("SchainsInternal", () => {
     let owner: SignerWithAddress;
@@ -67,7 +57,14 @@ describe("SchainsInternal", () => {
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         const validatorIndex = await validatorService.getValidatorId(holder.address);
         await validatorService.enableValidator(validatorIndex);
-        const signature = await getValidatorIdSignature(validatorIndex, nodeAddress);
+        const signature = await nodeAddress.signMessage(
+            ethers.utils.arrayify(
+                ethers.utils.solidityKeccak256(
+                    ["uint"],
+                    [validatorIndex]
+                )
+            )
+        );
         await validatorService.connect(holder).linkNodeAddress(nodeAddress.address, signature);
 
         const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
