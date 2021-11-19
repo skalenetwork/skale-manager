@@ -20,6 +20,7 @@ import { ethers } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -36,7 +37,7 @@ describe("SchainsInternal", () => {
     let schainsInternal: SchainsInternalMock;
     let validatorService: ValidatorService;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, holder] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[1])).connect(ethers.provider);
@@ -129,7 +130,7 @@ describe("SchainsInternal", () => {
     describe("on existing schain", async () => {
         const schainNameHash = ethers.utils.solidityKeccak256(["string"], ["TestSchain"]);
 
-        beforeEach(async () => {
+        fastBeforeEach(async () => {
             await schainsInternal.initializeSchain("TestSchain", holder.address, 5, 5);
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(nodeAddress.address,
@@ -172,12 +173,13 @@ describe("SchainsInternal", () => {
             schain.deposit.should.be.equal(13);
         });
 
-        describe("on registered schain", async function() {
+        describe("on registered schain", async () => {
             const nodeIndex = 0;
             const numberOfNewSchains = 5
             const newSchainNames = [...Array(numberOfNewSchains).keys()].map((index) => "newSchain" + index);
             const newSchainHashes = newSchainNames.map((schainName) => ethers.utils.solidityKeccak256(["string"], [schainName]));
-            this.beforeEach(async () => {
+
+            fastBeforeEach(async () => {
                 await schainsInternal.createGroupForSchain(schainNameHash, 1, 2);
 
                 for (const schainName of newSchainNames) {
