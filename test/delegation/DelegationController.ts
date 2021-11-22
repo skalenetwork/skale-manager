@@ -306,7 +306,7 @@ describe("DelegationController", () => {
                     const twoDays = 2 * 24 * 60 * 60;
 
                     // skip time 2 days before delegation end
-                    await skipTime(ethers, delegationEndTimestamp - twoDays - await currentTime(web3));
+                    await skipTime(ethers, delegationEndTimestamp - twoDays - await currentTime(ethers));
 
                     await delegationController.connect(validator).requestUndelegation(delegationId)
                         .should.be.eventually.rejectedWith("Undelegation requests must be sent 3 days before the end of delegation period");

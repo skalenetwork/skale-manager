@@ -2,7 +2,7 @@ import { contracts, getContractKeyInAbiFile, getManifestFile, getContractFactory
 import { ethers, network, upgrades, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, Nodes, SchainsInternal, SkaleManager, SyncManager } from "../typechain";
+import { ContractManager, SchainsInternal, SkaleManager, SyncManager } from "../typechain";
 import { getImplementationAddress, hashBytecode } from "@openzeppelin/upgrades-core";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from "./tools/abi";
@@ -255,7 +255,27 @@ async function main() {
             abi[getContractKeyInAbiFile(syncManagerName) + "_abi"] = syncManager.interface;
             abi[getContractKeyInAbiFile(syncManagerName) + "_address"] = syncManager.address;
         },
-        async (safeTransactions, abi, contractManager) => undefined
+        async (safeTransactions, abi, contractManager) => {
+            const schainsInternal = (await ethers.getContractFactory("SchainsInternal"))
+                .attach(await contractManager.getContract("SchainsInternal")) as SchainsInternal;
+            const GENERATION_MANAGER_ROLE = ethers.utils.solidityKeccak256(["string"], ["GENERATION_MANAGER_ROLE"])
+            safeTransactions.push(encodeTransaction(
+                0,
+                schainsInternal.address,
+                0,
+                schainsInternal.interface.encodeFunctionData("grantRole", [
+                    GENERATION_MANAGER_ROLE,
+                    await contractManager.owner()
+                ])
+            ));
+            console.log(chalk.yellowBright("Prepare transaction to switch generation"));
+            safeTransactions.push(encodeTransaction(
+                0,
+                schainsInternal.address,
+                0,
+                schainsInternal.interface.encodeFunctionData("newGeneration"),
+            ));
+        }
     );
 }
 
