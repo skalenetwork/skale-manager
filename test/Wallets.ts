@@ -28,6 +28,7 @@ import { assert } from "chai";
 import { solidity } from "ethereum-waffle";
 import { ContractTransaction, Wallet } from "ethers";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
+import { getValidatorIdSignature } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -56,16 +57,6 @@ function hexValue(value: string) {
         return value;
     } else {
         return "0" + value;
-    }
-}
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
-        return signature.signature;
-    } else {
-        return "";
     }
 }
 
@@ -182,9 +173,9 @@ describe("Wallets", () => {
         before(async () => {
             snapshotOfDeployedContracts = await makeSnapshot();
             await validatorService.disableWhitelist();
-            let signature = await getValidatorIdSignature(new BigNumber(validator1Id), nodeAddress1);
+            let signature = await getValidatorIdSignature(validator1Id, nodeAddress1);
             await validatorService.connect(validator1).linkNodeAddress(nodeAddress1.address, signature);
-            signature = await getValidatorIdSignature(new BigNumber(validator2Id), nodeAddress2);
+            signature = await getValidatorIdSignature(validator2Id, nodeAddress2);
             await validatorService.connect(validator2).linkNodeAddress(nodeAddress2.address, signature);
 
             const nodesPerValidator = 2;

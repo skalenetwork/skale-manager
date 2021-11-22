@@ -530,6 +530,17 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     }
 
     /**
+     * @dev Returns an erector of the schain.
+     *
+     * Requirements:
+     * 
+     * - Schain must exist
+     */
+    function getSchainErector(bytes32 schainHash) external view schainExists(schainHash) returns (address) {
+        return schains[schainHash].erector;
+    }
+
+    /**
      * @dev Checks whether schain name is available.
      * TODO Need to delete - copy of web3.utils.soliditySha3
      */

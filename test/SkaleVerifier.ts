@@ -25,19 +25,10 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { assert } from "chai";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
+import { getValidatorIdSignature } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
-        return signature.signature;
-    } else {
-        return "";
-    }
-}
 
 describe("SkaleVerifier", () => {
     let validator1: SignerWithAddress;

@@ -19,30 +19,11 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { assert } from "chai";
 import { solidity } from "ethereum-waffle";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+import { getValidatorIdSignature } from "../tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
-    } else {
-        return "";
-    }
-}
-
 
 describe("ValidatorService", () => {
     let owner: SignerWithAddress;

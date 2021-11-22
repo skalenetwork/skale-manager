@@ -15,9 +15,6 @@ import { ConstantsHolder,
          BountyV2,
          Wallets} from "../typechain";
 
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
@@ -42,15 +39,11 @@ import { solidity } from "ethereum-waffle";
 import { deployWallets } from "./tools/deploy/wallets";
 import chaiAlmost from "chai-almost";
 import { fastBeforeEach } from "./tools/mocha";
+import { getPublicKey } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
-
-function getPublicKey(wallet: Wallet): [BytesLike, BytesLike] {
-    const publicKey = ec.keyFromPrivate(wallet.privateKey.slice(2)).getPublic();
-    return [ethers.utils.hexlify(publicKey.x.toBuffer()), ethers.utils.hexlify(publicKey.y.toBuffer())]
-}
 
 describe("SkaleManager", () => {
     let owner: SignerWithAddress;
