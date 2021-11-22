@@ -79,7 +79,7 @@ describe("SchainsInternal", () => {
     });
 
     it("should initialize schain", async () => {
-        await schainsInternal.initializeSchain("TestSchain", holder.address, 5, 5);
+        await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.constants.AddressZero, 5, 5);
 
         const schain = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["TestSchain"]));
         schain.name.should.be.equal("TestSchain");
@@ -112,13 +112,13 @@ describe("SchainsInternal", () => {
         const generation1Name = "Generation 1";
         const generation0Hash = ethers.utils.solidityKeccak256(["string"], [generation0Name]);
         const generation1Hash = ethers.utils.solidityKeccak256(["string"], [generation1Name]);
-        await schainsInternal.initializeSchain(generation0Name, holder.address, 5, 5);
+        await schainsInternal.initializeSchain(generation0Name, holder.address, ethers.constants.AddressZero, 5, 5);
         (await schainsInternal.getGeneration(generation0Hash)).should.be.equal(generation);
 
         await schainsInternal.newGeneration();
         generation = generation.add(1);
 
-        await schainsInternal.initializeSchain(generation1Name, holder.address, 5, 5);
+        await schainsInternal.initializeSchain(generation1Name, holder.address, ethers.constants.AddressZero, 5, 5);
         (await schainsInternal.getGeneration(generation1Hash)).should.be.equal(generation);
     });
 
@@ -131,7 +131,7 @@ describe("SchainsInternal", () => {
         const schainNameHash = ethers.utils.solidityKeccak256(["string"], ["TestSchain"]);
 
         fastBeforeEach(async () => {
-            await schainsInternal.initializeSchain("TestSchain", holder.address, 5, 5);
+            await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.constants.AddressZero, 5, 5);
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(nodeAddress.address,
                 {
@@ -183,7 +183,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.createGroupForSchain(schainNameHash, 1, 2);
 
                 for (const schainName of newSchainNames) {
-                    await schainsInternal.initializeSchain(schainName, owner.address, 5, 5);
+                    await schainsInternal.initializeSchain(schainName, owner.address, ethers.constants.AddressZero, 5, 5);
                 }
             });
 

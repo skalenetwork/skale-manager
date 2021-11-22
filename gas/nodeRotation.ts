@@ -113,7 +113,7 @@ describe("createSchains", () => {
 
         const numberOfSchains = 64;
         for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
-            const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner.address)).wait();
+            const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner.address, ethers.constants.AddressZero)).wait();
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("schain-" + schainNumber))
             );
@@ -180,7 +180,7 @@ describe("createSchains", () => {
 
         const numberOfSchains = 128;
         for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
-            const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner.address)).wait();
+            const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner.address, ethers.constants.AddressZero)).wait();
             const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
                 console.log("Nodes in Schain:");
                 const setOfNodes = new Set();
@@ -198,9 +198,6 @@ describe("createSchains", () => {
             );
             console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
         }
-
-        // await schains.addSchainByFoundation(0, 1, 0, "schain-128", owner)
-        //     .should.be.eventually.rejectedWith("Not enough nodes to create Schain");
 
         await skaleManager.connect(node).createNode(
             1, // port
@@ -265,7 +262,7 @@ describe("createSchains", () => {
 
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
-                const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner.address)).wait();
+                const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner.address, ethers.constants.AddressZero)).wait();
                 await skaleDKG.setSuccessfulDKGPublic(
                     stringValue(web3.utils.soliditySha3("schain-" + nodeId))
                 );

@@ -96,9 +96,9 @@ describe("Pricing", () => {
 
     describe("on initialized contracts", async () => {
         beforeEach(async () => {
-            await schainsInternal.initializeSchain("BobSchain", holder.address, 10, 2);
-            await schainsInternal.initializeSchain("DavidSchain", holder.address, 10, 4);
-            await schainsInternal.initializeSchain("JacobSchain", holder.address, 10, 8);
+            await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.constants.AddressZero, 10, 2);
+            await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.constants.AddressZero, 10, 4);
+            await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.constants.AddressZero, 10, 8);
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,

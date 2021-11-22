@@ -40,12 +40,14 @@ import "./Wallets.sol";
  * deletion, and rotation.
  */
 contract Schains is Permissions, ISchains {
+    using AddressUpgradeable for address;
 
     struct SchainParameters {
         uint lifetime;
         uint8 typeOfSchain;
         uint16 nonce;
         string name;
+        address erector;
     }
 
     bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
@@ -108,6 +110,7 @@ contract Schains is Permissions, ISchains {
      * 
      * - Schain type is valid.
      * - There is sufficient deposit to create type of schain.
+     * - If from is a smart contract erector must be specified
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow("SkaleManager") {
         SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
@@ -122,7 +125,6 @@ contract Schains is Permissions, ISchains {
         require(
             getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit,
             "Not enough money to create Schain");
-
         _addSchain(from, deposit, schainParameters);
     }
 
@@ -135,13 +137,15 @@ contract Schains is Permissions, ISchains {
      * 
      * - sender is granted with SCHAIN_CREATOR_ROLE
      * - Schain type is valid.
+     * - If schain owner is a smart contract schain erector must be specified
      */
     function addSchainByFoundation(
         uint lifetime,
         uint8 typeOfSchain,
         uint16 nonce,
         string calldata name,
-        address schainOwner
+        address schainOwner,
+        address schainErector
     )
         external
         payable
@@ -152,7 +156,8 @@ contract Schains is Permissions, ISchains {
             lifetime: lifetime,
             typeOfSchain: typeOfSchain,
             nonce: nonce,
-            name: name
+            name: name,
+            erector: schainErector
         });
 
         address _schainOwner;
@@ -300,6 +305,7 @@ contract Schains is Permissions, ISchains {
     function _initializeSchainInSchainsInternal(
         string memory name,
         address from,
+        address erector,
         uint deposit,
         uint lifetime,
         SchainsInternal schainsInternal
@@ -309,7 +315,7 @@ contract Schains is Permissions, ISchains {
         require(schainsInternal.isSchainNameAvailable(name), "Schain name is not available");
 
         // initialize Schain
-        schainsInternal.initializeSchain(name, from, lifetime, deposit);
+        schainsInternal.initializeSchain(name, from, erector, lifetime, deposit);
     }
 
     /**
@@ -347,10 +353,17 @@ contract Schains is Permissions, ISchains {
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
 
+        if (schainParameters.erector.isContract()) {
+            require(schainParameters.erector != address(0), "Erector address is not provided");
+        } else {
+            schainParameters.erector = address(0);
+        }
+
         //initialize Schain
         _initializeSchainInSchainsInternal(
             schainParameters.name,
             from,
+            schainParameters.erector,
             deposit,
             schainParameters.lifetime,
             schainsInternal
@@ -421,6 +434,7 @@ contract Schains is Permissions, ISchains {
         (schainParameters.lifetime,
         schainParameters.typeOfSchain,
         schainParameters.nonce,
-        schainParameters.name) = abi.decode(data, (uint, uint8, uint16, string));
+        schainParameters.name,
+        schainParameters.erector) = abi.decode(data, (uint, uint8, uint16, string, address));
     }
 }

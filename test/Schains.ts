@@ -86,7 +86,6 @@ describe("Schains", () => {
     let keyStorage: KeyStorage;
     let nodeRotation: NodeRotation;
     let wallets: Wallets;
-    const zeroAddress = "0x0000000000000000000000000000000000000000";
     let snapshot: number;
     let cleanContracts: number;
 
@@ -162,7 +161,7 @@ describe("Schains", () => {
         });
 
         it("should not allow everyone to create schains as the foundation", async () => {
-            await schains.addSchainByFoundation(5, 1, 0, "d2", zeroAddress)
+            await schains.addSchainByFoundation(5, 1, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero)
                 .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
         })
 
@@ -617,7 +616,7 @@ describe("Schains", () => {
             it("should allow the foundation to create schain without tokens", async () => {
                 const schainCreator = holder;
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), schainCreator.address);
-                await schains.connect(schainCreator).addSchainByFoundation(5, 5, 0, "d2", zeroAddress);
+                await schains.connect(schainCreator).addSchainByFoundation(5, 5, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -628,7 +627,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, 5, 0, "d2", holder.address);
+                await schains.addSchainByFoundation(5, 5, 0, "d2", holder.address, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -692,7 +691,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create small schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", zeroAddress);
+                await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -703,7 +702,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create medium schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 2, 0, "d2", zeroAddress);
+                await schains.connect(holder).addSchainByFoundation(5, 2, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -714,7 +713,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create large schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 3, 0, "d2", zeroAddress);
+                await schains.connect(holder).addSchainByFoundation(5, 3, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
