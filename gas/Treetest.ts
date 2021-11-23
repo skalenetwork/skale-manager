@@ -20,10 +20,11 @@ import { deployNodes } from "../test/tools/deploy/nodes";
 import { deployWallets } from "../test/tools/deploy/wallets";
 import { skipTime } from "../test/tools/time";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { BigNumberish, BytesLike, Event, Signer, Wallet } from "ethers";
 import { assert } from "chai";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
+import { stringKeccak256 } from "../test/tools/hashes";
 
 async function createNode(skaleManager: SkaleManager, node: Wallet, nodeId: number) {
     await skaleManager.connect(node).createNode(
@@ -94,7 +95,7 @@ async function createSchain(schains: Schains, typeOfSchain: number, name: string
 }
 
 async function getNodesInSchain(schainsInternal: SchainsInternal, name: string) {
-    const res = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(name)));
+    const res = await schainsInternal.getNodesInGroup(stringKeccak256(name));
     const arrOfNodes: string[] = [];
     res.forEach(element => {
         arrOfNodes.push(element.toString())
@@ -119,7 +120,7 @@ async function getRandomNodeInSchain(schainsInternal: SchainsInternal, name: str
 }
 
 async function finishDKG(skaleDKG: SkaleDKG, name: string) {
-    await skaleDKG.setSuccessfulDKGPublic(stringValue(web3.utils.soliditySha3(name)));
+    await skaleDKG.setSuccessfulDKGPublic(stringKeccak256(name));
     console.log("DKG successful finished");
 }
 
@@ -157,7 +158,7 @@ function getRandomSecretKeyContribution(n: number): { publicKey: [BytesLike, Byt
 }
 
 async function getNumberOfNodesInGroup(schainsInternal: SchainsInternal, name: string) {
-    return (await schainsInternal.getNumberOfNodesInGroup(stringValue(web3.utils.soliditySha3(name)))).toString();
+    return (await schainsInternal.getNumberOfNodesInGroup(stringKeccak256(name))).toString();
 }
 
 async function rotateOnDKG(schainsInternal: SchainsInternal, name: string, skaleDKG: SkaleDKG, node: Wallet, skipNode: string = "") {
@@ -174,14 +175,14 @@ async function rotateOnDKG(schainsInternal: SchainsInternal, name: string, skale
     const n = await getNumberOfNodesInGroup(schainsInternal, name);
     const t = (parseInt(n, 10) * 2 + 1) / 3;
     await skaleDKG.connect(node).broadcast(
-        stringValue(web3.utils.soliditySha3(name)),
+        stringKeccak256(name),
         randomNode1,
         getRandomVerificationVector(t),
         getRandomSecretKeyContribution(parseInt(n, 10))
     );
     await skipTime(ethers, 1800);
     await skaleDKG.connect(node).complaint(
-        stringValue(web3.utils.soliditySha3(name)),
+        stringKeccak256(name),
         randomNode1,
         randomNode2
     );
@@ -189,7 +190,7 @@ async function rotateOnDKG(schainsInternal: SchainsInternal, name: string, skale
 }
 
 async function rechargeSchainWallet(wallets: Wallets, name: string, owner: Signer) {
-    await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(name)), {value: 1e20.toString()});
+    await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(name), {value: 1e20.toString()});
 }
 
 async function setNodeInMaintenance(nodes: Nodes, node: Wallet, nodeId: string) {
@@ -210,27 +211,6 @@ async function nodeExit(skaleManager: SkaleManager, node: Wallet, nodeId: string
 async function deleteSchain(skaleManager: SkaleManager, name: string, owner: Signer) {
     await skaleManager.connect(owner).deleteSchain(name);
     console.log("Schain deleted", name);
-}
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
-    }
-}
-
-function findEvent(events: Event[] | undefined, eventName: string) {
-    if (events) {
-        const target = events.find((event) => event.event === eventName);
-        if (target) {
-            return target;
-        } else {
-            throw new Error("Event was not emitted");
-        }
-    } else {
-        throw new Error("Event was not emitted");
-    }
 }
 
 describe("Tree test", () => {
