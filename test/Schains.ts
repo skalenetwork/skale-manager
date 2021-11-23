@@ -1082,7 +1082,7 @@ describe("Schains", () => {
             const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
             const _12hours = 43200;
             assert.equal(await currentTime(ethers), leavingTimeOfNode-_12hours);
-            const rotatedSchain = (await nodeRotation.getLeavingHistory(0))[0].schainIndex;
+            const rotatedSchain = (await nodeRotation.getLeavingHistory(0))[0].schainHash;
             const rotationForRotatedSchain = await nodeRotation.getRotation(rotatedSchain);
             rotationForRotatedSchain.newNodeIndex.should.be.not.equal(0);
             rotationForRotatedSchain.freezeUntil.should.be.not.equal(0);
