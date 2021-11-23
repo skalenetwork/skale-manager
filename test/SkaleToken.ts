@@ -10,10 +10,11 @@ import { deployValidatorService } from "./tools/deploy/delegation/validatorServi
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployReentrancyTester } from "./tools/deploy/test/reentrancyTester";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { solidity } from "ethereum-waffle";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -32,7 +33,7 @@ describe("SkaleToken", () => {
   const TOKEN_CAP: number = 7000000000;
   const TOTAL_SUPPLY = 5000000000;
 
-  beforeEach(async () => {
+  fastBeforeEach(async () => {
     [owner, holder, receiver, nilAddress, accountWith99] = await ethers.getSigners();
 
     contractManager = await deployContractManager();
@@ -138,7 +139,7 @@ describe("SkaleToken", () => {
   });
 
   it("holder balance should be bigger than 0 eth", async () => {
-    const holderBalance = await web3.eth.getBalance(holder.address);
+    const holderBalance = await ethers.provider.getBalance(holder.address);
     holderBalance.should.not.be.equal(0);
   });
 
@@ -240,7 +241,7 @@ describe("SkaleToken", () => {
   it("should parse call data correctly", async () => {
     const skaleTokenInternalTesterFactory = await ethers.getContractFactory("SkaleTokenInternalTester");
     const skaleTokenInternalTester = await skaleTokenInternalTesterFactory.deploy(contractManager.address, []) as SkaleTokenInternalTester;
-    await skaleTokenInternalTester.getMsgData().should.be.eventually.equal(web3.eth.abi.encodeFunctionSignature("getMsgData()"));
+    await skaleTokenInternalTester.getMsgData().should.be.eventually.equal(skaleTokenInternalTester.interface.encodeFunctionData("getMsgData"));
   });
 });
 
