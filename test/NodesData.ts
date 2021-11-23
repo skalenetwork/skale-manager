@@ -1,15 +1,9 @@
 import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          Nodes,
-         SkaleManager,
          ValidatorService} from "../typechain";
-import { currentTime, skipTime } from "./tools/time";
-
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
+import { skipTime } from "./tools/time";
 import { privateKeys } from "./tools/private-keys";
-
 import chai = require("chai");
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
@@ -19,8 +13,8 @@ import { BigNumber, Wallet } from "ethers";
 import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
-import { getValidatorIdSignature } from "./tools/signatures";
+import { assert } from "chai";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -74,7 +68,6 @@ describe("NodesData", () => {
     });
 
     it("should add node", async () => {
-        const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
         await nodes.createNode(
             nodeAddress.address,
             {
@@ -82,7 +75,7 @@ describe("NodesData", () => {
                 nonce: 0,
                 ip: "0x7f000001",
                 publicIp: "0x7f000002",
-                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                publicKey: getPublicKey(nodeAddress),
                 name: "d2",
                 domainName: "some.domain.name"
             });
@@ -93,9 +86,7 @@ describe("NodesData", () => {
         node[1].should.be.equal("0x7f000001");
         node[2].should.be.equal("0x7f000002");
         node[3].should.be.equal(8545);
-        (await nodes.getNodePublicKey(0)).should.be.deep.equal(
-            ["0x" + pubKey.x.toString('hex'),
-            "0x" + pubKey.y.toString('hex')]);
+        (await nodes.getNodePublicKey(0)).should.be.deep.equal(getPublicKey(nodeAddress));
         node[7].should.be.equal(0);
 
         const nodeId = stringValue(web3.utils.soliditySha3("d2"));
@@ -113,7 +104,6 @@ describe("NodesData", () => {
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -121,7 +111,7 @@ describe("NodesData", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "d2",
                     domainName: "some.domain.name"
                 });
@@ -445,7 +435,6 @@ describe("NodesData", () => {
 
         describe("when node is registered", async () => {
             beforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress.address,
                     {
@@ -453,7 +442,7 @@ describe("NodesData", () => {
                         nonce: 0,
                         ip: "0x7f000003",
                         publicIp: "0x7f000004",
-                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        publicKey: getPublicKey(nodeAddress),
                         name: "d3",
                         domainName: "some.domain.name"
                     });
@@ -492,7 +481,6 @@ describe("NodesData", () => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -500,7 +488,7 @@ describe("NodesData", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "d1",
                     domainName: "some.domain.name"
                 });
@@ -511,7 +499,7 @@ describe("NodesData", () => {
                     nonce: 0,
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "d2",
                     domainName: "some.domain.name"
                 });
@@ -547,7 +535,6 @@ describe("NodesData", () => {
 
         describe("when nodes are registered", async () => {
             beforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress.address,
                     {
@@ -555,7 +542,7 @@ describe("NodesData", () => {
                         nonce: 0,
                         ip: "0x7f000003",
                         publicIp: "0x7f000003",
-                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        publicKey: getPublicKey(nodeAddress),
                         name: "d3",
                         domainName: "some.domain.name"
                     });
@@ -566,7 +553,7 @@ describe("NodesData", () => {
                         nonce: 0,
                         ip: "0x7f000004",
                         publicIp: "0x7f000004",
-                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        publicKey: getPublicKey(nodeAddress),
                         name: "d4",
                         domainName: "some.domain.name"
                     });

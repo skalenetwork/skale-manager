@@ -12,8 +12,6 @@ import * as elliptic from "elliptic";
 const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
-import BigNumber from "bignumber.js";
-
 import { deployWallets } from "./tools/deploy/wallets";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySchains } from "./tools/deploy/schains";
@@ -181,11 +179,11 @@ describe("Wallets", () => {
             const nodesPerValidator = 2;
             const validators = [
                 {
-                    nodePublicKey: ec.keyFromPrivate(String(nodeAddress1.privateKey).slice(2)).getPublic(),
+                    nodePublicKey: ec.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic(),
                     nodeAddress: nodeAddress1
                 },
                 {
-                    nodePublicKey: ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic(),
+                    nodePublicKey: ec.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic(),
                     nodeAddress: nodeAddress2
                 }
             ];

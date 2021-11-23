@@ -43,7 +43,7 @@ import { assert } from "chai";
 import { solidity } from "ethereum-waffle";
 import { deployWallets } from "./tools/deploy/wallets";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
-import { getValidatorIdSignature } from "./tools/signatures";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -879,11 +879,11 @@ describe("SkaleDkgFakeComplaint", () => {
 
         validators = [
             {
-                nodePublicKey: ec.keyFromPrivate(String(nodeAddress1.privateKey).slice(2)).getPublic(),
+                nodePublicKey: ec.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress1
             },
             {
-                nodePublicKey: ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic(),
+                nodePublicKey: ec.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress2
             }
         ];
@@ -935,14 +935,13 @@ describe("SkaleDkgFakeComplaint", () => {
         const nodesCount = 4;
         for (const index of Array.from(Array(nodesCount).keys())) {
             const hexIndex = ("0" + index.toString(16)).slice(-2);
-            const pubKey = ec.keyFromPrivate(String(validators[index % 2].nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(validators[index % 2].nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f0000" + hexIndex,
                     publicIp: "0x7f0000" + hexIndex,
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(validators[index % 2].nodeAddress),
                     name: "d2" + hexIndex,
                     domainName: "some.domain.name"
                 });

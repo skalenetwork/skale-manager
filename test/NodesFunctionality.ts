@@ -6,15 +6,9 @@ import { ContractManager,
          ValidatorService,
          DelegationController,
          ConstantsHolder} from "../typechain";
-
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
-
 import { skipTime } from "./tools/time";
-
-import { BigNumber, Wallet } from "ethers";
+import { Wallet } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
@@ -22,11 +16,11 @@ import { deployNodes } from "./tools/deploy/nodes";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
-import { getValidatorIdSignature } from "./tools/signatures";
+import { expect } from "chai";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 
 
 chai.should();
@@ -35,7 +29,7 @@ chai.use(solidity);
 
 describe("NodesFunctionality", () => {
     let owner: SignerWithAddress;
-    let validator: SignerWithAddress;
+    let validator: Wallet;
     let nodeAddress: Wallet;
     let nodeAddress2: Wallet;
     let holder: SignerWithAddress;
@@ -48,14 +42,14 @@ describe("NodesFunctionality", () => {
     let delegationController: DelegationController;
 
     beforeEach(async () => {
-        [owner, validator, holder] = await ethers.getSigners();
+        [owner] = await ethers.getSigners();
 
+        validator = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
+        nodeAddress2 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
+        holder = (await ethers.getSigners())[4];
 
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
-
-        nodeAddress2 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
-
         await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
@@ -82,7 +76,6 @@ describe("NodesFunctionality", () => {
     });
 
     it("should fail to create node if ip is zero", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
         await nodes.createNode(
             validator.address,
             {
@@ -90,14 +83,13 @@ describe("NodesFunctionality", () => {
                 nonce: 0,
                 ip: "0x00000000",
                 publicIp: "0x7f000001",
-                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                publicKey: getPublicKey(validator),
                 name: "D2",
                 domainName: "some.domain.name"
             }).should.be.eventually.rejectedWith("IP address is zero or is not available");
     });
 
     it("should fail to create node if port is zero", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
         await nodes.createNode(
             validator.address,
             {
@@ -105,14 +97,13 @@ describe("NodesFunctionality", () => {
                 nonce: 0,
                 ip: "0x7f000001",
                 publicIp: "0x7f000001",
-                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                publicKey: getPublicKey(validator),
                 name: "D2",
                 domainName: "some.domain.name"
             }).should.be.eventually.rejectedWith("Port is zero");
     });
 
     it("should fail to create node if public Key is incorrect", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
         await nodes.createNode(
             validator.address,
             {
@@ -120,14 +111,13 @@ describe("NodesFunctionality", () => {
                 nonce: 0,
                 ip: "0x7f000001",
                 publicIp: "0x7f000001",
-                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex').slice(1) + "0"],
+                publicKey: getPublicKey(validator),
                 name: "D2",
                 domainName: "some.domain.name"
             }).should.be.eventually.rejectedWith("Public Key is incorrect");
     });
 
     it("should create node", async () => {
-        const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
         await nodes.createNode(
             nodeAddress.address,
             {
@@ -135,7 +125,7 @@ describe("NodesFunctionality", () => {
                 nonce: 0,
                 ip: "0x7f000001",
                 publicIp: "0x7f000001",
-                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                publicKey: getPublicKey(nodeAddress),
                 name: "D2",
                 domainName: "some.domain.name"
             });
@@ -145,14 +135,12 @@ describe("NodesFunctionality", () => {
         node[1].should.be.equal("0x7f000001");
         node[2].should.be.equal("0x7f000001");
         node[3].should.be.equal(8545);
-        (await nodes.getNodePublicKey(0))
-            .should.be.deep.equal(["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')]);
+        (await nodes.getNodePublicKey(0)).should.be.deep.equal(getPublicKey(nodeAddress));
     });
 
     describe("when node is created", async () => {
         const nodeId = 0;
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -160,7 +148,7 @@ describe("NodesFunctionality", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "D2",
                     domainName: "some.domain.name"
                 });
@@ -248,7 +236,6 @@ describe("NodesFunctionality", () => {
 
     describe("when two nodes are created", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -256,11 +243,10 @@ describe("NodesFunctionality", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "D2",
                     domainName: "some.domain.name"
                 }); // name
-                const pubKey2 = ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress2.address,
                 {
@@ -268,7 +254,7 @@ describe("NodesFunctionality", () => {
                     nonce: 0,
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x" + pubKey2.x.toString('hex'), "0x" + pubKey2.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress2),
                     name: "D3",
                     domainName: "some.domain.name"
                 }); // name
@@ -402,7 +388,6 @@ describe("NodesFunctionality", () => {
             // now it should not reject
             await nodes.checkPossibilityCreatingNode(nodeAddress.address);
 
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -410,7 +395,7 @@ describe("NodesFunctionality", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "D2",
                     domainName: "some.domain.name"
                 });
@@ -435,7 +420,6 @@ describe("NodesFunctionality", () => {
             await constantsHolder.setMSR(amount);
 
             await nodes.checkPossibilityCreatingNode(nodeAddress.address);
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -443,7 +427,7 @@ describe("NodesFunctionality", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "D2",
                     domainName: "some.domain.name"
                 });
@@ -456,7 +440,7 @@ describe("NodesFunctionality", () => {
                     nonce: 0,
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "D3",
                     domainName: "some.domain.name"
                 });

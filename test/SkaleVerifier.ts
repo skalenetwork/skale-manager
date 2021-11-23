@@ -7,12 +7,7 @@ import { ContractManager,
          SchainsInternal,
          SkaleVerifier,
          ValidatorService } from "../typechain";
-
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
-
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
@@ -24,8 +19,8 @@ import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
-import { getValidatorIdSignature } from "./tools/signatures";
+import { Wallet } from "ethers";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -234,14 +229,13 @@ describe("SkaleVerifier", () => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await nodes.connect(validator1).createNode(nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
-                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        publicKey: getPublicKey(nodeAddress),
                         name: "d2" + hexIndex,
                         domainName: "some.domain.name"
                     });

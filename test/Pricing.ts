@@ -1,4 +1,4 @@
-import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
+import { Wallet } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
@@ -11,9 +11,6 @@ import { ContractManager,
          ConstantsHolder,
          NodeRotation } from "../typechain";
 
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -29,8 +26,7 @@ import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
-import { getValidatorIdSignature } from "./tools/signatures";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -90,7 +86,6 @@ describe("Pricing", () => {
             await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.constants.AddressZero, 10, 2);
             await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.constants.AddressZero, 10, 4);
             await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.constants.AddressZero, 10, 8);
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -98,7 +93,7 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis1",
                     domainName: "some.domain.name"
                 });
@@ -110,7 +105,7 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis2",
                     domainName: "some.domain.name"
                 });
@@ -122,7 +117,7 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000005",
                     publicIp: "0x7f000005",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis3",
                     domainName: "some.domain.name"
                 });
@@ -134,7 +129,7 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000007",
                     publicIp: "0x7f000007",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis4",
                     domainName: "some.domain.name"
                 });
@@ -237,7 +232,6 @@ describe("Pricing", () => {
                 }
 
                 it("should change price when new active node has been added", async () => {
-                    const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress.address,
                         {
@@ -245,7 +239,7 @@ describe("Pricing", () => {
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                            publicKey: getPublicKey(nodeAddress),
                             name: "vadim",
                             domainName: "some.domain.name"
                         });
@@ -301,7 +295,6 @@ describe("Pricing", () => {
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
-                    const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress.address,
                         {
@@ -309,7 +302,7 @@ describe("Pricing", () => {
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                            publicKey: getPublicKey(nodeAddress),
                             name: "vadim",
                             domainName: "some.domain.name"
                         });

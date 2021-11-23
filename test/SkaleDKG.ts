@@ -100,11 +100,11 @@ describe("SkaleDKG", () => {
 
         validators = [
             {
-                nodePublicKey: ec.keyFromPrivate(String(nodeAddress1.privateKey).slice(2)).getPublic(),
+                nodePublicKey: ec.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress1
             },
             {
-                nodePublicKey: ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic(),
+                nodePublicKey: ec.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress2
             }
         ];
@@ -142,8 +142,8 @@ describe("SkaleDKG", () => {
     });
 
     describe("when 2 nodes are created", async () => {
-        const pubKey1 = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
-        const pubKey2 = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        const pubKey1 = ec.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic();
+        const pubKey2 = ec.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic();
         const validatorsPublicKey: [string, string][] = [
             ["0x" + pubKey1.x.toString('hex'), "0x" + pubKey1.y.toString('hex')],
             ["0x" + pubKey2.x.toString('hex'), "0x" + pubKey2.y.toString('hex')]
@@ -354,7 +354,6 @@ describe("SkaleDKG", () => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const pubKey = ec.keyFromPrivate(String(validators[index].nodeAddress.privateKey).slice(2)).getPublic();
                 await nodes.createNode(validators[index].nodeAddress.address,
                     {
                         port: 8545,

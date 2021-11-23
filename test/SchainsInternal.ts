@@ -2,12 +2,7 @@ import { ContractManager,
          Nodes,
          SchainsInternalMock,
          ValidatorService } from "../typechain";
-
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
-
 import { Wallet } from "ethers";
 import chai = require("chai");
 import chaiAsPromised from "chai-as-promised";
@@ -21,7 +16,7 @@ import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { fastBeforeEach } from "./tools/mocha";
-import { getValidatorIdSignature } from "./tools/signatures";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
@@ -127,14 +122,13 @@ describe("SchainsInternal", () => {
 
         fastBeforeEach(async () => {
             await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.constants.AddressZero, 5, 5);
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "D2-01",
                     domainName: "some.domain.name"
                 });
