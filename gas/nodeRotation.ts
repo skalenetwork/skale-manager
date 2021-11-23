@@ -15,18 +15,11 @@ import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
 import { deploySkaleDKGTester } from "../test/tools/deploy/test/skaleDKGTester";
 import { skipTime } from "../test/tools/time";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { Event, Wallet } from "ethers";
 import fs from 'fs';
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
-    }
-}
+import { stringKeccak256 } from "../test/tools/hashes";
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {
@@ -93,9 +86,7 @@ describe("createSchains", () => {
         const numberOfSchains = 64;
         for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
             const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner.address, ethers.constants.AddressZero)).wait();
-            await skaleDKG.setSuccessfulDKGPublic(
-                stringValue(web3.utils.soliditySha3("schain-" + schainNumber))
-            );
+            await skaleDKG.setSuccessfulDKGPublic(stringKeccak256("schain-" + schainNumber));
             console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
         }
 
@@ -171,9 +162,7 @@ describe("createSchains", () => {
                     }
                     console.log(nodeOfSchain.toNumber());
                 }
-            await skaleDKG.setSuccessfulDKGPublic(
-                stringValue(web3.utils.soliditySha3("schain-" + schainNumber))
-            );
+            await skaleDKG.setSuccessfulDKGPublic(stringKeccak256("schain-" + schainNumber));
             console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
         }
 
@@ -240,9 +229,7 @@ describe("createSchains", () => {
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
                 const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner.address, ethers.constants.AddressZero)).wait();
-                await skaleDKG.setSuccessfulDKGPublic(
-                    stringValue(web3.utils.soliditySha3("schain-" + nodeId))
-                );
+                await skaleDKG.setSuccessfulDKGPublic(stringKeccak256("schain-" + nodeId));
                 console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
 
                 measurementsSchainCreation.push({nodesAmount, gasUsed: result.gasUsed.toNumber()});
