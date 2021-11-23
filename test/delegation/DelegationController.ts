@@ -2,8 +2,7 @@ import { ContractManager,
     DelegationController,
     SkaleToken,
     ValidatorService,
-    ConstantsHolder,
-    SkaleManagerMock} from "../../typechain";
+    ConstantsHolder} from "../../typechain";
 
 import { currentTime, skipTime } from "../tools/time";
 
@@ -17,7 +16,7 @@ import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWith
 import { State } from "../tools/types";
 import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
 import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 import { solidity } from "ethereum-waffle";

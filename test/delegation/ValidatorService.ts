@@ -3,9 +3,7 @@ import { ContractManager,
     SkaleToken,
     ValidatorService} from "../../typechain";
 
-import { skipTime } from "../tools/time";
 
-import { BigNumber } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
@@ -14,7 +12,7 @@ import { deployValidatorService } from "../tools/deploy/delegation/validatorServ
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { deploySkaleManager } from "../tools/deploy/skaleManager";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
 import { solidity } from "ethereum-waffle";
