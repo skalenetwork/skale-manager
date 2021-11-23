@@ -12,16 +12,9 @@ import { ContractManager,
          SlashingTable,
          ValidatorService,
          SkaleManager,
-         ConstantsHolder,
          Wallets } from "../typechain";
-
 import { skipTime, currentTime } from "./tools/time";
-
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
-
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
@@ -34,7 +27,6 @@ import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployWallets } from "./tools/deploy/wallets";
 import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
@@ -42,8 +34,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { assert, expect } from "chai";
 import chaiAlmost from "chai-almost";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
-import { BigNumber, Wallet } from "ethers";
-import { getValidatorIdSignature } from "./tools/signatures";
+import { BytesLike, Wallet } from "ethers";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -80,12 +72,11 @@ describe("SkaleDKG", () => {
     let nodes: Nodes;
     let nodeRotation: NodeRotation;
     let skaleManager: SkaleManager;
-    let constantsHolder: ConstantsHolder;
     let wallets: Wallets;
 
     const failedDkgPenalty = 5;
     let snapshot: any;
-    let validators: {nodePublicKey: string, nodeAddress: Wallet}[];
+    let validators: {nodeAddress: Wallet}[];
     before(async() => {
         chai.use(chaiAlmost(0.002));
         [owner, validator1, validator2] = await ethers.getSigners();
@@ -93,18 +84,14 @@ describe("SkaleDKG", () => {
         nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
-
-
         await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
         await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
 
         validators = [
             {
-                nodePublicKey: ec.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress1
             },
             {
-                nodePublicKey: ec.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress2
             }
         ];
@@ -121,7 +108,6 @@ describe("SkaleDKG", () => {
         delegationController = await deployDelegationController(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
-        constantsHolder = await deployConstantsHolder(contractManager);
         wallets = await deployWallets(contractManager);
 
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
@@ -142,12 +128,7 @@ describe("SkaleDKG", () => {
     });
 
     describe("when 2 nodes are created", async () => {
-        const pubKey1 = ec.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic();
-        const pubKey2 = ec.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic();
-        const validatorsPublicKey: [string, string][] = [
-            ["0x" + pubKey1.x.toString('hex'), "0x" + pubKey1.y.toString('hex')],
-            ["0x" + pubKey2.x.toString('hex'), "0x" + pubKey2.y.toString('hex')]
-        ];
+        let validatorsPublicKey: [BytesLike, BytesLike][];
 
         const secretNumbers = [
             "94073351970851123256998281197810571804991376897451597421391551220528953509967",
@@ -331,6 +312,8 @@ describe("SkaleDKG", () => {
         let cleanContracts: number;
         before(async () => {
             cleanContracts = await makeSnapshot();
+
+            validatorsPublicKey = [getPublicKey(nodeAddress1), getPublicKey(nodeAddress2)];
 
             await validatorService.connect(validator1).registerValidator("Validator1", "D2 is even", 0, 0);
             const validator1Id = await validatorService.getValidatorId(validator1.address);

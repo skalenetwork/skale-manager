@@ -29,7 +29,7 @@ chai.use(solidity);
 
 describe("NodesFunctionality", () => {
     let owner: SignerWithAddress;
-    let validator: Wallet;
+    let validator: SignerWithAddress;
     let nodeAddress: Wallet;
     let nodeAddress2: Wallet;
     let holder: SignerWithAddress;
@@ -42,12 +42,10 @@ describe("NodesFunctionality", () => {
     let delegationController: DelegationController;
 
     beforeEach(async () => {
-        [owner] = await ethers.getSigners();
+        [owner, validator, holder] = await ethers.getSigners();
 
-        validator = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
-        holder = (await ethers.getSigners())[4];
 
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
         await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
@@ -77,13 +75,13 @@ describe("NodesFunctionality", () => {
 
     it("should fail to create node if ip is zero", async () => {
         await nodes.createNode(
-            validator.address,
+            nodeAddress.address,
             {
                 port: 8545,
                 nonce: 0,
                 ip: "0x00000000",
                 publicIp: "0x7f000001",
-                publicKey: getPublicKey(validator),
+                publicKey: getPublicKey(nodeAddress),
                 name: "D2",
                 domainName: "some.domain.name"
             }).should.be.eventually.rejectedWith("IP address is zero or is not available");
@@ -91,13 +89,13 @@ describe("NodesFunctionality", () => {
 
     it("should fail to create node if port is zero", async () => {
         await nodes.createNode(
-            validator.address,
+            nodeAddress.address,
             {
                 port: 0,
                 nonce: 0,
                 ip: "0x7f000001",
                 publicIp: "0x7f000001",
-                publicKey: getPublicKey(validator),
+                publicKey: getPublicKey(nodeAddress),
                 name: "D2",
                 domainName: "some.domain.name"
             }).should.be.eventually.rejectedWith("Port is zero");
@@ -111,7 +109,7 @@ describe("NodesFunctionality", () => {
                 nonce: 0,
                 ip: "0x7f000001",
                 publicIp: "0x7f000001",
-                publicKey: getPublicKey(validator),
+                publicKey: getPublicKey(nodeAddress),
                 name: "D2",
                 domainName: "some.domain.name"
             }).should.be.eventually.rejectedWith("Public Key is incorrect");
