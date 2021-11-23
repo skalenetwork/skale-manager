@@ -15,12 +15,13 @@ import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { Wallet } from "ethers";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -246,9 +247,9 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
 
-            const bobHash = web3.utils.soliditySha3("Bob");
+            const bobHash = stringKeccak256("Bob");
             if (bobHash) {
                 await keyStorage.initPublicKeyInProgress(bobHash);
 
