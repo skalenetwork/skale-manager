@@ -23,22 +23,15 @@ import { deploySchains } from "./tools/deploy/schains";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
-    }
-}
 
 describe("Pricing", () => {
     let owner: SignerWithAddress;
@@ -147,14 +140,9 @@ describe("Pricing", () => {
         });
 
         describe("on existing nodes and schains", async () => {
-            const bobSchainHash = stringValue(web3.utils.soliditySha3("BobSchain"));
-            const davidSchainHash = stringValue(web3.utils.soliditySha3("DavidSchain"));
-            const jacobSchainHash = stringValue(web3.utils.soliditySha3("JacobSchain"));
-
-            const johnNodeHash = stringValue(web3.utils.soliditySha3("John"));
-            const michaelNodeHash = stringValue(web3.utils.soliditySha3("Michael"));
-            const danielNodeHash = stringValue(web3.utils.soliditySha3("Daniel"));
-            const stevenNodeHash = stringValue(web3.utils.soliditySha3("Steven"));
+            const bobSchainHash = stringKeccak256("BobSchain");
+            const davidSchainHash = stringKeccak256("DavidSchain");
+            const jacobSchainHash = stringKeccak256("JacobSchain");
 
             beforeEach(async () => {
 
