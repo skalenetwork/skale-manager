@@ -126,7 +126,7 @@ contract DelegationController is Permissions, ILocker {
     struct ValidatorsStatistics {
         // number of validators
         uint number;
-        //validatorId => bool - is Delegated or not
+        //validatorId => amount of delegations
         mapping (uint => uint) delegated;
     }
 
@@ -630,10 +630,9 @@ contract DelegationController is Permissions, ILocker {
 
     function _addValidatorToValidatorsPerDelegators(address holder, uint validatorId) private {
         if (_numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 0) {
-            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number + 1;
+            _numberOfValidatorsPerDelegator[holder].number += 1;
         }
-        _numberOfValidatorsPerDelegator[holder].
-            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId] + 1;
+        _numberOfValidatorsPerDelegator[holder].delegated[validatorId] += 1;
     }
 
     function _removeFromDelegatedByHolder(address holder, uint amount, uint month) private {
@@ -648,10 +647,9 @@ contract DelegationController is Permissions, ILocker {
 
     function _removeValidatorFromValidatorsPerDelegators(address holder, uint validatorId) private {
         if (_numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 1) {
-            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number - 1;
+            _numberOfValidatorsPerDelegator[holder].number -= 1;
         }
-        _numberOfValidatorsPerDelegator[holder].
-            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId] - 1;
+        _numberOfValidatorsPerDelegator[holder].delegated[validatorId] -= 1;
     }
 
     function _addToEffectiveDelegatedByHolderToValidator(
@@ -985,10 +983,7 @@ contract DelegationController is Permissions, ILocker {
     function _checkIfDelegationIsAllowed(address holder, uint validatorId) private view {
         require(
             _numberOfValidatorsPerDelegator[holder].delegated[validatorId] > 0 ||
-                (
-                    _numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 0 &&
-                    _numberOfValidatorsPerDelegator[holder].number < _getConstantsHolder().limitValidatorsPerDelegator()
-                ),
+                _numberOfValidatorsPerDelegator[holder].number < _getConstantsHolder().limitValidatorsPerDelegator(),
             "Limit of validators is reached"
         );
     }
