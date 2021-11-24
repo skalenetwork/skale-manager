@@ -141,7 +141,7 @@ describe("Delegation", () => {
                 account: Wallet.createRandom().connect(ethers.provider)
             });
         }
-        const etherAmount = ethers.utils.parseEther("5");
+        const etherAmount = ethers.utils.parseEther("5000");
         for (const newValidator of validators) {
             await holder1.sendTransaction({to: newValidator.account.address, value: etherAmount});
             await validatorService.connect(newValidator.account).registerValidator("Validator", "Good Validator", 150, 0);
@@ -191,7 +191,7 @@ describe("Delegation", () => {
                 account: Wallet.createRandom().connect(ethers.provider)
             });
         }
-        const etherAmount = ethers.utils.parseEther("5");
+        const etherAmount = ethers.utils.parseEther("5000");
         for (const newValidator of validators) {
             await holder1.sendTransaction({to: newValidator.account.address, value: etherAmount});
             await validatorService.connect(newValidator.account).registerValidator("Validator", "Good Validator", 150, 0);
@@ -513,7 +513,7 @@ describe("Delegation", () => {
             for (let i = 0; i < holdersAmount; ++i) {
                 holders.push(Wallet.createRandom().connect(ethers.provider));
             }
-            const etherAmount = ethers.utils.parseEther("5");
+            const etherAmount = ethers.utils.parseEther("5000");
 
             await constantsHolder.setLaunchTimestamp(0);
 
