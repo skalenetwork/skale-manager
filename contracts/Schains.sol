@@ -353,7 +353,7 @@ contract Schains is Permissions, ISchains {
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
 
-        require(!schainParameters.erector.isContract(), "Erector address must be a private key");
+        require(!schainParameters.erector.isContract(), "Erector address must be not a contract");
         if (from.isContract()) {
             require(schainParameters.erector != address(0), "Erector address is not provided");
         } else {
