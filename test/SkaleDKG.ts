@@ -31,7 +31,6 @@ import { deployWallets } from "./tools/deploy/wallets";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert, expect } from "chai";
-import chaiAlmost from "chai-almost";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 import { BytesLike, Wallet } from "ethers";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
@@ -39,10 +38,6 @@ import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-
-async function getBalance(address: string) {
-    return parseFloat(ethers.utils.formatEther(await ethers.provider.getBalance(address)));
-}
 
 describe("SkaleDKG", () => {
     let owner: SignerWithAddress;
@@ -66,10 +61,10 @@ describe("SkaleDKG", () => {
     let wallets: Wallets;
 
     const failedDkgPenalty = 5;
+    const weiTolerance = ethers.utils.parseEther("0.002").toNumber();
     let snapshot: any;
     let validators: {nodeAddress: Wallet}[];
     before(async() => {
-        chai.use(chaiAlmost(0.002));
         [owner, validator1, validator2] = await ethers.getSigners();
 
         nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
@@ -515,15 +510,15 @@ describe("SkaleDKG", () => {
                     1,
                 );
                 assert(resComplaint.should.be.false);
-                const balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                const balanceBefore = await validators[0].nodeAddress.getBalance();
                 await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
                     1
                 )).to.emit(skaleDKG, "ComplaintError").withArgs("Complaint sent too early");
-                const balance = await getBalance(validators[0].nodeAddress.address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
+                const balance = await validators[0].nodeAddress.getBalance();
+                balance.should.be.least(balanceBefore);
+                balance.should.be.closeTo(balanceBefore, weiTolerance);
             });
 
             it("should send complaint after missing broadcast", async () => {
@@ -555,15 +550,15 @@ describe("SkaleDKG", () => {
                     1
                 );
                 assert(resComplaint.should.be.true);
-                const balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                const balanceBefore = await validators[0].nodeAddress.getBalance();
                 await skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
                     1
                 );
-                const balance = await getBalance(validators[0].nodeAddress.address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
+                const balance = await validators[0].nodeAddress.getBalance();
+                balance.should.be.least(balanceBefore);
+                balance.should.be.closeTo(balanceBefore, weiTolerance);
                 res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                     stringKeccak256(schainName),
                     1
@@ -620,16 +615,16 @@ describe("SkaleDKG", () => {
                 );
                 assert(res.should.be.true);
 
-                let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                let balanceBefore = await validators[0].nodeAddress.getBalance();
 
                 await skaleDKG.connect(validators[0].nodeAddress).alright(
                     stringKeccak256(schainName),
                     0
                 );
 
-                let balance = await getBalance(validators[0].nodeAddress.address);
-                // balance.should.not.be.lessThan(balanceBefore);
-                // balance.should.be.almost(balanceBefore);
+                let balance = await validators[0].nodeAddress.getBalance();
+                // balance.should.be.least(balanceBefore);
+                // balance.should.be.closeTo(balanceBefore, weiTolerance);
 
 
                 res = await skaleDKG.connect(validators[0].nodeAddress).isAlrightPossible(
@@ -649,15 +644,15 @@ describe("SkaleDKG", () => {
                 );
                 assert(res.should.be.false);
 
-                balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                balanceBefore = await validators[0].nodeAddress.getBalance();
                 await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
                     1
                 )).to.emit(skaleDKG, "ComplaintError").withArgs("Has already sent alright");
-                balance = await getBalance(validators[0].nodeAddress.address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
+                balance = await validators[0].nodeAddress.getBalance();
+                balance.should.be.least(balanceBefore);
+                balance.should.be.closeTo(balanceBefore, weiTolerance);
 
                 await skipTime(ethers, 1800);
                 res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
@@ -667,15 +662,15 @@ describe("SkaleDKG", () => {
                 );
                 assert(res.should.be.true);
 
-                balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                balanceBefore = await validators[0].nodeAddress.getBalance();
                 await skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
                     1
                 );
-                balance = await getBalance(validators[0].nodeAddress.address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
+                balance = await validators[0].nodeAddress.getBalance();
+                balance.should.be.least(balanceBefore);
+                balance.should.be.closeTo(balanceBefore, weiTolerance);
 
                 res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
                     stringKeccak256(schainName),
@@ -861,15 +856,15 @@ describe("SkaleDKG", () => {
                         encryptedSecretKeyContributions[indexes[0]]
                     );
                     await skipTime(ethers, 1800);
-                    const balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                    const balanceBefore = await validators[0].nodeAddress.getBalance();
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
                         stringKeccak256(schainName),
                         0,
                         1
                     );
-                    const balance = await getBalance(validators[0].nodeAddress.address);
-                    balance.should.not.be.lessThan(balanceBefore);
-                    balance.should.be.almost(balanceBefore);
+                    const balance = await validators[0].nodeAddress.getBalance();
+                    balance.should.be.least(balanceBefore);
+                    balance.should.be.closeTo(balanceBefore, weiTolerance);
                 });
 
                 after(async () => {
@@ -1007,30 +1002,30 @@ describe("SkaleDKG", () => {
                 });
 
                 it("should complaint and be slashed", async () => {
-                    const balanceBefore = await getBalance(validators[1].nodeAddress.address);
+                    const balanceBefore = await validators[1].nodeAddress.getBalance();
                     await expect(skaleDKG.connect(validators[1].nodeAddress).complaint(
                         stringKeccak256(schainName),
                         1,
                         0
                     )).to.emit(skaleDKG, "BadGuy").withArgs(1);
-                    const balance = await getBalance(validators[1].nodeAddress.address);
-                    balance.should.not.be.lessThan(balanceBefore);
-                    balance.should.be.almost(balanceBefore);
+                    const balance = await validators[1].nodeAddress.getBalance();
+                    balance.should.be.least(balanceBefore);
+                    balance.should.be.closeTo(balanceBefore, weiTolerance);
                 });
 
                 describe("when 2 node sent incorrect complaint", async () => {
                     let correctBroadcastIsSent: number;
                     before(async () => {
                         correctBroadcastIsSent = await makeSnapshot();
-                        const balanceBefore = await getBalance(validators[1].nodeAddress.address);
+                        const balanceBefore = await validators[1].nodeAddress.getBalance();
                         await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                             stringKeccak256(schainName),
                             1,
                             0
                         );
-                        const balance = await getBalance(validators[1].nodeAddress.address);
-                        // balance.should.not.be.lessThan(balanceBefore);
-                        // balance.should.be.almost(balanceBefore);
+                        const balance = await validators[1].nodeAddress.getBalance();
+                        // balance.should.be.least(balanceBefore);
+                        // balance.should.be.closeTo(balanceBefore, weiTolerance);
                     });
 
                     after(async () => {
@@ -1059,15 +1054,15 @@ describe("SkaleDKG", () => {
                             0
                         );
                         assert(res.should.be.true);
-                        const balanceBefore = await getBalance(validators[1].nodeAddress.address);
+                        const balanceBefore = await validators[1].nodeAddress.getBalance();
                         await expect(skaleDKG.connect(validators[1].nodeAddress).complaint(
                             stringKeccak256(schainName),
                             1,
                             0
                         )).to.emit(skaleDKG, "BadGuy").withArgs(0);
-                        const balance = await getBalance(validators[1].nodeAddress.address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
+                        const balance = await validators[1].nodeAddress.getBalance();
+                        balance.should.be.least(balanceBefore);
+                        balance.should.be.closeTo(balanceBefore, weiTolerance);
                     });
 
                     it("should send complaint after missing response", async () => {
@@ -1097,15 +1092,15 @@ describe("SkaleDKG", () => {
                             0
                         );
                         assert(res.should.be.true);
-                        const balanceBefore = await getBalance(validators[1].nodeAddress.address);
+                        const balanceBefore = await validators[1].nodeAddress.getBalance();
                         await expect(skaleDKG.connect(validators[1].nodeAddress).complaint(
                             stringKeccak256(schainName),
                             1,
                             0
                         )).to.emit(skaleDKG, "BadGuy").withArgs(0);
-                        const balance = await getBalance(validators[1].nodeAddress.address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
+                        const balance = await validators[1].nodeAddress.getBalance();
+                        balance.should.be.least(balanceBefore);
+                        balance.should.be.closeTo(balanceBefore, weiTolerance);
                     });
 
                     it("should send correct response", async () => {
@@ -1156,7 +1151,7 @@ describe("SkaleDKG", () => {
                         );
                         assert(res.should.be.false);
 
-                        const balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                        const balanceBefore = await validators[0].nodeAddress.getBalance();
 
                         await expect(skaleDKG.connect(validators[0].nodeAddress).response(
                             stringKeccak256(schainName),
@@ -1165,8 +1160,8 @@ describe("SkaleDKG", () => {
                             multipliedShares[indexes[0]]
                         )).to.emit(skaleDKG, "BadGuy").withArgs(1);
 
-                        const balance = await getBalance(validators[0].nodeAddress.address);
-                        balance.should.not.be.lessThan(balanceBefore);
+                        const balance = await validators[0].nodeAddress.getBalance();
+                        balance.should.be.least(balanceBefore);
 
                         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator2.address)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -1218,15 +1213,15 @@ describe("SkaleDKG", () => {
                 });
 
                 it("should send complaint from 2 node", async () => {
-                    const balanceBefore = await getBalance(validators[1].nodeAddress.address);
+                    const balanceBefore = await validators[1].nodeAddress.getBalance();
                     await expect(skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                         stringKeccak256(schainName),
                         1,
                         0
                     )).to.emit(skaleDKG, "ComplaintSent").withArgs(stringKeccak256(schainName), 1, 0);
-                    const balance = await getBalance(validators[1].nodeAddress.address);
-                    // balance.should.not.be.lessThan(balanceBefore);
-                    // balance.should.be.almost(balanceBefore);
+                    const balance = await validators[1].nodeAddress.getBalance();
+                    // balance.should.be.least(balanceBefore);
+                    // balance.should.be.closeTo(balanceBefore, weiTolerance);
                     const res = await skaleDKG.getComplaintData(stringKeccak256(schainName));
                     assert.equal(res[0].toString(), "1");
                     assert.equal(res[1].toString(), "0");
@@ -1309,7 +1304,7 @@ describe("SkaleDKG", () => {
                                 domainName: "some.domain.name"
                         });
 
-                        let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                        let balanceBefore = await validators[0].nodeAddress.getBalance();
                         await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                             stringKeccak256(schainName),
                             0,
@@ -1317,20 +1312,20 @@ describe("SkaleDKG", () => {
                             verificationVectorMultiplication[indexes[0]],
                             badEncryptedSecretKeyContributions[indexes[0]]
                         );
-                        let balance = await getBalance(validators[0].nodeAddress.address);
-                        // balance.should.not.be.lessThan(balanceBefore);
-                        // balance.should.be.almost(balanceBefore);
+                        let balance = await validators[0].nodeAddress.getBalance();
+                        // balance.should.be.least(balanceBefore);
+                        // balance.should.be.closeTo(balanceBefore, weiTolerance);
 
-                        balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                        balanceBefore = await validators[0].nodeAddress.getBalance();
                         await expect(skaleDKG.connect(validators[0].nodeAddress).response(
                             stringKeccak256(schainName),
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[0]]
                         )).to.emit(skaleDKG, "BadGuy").withArgs(0);
-                        balance = await getBalance(validators[0].nodeAddress.address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
+                        balance = await validators[0].nodeAddress.getBalance();
+                        balance.should.be.least(balanceBefore);
+                        balance.should.be.closeTo(balanceBefore, weiTolerance);
 
                         const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
                         assert.equal(await currentTime(ethers), leavingTimeOfNode);
@@ -1344,7 +1339,7 @@ describe("SkaleDKG", () => {
                     });
 
                     it("accused node should send incorrect response", async () => {
-                        let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                        let balanceBefore = await validators[0].nodeAddress.getBalance();
                         await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                             stringKeccak256(schainName),
                             0,
@@ -1352,20 +1347,20 @@ describe("SkaleDKG", () => {
                             verificationVectorMultiplication[indexes[0]],
                             badEncryptedSecretKeyContributions[indexes[0]]
                         );
-                        let balance = await getBalance(validators[0].nodeAddress.address);
-                        // balance.should.not.be.lessThan(balanceBefore);
-                        // balance.should.be.almost(balanceBefore);
+                        let balance = await validators[0].nodeAddress.getBalance();
+                        // balance.should.be.least(balanceBefore);
+                        // balance.should.be.closeTo(balanceBefore, weiTolerance);
 
-                        balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                        balanceBefore = await validators[0].nodeAddress.getBalance();
                         await expect(skaleDKG.connect(validators[0].nodeAddress).response(
                             stringKeccak256(schainName),
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[1]]
                         )).to.emit(skaleDKG, "BadGuy").withArgs(0);
-                        balance = await getBalance(validators[0].nodeAddress.address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
+                        balance = await validators[0].nodeAddress.getBalance();
+                        balance.should.be.least(balanceBefore);
+                        balance.should.be.closeTo(balanceBefore, weiTolerance);
 
                         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -1415,7 +1410,7 @@ describe("SkaleDKG", () => {
                 });
 
             await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
-            let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            let balanceBefore = await validators[0].nodeAddress.getBalance();
             await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                 stringKeccak256(schainName),
                 0,
@@ -1423,37 +1418,37 @@ describe("SkaleDKG", () => {
                 // the last symbol is spoiled in parameter below
                 badEncryptedSecretKeyContributions[indexes[0]]
             );
-            let balance = await getBalance(validators[0].nodeAddress.address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            let balance = await validators[0].nodeAddress.getBalance();
+            balance.should.be.least(balanceBefore);
+            balance.should.be.closeTo(balanceBefore, weiTolerance);
 
-            balanceBefore = await getBalance(validators[1].nodeAddress.address);
+            balanceBefore = await validators[1].nodeAddress.getBalance();
             await skaleDKG.connect(validators[1].nodeAddress).broadcast(
                 stringKeccak256(schainName),
                 1,
                 verificationVectors[indexes[1]],
                 encryptedSecretKeyContributions[indexes[1]]
             );
-            balance = await getBalance(validators[1].nodeAddress.address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            balance = await validators[1].nodeAddress.getBalance();
+            balance.should.be.least(balanceBefore);
+            balance.should.be.closeTo(balanceBefore, weiTolerance);
 
-            balanceBefore = await getBalance(validators[1].nodeAddress.address);
+            balanceBefore = await validators[1].nodeAddress.getBalance();
             const resComplaint = await (await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                 stringKeccak256(schainName),
                 1,
                 0
             )).wait();
-            balance = await getBalance(validators[1].nodeAddress.address);
-            // balance.should.not.be.lessThan(balanceBefore);
-            // balance.should.be.almost(balanceBefore);
+            balance = await validators[1].nodeAddress.getBalance();
+            // balance.should.be.least(balanceBefore);
+            // balance.should.be.closeTo(balanceBefore, weiTolerance);
 
             assert(
                 await skaleDKG.getComplaintStartedTime(stringKeccak256(schainName)),
                 (await ethers.provider.getBlock(resComplaint.blockNumber)).timestamp.toString()
             );
 
-            balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            balanceBefore = await validators[0].nodeAddress.getBalance();
             await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                 stringKeccak256(schainName),
                 0,
@@ -1461,20 +1456,20 @@ describe("SkaleDKG", () => {
                 verificationVectorMultiplication[indexes[0]],
                 badEncryptedSecretKeyContributions[indexes[0]]
             );
-            balance = await getBalance(validators[0].nodeAddress.address);
-            // balance.should.not.be.lessThan(balanceBefore);
-            // balance.should.be.almost(balanceBefore);
+            balance = await validators[0].nodeAddress.getBalance();
+            // balance.should.be.least(balanceBefore);
+            // balance.should.be.closeTo(balanceBefore, weiTolerance);
 
-            balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            balanceBefore = await validators[0].nodeAddress.getBalance();
             const responseTx = await skaleDKG.connect(validators[0].nodeAddress).response(
                 stringKeccak256(schainName),
                 0,
                 secretNumbers[indexes[0]],
                 multipliedShares[indexes[1]]
             );
-            balance = await getBalance(validators[0].nodeAddress.address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            balance = await validators[0].nodeAddress.getBalance();
+            balance.should.be.least(balanceBefore);
+            balance.should.be.closeTo(balanceBefore, weiTolerance);
 
             responseTx.should.emit(skaleDKG, "BadGuy").withArgs(0);
             responseTx.should.emit(skaleDKG, "NewGuy").withArgs(2);
@@ -1489,15 +1484,15 @@ describe("SkaleDKG", () => {
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
 
-            balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            balanceBefore = await validators[0].nodeAddress.getBalance();
             await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256(schainName),
                 2,
                 0
             )).to.emit(skaleDKG, "ComplaintError").withArgs("Node is not in this group");
-            balance = await getBalance(validators[0].nodeAddress.address);
-            // balance.should.not.be.lessThan(balanceBefore);
-            // balance.should.be.almost(balanceBefore);
+            balance = await validators[0].nodeAddress.getBalance();
+            // balance.should.be.least(balanceBefore);
+            // balance.should.be.closeTo(balanceBefore, weiTolerance);
 
             let res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
                 stringKeccak256(schainName),
@@ -1783,16 +1778,16 @@ describe("SkaleDKG", () => {
                     i
                 );
                 assert.equal(broadPoss, true);
-                const balanceBefore = await getBalance(validators[index].nodeAddress.address);
+                const balanceBefore = await validators[index].nodeAddress.getBalance();
                 await skaleDKG.connect(validators[index].nodeAddress).broadcast(
                     stringKeccak256("New16NodeSchain"),
                     i,
                     verificationVectorNew,
                     secretKeyContributions
                 );
-                const balance = await getBalance(validators[index].nodeAddress.address);
-                // balance.should.not.be.lessThan(balanceBefore);
-                // balance.should.be.almost(balanceBefore);
+                const balance = await validators[index].nodeAddress.getBalance();
+                // balance.should.be.least(balanceBefore);
+                // balance.should.be.closeTo(balanceBefore, weiTolerance);
                 broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
                     stringKeccak256("New16NodeSchain"),
                     i
@@ -1816,14 +1811,14 @@ describe("SkaleDKG", () => {
                 );
                 assert.equal(alrightPoss, true);
 
-                const balanceBefore = await getBalance(validators[index].nodeAddress.address);
+                const balanceBefore = await validators[index].nodeAddress.getBalance();
                 await skaleDKG.connect(validators[index].nodeAddress).alright(
                     stringKeccak256("New16NodeSchain"),
                     i
                 );
-                const balance = await getBalance(validators[index].nodeAddress.address);
-                // balance.should.not.be.lessThan(balanceBefore);
-                // balance.should.be.almost(balanceBefore);
+                const balance = await validators[index].nodeAddress.getBalance();
+                // balance.should.be.least(balanceBefore);
+                // balance.should.be.closeTo(balanceBefore, weiTolerance);
 
                 alrightPoss = await skaleDKG.connect(validators[index].nodeAddress).isAlrightPossible(
                     stringKeccak256("New16NodeSchain"),
@@ -2147,15 +2142,15 @@ describe("SkaleDKG", () => {
                 complaintNode,
                 accusedNode
             );
-            const balanceBefore = await getBalance(validators[indexToSend].nodeAddress.address);
+            const balanceBefore = await validators[indexToSend].nodeAddress.getBalance();
             await expect(skaleDKG.connect(validators[indexToSend].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
                 complaintNode,
                 someNode
             )).to.emit(skaleDKG, "ComplaintError").withArgs("One complaint is already sent");
-            const balance = await getBalance(validators[indexToSend].nodeAddress.address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            const balance = await validators[indexToSend].nodeAddress.getBalance();
+            balance.should.be.least(balanceBefore);
+            balance.should.be.closeTo(balanceBefore, weiTolerance);
 
             if (accusedNode.eq(1)) {
                 indexToSend = 1;
@@ -2248,25 +2243,25 @@ describe("SkaleDKG", () => {
             const complaintNode = "7";
             await skipTime(ethers, 1800);
 
-            let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            let balanceBefore = await validators[0].nodeAddress.getBalance();
             await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
                 complaintNode,
                 accusedNode
             );
-            let balance = await getBalance(validators[0].nodeAddress.address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            let balance = await validators[0].nodeAddress.getBalance();
+            balance.should.be.least(balanceBefore);
+            balance.should.be.closeTo(balanceBefore, weiTolerance);
 
-            balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            balanceBefore = await validators[0].nodeAddress.getBalance();
             await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
                 8,
                 accusedNode
             )).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-            balance = await getBalance(validators[0].nodeAddress.address);
-            // balance.should.not.be.lessThan(balanceBefore);
-            // balance.should.be.almost(balanceBefore);
+            balance = await validators[0].nodeAddress.getBalance();
+            // balance.should.be.least(balanceBefore);
+            // balance.should.be.closeTo(balanceBefore, weiTolerance);
             await skaleManager.connect(validator1).deleteSchain("New16NodeSchain");
         });
 
@@ -2324,27 +2319,27 @@ describe("SkaleDKG", () => {
             const accusedNode = "15";
             const complaintNode = "7";
             await skipTime(ethers, 1800);
-            let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            let balanceBefore = await validators[0].nodeAddress.getBalance();
             await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
                 complaintNode,
                 accusedNode
             );
-            let balance = await getBalance(validators[0].nodeAddress.address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            let balance = await validators[0].nodeAddress.getBalance();
+            balance.should.be.least(balanceBefore);
+            balance.should.be.closeTo(balanceBefore, weiTolerance);
             const space = await nodes.spaceOfNodes(accusedNode);
             space.freeSpace.should.be.equal(128);
 
-            balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            balanceBefore = await validators[0].nodeAddress.getBalance();
             await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
                 8,
                 accusedNode
             )).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-            balance = await getBalance(validators[0].nodeAddress.address);
-            // balance.should.not.be.lessThan(balanceBefore);
-            // balance.should.be.almost(balanceBefore);
+            balance = await validators[0].nodeAddress.getBalance();
+            // balance.should.be.least(balanceBefore);
+            // balance.should.be.closeTo(balanceBefore, weiTolerance);
 
             await nodes.createNode(validators[0].nodeAddress.address,
                 {
@@ -2455,25 +2450,25 @@ describe("SkaleDKG", () => {
             const accusedNode = "15";
             const complaintNode = "7";
             await skipTime(ethers, 1800);
-            let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            let balanceBefore = await validators[0].nodeAddress.getBalance();
             await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
                 complaintNode,
                 accusedNode
             );
-            let balance = await getBalance(validators[0].nodeAddress.address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            let balance = await validators[0].nodeAddress.getBalance();
+            balance.should.be.least(balanceBefore);
+            balance.should.be.closeTo(balanceBefore, weiTolerance);
 
-            balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            balanceBefore = await validators[0].nodeAddress.getBalance();
             await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
                 8,
                 accusedNode
             )).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-            balance = await getBalance(validators[0].nodeAddress.address);
-            // balance.should.not.be.lessThan(balanceBefore);
-            // balance.should.be.almost(balanceBefore);
+            balance = await validators[0].nodeAddress.getBalance();
+            // balance.should.be.least(balanceBefore);
+            // balance.should.be.closeTo(balanceBefore, weiTolerance);
             // await nodes.createNode(validators[0].nodeAddress.address,
             //     {
             //         port: 8545,
