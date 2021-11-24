@@ -20,6 +20,7 @@ import { Event, Wallet } from "ethers";
 import fs from 'fs';
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 import { stringKeccak256 } from "../test/tools/hashes";
+import { fastBeforeEach } from "../test/tools/mocha";
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {
@@ -46,7 +47,7 @@ describe("createSchains", () => {
     let schainsInternal: SchainsInternal;
     let skaleDKG: SkaleDKGTester;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, validator] = await ethers.getSigners();
         node = new Wallet(String(privateKeys[3])).connect(ethers.provider);
         contractManager = await deployContractManager();

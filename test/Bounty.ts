@@ -21,14 +21,13 @@ import { deployDelegationController } from "./tools/deploy/delegation/delegation
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import * as elliptic from "elliptic";
 import { ethers } from "hardhat";
-import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { BigNumber, Event } from "ethers";
 import { deployPunisher } from "./tools/deploy/delegation/punisher";
 
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -92,12 +91,9 @@ describe("Bounty", () => {
     const day = 60 * 60 * 24;
     const month = 31 * day;
 
-    before(async() => {
+    fastBeforeEach(async () => {
         chai.use(chaiAlmost(2));
         [owner, admin, hacker, validator, validator2] = await ethers.getSigners();
-    });
-
-    beforeEach(async () => {
         contractManager = await deployContractManager();
         constantsHolder = await deployConstantsHolder(contractManager);
         bountyContract = await deployBounty(contractManager);
@@ -134,7 +130,7 @@ describe("Bounty", () => {
 
         const validatorId = 1;
         const validatorAmount = 1e6;
-        beforeEach(async () => {
+        fastBeforeEach(async () => {
             skaleToken = await deploySkaleToken(contractManager);
             delegationController = await deployDelegationController(contractManager);
             validatorService = await deployValidatorService(contractManager);
@@ -161,7 +157,7 @@ describe("Bounty", () => {
         describe("when second validator is registered and has active delegations", async () => {
             const validator2Id = 2;
             const validator2Amount = 0.5e6;
-            beforeEach(async () => {
+            fastBeforeEach(async () => {
                 const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
                 const DELEGATION_PERIOD_SETTER_ROLE = await delegationPeriodManager.DELEGATION_PERIOD_SETTER_ROLE();
                 await delegationPeriodManager.grantRole(DELEGATION_PERIOD_SETTER_ROLE, owner.address);

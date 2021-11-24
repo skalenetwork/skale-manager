@@ -13,6 +13,7 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { deployECDH } from "./tools/deploy/ecdh";
 import { deployContractManager } from "./tools/deploy/contractManager";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -30,7 +31,7 @@ describe("ECDH", () => {
 
     let ecdh: ECDH;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, validator, developer, hacker] = await ethers.getSigners();
 
         const contractManager = await deployContractManager();

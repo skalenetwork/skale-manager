@@ -9,6 +9,7 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { Event, Wallet } from "ethers";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
+import { fastBeforeEach } from "../test/tools/mocha";
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {
@@ -33,7 +34,7 @@ describe("createSchains", () => {
     let skaleManager: SkaleManager;
     let schains: Schains;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, validator, node] = await ethers.getSigners();
         contractManager = await deployContractManager();
 

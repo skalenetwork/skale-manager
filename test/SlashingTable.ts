@@ -6,6 +6,7 @@ import * as chai from "chai";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -19,7 +20,7 @@ describe("SlashingTable", () => {
     let skaleManager: SkaleManager;
     let slashingTable: SlashingTable;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, admin, hacker] = await ethers.getSigners();
 
         contractManager = await deployContractManager();

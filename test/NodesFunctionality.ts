@@ -20,6 +20,7 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { fastBeforeEach } from "./tools/mocha";
 
 
 chai.should();
@@ -39,7 +40,7 @@ describe("NodesFunctionality", () => {
     let skaleToken: SkaleToken;
     let delegationController: DelegationController;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, validator, holder] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
@@ -136,7 +137,7 @@ describe("NodesFunctionality", () => {
 
     describe("when node is created", async () => {
         const nodeId = 0;
-        beforeEach(async () => {
+        fastBeforeEach(async () => {
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -231,7 +232,7 @@ describe("NodesFunctionality", () => {
     });
 
     describe("when two nodes are created", async () => {
-        beforeEach(async () => {
+        fastBeforeEach(async () => {
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -346,7 +347,7 @@ describe("NodesFunctionality", () => {
         let delegationPeriod: number;
         let info: string;
         const month = 60 * 60 * 24 * 31;
-        beforeEach(async () => {
+        fastBeforeEach(async () => {
             amount = 100;
             delegationPeriod = 2;
             info = "NICE";

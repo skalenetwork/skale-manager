@@ -27,6 +27,7 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -46,7 +47,7 @@ describe("Pricing", () => {
     let constants: ConstantsHolder;
     let nodeRotation: NodeRotation;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, holder, validator] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[3])).connect(ethers.provider);
@@ -73,7 +74,7 @@ describe("Pricing", () => {
     });
 
     describe("on initialized contracts", async () => {
-        beforeEach(async () => {
+        fastBeforeEach(async () => {
             await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.constants.AddressZero, 10, 2);
             await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.constants.AddressZero, 10, 4);
             await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.constants.AddressZero, 10, 8);
@@ -142,7 +143,7 @@ describe("Pricing", () => {
             const davidSchainHash = stringKeccak256("DavidSchain");
             const jacobSchainHash = stringKeccak256("JacobSchain");
 
-            beforeEach(async () => {
+            fastBeforeEach(async () => {
 
                 await schainsInternal.createGroupForSchain(bobSchainHash, 1, 32);
                 await schainsInternal.createGroupForSchain(davidSchainHash, 1, 32);
@@ -197,7 +198,7 @@ describe("Pricing", () => {
                 let oldPrice: number;
                 let lastUpdated: number;
 
-                beforeEach(async () => {
+                fastBeforeEach(async () => {
                     await pricing.initNodes();
                     oldPrice = (await pricing.price()).toNumber();
                     lastUpdated = (await pricing.lastUpdated()).toNumber()

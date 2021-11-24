@@ -25,6 +25,7 @@ import { BigNumberish, BytesLike, Event, Signer, Wallet } from "ethers";
 import { assert } from "chai";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 import { stringKeccak256 } from "../test/tools/hashes";
+import { fastBeforeEach } from "../test/tools/mocha";
 
 async function createNode(skaleManager: SkaleManager, node: Wallet, nodeId: number) {
     await skaleManager.connect(node).createNode(
@@ -227,7 +228,7 @@ describe("Tree test", () => {
     let skaleDKG: SkaleDKGTester;
     let wallets: Wallets;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, validator] = await ethers.getSigners();
 
         node = new Wallet(String(privateKeys[2])).connect(ethers.provider);

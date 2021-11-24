@@ -15,6 +15,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { assert } from "chai";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -30,7 +31,7 @@ describe("NodesData", () => {
     let nodes: Nodes;
     let validatorService: ValidatorService;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, validator, admin, hacker] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
@@ -94,7 +95,7 @@ describe("NodesData", () => {
     });
 
     describe("when a node is added", async () => {
-        beforeEach(async () => {
+        fastBeforeEach(async () => {
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -345,7 +346,7 @@ describe("NodesData", () => {
         });
 
         describe("when node is registered", async () => {
-            beforeEach(async () => {
+            fastBeforeEach(async () => {
                 await nodes.createNode(
                     nodeAddress.address,
                     {
@@ -391,7 +392,7 @@ describe("NodesData", () => {
     });
 
     describe("when two nodes are added", async () => {
-        beforeEach(async () => {
+        fastBeforeEach(async () => {
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -417,7 +418,7 @@ describe("NodesData", () => {
         });
 
         describe("when nodes are registered", async () => {
-            beforeEach(async () => {
+            fastBeforeEach(async () => {
                 await nodes.createNode(
                     nodeAddress.address,
                     {

@@ -6,6 +6,7 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -16,7 +17,7 @@ describe("ContractManager", () => {
   let contractManager: ContractManager;
   let constantsHolder: ConstantsHolder;
 
-  beforeEach(async () => {
+  fastBeforeEach(async () => {
     [, user] = await ethers.getSigners();
 
     contractManager = await deployContractManager();

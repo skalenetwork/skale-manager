@@ -22,6 +22,7 @@ import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { Wallet } from "ethers";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -41,7 +42,7 @@ describe("SkaleVerifier", () => {
     let keyStorage: KeyStorage;
     let schainsInternal: SchainsInternal;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [validator1, owner, developer, hacker] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[0])).connect(ethers.provider);
