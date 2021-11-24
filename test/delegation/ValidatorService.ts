@@ -3,9 +3,7 @@ import { ContractManager,
     SkaleToken,
     ValidatorService} from "../../typechain";
 
-import { skipTime } from "../tools/time";
 
-import { BigNumber } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
@@ -14,35 +12,14 @@ import { deployValidatorService } from "../tools/deploy/delegation/validatorServ
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { deploySkaleManager } from "../tools/deploy/skaleManager";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
-import { solidity } from "ethereum-waffle";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+import { getValidatorIdSignature } from "../tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
-    } else {
-        return "";
-    }
-}
-
 
 describe("ValidatorService", () => {
     let owner: SignerWithAddress;

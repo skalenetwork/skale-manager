@@ -1,7 +1,5 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { web3, ethers } from "hardhat"
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { SegmentTreeTester } from "../../typechain/SegmentTreeTester";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deploySegmentTreeTester } from "../tools/deploy/test/segmentTreeTester";
