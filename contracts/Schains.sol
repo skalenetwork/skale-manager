@@ -310,7 +310,6 @@ contract Schains is Permissions, ISchains {
 
         // initialize Schain
         schainsInternal.initializeSchain(name, from, lifetime, deposit);
-        schainsInternal.setSchainIndex(keccak256(abi.encodePacked(name)), from);
     }
 
     /**
@@ -401,9 +400,9 @@ contract Schains is Permissions, ISchains {
         }
         schainsInternal.deleteGroup(schainHash);
         address from = schainsInternal.getSchainOwner(schainHash);
-        schainsInternal.removeSchain(schainHash, from);
         schainsInternal.removeHolesForSchain(schainHash);
         nodeRotation.removeRotation(schainHash);
+        schainsInternal.removeSchain(schainHash, from);
         Wallets(
             payable(contractManager.getContract("Wallets"))
         ).withdrawFundsFromSchainWallet(payable(from), schainHash);

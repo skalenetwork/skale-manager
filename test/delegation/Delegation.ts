@@ -386,7 +386,7 @@ describe("Delegation", () => {
             await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
             slashingTable.setPenalty("FailedDKG", ten18.muln(10000).toString(10));
 
-            await constantsHolder.setLaunchTimestamp((await currentTime(web3)) - 4 * month);
+            await constantsHolder.setLaunchTimestamp((await currentTime(ethers)) - 4 * month);
 
             await delegationController.connect(holder1).delegate(validatorId, ten18.muln(10000).toString(10), 2, "First delegation");
             const delegationId1 = 0;
@@ -461,7 +461,7 @@ describe("Delegation", () => {
             });
 
             it("should distribute funds sent to Distributor across delegators", async () => {
-                await constantsHolder.setLaunchTimestamp(await currentTime(web3));
+                await constantsHolder.setLaunchTimestamp(await currentTime(ethers));
 
                 await skaleManagerMock.payBounty(validatorId, 101);
 

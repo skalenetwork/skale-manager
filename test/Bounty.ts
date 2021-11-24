@@ -181,7 +181,7 @@ describe("Bounty", () => {
                 await skipTime(ethers, month);
 
                 await skipTimeToDate(ethers, 1, 0); // Jan 1st
-                await constantsHolder.setLaunchTimestamp(await currentTime(web3));
+                await constantsHolder.setLaunchTimestamp(await currentTime(ethers));
                 await constantsHolder.setMSR(ten18.mul(validator2Amount).toString());
             });
 
@@ -204,7 +204,7 @@ describe("Bounty", () => {
                 const million = ten18.mul(1e6).toString();
 
                 // Jan 1st
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // validator1:
                 //     delegations:
@@ -221,7 +221,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 15, 0);
 
                 // Jan 15th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -239,7 +239,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 30, 0);
 
                 // Jan 30th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -257,7 +257,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 1, 1);
 
                 // Feb 1st
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -278,7 +278,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 15, 1);
 
                 // Feb 15th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -301,7 +301,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 27, 1);
 
                 // Feb 27th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -326,7 +326,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 1, 2);
 
                 // March 1st
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -350,7 +350,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 15, 2);
 
                 // March 15th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -374,7 +374,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 29, 2);
 
                 // March 29th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -405,7 +405,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 1, 3);
 
                 // April 1st
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -432,7 +432,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 15, 3);
 
                 // April 15th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -462,7 +462,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 28, 3);
 
                 // April 28th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -500,7 +500,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 1, 4);
 
                 // May 1st
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -534,7 +534,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 15, 4);
 
                 // May 15th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -583,7 +583,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 29, 4);
 
                 // May 29th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -634,7 +634,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 16, 5);
 
                 // June 16th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -674,7 +674,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 28, 5);
 
                 // June 28th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -706,7 +706,7 @@ describe("Bounty", () => {
                 await skipTimeToDate(ethers, 29, 6);
 
                 // July 29th
-                // console.log("ts: current", new Date(await currentTime(web3) * 1000));
+                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -750,27 +750,27 @@ describe("Bounty", () => {
         //     const queue = []
         //     for (let i = 0; i < nodesCount; ++i) {
         //         await nodes.registerNodes(1, validatorId);
-        //         console.log("Node", i, "is registered", new Date(await currentTime(web3) * 1000))
+        //         console.log("Node", i, "is registered", new Date(await currentTime(ethers) * 1000))
         //         await skipTime(ethers, day);
         //         result.set(i, []);
         //         queue.push({nodeId: i, getBountyTimestamp: (await bountyContract.getNextRewardTimestamp(i)).toNumber()})
         //     }
         //     let minBounty = Infinity;
         //     let maxBounty = 0;
-        //     const startTime = await currentTime(web3);
+        //     const startTime = await currentTime(ethers);
         //     queue.sort((a, b) => {
         //         return b.getBountyTimestamp - a.getBountyTimestamp;
         //     });
-        //     for (let timestamp = startTime; timestamp < startTime + 365 * day; timestamp = await currentTime(web3)) {
+        //     for (let timestamp = startTime; timestamp < startTime + 365 * day; timestamp = await currentTime(ethers)) {
         //         const nodeInfo: {nodeId: number, getBountyTimestamp: number} | undefined = queue.pop();
         //         assert(nodeInfo !== undefined);
         //         if (nodeInfo) {
         //             const nodeId = nodeInfo.nodeId;
         //             if (timestamp < nodeInfo.getBountyTimestamp) {
         //                 await skipTime(ethers, nodeInfo.getBountyTimestamp - timestamp);
-        //                 timestamp = await currentTime(web3)
+        //                 timestamp = await currentTime(ethers)
         //             }
-        //             console.log("Node", nodeId, new Date(await currentTime(web3) * 1000))
+        //             console.log("Node", nodeId, new Date(await currentTime(ethers) * 1000))
         //             const bounty = web3.utils.toBN((await bountyContract.calculateBounty.call(nodeId))).div(ten18).toNumber();
         //             // total[nodeIndex] += bounty;
         //             await bountyContract.calculateBounty(nodeId);
