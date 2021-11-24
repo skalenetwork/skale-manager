@@ -31,11 +31,10 @@ import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { skipTime, currentTime } from "./tools/time";
 import { deployBounty } from "./tools/deploy/bounty";
-import { BigNumber, BytesLike, Wallet } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { solidity } from "ethereum-waffle";
 import { deployWallets } from "./tools/deploy/wallets";
 import chaiAlmost from "chai-almost";
 import { fastBeforeEach } from "./tools/mocha";
@@ -43,7 +42,6 @@ import { getPublicKey } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("SkaleManager", () => {
     let owner: SignerWithAddress;

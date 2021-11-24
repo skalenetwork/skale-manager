@@ -13,12 +13,10 @@ import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
-import { solidity } from "ethereum-waffle";
 import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("SkaleToken", () => {
   let owner: SignerWithAddress;

@@ -17,7 +17,6 @@ import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { ethers } from "hardhat";
-import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
@@ -25,7 +24,6 @@ import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("NodesFunctionality", () => {
     let owner: SignerWithAddress;

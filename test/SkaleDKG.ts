@@ -29,7 +29,6 @@ import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deployWallets } from "./tools/deploy/wallets";
 import { ethers } from "hardhat";
-import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert, expect } from "chai";
 import chaiAlmost from "chai-almost";
@@ -40,7 +39,6 @@ import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 async function getBalance(address: string) {
     return parseFloat(ethers.utils.formatEther(await ethers.provider.getBalance(address)));
@@ -1468,25 +1466,21 @@ describe("SkaleDKG", () => {
             // balance.should.be.almost(balanceBefore);
 
             balanceBefore = await getBalance(validators[0].nodeAddress.address);
-            const result = await (await skaleDKG.connect(validators[0].nodeAddress).response(
+            const responseTx = await skaleDKG.connect(validators[0].nodeAddress).response(
                 stringKeccak256(schainName),
                 0,
                 secretNumbers[indexes[0]],
                 multipliedShares[indexes[1]]
-            )).wait();
+            );
             balance = await getBalance(validators[0].nodeAddress.address);
             balance.should.not.be.lessThan(balanceBefore);
             balance.should.be.almost(balanceBefore);
 
-            if (result.logs) {
-                assert.equal(result.logs[0].data.toString(), "0x0000000000000000000000000000000000000000000000000000000000000000");
+            responseTx.should.emit(skaleDKG, "BadGuy").withArgs(0);
+            responseTx.should.emit(skaleDKG, "NewGuy").withArgs(2);
+            responseTx.should.emit(skaleDKG, "FailedDKG").withArgs(stringKeccak256(schainName));
 
-                assert.equal(result.logs[2].data, stringKeccak256(schainName));
-            } else {
-                assert(false, "No events were emitted");
-            }
-
-            const blockNumber = result.blockNumber;
+            const blockNumber = (await responseTx.wait()).blockNumber;
             const timestamp = (await ethers.provider.getBlock(blockNumber)).timestamp;
 
             assert.equal((await skaleDKG.getNumberOfBroadcasted(stringKeccak256(schainName))).toString(), "0");
@@ -2141,7 +2135,7 @@ describe("SkaleDKG", () => {
                 );
             }
             const nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("New16NodeSchain"));
-            const accusedNode = nodesInGroup[14].toString();
+            const accusedNode = nodesInGroup[14];
             const complaintNode = nodesInGroup[0].toString();
             const someNode = nodesInGroup[7].toString();
             let indexToSend = 0;
@@ -2163,7 +2157,7 @@ describe("SkaleDKG", () => {
             balance.should.not.be.lessThan(balanceBefore);
             balance.should.be.almost(balanceBefore);
 
-            if (accusedNode === "1") {
+            if (accusedNode.eq(1)) {
                 indexToSend = 1;
             } else {
                 indexToSend = 0;
@@ -2189,18 +2183,14 @@ describe("SkaleDKG", () => {
                 verificationVectorMultiplicationNew,
                 secretKeyContributions
             )).wait();
-            const resResp = await (await skaleDKG.connect(validators[indexToSend].nodeAddress).response(
+            const responseTx = await skaleDKG.connect(validators[indexToSend].nodeAddress).response(
                 stringKeccak256("New16NodeSchain"),
                 accusedNode,
                 secretNumbers[indexes[indexToSend]],
                 multipliedShares[indexes[indexToSend]]
-            )).wait();
-            if (resResp.logs) {
-                assert.equal(resResp.logs[0].data, "0x00000000000000000000000000000000000000000000000000000000000000" + (Number(accusedNode) < 16 ? "0" : "") + Number(accusedNode).toString(16));
-            } else {
-                assert(false, "No events were emitted");
-            }
-            assert.isAtMost(resResp.gasUsed.toNumber() + resPreResp.gasUsed.toNumber(), 10000000);
+            );
+            responseTx.should.emit(skaleDKG, "BadGuy").withArgs(accusedNode);
+            assert.isAtMost((await responseTx.wait()).gasUsed.toNumber() + resPreResp.gasUsed.toNumber(), 10000000);
         });
 
         it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {

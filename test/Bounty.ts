@@ -32,9 +32,6 @@ import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 
 function hexValue(value: string) {
     if (value.length % 2 === 0) {

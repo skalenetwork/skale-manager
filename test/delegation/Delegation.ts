@@ -33,14 +33,12 @@ import { deploySkaleManager } from "../tools/deploy/skaleManager";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { solidity } from "ethereum-waffle"
 import { assert, expect } from "chai";
 import { getValidatorIdSignature } from "../tools/signatures";
 import { fastBeforeEach } from "../tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 const allowedDelegationPeriods = [2, 6, 12];
 

@@ -39,7 +39,6 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
-import { solidity } from "ethereum-waffle";
 import { deployWallets } from "./tools/deploy/wallets";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
@@ -47,7 +46,6 @@ import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("SkaleDkgFakeComplaint", () => {
     let owner: SignerWithAddress;

@@ -12,7 +12,6 @@ import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMo
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { skipTime } from "./tools/time";
 import { ethers } from "hardhat";
-import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { fastBeforeEach } from "./tools/mocha";
@@ -21,7 +20,6 @@ import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 
 describe("SchainsInternal", () => {

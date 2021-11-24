@@ -24,14 +24,12 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { ethers } from "hardhat";
-import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("Pricing", () => {
     let owner: SignerWithAddress;

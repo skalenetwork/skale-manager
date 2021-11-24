@@ -4,8 +4,6 @@ import * as elliptic from "elliptic";
 import { ECDH } from "../typechain";
 import "./tools/elliptic-types";
 
-import { gasMultiplier } from "./tools/command_line";
-import { skipTime } from "./tools/time";
 
 const EC = elliptic.ec;
 const ec = new EC("secp256k1");
@@ -15,11 +13,9 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { deployECDH } from "./tools/deploy/ecdh";
 import { deployContractManager } from "./tools/deploy/contractManager";
-import { solidity } from "ethereum-waffle";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 const n = BigNumber.from("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F");
 const gx = BigNumber.from("0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798");

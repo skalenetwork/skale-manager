@@ -11,7 +11,6 @@ import { deployValidatorService } from "./tools/deploy/delegation/validatorServi
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { BigNumber, Wallet } from "ethers";
 import { ethers } from "hardhat";
-import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
@@ -19,15 +18,6 @@ import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
-    }
-}
 
 describe("NodesData", () => {
     let owner: SignerWithAddress;

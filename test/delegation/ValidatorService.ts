@@ -15,13 +15,11 @@ import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
-import { solidity } from "ethereum-waffle";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 import { getValidatorIdSignature } from "../tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("ValidatorService", () => {
     let owner: SignerWithAddress;

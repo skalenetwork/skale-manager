@@ -17,12 +17,10 @@ import { State } from "../tools/types";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { solidity } from "ethereum-waffle";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("DelegationController (token state)", () => {
     let owner: SignerWithAddress;

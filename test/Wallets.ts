@@ -19,7 +19,6 @@ import { SchainType } from "./tools/types";
 import chaiAlmost from "chai-almost";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { solidity } from "ethereum-waffle";
 import { ContractTransaction, Wallet } from "ethers";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
@@ -27,7 +26,6 @@ import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 async function ethSpent(response: ContractTransaction) {
     const receipt = await response.wait();

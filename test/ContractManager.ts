@@ -6,11 +6,9 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { solidity } from "ethereum-waffle";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("ContractManager", () => {
   let user: SignerWithAddress;
