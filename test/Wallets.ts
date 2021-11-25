@@ -8,12 +8,7 @@ import { ContractManager,
 import { deployContractManager } from "./tools/deploy/contractManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
-import BigNumber from "bignumber.js";
-
 import { deployWallets } from "./tools/deploy/wallets";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySchains } from "./tools/deploy/schains";
@@ -22,62 +17,22 @@ import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { SchainType } from "./tools/types";
 import chaiAlmost from "chai-almost";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert } from "chai";
-import { solidity } from "ethereum-waffle";
 import { ContractTransaction, Wallet } from "ethers";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 async function ethSpent(response: ContractTransaction) {
     const receipt = await response.wait();
     if (receipt.effectiveGasPrice) {
-        const cost = receipt.effectiveGasPrice.toNumber() * receipt.gasUsed.toNumber();
-        return parseFloat(web3.utils.fromWei(cost.toString()));
+        return receipt.effectiveGasPrice.mul(receipt.gasUsed);
     } else {
         throw new ReferenceError("gasPrice is undefined");
-    }
-}
-
-async function getBalance(address: string) {
-    return parseFloat(web3.utils.fromWei(await web3.eth.getBalance(address)));
-}
-
-function fromWei(value: string) {
-    return parseFloat(web3.utils.fromWei(value));
-}
-
-function hexValue(value: string) {
-    if (value.length % 2 === 0) {
-        return value;
-    } else {
-        return "0" + value;
-    }
-}
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
-        return signature.signature;
-    } else {
-        return "";
-    }
-}
-
-function getRound(value: number) {
-    return Math.round(value*1e9)/1e9;
-}
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
     }
 }
 
@@ -96,12 +51,13 @@ describe("Wallets", () => {
     let skaleDKG: SkaleDKGTester;
     let schainsInternal: SchainsInternal;
 
+    const tolerance = 0.003;
     const validator1Id = 1;
     const validator2Id = 2;
     let snapshot: number;
 
     before(async() => {
-        chai.use(chaiAlmost(0.003));
+        chai.use(chaiAlmost(tolerance));
         [owner, validator1, validator2] = await ethers.getSigners();
 
         nodeAddress1 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
@@ -161,12 +117,12 @@ describe("Wallets", () => {
 
     it("should withdraw from validator wallet", async() => {
         const amount = 1e9;
-        await wallets.rechargeValidatorWallet(validator1Id, {value: amount.toString()});
-        const validator1Balance = Number.parseInt(await web3.eth.getBalance(validator1.address), 10);
+        await wallets.rechargeValidatorWallet(validator1Id, {value: amount});
+        const validator1Balance = await validator1.getBalance();
 
         const tx = await wallets.connect(validator1).withdrawFundsFromValidatorWallet(amount);
-        const validator1BalanceAfterWithdraw = fromWei(await web3.eth.getBalance(validator1.address)) + await ethSpent(tx);
-        assert.equal(getRound(validator1BalanceAfterWithdraw), getRound((validator1Balance + amount)/1e18));
+        const validator1BalanceAfterWithdraw = await validator1.getBalance();
+        validator1BalanceAfterWithdraw.should.be.equal(validator1Balance.add(amount).sub(await ethSpent(tx)));
         await wallets.connect(validator2).withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Balance is too low");
         await wallets.withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Validator address does not exist");
     });
@@ -174,27 +130,27 @@ describe("Wallets", () => {
     describe("when nodes and schains have been created", async() => {
         const schain1Name = "schain-1";
         const schain2Name = "schain-2";
-        const schain1Id = web3.utils.soliditySha3(schain1Name);
-        const schain2Id = web3.utils.soliditySha3(schain2Name);
+        const schain1Id = stringKeccak256(schain1Name);
+        const schain2Id = stringKeccak256(schain2Name);
 
         let snapshotOfDeployedContracts: number;
 
         before(async () => {
             snapshotOfDeployedContracts = await makeSnapshot();
             await validatorService.disableWhitelist();
-            let signature = await getValidatorIdSignature(new BigNumber(validator1Id), nodeAddress1);
+            let signature = await getValidatorIdSignature(validator1Id, nodeAddress1);
             await validatorService.connect(validator1).linkNodeAddress(nodeAddress1.address, signature);
-            signature = await getValidatorIdSignature(new BigNumber(validator2Id), nodeAddress2);
+            signature = await getValidatorIdSignature(validator2Id, nodeAddress2);
             await validatorService.connect(validator2).linkNodeAddress(nodeAddress2.address, signature);
 
             const nodesPerValidator = 2;
             const validators = [
                 {
-                    nodePublicKey: ec.keyFromPrivate(String(nodeAddress1.privateKey).slice(2)).getPublic(),
+                    nodePublicKey: getPublicKey(nodeAddress1),
                     nodeAddress: nodeAddress1
                 },
                 {
-                    nodePublicKey: ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic(),
+                    nodePublicKey: getPublicKey(nodeAddress2),
                     nodeAddress: nodeAddress2
                 }
             ];
@@ -206,8 +162,7 @@ describe("Wallets", () => {
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        ["0x" + hexValue(validator.nodePublicKey.x.toString('hex')),
-                         "0x" + hexValue(validator.nodePublicKey.y.toString('hex'))], // public key
+                        validator.nodePublicKey, // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -220,11 +175,11 @@ describe("Wallets", () => {
             await schainsInternal.addSchainType(0, 2);
             await schainsInternal.addSchainType(32, 4);
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address);
-            await skaleDKG.setSuccessfulDKGPublic(stringValue(schain1Id));
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address, ethers.constants.AddressZero);
+            await skaleDKG.setSuccessfulDKGPublic(schain1Id);
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address);
-            await skaleDKG.setSuccessfulDKGPublic(stringValue(schain2Id));
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address, ethers.constants.AddressZero);
+            await skaleDKG.setSuccessfulDKGPublic(schain2Id);
         });
 
         after(async () => {
@@ -233,39 +188,39 @@ describe("Wallets", () => {
 
         it("should automatically recharge wallet after creating schain by foundation", async () => {
             const amount = 1e9;
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, {value: amount.toString()});
-            const schainBalance = await wallets.getSchainBalance(stringValue(web3.utils.soliditySha3("schain-3")));
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, ethers.constants.AddressZero, {value: amount.toString()});
+            const schainBalance = await wallets.getSchainBalance(stringKeccak256("schain-3"));
             amount.should.be.equal(schainBalance.toNumber());
         });
 
         it("should recharge schain wallet", async() => {
             const amount = 1e9;
-            (await wallets.getSchainBalance(stringValue(schain1Id))).toNumber().should.be.equal(0);
-            (await wallets.getSchainBalance(stringValue(schain2Id))).toNumber().should.be.equal(0);
+            (await wallets.getSchainBalance(schain1Id)).toNumber().should.be.equal(0);
+            (await wallets.getSchainBalance(schain2Id)).toNumber().should.be.equal(0);
 
-            await wallets.rechargeSchainWallet(stringValue(schain1Id), {value: amount.toString()});
-            (await wallets.getSchainBalance(stringValue(schain1Id))).toNumber().should.be.equal(amount);
-            (await wallets.getSchainBalance(stringValue(schain2Id))).toNumber().should.be.equal(0);
+            await wallets.rechargeSchainWallet(schain1Id, {value: amount.toString()});
+            (await wallets.getSchainBalance(schain1Id)).toNumber().should.be.equal(amount);
+            (await wallets.getSchainBalance(schain2Id)).toNumber().should.be.equal(0);
         });
 
         it("should recharge schain wallet sending ETH to contract Wallets", async() => {
             const amount = ethers.utils.parseEther("1.0");
-            (await wallets.getSchainBalance(stringValue(schain1Id))).toNumber().should.be.equal(0);
+            (await wallets.getSchainBalance(schain1Id)).toNumber().should.be.equal(0);
             await validator1.sendTransaction({to: wallets.address, value: amount});
-            (await wallets.getSchainBalance(stringValue(schain1Id))).should.be.equal(amount);
+            (await wallets.getSchainBalance(schain1Id)).should.be.equal(amount);
         });
 
         describe("when validators and schains wallets are recharged", async () => {
-            const initialBalance = 1;
+            const initialBalance = ethers.utils.parseEther("1");
 
             let snapshotWithNodesAndSchains: number;
 
             before(async () => {
                 snapshotWithNodesAndSchains = await makeSnapshot();
-                await wallets.rechargeValidatorWallet(validator1Id, {value: (initialBalance * 1e18).toString()});
-                await wallets.rechargeValidatorWallet(validator2Id, {value: (initialBalance * 1e18).toString()});
-                await wallets.rechargeSchainWallet(stringValue(schain1Id), {value: (initialBalance * 1e18).toString()});
-                await wallets.rechargeSchainWallet(stringValue(schain2Id), {value: (initialBalance * 1e18).toString()});
+                await wallets.rechargeValidatorWallet(validator1Id, {value: initialBalance});
+                await wallets.rechargeValidatorWallet(validator2Id, {value: initialBalance});
+                await wallets.rechargeSchainWallet(schain1Id, {value: initialBalance});
+                await wallets.rechargeSchainWallet(schain2Id, {value: initialBalance});
             });
 
             after(async () => {
@@ -273,27 +228,31 @@ describe("Wallets", () => {
             });
 
             it("should move ETH to schain owner after schain termination", async () => {
-                let balanceBefore = await getBalance(validator1.address);
+                let balanceBefore = await validator1.getBalance();
                 const result = await skaleManager.connect(validator1).deleteSchain(schain1Name);
-                let balance = await getBalance(validator1.address);
-                const expectedBalance = balanceBefore - await ethSpent(result) + initialBalance;
-                getRound(balance).should.be.equal(getRound(expectedBalance));
+                let balance = await validator1.getBalance();
+                const expectedBalance = balanceBefore.sub(await ethSpent(result)).add(initialBalance);
+                balance.should.be.equal(expectedBalance);
 
-                balanceBefore = await getBalance(validator2.address);
+                balanceBefore = await validator2.getBalance();
                 await skaleManager.deleteSchainByRoot(schain2Name);
-                balance = await getBalance(validator2.address);
-                balance.should.be.equal(balanceBefore + initialBalance);
+                balance = await validator2.getBalance();
+                balance.should.be.equal(balanceBefore.add(initialBalance));
             });
 
             it("should reimburse gas for node exit", async() => {
-                const balanceBefore = await getBalance(nodeAddress1.address);
+                const balanceBefore = await nodeAddress1.getBalance();
                 const response = await skaleManager.connect(nodeAddress1).nodeExit(0);
-                const balance = await getBalance(nodeAddress1.address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
+                const balance = await nodeAddress1.getBalance();
+                balance.sub(balanceBefore).toNumber().should.not.be.lessThan(0);
+
+                const floatBalance = Number.parseFloat(ethers.utils.formatEther(balance));
+                const floatBalanceBefore = Number.parseFloat(ethers.utils.formatEther(balanceBefore));
+                floatBalance.should.be.almost(floatBalanceBefore);
+
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);
-                (initialBalance - fromWei(validatorBalance.toString()))
-                    .should.be.almost(await ethSpent(response));
+                initialBalance.sub(await ethSpent(response)).sub(validatorBalance).toNumber()
+                    .should.be.almost(0, ethers.utils.parseEther(tolerance.toString()).toNumber());
             });
         });
     });

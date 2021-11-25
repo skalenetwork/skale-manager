@@ -15,14 +15,14 @@ import { ContractManager,
          ConstantsHolder,
          Wallets} from "../typechain";
 
-import { skipTime, currentTime } from "./tools/time";
+import { skipTime } from "./tools/time";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
-import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
+import { Wallet } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
@@ -36,35 +36,16 @@ import { deploySlashingTable } from "./tools/deploy/slashingTable";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployECDH } from "./tools/deploy/ecdh";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
-import { solidity } from "ethereum-waffle";
 import { deployWallets } from "./tools/deploy/wallets";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
-        return signature.signature;
-    } else {
-        return "";
-    }
-}
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
-    }
-}
 
 describe("SkaleDkgFakeComplaint", () => {
     let owner: SignerWithAddress;
@@ -888,11 +869,11 @@ describe("SkaleDkgFakeComplaint", () => {
 
         validators = [
             {
-                nodePublicKey: ec.keyFromPrivate(String(nodeAddress1.privateKey).slice(2)).getPublic(),
+                nodePublicKey: ec.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress1
             },
             {
-                nodePublicKey: ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic(),
+                nodePublicKey: ec.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress2
             }
         ];
@@ -944,14 +925,13 @@ describe("SkaleDkgFakeComplaint", () => {
         const nodesCount = 4;
         for (const index of Array.from(Array(nodesCount).keys())) {
             const hexIndex = ("0" + index.toString(16)).slice(-2);
-            const pubKey = ec.keyFromPrivate(String(validators[index % 2].nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(validators[index % 2].nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f0000" + hexIndex,
                     publicIp: "0x7f0000" + hexIndex,
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(validators[index % 2].nodeAddress),
                     name: "d2" + hexIndex,
                     domainName: "some.domain.name"
                 });
@@ -980,11 +960,11 @@ describe("SkaleDkgFakeComplaint", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]));
 
-            let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
+            let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
-            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
+            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 let index = 3;
             while (!(nodesInGroup[0].eq(0) && nodesInGroup[1].eq(1) && nodesInGroup[2].eq(2))) {
                 await schains.deleteSchainByRoot(schainName);
@@ -993,9 +973,9 @@ describe("SkaleDkgFakeComplaint", () => {
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, schainName]));
-                nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
-                await wallets.rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, schainName]));
+                nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
+                await wallets.rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
             }
         });
 
@@ -1008,7 +988,7 @@ describe("SkaleDkgFakeComplaint", () => {
             it("should not revert after successful complaint", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
                     await skaleDKG.connect(validators[i % 2].nodeAddress).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                        stringKeccak256(schainName),
                         i,
                         verificationVectors[i],
                         encryptedSecretKeyContributions[i]);
@@ -1017,7 +997,7 @@ describe("SkaleDkgFakeComplaint", () => {
                 for (let i = 0; i < nodesCount; ++i) {
                     if (i !== 1) {
                         await skaleDKG.connect(validators[i % 2].nodeAddress).alright(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                            stringKeccak256(schainName),
                             i);
                     }
                 }
@@ -1025,20 +1005,20 @@ describe("SkaleDkgFakeComplaint", () => {
                 await skipTime(ethers, 1800);
 
                 let isComplaintPossible = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     0,
                     1);
 
                 assert(isComplaintPossible.should.be.true);
 
                 await skaleDKG.connect(validators[0].nodeAddress).complaint(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     0,
                     1
                 );
 
                 isComplaintPossible = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     2,
                     1
                 );
@@ -1049,7 +1029,7 @@ describe("SkaleDkgFakeComplaint", () => {
             it("should proceed response", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
                     await skaleDKG.connect(validators[i % 2].nodeAddress).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                        stringKeccak256(schainName),
                         i,
                         verificationVectors[i],
                         encryptedSecretKeyContributions[i]
@@ -1059,20 +1039,20 @@ describe("SkaleDkgFakeComplaint", () => {
                 for (let i = 0; i < nodesCount; ++i) {
                     if (i !== 1) {
                         await skaleDKG.connect(validators[i % 2].nodeAddress).alright(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                            stringKeccak256(schainName),
                             i
                         );
                     }
                 }
 
                 await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     1,
                     2
                 );
 
                 await skaleDKG.connect(validators[0].nodeAddress).preResponse(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     2,
                     verificationVectors[2],
                     verificationVectorMultiplication,
@@ -1080,7 +1060,7 @@ describe("SkaleDkgFakeComplaint", () => {
                 );
 
                 await skaleDKG.connect(validators[0].nodeAddress).response(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     2,
                     secretNumbers[2][1],
                     multipliedShares[2][1]

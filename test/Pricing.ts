@@ -1,4 +1,4 @@
-import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
+import { Wallet } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
@@ -11,9 +11,6 @@ import { ContractManager,
          ConstantsHolder,
          NodeRotation } from "../typechain";
 
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -26,32 +23,14 @@ import { deploySchains } from "./tools/deploy/schains";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
-import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
-        return signature.signature;
-    } else {
-        return "";
-    }
-}
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
-    }
-}
 
 describe("Pricing", () => {
     let owner: SignerWithAddress;
@@ -68,7 +47,7 @@ describe("Pricing", () => {
     let constants: ConstantsHolder;
     let nodeRotation: NodeRotation;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [owner, holder, validator] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[3])).connect(ethers.provider);
@@ -95,11 +74,10 @@ describe("Pricing", () => {
     });
 
     describe("on initialized contracts", async () => {
-        beforeEach(async () => {
-            await schainsInternal.initializeSchain("BobSchain", holder.address, 10, 2);
-            await schainsInternal.initializeSchain("DavidSchain", holder.address, 10, 4);
-            await schainsInternal.initializeSchain("JacobSchain", holder.address, 10, 8);
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
+        fastBeforeEach(async () => {
+            await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.constants.AddressZero, 10, 2);
+            await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.constants.AddressZero, 10, 4);
+            await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.constants.AddressZero, 10, 8);
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -107,7 +85,7 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis1",
                     domainName: "some.domain.name"
                 });
@@ -119,7 +97,7 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis2",
                     domainName: "some.domain.name"
                 });
@@ -131,7 +109,7 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000005",
                     publicIp: "0x7f000005",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis3",
                     domainName: "some.domain.name"
                 });
@@ -143,7 +121,7 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000007",
                     publicIp: "0x7f000007",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis4",
                     domainName: "some.domain.name"
                 });
@@ -161,16 +139,11 @@ describe("Pricing", () => {
         });
 
         describe("on existing nodes and schains", async () => {
-            const bobSchainHash = stringValue(web3.utils.soliditySha3("BobSchain"));
-            const davidSchainHash = stringValue(web3.utils.soliditySha3("DavidSchain"));
-            const jacobSchainHash = stringValue(web3.utils.soliditySha3("JacobSchain"));
+            const bobSchainHash = stringKeccak256("BobSchain");
+            const davidSchainHash = stringKeccak256("DavidSchain");
+            const jacobSchainHash = stringKeccak256("JacobSchain");
 
-            const johnNodeHash = stringValue(web3.utils.soliditySha3("John"));
-            const michaelNodeHash = stringValue(web3.utils.soliditySha3("Michael"));
-            const danielNodeHash = stringValue(web3.utils.soliditySha3("Daniel"));
-            const stevenNodeHash = stringValue(web3.utils.soliditySha3("Steven"));
-
-            beforeEach(async () => {
+            fastBeforeEach(async () => {
 
                 await schainsInternal.createGroupForSchain(bobSchainHash, 1, 32);
                 await schainsInternal.createGroupForSchain(davidSchainHash, 1, 32);
@@ -225,7 +198,7 @@ describe("Pricing", () => {
                 let oldPrice: number;
                 let lastUpdated: number;
 
-                beforeEach(async () => {
+                fastBeforeEach(async () => {
                     await pricing.initNodes();
                     oldPrice = (await pricing.price()).toNumber();
                     lastUpdated = (await pricing.lastUpdated()).toNumber()
@@ -246,7 +219,6 @@ describe("Pricing", () => {
                 }
 
                 it("should change price when new active node has been added", async () => {
-                    const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress.address,
                         {
@@ -254,7 +226,7 @@ describe("Pricing", () => {
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                            publicKey: getPublicKey(nodeAddress),
                             name: "vadim",
                             domainName: "some.domain.name"
                         });
@@ -310,7 +282,6 @@ describe("Pricing", () => {
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
-                    const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress.address,
                         {
@@ -318,7 +289,7 @@ describe("Pricing", () => {
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                            publicKey: getPublicKey(nodeAddress),
                             name: "vadim",
                             domainName: "some.domain.name"
                         });

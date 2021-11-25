@@ -2,8 +2,7 @@ import { ContractManager,
     DelegationController,
     SkaleToken,
     ValidatorService,
-    ConstantsHolder,
-    SkaleManagerMock} from "../../typechain";
+    ConstantsHolder} from "../../typechain";
 
 import { currentTime, skipTime } from "../tools/time";
 
@@ -17,7 +16,7 @@ import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWith
 import { State } from "../tools/types";
 import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
 import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 import { solidity } from "ethereum-waffle";
@@ -26,7 +25,6 @@ import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 
 describe("DelegationController", () => {
@@ -40,7 +38,6 @@ describe("DelegationController", () => {
     let skaleToken: SkaleToken;
     let delegationController: DelegationController;
     let validatorService: ValidatorService;
-    let constantsHolder: ConstantsHolder;
 
     const month = 60 * 60 * 24 * 31;
 
@@ -53,7 +50,6 @@ describe("DelegationController", () => {
         skaleToken = await deploySkaleToken(contractManager);
         delegationController = await deployDelegationController(contractManager);
         validatorService = await deployValidatorService(contractManager);
-        constantsHolder = await deployConstantsHolder(contractManager);
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
@@ -123,10 +119,6 @@ describe("DelegationController", () => {
         it("should send request for delegation", async () => {
             amount = 100;
             await skaleToken.mint(holder1.address, amount, "0x", "0x");
-            // const { logs } = await delegationController.connect(holder1).delegate(
-            //     validatorId, amount, delegationPeriod, info);
-            // assert.equal(logs.length, 1, "No DelegationProposed Event emitted");
-            // assert.equal(logs[0].event, "DelegationProposed");
 
             await expect(
                 delegationController.connect(holder1).delegate(validatorId, amount, delegationPeriod, info)

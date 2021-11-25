@@ -1,19 +1,15 @@
-import { BigNumber } from "ethers";
 import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
          ContractManager } from "../typechain";
-import { skipTime } from "./tools/time";
 
 import chai = require("chai");
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { solidity } from "ethereum-waffle";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("ConstantsHolder", () => {
   let owner: SignerWithAddress;
