@@ -370,6 +370,256 @@ describe("Schains", () => {
                     res1[1]
                 );
             });
+
+            it("should get previous nodes after nodeExit",  async () => {
+                const nodesCount = 2;
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("0" + index.toString(16)).slice(-2);
+                    await skaleManager.connect(nodeAddress).createNode(
+                        8545, // port
+                        0, // nonce
+                        "0x7f0000" + hexIndex, // ip
+                        "0x7f0000" + hexIndex, // public ip
+                        getPublicKey(nodeAddress), // public key
+                        "D2-" + hexIndex, // name
+                        "some.domain.name");
+                }
+
+                const schainName = "d2";
+                const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
+                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
+                await schains.addSchainByFoundation(5, 4, 0, schainName, schains.address, owner.address);
+
+
+
+                await skaleManager.connect(nodeAddress).createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f000011", // ip
+                    "0x7f000011", // public ip
+                    getPublicKey(nodeAddress), // public key
+                    "D2-11", // name
+                    "some.domain.name"
+                );
+
+                await skaleManager.connect(nodeAddress).nodeExit(0);
+
+                await skaleDKG.setSuccessfulDKGPublic(schainHash);
+
+
+                (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+
+                await skaleManager.connect(nodeAddress).createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f000012", // ip
+                    "0x7f000012", // public ip
+                    getPublicKey(nodeAddress), // public key
+                    "D2-12", // name
+                    "some.domain.name"
+                );
+
+                await skipTime(ethers, 43260);
+                await skaleManager.connect(nodeAddress).nodeExit(2);
+
+                await skaleDKG.setSuccessfulDKGPublic(schainHash);
+
+                (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
+                (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+
+                await skaleManager.connect(nodeAddress).createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f000013", // ip
+                    "0x7f000013", // public ip
+                    getPublicKey(nodeAddress), // public key
+                    "D2-13", // name
+                    "some.domain.name"
+                );
+
+                await skipTime(ethers, 43260);
+                await skaleManager.connect(nodeAddress).nodeExit(1);
+
+                await skaleDKG.setSuccessfulDKGPublic(schainHash);
+
+                (await nodeRotation.getPreviousNode(schainHash, 4)).should.be.equal(1);
+                (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
+                (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+
+            });
+
+            it("should get previous nodes after DKG failure",  async () => {
+                const nodesCount = 2;
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("0" + index.toString(16)).slice(-2);
+                    await skaleManager.connect(nodeAddress).createNode(
+                        8545, // port
+                        0, // nonce
+                        "0x7f0000" + hexIndex, // ip
+                        "0x7f0000" + hexIndex, // public ip
+                        getPublicKey(nodeAddress), // public key
+                        "D2-" + hexIndex, // name
+                        "some.domain.name");
+                }
+
+                const schainName = "d2";
+                const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
+                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
+                await schains.addSchainByFoundation(5, 4, 0, schainName, schains.address, owner.address);
+                await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("d2"), {value: 1e20.toString()});
+
+                const verificationVector = [{
+                    x: {
+                        a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                        b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417",
+                    },
+                    y: {
+                        a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                        b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                    }
+                }];
+
+                const encryptedSecretKeyContribution: {share: string, publicKey: [string, string]}[] = [
+                    {
+                        share: "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f",
+                        publicKey: [
+                            "0xfdf8101e91bd658fa1cea6fdd75adb8542951ce3d251cdaa78f43493dad730b5",
+                            "0x9d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf"
+                        ]
+                    },
+                    {
+                        share: "0x7232f27fdfe521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e1810",
+                        publicKey: [
+                            "0x086ff076abe442563ae9b8938d483ae581f4de2ee54298b3078289bbd85250c8",
+                            "0xdf956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77"
+                        ]
+                    }
+                ];
+
+                await skaleDKG.connect(nodeAddress).broadcast(
+                    schainHash,
+                    0,
+                    verificationVector,
+                    // the last symbol is spoiled in parameter below
+                    encryptedSecretKeyContribution
+                );
+
+                await skaleDKG.connect(nodeAddress).broadcast(
+                    schainHash,
+                    1,
+                    verificationVector,
+                    // the last symbol is spoiled in parameter below
+                    encryptedSecretKeyContribution
+                );
+
+                await skaleDKG.connect(nodeAddress).alright(
+                    schainHash,
+                    1
+                );
+
+                await skaleManager.connect(nodeAddress).createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f000011", // ip
+                    "0x7f000011", // public ip
+                    getPublicKey(nodeAddress), // public key
+                    "D2-11", // name
+                    "some.domain.name"
+                );
+
+                await skipTime(ethers, 1800);
+                await skaleDKG.connect(nodeAddress).complaint(
+                    schainHash,
+                    1,
+                    0
+                );
+
+                (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+
+                await skaleDKG.connect(nodeAddress).broadcast(
+                    schainHash,
+                    2,
+                    verificationVector,
+                    // the last symbol is spoiled in parameter below
+                    encryptedSecretKeyContribution
+                );
+
+                await skaleDKG.connect(nodeAddress).broadcast(
+                    schainHash,
+                    1,
+                    verificationVector,
+                    // the last symbol is spoiled in parameter below
+                    encryptedSecretKeyContribution
+                );
+
+                await skaleDKG.connect(nodeAddress).alright(
+                    schainHash,
+                    1
+                );
+
+                await skaleManager.connect(nodeAddress).createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f000012", // ip
+                    "0x7f000012", // public ip
+                    getPublicKey(nodeAddress), // public key
+                    "D2-12", // name
+                    "some.domain.name"
+                );
+
+                await skipTime(ethers, 1800);
+                await skaleDKG.connect(nodeAddress).complaint(
+                    schainHash,
+                    1,
+                    2
+                );
+
+                (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
+                (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+
+                await skaleDKG.connect(nodeAddress).broadcast(
+                    schainHash,
+                    3,
+                    verificationVector,
+                    // the last symbol is spoiled in parameter below
+                    encryptedSecretKeyContribution
+                );
+
+                await skaleDKG.connect(nodeAddress).broadcast(
+                    schainHash,
+                    1,
+                    verificationVector,
+                    // the last symbol is spoiled in parameter below
+                    encryptedSecretKeyContribution
+                );
+
+                await skaleDKG.connect(nodeAddress).alright(
+                    schainHash,
+                    3
+                );
+
+                await skaleManager.connect(nodeAddress).createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f000013", // ip
+                    "0x7f000013", // public ip
+                    getPublicKey(nodeAddress), // public key
+                    "D2-13", // name
+                    "some.domain.name"
+                );
+
+                await skipTime(ethers, 1800);
+                await skaleDKG.connect(nodeAddress).complaint(
+                    schainHash,
+                    3,
+                    1
+                );
+
+                (await nodeRotation.getPreviousNode(schainHash, 4)).should.be.equal(1);
+                (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
+                (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+
+            });
         });
 
         describe("when 4 nodes are registered", async () => {

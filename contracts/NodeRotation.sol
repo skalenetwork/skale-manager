@@ -170,7 +170,7 @@ contract NodeRotation is Permissions {
 
     function getPreviousNode(bytes32 schainHash, uint256 nodeIndex) external view returns (uint256 previousNode) {
         previousNode = rotations[schainHash].previousNodes[schainHash][nodeIndex];
-        require(previousNode != rotations[schainHash].previousNodes[schainHash][previousNode], "No previous node");
+        require(leavingHistory[previousNode].length > 0, "No previous node");
     }
 
     function initialize(address newContractsAddress) public override initializer {
