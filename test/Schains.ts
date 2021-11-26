@@ -407,6 +407,9 @@ describe("Schains", () => {
 
 
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 3).should.be.eventually.rejectedWith("No previous node");
 
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
@@ -425,6 +428,9 @@ describe("Schains", () => {
 
                 (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 4).should.be.eventually.rejectedWith("No previous node");
 
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
@@ -444,6 +450,9 @@ describe("Schains", () => {
                 (await nodeRotation.getPreviousNode(schainHash, 4)).should.be.equal(1);
                 (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 5).should.be.eventually.rejectedWith("No previous node");
 
             });
 
@@ -534,6 +543,9 @@ describe("Schains", () => {
                 );
 
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 3).should.be.eventually.rejectedWith("No previous node");
 
                 await skaleDKG.connect(nodeAddress).broadcast(
                     schainHash,
@@ -575,6 +587,9 @@ describe("Schains", () => {
 
                 (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 4).should.be.eventually.rejectedWith("No previous node");
 
                 await skaleDKG.connect(nodeAddress).broadcast(
                     schainHash,
@@ -617,6 +632,9 @@ describe("Schains", () => {
                 (await nodeRotation.getPreviousNode(schainHash, 4)).should.be.equal(1);
                 (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
+                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
+                await nodeRotation.getPreviousNode(schainHash, 5).should.be.eventually.rejectedWith("No previous node");
 
             });
         });
