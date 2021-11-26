@@ -537,6 +537,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * - Schain must exist
      */
     function getSchainErector(bytes32 schainHash) external view schainExists(schainHash) returns (address) {
+        require(schains[schainHash].erector != address(0), "Erector address is not set");
         return schains[schainHash].erector;
     }
 
