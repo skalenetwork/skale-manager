@@ -53,7 +53,7 @@ contract NodeRotation is Permissions {
         mapping (bytes32 => mapping (uint256 => uint256)) previousNodes;
     }
 
-    struct RotationToReturn {
+    struct Rotation {
         uint nodeIndex;
         uint newNodeIndex;
         uint freezeUntil;
@@ -147,8 +147,8 @@ contract NodeRotation is Permissions {
     /**
      * @dev Returns rotation details for a given schain.
      */
-    function getRotation(bytes32 schainHash) external view returns (RotationToReturn memory) {
-        return RotationToReturn({
+    function getRotation(bytes32 schainHash) external view returns (Rotation memory) {
+        return Rotation({
             nodeIndex: rotations[schainHash].nodeIndex,
             newNodeIndex: rotations[schainHash].newNodeIndex,
             freezeUntil: rotations[schainHash].freezeUntil,
@@ -169,7 +169,7 @@ contract NodeRotation is Permissions {
 
     /**
      * @dev Returns a previous node of the node in schain.
-     * If there is no previous node for givn node would return an error:
+     * If there is no previous node for given node would return an error:
      * "No previous node"
      */
     function getPreviousNode(bytes32 schainHash, uint256 nodeIndex) external view returns (uint256 previousNode) {
