@@ -389,8 +389,7 @@ describe("Schains", () => {
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
                 await schains.addSchainByFoundation(5, 4, 0, schainName, schains.address, owner.address);
-
-
+                await skaleDKG.setSuccessfulDKGPublic(schainHash);
 
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
