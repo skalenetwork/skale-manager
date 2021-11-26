@@ -363,7 +363,7 @@ contract DelegationController is Permissions, ILocker {
      * 
      * Requirements:
      * 
-     * - `msg.sender` must be the delegator.
+     * - `msg.sender` must be the delegator or the validator.
      * - Delegation state must be DELEGATED.
      */
     function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
