@@ -49,6 +49,7 @@ contract NodeRotation is Permissions {
         uint newNodeIndex;
         uint freezeUntil;
         uint rotationCounter;
+        //    schainHash =>        nodeIndex => nodeIndex
         mapping (bytes32 => mapping (uint256 => uint256)) previousNodes;
     }
 
@@ -69,8 +70,6 @@ contract NodeRotation is Permissions {
     mapping (uint => LeavingHistory[]) public leavingHistory;
 
     mapping (bytes32 => bool) public waitForNewNode;
-
-    // mapping (bytes32 => mapping (uint256 => uint256)) private _previousNodes;
 
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
 
@@ -168,6 +167,11 @@ contract NodeRotation is Permissions {
         return rotations[schainHash].freezeUntil >= block.timestamp && !waitForNewNode[schainHash];
     }
 
+    /**
+     * @dev Returns a previous node of the node in schain.
+     * If there is no previous node for givn node would return an error:
+     * "No previous node"
+     */
     function getPreviousNode(bytes32 schainHash, uint256 nodeIndex) external view returns (uint256 previousNode) {
         previousNode = rotations[schainHash].previousNodes[schainHash][nodeIndex];
         require(leavingHistory[previousNode].length > 0, "No previous node");
