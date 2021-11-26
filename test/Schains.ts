@@ -589,12 +589,13 @@ describe("Schains", () => {
                 await schainsInternal.getSchainErector(schainHash).should.be.eventually.equal(owner.address);
             });
 
-            it("should store zero erector address if schain owner is not a smart contract", async () => {
+            it("should not store erector address if schain owner is not a smart contract", async () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
                 await schains.addSchainByFoundation(5, 5, 0, schainName, owner.address, owner.address);
-                await schainsInternal.getSchainErector(schainHash).should.be.eventually.equal(ethers.constants.AddressZero);
+                await schainsInternal.getSchainErector(schainHash)
+                    .should.be.rejectedWith("Erector address is not set");
             });
         });
 
