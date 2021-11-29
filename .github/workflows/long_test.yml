@@ -1,16 +1,11 @@
 name: Build and test
-on: [push, pull_request]
+on:
+  schedule:
+    - cron:  '14 * * * *'
 
-jobs:
-  test:
+jobs: 
+  long-test:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [12.x, 14.x, 16.x]
-
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     steps:
     - uses: actions/checkout@v2
@@ -37,7 +32,7 @@ jobs:
     - name: Install NODE JS
       uses: actions/setup-node@v2
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 14
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -47,22 +42,8 @@ jobs:
     - name: Install project
       run: yarn install
 
-    - name: Install slither
-      run: pip3 install -r scripts/requirements.txt
+    - name: Run gas measurements
+      run: npx hardhat test gas/*.ts
 
-    - name: Show slither version
-      run: slither --version
-
-    - name: lint
-      run: yarn fullCheck
-
-    - name: Test deployment
-      run: ./scripts/test_deploy.sh
-
-    - name: Test upgrade
-      env:
-        NODE_VERSION: ${{ matrix.node-version }}
-      run: ./scripts/test_upgrade.sh
-
-    - name: Run tests
-      run: ./scripts/coverage.sh
+    - name: Run long tests
+      run: npx hardhat test long-test/*
