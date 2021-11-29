@@ -2,12 +2,7 @@ import { ContractManager,
          Nodes,
          SchainsInternalMock,
          ValidatorService } from "../typechain";
-
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
-
 import { Wallet } from "ethers";
 import chai = require("chai");
 import chaiAsPromised from "chai-as-promised";
@@ -17,14 +12,14 @@ import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMo
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { skipTime } from "./tools/time";
 import { ethers } from "hardhat";
-import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { fastBeforeEach } from "./tools/mocha";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 
 describe("SchainsInternal", () => {
@@ -58,14 +53,7 @@ describe("SchainsInternal", () => {
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         const validatorIndex = await validatorService.getValidatorId(holder.address);
         await validatorService.enableValidator(validatorIndex);
-        const signature = await nodeAddress.signMessage(
-            ethers.utils.arrayify(
-                ethers.utils.solidityKeccak256(
-                    ["uint"],
-                    [validatorIndex]
-                )
-            )
-        );
+        const signature = await getValidatorIdSignature(validatorIndex, nodeAddress);
         await validatorService.connect(holder).linkNodeAddress(nodeAddress.address, signature);
 
         const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
@@ -79,9 +67,9 @@ describe("SchainsInternal", () => {
     });
 
     it("should initialize schain", async () => {
-        await schainsInternal.initializeSchain("TestSchain", holder.address, 5, 5);
+        await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.constants.AddressZero, 5, 5);
 
-        const schain = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["TestSchain"]));
+        const schain = await schainsInternal.schains(stringKeccak256("TestSchain"));
         schain.name.should.be.equal("TestSchain");
         schain.owner.should.be.equal(holder.address);
         schain.lifetime.should.be.equal(5);
@@ -110,15 +98,15 @@ describe("SchainsInternal", () => {
 
         const generation0Name = "Generation 0";
         const generation1Name = "Generation 1";
-        const generation0Hash = ethers.utils.solidityKeccak256(["string"], [generation0Name]);
-        const generation1Hash = ethers.utils.solidityKeccak256(["string"], [generation1Name]);
-        await schainsInternal.initializeSchain(generation0Name, holder.address, 5, 5);
+        const generation0Hash = stringKeccak256(generation0Name);
+        const generation1Hash = stringKeccak256(generation1Name);
+        await schainsInternal.initializeSchain(generation0Name, holder.address, ethers.constants.AddressZero, 5, 5);
         (await schainsInternal.getGeneration(generation0Hash)).should.be.equal(generation);
 
         await schainsInternal.newGeneration();
         generation = generation.add(1);
 
-        await schainsInternal.initializeSchain(generation1Name, holder.address, 5, 5);
+        await schainsInternal.initializeSchain(generation1Name, holder.address, ethers.constants.AddressZero, 5, 5);
         (await schainsInternal.getGeneration(generation1Hash)).should.be.equal(generation);
     });
 
@@ -128,18 +116,17 @@ describe("SchainsInternal", () => {
     })
 
     describe("on existing schain", async () => {
-        const schainNameHash = ethers.utils.solidityKeccak256(["string"], ["TestSchain"]);
+        const schainNameHash = stringKeccak256("TestSchain");
 
         fastBeforeEach(async () => {
-            await schainsInternal.initializeSchain("TestSchain", holder.address, 5, 5);
-            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
+            await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.constants.AddressZero, 5, 5);
             await nodes.createNode(nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "D2-01",
                     domainName: "some.domain.name"
                 });
@@ -177,13 +164,13 @@ describe("SchainsInternal", () => {
             const nodeIndex = 0;
             const numberOfNewSchains = 5
             const newSchainNames = [...Array(numberOfNewSchains).keys()].map((index) => "newSchain" + index);
-            const newSchainHashes = newSchainNames.map((schainName) => ethers.utils.solidityKeccak256(["string"], [schainName]));
+            const newSchainHashes = newSchainNames.map((schainName) => stringKeccak256(schainName));
 
             fastBeforeEach(async () => {
                 await schainsInternal.createGroupForSchain(schainNameHash, 1, 2);
 
                 for (const schainName of newSchainNames) {
-                    await schainsInternal.initializeSchain(schainName, owner.address, 5, 5);
+                    await schainsInternal.initializeSchain(schainName, owner.address, ethers.constants.AddressZero, 5, 5);
                 }
             });
 

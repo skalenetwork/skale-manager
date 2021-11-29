@@ -4,25 +4,12 @@ import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
 import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
 import { ContractManager, Schains, SkaleManager, ValidatorService } from "../typechain";
 import { privateKeys } from "../test/tools/private-keys";
-import * as elliptic from "elliptic";
 import { deploySchains } from "../test/tools/deploy/schains";
-import fs from 'fs';
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { BigNumber, BigNumberish, Event, Wallet } from "ethers";
+import { Event, Wallet } from "ethers";
 import { SchainsInternal } from "../typechain/SchainsInternal";
-
-const ec = new elliptic.ec("secp256k1");
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
-        return signature.signature;
-    } else {
-        return "";
-    }
-}
+import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {
@@ -34,14 +21,6 @@ function findEvent(events: Event[] | undefined, eventName: string) {
         }
     } else {
         throw new Error("Event was not emitted");
-    }
-}
-
-function hexValue(value: string) {
-    if (value.length % 2 === 0) {
-        return value;
-    } else {
-        return "0" + value;
     }
 }
 
@@ -84,14 +63,13 @@ describe("Schain creation test", () => {
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature);
         await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
         const maxNodesAmount = 20;
-        const publicKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
         for (let nodeId = 0; nodeId < maxNodesAmount; ++nodeId) {
             await skaleManager.connect(nodeAddress).createNode(
                 1, // port
                 0, // nonce
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
-                ["0x" + hexValue(publicKey.x.toString('hex')), "0x" + hexValue(publicKey.y.toString('hex'))], // public key
+                getPublicKey(nodeAddress), // public key
                 "d2-" + nodeId, // name)
                 "some.domain.name"
             );
@@ -100,7 +78,7 @@ describe("Schain creation test", () => {
             const type = 2;;
             console.log(type);
             for (let try1 = 0; try1 < 32; try1++) {
-                const result = await (await schains.addSchainByFoundation(0, type, 0, "schain-" + tries + try1, owner.address)).wait();
+                const result = await (await schains.addSchainByFoundation(0, type, 0, "schain-" + tries + try1, owner.address, ethers.constants.AddressZero)).wait();
                 const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
                 const setOfNodes = new Set();
                 for (const nodeOfSchain of nodeInGroup) {
@@ -131,14 +109,13 @@ describe("Schain creation test", () => {
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature);
         await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
         const maxNodesAmount = 20;
-        const publicKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
         for (let nodeId = 0; nodeId < maxNodesAmount; ++nodeId) {
             await skaleManager.connect(nodeAddress).createNode(
                 1, // port
                 0, // nonce
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
-                ["0x" + hexValue(publicKey.x.toString('hex')), "0x" + hexValue(publicKey.y.toString('hex'))], // public key
+                getPublicKey(nodeAddress), // public key
                 "d2-" + nodeId, // name)
                 "some.domain.name"
             );
@@ -146,7 +123,7 @@ describe("Schain creation test", () => {
         for(let tries = 0; tries < 200; tries++) {
             const type = Math.floor(Math.random() * 2) + 1;
             console.log(type);
-            const result = await (await schains.addSchainByFoundation(0, type, 0, "schain-" + tries, owner.address)).wait();
+            const result = await (await schains.addSchainByFoundation(0, type, 0, "schain-" + tries, owner.address, ethers.constants.AddressZero)).wait();
             const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
             const setOfNodes = new Set();
             for (const nodeOfSchain of nodeInGroup) {

@@ -7,12 +7,7 @@ import { ContractManager,
          SchainsInternal,
          SkaleVerifier,
          ValidatorService } from "../typechain";
-
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
-
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
@@ -20,24 +15,17 @@ import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
+import { Wallet } from "ethers";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
-        return signature.signature;
-    } else {
-        return "";
-    }
-}
 
 describe("SkaleVerifier", () => {
     let validator1: SignerWithAddress;
@@ -54,7 +42,7 @@ describe("SkaleVerifier", () => {
     let keyStorage: KeyStorage;
     let schainsInternal: SchainsInternal;
 
-    beforeEach(async () => {
+    fastBeforeEach(async () => {
         [validator1, owner, developer, hacker] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[0])).connect(ethers.provider);
@@ -243,14 +231,13 @@ describe("SkaleVerifier", () => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 await nodes.connect(validator1).createNode(nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
-                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        publicKey: getPublicKey(nodeAddress),
                         name: "d2" + hexIndex,
                         domainName: "some.domain.name"
                     });
@@ -261,9 +248,9 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
 
-            const bobHash = web3.utils.soliditySha3("Bob");
+            const bobHash = stringKeccak256("Bob");
             if (bobHash) {
                 await keyStorage.initPublicKeyInProgress(bobHash);
 

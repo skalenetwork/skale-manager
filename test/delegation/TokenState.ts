@@ -5,7 +5,7 @@ import { ContractManager,
          ValidatorService} from "../../typechain";
 
 import { deployContractManager } from "../tools/deploy/contractManager";
-import { currentTime, skipTime } from "../tools/time";
+import { skipTime } from "../tools/time";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
@@ -15,14 +15,12 @@ import { deployValidatorService } from "../tools/deploy/delegation/validatorServ
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { State } from "../tools/types";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { solidity } from "ethereum-waffle";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("DelegationController (token state)", () => {
     let owner: SignerWithAddress;

@@ -3,7 +3,6 @@ import {
     ConstantsHolder,
     BountyV2,
     NodesMock,
-    SkaleManager,
     DelegationController,
     SkaleToken,
     ValidatorService
@@ -21,23 +20,17 @@ import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
-import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { privateKeys } from "./tools/private-keys";
-import * as elliptic from "elliptic";
-import { ethers, web3 } from "hardhat";
-import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { BigNumber, Event, ContractFactory } from "ethers";
+import { BigNumber, Event } from "ethers";
 import { deployPunisher } from "./tools/deploy/delegation/punisher";
 
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 
 function hexValue(value: string) {
     if (value.length % 2 === 0) {
@@ -98,12 +91,9 @@ describe("Bounty", () => {
     const day = 60 * 60 * 24;
     const month = 31 * day;
 
-    before(async() => {
+    fastBeforeEach(async () => {
         chai.use(chaiAlmost(2));
         [owner, admin, hacker, validator, validator2] = await ethers.getSigners();
-    });
-
-    beforeEach(async () => {
         contractManager = await deployContractManager();
         constantsHolder = await deployConstantsHolder(contractManager);
         bountyContract = await deployBounty(contractManager);
@@ -140,7 +130,7 @@ describe("Bounty", () => {
 
         const validatorId = 1;
         const validatorAmount = 1e6;
-        beforeEach(async () => {
+        fastBeforeEach(async () => {
             skaleToken = await deploySkaleToken(contractManager);
             delegationController = await deployDelegationController(contractManager);
             validatorService = await deployValidatorService(contractManager);
@@ -167,7 +157,7 @@ describe("Bounty", () => {
         describe("when second validator is registered and has active delegations", async () => {
             const validator2Id = 2;
             const validator2Amount = 0.5e6;
-            beforeEach(async () => {
+            fastBeforeEach(async () => {
                 const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
                 const DELEGATION_PERIOD_SETTER_ROLE = await delegationPeriodManager.DELEGATION_PERIOD_SETTER_ROLE();
                 await delegationPeriodManager.grantRole(DELEGATION_PERIOD_SETTER_ROLE, owner.address);
@@ -741,62 +731,5 @@ describe("Bounty", () => {
                 totalBounty += bounty;
             });
         });
-
-        // this test was used to manually check bounty distribution
-
-        // it("30 nodes by 1 each day", async () => {
-        //     const nodesCount = 30;
-        //     const result = new Map<number, object[]>();
-        //     const queue = []
-        //     for (let i = 0; i < nodesCount; ++i) {
-        //         await nodes.registerNodes(1, validatorId);
-        //         console.log("Node", i, "is registered", new Date(await currentTime(ethers) * 1000))
-        //         await skipTime(ethers, day);
-        //         result.set(i, []);
-        //         queue.push({nodeId: i, getBountyTimestamp: (await bountyContract.getNextRewardTimestamp(i)).toNumber()})
-        //     }
-        //     let minBounty = Infinity;
-        //     let maxBounty = 0;
-        //     const startTime = await currentTime(ethers);
-        //     queue.sort((a, b) => {
-        //         return b.getBountyTimestamp - a.getBountyTimestamp;
-        //     });
-        //     for (let timestamp = startTime; timestamp < startTime + 365 * day; timestamp = await currentTime(ethers)) {
-        //         const nodeInfo: {nodeId: number, getBountyTimestamp: number} | undefined = queue.pop();
-        //         assert(nodeInfo !== undefined);
-        //         if (nodeInfo) {
-        //             const nodeId = nodeInfo.nodeId;
-        //             if (timestamp < nodeInfo.getBountyTimestamp) {
-        //                 await skipTime(ethers, nodeInfo.getBountyTimestamp - timestamp);
-        //                 timestamp = await currentTime(ethers)
-        //             }
-        //             console.log("Node", nodeId, new Date(await currentTime(ethers) * 1000))
-        //             const bounty = web3.utils.toBN((await bountyContract.calculateBounty.call(nodeId))).div(ten18).toNumber();
-        //             // total[nodeIndex] += bounty;
-        //             await bountyContract.calculateBounty(nodeId);
-        //             await nodes.changeNodeLastRewardDate(nodeId);
-
-        //             nodeInfo.getBountyTimestamp = (await bountyContract.getNextRewardTimestamp(nodeId)).toNumber();
-        //             queue.push(nodeInfo)
-        //             queue.sort((a, b) => {
-        //                 return b.getBountyTimestamp - a.getBountyTimestamp;
-        //             });
-
-        //             minBounty = Math.min(minBounty, bounty);
-        //             maxBounty = Math.max(maxBounty, bounty);
-        //             result.get(nodeId)?.push({timestamp, bounty});
-        //         } else {
-        //             assert(false, "Internal error");
-        //         }
-        //     }
-        //     console.log(minBounty, maxBounty);
-        //     console.log(JSON.stringify(Array.from(result)));
-        //     const epochs = []
-        //     const timeHelpers = await deployTimeHelpers(contractManager);
-        //     for (let i = 0; i < 30; ++i) {
-        //         epochs.push((await timeHelpers.monthToTimestamp(i)).toNumber())
-        //     }
-        //     console.log(JSON.stringify(Array.from(epochs)));
-        // })
     });
 });

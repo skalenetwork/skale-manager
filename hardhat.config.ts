@@ -1,6 +1,6 @@
 import { task, HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-web3";
+import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import "hardhat-typechain";
 import "solidity-coverage";
@@ -22,11 +22,11 @@ task("erc1820", "Deploy ERC1820 contract", async (_, { ethers }) => {
 });
 
 
-task("accounts", "Prints the list of accounts", async (_, { web3 }) => {
-  const accounts = await web3.eth.getAccounts();
+task("accounts", "Prints the list of accounts", async (_, { ethers }) => {
+  const accounts = await ethers.getSigners();
 
    for (const account of accounts) {
-    console.log(account);
+    console.log(account.address);
   }
 });
 
