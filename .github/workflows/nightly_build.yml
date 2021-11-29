@@ -1,10 +1,10 @@
 name: Build and test
 on:
   schedule:
-    - cron:  '14 * * * *'
+    - cron:  '14 3 * * *'
 
 jobs: 
-  long-test:
+  nightly-build:
     runs-on: ubuntu-latest
 
     steps:
