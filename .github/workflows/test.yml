@@ -65,4 +65,9 @@ jobs:
       run: ./scripts/test_upgrade.sh
 
     - name: Run tests
-      run: ./scripts/coverage.sh
+      run: npx hardhat coverage --solcoverjs .solcover.js
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
