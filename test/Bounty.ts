@@ -7,11 +7,10 @@ import {
     SkaleToken,
     ValidatorService
 } from "../typechain";
-
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployBounty } from "./tools/deploy/bounty";
-import { currentTime, skipTime, skipTimeToDate } from "./tools/time";
+import { currentTime, nextMonth, skipTime, skipTimeToDate } from "./tools/time";
 import chaiAsPromised from "chai-as-promised";
 import chaiAlmost from "chai-almost";
 import * as chai from "chai";
@@ -25,33 +24,10 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { BigNumber, Event } from "ethers";
 import { deployPunisher } from "./tools/deploy/delegation/punisher";
-
-import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-
-function hexValue(value: string) {
-    if (value.length % 2 === 0) {
-        return value;
-    } else {
-        return "0" + value;
-    }
-}
-
-function findEvent(events: Event[] | undefined, eventName: string) {
-    if (events) {
-        const target = events.find((event) => event.event === eventName);
-        if (target) {
-            return target;
-        } else {
-            throw new Error("Event was not emitted");
-        }
-    } else {
-        throw new Error("Event was not emitted");
-    }
-}
 
 function getBountyForEpoch(epoch: number) {
     const bountyForFirst6Years = [385000000, 346500000, 308000000, 269500000, 231000000, 192500000];
@@ -61,18 +37,6 @@ function getBountyForEpoch(epoch: number) {
     } else {
         return bountyForFirst6Years[5] / 2 ** (Math.floor((year - 6) / 3) + 1);
     }
-}
-
-async function getContractFactoryWithLibraries(e: any, contractName: string) {
-    const libraryNames = [];
-    for (const str of e.toString().split(".sol:")) {
-        const libraryName = str.split("\n")[0];
-        libraryNames.push(libraryName);
-    }
-    libraryNames.shift();
-    const libraries = await deployLibraries(libraryNames);
-    const contractFactory = await getLinkedContractFactory(contractName, libraries);
-    return contractFactory;
 }
 
 describe("Bounty", () => {
@@ -142,7 +106,7 @@ describe("Bounty", () => {
             await validatorService.enableValidator(validatorId);
             await delegationController.connect(validator).delegate(validatorId, ten18.mul(validatorAmount).toString(), 2, "");
             await delegationController.connect(validator).acceptPendingDelegation(0);
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
         });
 
         async function calculateBounty(nodeId: number) {
@@ -168,10 +132,10 @@ describe("Bounty", () => {
                 await delegationPeriodManager.setDelegationPeriod(12, 200);
                 await delegationController.connect(validator2).delegate(validator2Id, ten18.mul(validator2Amount).toString(), 12, "");
                 await delegationController.connect(validator2).acceptPendingDelegation(1);
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
 
-                await skipTimeToDate(ethers, 1, 0); // Jan 1st
-                await constantsHolder.setLaunchTimestamp(await currentTime(ethers));
+                await skipTimeToDate(1, 0); // Jan 1st
+                await constantsHolder.setLaunchTimestamp(await currentTime());
                 await constantsHolder.setMSR(ten18.mul(validator2Amount).toString());
             });
 
@@ -179,7 +143,7 @@ describe("Bounty", () => {
                 await nodes.registerNodes(2, validatorId);
                 await nodes.registerNodes(1, validator2Id);
 
-                await skipTime(ethers, 29 * day);
+                await skipTime(29 * day);
                 const bounty0 = await calculateBounty(0) + await calculateBounty(1);
                 const bounty1 = await calculateBounty(2);
                 bounty0.should.be.equal(bounty1);
@@ -194,7 +158,7 @@ describe("Bounty", () => {
                 const million = ten18.mul(1e6).toString();
 
                 // Jan 1st
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // validator1:
                 //     delegations:
@@ -208,10 +172,10 @@ describe("Bounty", () => {
 
                 await delegationController.connect(validator).requestUndelegation(0);
 
-                await skipTimeToDate(ethers, 15, 0);
+                await skipTimeToDate(15, 0);
 
                 // Jan 15th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -226,10 +190,10 @@ describe("Bounty", () => {
                 await delegationController.connect(validator2).delegate(2, million, 2, "");
                 await delegationController.connect(validator2).acceptPendingDelegation(2);
 
-                await skipTimeToDate(ethers, 30, 0);
+                await skipTimeToDate(30, 0);
 
                 // Jan 30th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -244,10 +208,10 @@ describe("Bounty", () => {
 
                 await punisher.slash(1, million);
 
-                await skipTimeToDate(ethers, 1, 1);
+                await skipTimeToDate(1, 1);
 
                 // Feb 1st
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -265,10 +229,10 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(0)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 15, 1);
+                await skipTimeToDate(15, 1);
 
                 // Feb 15th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -288,10 +252,10 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(0)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 27, 1);
+                await skipTimeToDate(27, 1);
 
                 // Feb 27th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -313,10 +277,10 @@ describe("Bounty", () => {
                 let bounty = await calculateBounty(0);
                 bounty.should.be.almost(getBountyForEpoch(0) + getBountyForEpoch(1));
 
-                await skipTimeToDate(ethers, 1, 2);
+                await skipTimeToDate(1, 2);
 
                 // March 1st
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -337,10 +301,10 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(0)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 15, 2);
+                await skipTimeToDate(15, 2);
 
                 // March 15th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -361,10 +325,10 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(0)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 29, 2);
+                await skipTimeToDate(29, 2);
 
                 // March 29th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -392,10 +356,10 @@ describe("Bounty", () => {
                 bounty.should.be.almost(bountyLeft * effectiveDelegated2 / (effectiveDelegated1 + effectiveDelegated2));
                 totalBounty += bounty;
 
-                await skipTimeToDate(ethers, 1, 3);
+                await skipTimeToDate(1, 3);
 
                 // April 1st
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -419,10 +383,10 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(1)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 15, 3);
+                await skipTimeToDate(15, 3);
 
                 // April 15th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -449,10 +413,10 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(2)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 28, 3);
+                await skipTimeToDate(28, 3);
 
                 // April 28th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -487,10 +451,10 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(2)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 1, 4);
+                await skipTimeToDate(1, 4);
 
                 // May 1st
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -521,10 +485,10 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(3)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 15, 4);
+                await skipTimeToDate(15, 4);
 
                 // May 15th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -570,10 +534,10 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(3)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 29, 4);
+                await skipTimeToDate(29, 4);
 
                 // May 29th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -621,10 +585,10 @@ describe("Bounty", () => {
 
                 totalBounty.should.be.lessThan(getBountyForEpoch(4));
 
-                await skipTimeToDate(ethers, 16, 5);
+                await skipTimeToDate(16, 5);
 
                 // June 16th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -657,14 +621,14 @@ describe("Bounty", () => {
                 await bountyContract.calculateBounty(3)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
-                await skipTimeToDate(ethers, 27, 5);
+                await skipTimeToDate(27, 5);
 
                 await delegationController.connect(validator2).requestUndelegation(6);
 
-                await skipTimeToDate(ethers, 28, 5);
+                await skipTimeToDate(28, 5);
 
                 // June 28th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:
@@ -693,10 +657,10 @@ describe("Bounty", () => {
                 bounty.should.be.almost(0); // stake is too low
                 totalBounty += bounty;
 
-                await skipTimeToDate(ethers, 29, 6);
+                await skipTimeToDate(29, 6);
 
                 // July 29th
-                // console.log("ts: current", new Date(await currentTime(ethers) * 1000));
+                // console.log("ts: current", new Date(await currentTime() * 1000));
 
                 // 1. validator1:
                 //     delegations:

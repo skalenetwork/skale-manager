@@ -128,7 +128,7 @@ describe("NodesData", () => {
         });
 
         it("should change node last reward date", async () => {
-            await skipTime(ethers, 5);
+            await skipTime(5);
             const res = await(await nodes.changeNodeLastRewardDate(0)).wait();
             const currentTimeLocal = BigNumber.from((await ethers.provider.getBlock(res.blockNumber)).timestamp);
 
