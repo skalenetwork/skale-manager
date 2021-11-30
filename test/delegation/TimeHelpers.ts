@@ -155,10 +155,10 @@ describe("TimeHelpers", () => {
         const currentMonth = (await timeHelpersWithDebug.getCurrentMonth()).toNumber();
         let nextMonthEndTimestamp = (await timeHelpersWithDebug.monthToTimestamp(currentMonth + 2)).toNumber();
         const diff = 60 * 60 * 24;
-        await timeHelpersWithDebug.skipTime(nextMonthEndTimestamp - diff - await currentTime(ethers));
+        await timeHelpersWithDebug.skipTime(nextMonthEndTimestamp - diff - await currentTime());
         (await timeHelpersWithDebug.getCurrentMonth()).toNumber()
             .should.be.equal(currentMonth + 1);
         nextMonthEndTimestamp = (await timeHelpersWithDebug.monthToTimestamp(currentMonth + 2)).toNumber();
-        Math.abs(await currentTime(ethers) + diff - nextMonthEndTimestamp).should.be.lessThan(5);
+        Math.abs(await currentTime() + diff - nextMonthEndTimestamp).should.be.lessThan(5);
     })
 });

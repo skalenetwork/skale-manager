@@ -319,7 +319,7 @@ describe("SchainsInternal", () => {
         it("should check if schain is expired", async () => {
             await schainsInternal.isTimeExpired(schainNameHash).should.be.eventually.false;
 
-            await skipTime(ethers, 6);
+            await skipTime(6);
 
             await schainsInternal.isTimeExpired(schainNameHash).should.be.eventually.true;
         });
