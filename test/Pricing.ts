@@ -183,7 +183,7 @@ describe("Pricing", () => {
 
             it("should not change price when no any new nodes have been added", async () => {
                 await pricing.initNodes();
-                await skipTime(ethers, 61);
+                await skipTime(61);
                 await pricing.adjustPrice()
                     .should.be.eventually.rejectedWith("No changes to node supply");
             });
@@ -231,7 +231,7 @@ describe("Pricing", () => {
                             domainName: "some.domain.name"
                         });
                     const MINUTES_PASSED = 2;
-                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(ethers));
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();
@@ -270,7 +270,7 @@ describe("Pricing", () => {
                     await nodes.completeExit(nodeToExit);
 
                     const MINUTES_PASSED = 2;
-                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(ethers));
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();
@@ -295,7 +295,7 @@ describe("Pricing", () => {
                         });
 
                     const MINUTES_PASSED = 30;
-                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(ethers));
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();

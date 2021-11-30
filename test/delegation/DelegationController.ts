@@ -1,10 +1,9 @@
 import { ContractManager,
     DelegationController,
     SkaleToken,
-    ValidatorService,
-    ConstantsHolder} from "../../typechain";
+    ValidatorService} from "../../typechain";
 
-import { currentTime, skipTime } from "../tools/time";
+import { currentTime, nextMonth, skipTime } from "../tools/time";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
@@ -15,11 +14,9 @@ import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 import { State } from "../tools/types";
 import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
-import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { solidity } from "ethereum-waffle";
 import { expect, assert } from "chai";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
@@ -211,7 +208,7 @@ describe("DelegationController", () => {
             });
 
             it("should reject accepting request if next month started", async () => {
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
                 await delegationController.connect(validator).acceptPendingDelegation(delegationId)
                     .should.be.rejectedWith("The delegation request is outdated");
             });
@@ -257,7 +254,7 @@ describe("DelegationController", () => {
                     holder1DelegatedToValidator = await makeSnapshot();
                     await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
-                    await skipTime(ethers, month);
+                    await nextMonth(contractManager);
                 });
 
                 after(async () => {
@@ -267,7 +264,7 @@ describe("DelegationController", () => {
                 it("should allow validator to request undelegation", async () => {
                     await delegationController.connect(validator).requestUndelegation(delegationId);
 
-                    await skipTime(ethers, delegationPeriod * month);
+                    await nextMonth(contractManager, delegationPeriod);
 
                     (await delegationController.getState(delegationId)).should.be.equal(State.COMPLETED);
                     (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toNumber().should.be.equal(0);
@@ -285,7 +282,7 @@ describe("DelegationController", () => {
                     await delegationController.connect(validator2).requestUndelegation(delegationId)
                         .should.be.eventually.rejectedWith("Permission denied to request undelegation");
 
-                    await skipTime(ethers, delegationPeriod * month);
+                    await nextMonth(contractManager, delegationPeriod);
 
                     (await delegationController.getState(delegationId)).should.be.equal(State.DELEGATED);
                     (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toNumber().should.be.equal(amount);
@@ -298,18 +295,18 @@ describe("DelegationController", () => {
                     const twoDays = 2 * 24 * 60 * 60;
 
                     // skip time 2 days before delegation end
-                    await skipTime(ethers, delegationEndTimestamp - twoDays - await currentTime(ethers));
+                    await skipTime(delegationEndTimestamp - twoDays - await currentTime());
 
                     await delegationController.connect(validator).requestUndelegation(delegationId)
                         .should.be.eventually.rejectedWith("Undelegation requests must be sent 3 days before the end of delegation period");
                     (await delegationController.getState(delegationId)).should.be.equal(State.DELEGATED);
 
-                    await skipTime(ethers, twoDays * 2);
+                    await skipTime(twoDays * 2);
 
                     await delegationController.connect(validator).requestUndelegation(delegationId);
                     (await delegationController.getState(delegationId)).should.be.equal(State.UNDELEGATION_REQUESTED);
 
-                    await skipTime(ethers, delegationPeriod * month);
+                    await nextMonth(contractManager, delegationPeriod);
 
                     (await delegationController.getState(delegationId)).should.be.equal(State.COMPLETED);
                     (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toNumber().should.be.equal(0);

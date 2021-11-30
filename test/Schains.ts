@@ -421,7 +421,7 @@ describe("Schains", () => {
                     "some.domain.name"
                 );
 
-                await skipTime(ethers, 43260);
+                await skipTime(43260);
                 await skaleManager.connect(nodeAddress).nodeExit(2);
 
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
@@ -442,7 +442,7 @@ describe("Schains", () => {
                     "some.domain.name"
                 );
 
-                await skipTime(ethers, 43260);
+                await skipTime(43260);
                 await skaleManager.connect(nodeAddress).nodeExit(1);
 
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
@@ -535,7 +535,7 @@ describe("Schains", () => {
                     "some.domain.name"
                 );
 
-                await skipTime(ethers, 1800);
+                await skipTime(1800);
                 await skaleDKG.connect(nodeAddress).complaint(
                     schainHash,
                     1,
@@ -578,7 +578,7 @@ describe("Schains", () => {
                     "some.domain.name"
                 );
 
-                await skipTime(ethers, 1800);
+                await skipTime(1800);
                 await skaleDKG.connect(nodeAddress).complaint(
                     schainHash,
                     1,
@@ -622,7 +622,7 @@ describe("Schains", () => {
                     "some.domain.name"
                 );
 
-                await skipTime(ethers, 1800);
+                await skipTime(1800);
                 await skaleDKG.connect(nodeAddress).complaint(
                     schainHash,
                     3,
@@ -1279,7 +1279,7 @@ describe("Schains", () => {
             await skaleManager.connect(nodeAddress).nodeExit(0);
             const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
             const _12hours = 43200;
-            assert.equal(await currentTime(ethers), leavingTimeOfNode-_12hours);
+            assert.equal(await currentTime(), leavingTimeOfNode-_12hours);
             const rotatedSchain = (await nodeRotation.getLeavingHistory(0))[0].schainHash;
             const rotationForRotatedSchain = await nodeRotation.getRotation(rotatedSchain);
             rotationForRotatedSchain.newNodeIndex.should.be.not.equal(0);
@@ -1317,7 +1317,7 @@ describe("Schains", () => {
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, ACTIVE);
             await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            await skipTime(ethers, 43260);
+            await skipTime(43260);
 
             await skaleManager.connect(nodeAddress).nodeExit(1);
             await skaleDKG.setSuccessfulDKGPublic(
@@ -1399,7 +1399,7 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
             );
-            await skipTime(ethers, 43260);
+            await skipTime(43260);
             await skaleManager.connect(nodeAddress).nodeExit(1);
             const newNewArrayD3 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             let onePositionD3 = 0;
@@ -1470,7 +1470,7 @@ describe("Schains", () => {
                 stringKeccak256("d3"),
             );
             await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            await skipTime(ethers, 43260);
+            await skipTime(43260);
             await skaleManager.connect(nodeAddress).nodeExit(1);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
@@ -1562,7 +1562,7 @@ describe("Schains", () => {
             await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skaleManager.connect(nodeAddress).nodeExit(0);
 
-            await skipTime(ethers, 43260);
+            await skipTime(43260);
 
             await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("DKG did not finish on Schain");
         });
@@ -1577,7 +1577,7 @@ describe("Schains", () => {
             assert.equal(res, true);
             const resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
             assert.equal(resS, true);
-            await skipTime(ethers, 43260);
+            await skipTime(43260);
             await skaleManager.connect(nodeAddress).nodeExit(0);
 
             await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("DKG did not finish on Schain");
@@ -1602,7 +1602,7 @@ describe("Schains", () => {
                 stringKeccak256("d2"),
             );
 
-            await skipTime(ethers, 43260);
+            await skipTime(43260);
 
             await skaleManager.connect(nodeAddress).nodeExit(1);
         });
@@ -1879,7 +1879,7 @@ describe("Schains", () => {
                 }
             }
 
-            await skipTime(ethers, 43260);
+            await skipTime(43260);
             for (const schainHash of Array.from(schainHashes2).reverse()) {
                 await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
                 await skaleDKG.setSuccessfulDKGPublic(
@@ -2028,7 +2028,7 @@ describe("Schains", () => {
                 }
             }
 
-            await skipTime(ethers, 43260);
+            await skipTime(43260);
             for (const schainHash of Array.from(schainHashes2).reverse()) {
                 if (rotIndex2 === 7) {
                     await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
@@ -2249,7 +2249,7 @@ describe("Schains", () => {
                 verificationVectorNew,
                 secretKeyContributions
             );
-            await skipTime(ethers, 1800);
+            await skipTime(1800);
             await skaleDKG.connect(nodeAddress).complaint(
                 stringKeccak256("d1"),
                 1,
@@ -2285,7 +2285,7 @@ describe("Schains", () => {
                 verificationVectorNew,
                 secretKeyContributions
             );
-            await skipTime(ethers, 1800);
+            await skipTime(1800);
             await skaleDKG.connect(nodeAddress).complaint(
                 stringKeccak256("d1"),
                 1,
@@ -2323,7 +2323,7 @@ describe("Schains", () => {
                 verificationVectorNew,
                 secretKeyContributions
             );
-            await skipTime(ethers, 1800);
+            await skipTime(1800);
             await skaleDKG.connect(nodeAddress).complaint(
                 stringKeccak256("d1"),
                 1,
@@ -2350,7 +2350,7 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d1"),
             );
-            await skipTime(ethers, 46200);
+            await skipTime(46200);
             await schains.addSchain(
                 holder.address,
                 deposit,
@@ -2390,7 +2390,7 @@ describe("Schains", () => {
                 verificationVectorNew,
                 secretKeyContributions
             );
-            await skipTime(ethers, 1800);
+            await skipTime(1800);
             await skaleDKG.connect(nodeAddress).complaint(
                 stringKeccak256("d1"),
                 2,

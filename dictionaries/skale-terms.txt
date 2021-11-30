@@ -1,6 +1,7 @@
 cooldown
 delegatable
 delegators
+githooks
 schain
 schains
 skale
@@ -10,3 +11,4 @@ thirdparty
 undelegate
 undelegation
 unwithdrawn
+workdir

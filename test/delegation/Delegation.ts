@@ -11,7 +11,7 @@ import { ConstantsHolder,
     Nodes,
     SlashingTable} from "../../typechain";
 
-import { currentTime, skipTime, skipTimeToDate } from "../tools/time";
+import { currentTime, nextMonth, skipTime, skipTimeToDate } from "../tools/time";
 
 import { BigNumber, Wallet } from "ethers";
 import * as chai from "chai";
@@ -92,7 +92,7 @@ describe("Delegation", () => {
         await contractManager.setContractsAddress("SkaleDKG", nodes.address);
 
         // each test will start from Nov 10
-        await skipTimeToDate(ethers, 10, 10);
+        await skipTimeToDate(10, 10);
 
         const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
         await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
@@ -162,7 +162,7 @@ describe("Delegation", () => {
         // still could send delegation request to already delegated validator
         await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
 
-        await skipTime(ethers, month);
+        await nextMonth(contractManager);
         // could send undelegation request from 1 delegationId
         await delegationController.connect(holder1).requestUndelegation(0);
 
@@ -218,7 +218,7 @@ describe("Delegation", () => {
         // still could send delegation request to already delegated validator
         await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
 
-        await skipTime(ethers, 60 * 60 * 24 * 31);
+        await nextMonth(contractManager);
         // could send undelegation request from 1 delegationId (2 validatorId)
         await delegationController.connect(holder1).requestUndelegation(0);
 
@@ -306,7 +306,7 @@ describe("Delegation", () => {
                         });
 
                         it("should unlock token if validator does not accept delegation request", async () => {
-                            await skipTimeToDate(ethers, 1, 11);
+                            await skipTimeToDate(1, 11);
 
                             await skaleToken.connect(holder1).transfer(holder2.address, 1);
                             await skaleToken.connect(holder1).approve(holder2.address, 1);
@@ -326,7 +326,7 @@ describe("Delegation", () => {
 
                             it("should extend delegation period if undelegation request was not sent",
                                 async () => {
-                                    await skipTimeToDate(ethers, 1, (11 + delegationPeriod) % 12);
+                                    await skipTimeToDate(1, (11 + delegationPeriod) % 12);
 
                                     await skaleToken.connect(holder1).transfer(holder2.address, 1)
                                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
@@ -338,7 +338,7 @@ describe("Delegation", () => {
 
                                     await delegationController.connect(holder1).requestUndelegation(requestId);
 
-                                    await skipTimeToDate(ethers, 27, (11 + delegationPeriod + delegationPeriod - 1) % 12);
+                                    await skipTimeToDate(27, (11 + delegationPeriod + delegationPeriod - 1) % 12);
 
                                     await skaleToken.connect(holder1).transfer(holder2.address, 1)
                                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
@@ -349,7 +349,7 @@ describe("Delegation", () => {
                                     await skaleToken.connect(holder1).send(holder2.address, 1, "0x")
                                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
-                                    await skipTimeToDate(ethers, 1, (11 + delegationPeriod + delegationPeriod) % 12);
+                                    await skipTimeToDate(1, (11 + delegationPeriod + delegationPeriod) % 12);
 
                                     await skaleToken.connect(holder1).transfer(holder2.address, 1);
                                     await skaleToken.connect(holder1).approve(holder2.address, 1);
@@ -385,7 +385,7 @@ describe("Delegation", () => {
             await delegationController.connect(validator).acceptPendingDelegation(0);
             await delegationController.connect(validator).acceptPendingDelegation(1);
 
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             const bondAmount = await validatorService.callStatic.getAndUpdateBondAmount(validatorId);
             assert.equal(defaultAmount.toString(), bondAmount.toString());
@@ -400,7 +400,7 @@ describe("Delegation", () => {
             await delegationController.connect(validator).acceptPendingDelegation(0);
             await delegationController.connect(validator).acceptPendingDelegation(1);
 
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             const bondAmount = await validatorService.callStatic.getAndUpdateBondAmount(validatorId);
             assert.equal(18, bondAmount.toNumber());
@@ -420,7 +420,7 @@ describe("Delegation", () => {
                 validator2Id, 200, 2, "D2 is even");
             await delegationController.connect(validator1).acceptPendingDelegation(0);
             await delegationController.connect(validator2).acceptPendingDelegation(1);
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             const bondAmount1 = await validatorService.callStatic.getAndUpdateBondAmount(validator1Id);
             let bondAmount2 = await validatorService.callStatic.getAndUpdateBondAmount(validator2Id);
@@ -430,7 +430,7 @@ describe("Delegation", () => {
                 validator2Id, 200, 2, "D2 is even");
             await delegationController.connect(validator2).acceptPendingDelegation(2);
 
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
             bondAmount2 = await validatorService.callStatic.getAndUpdateBondAmount(validator2Id);
             assert.equal(bondAmount2.toNumber(), 400);
         });
@@ -448,7 +448,7 @@ describe("Delegation", () => {
             await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
             slashingTable.setPenalty("FailedDKG", ethers.utils.parseEther("10000"));
 
-            await constantsHolder.setLaunchTimestamp((await currentTime(ethers)) - 4 * month);
+            await constantsHolder.setLaunchTimestamp((await currentTime()) - 4 * month);
 
             await delegationController.connect(holder1).delegate(validatorId, ethers.utils.parseEther("10000"), 2, "First delegation");
             const delegationId1 = 0;
@@ -523,13 +523,13 @@ describe("Delegation", () => {
                 await delegationController.connect(validator).acceptPendingDelegation(delegationId++);
             }
 
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             const bounty = Math.floor(holdersAmount * delegatedAmount / 0.85);
             (bounty - Math.floor(bounty * 0.15)).should.be.equal(holdersAmount * delegatedAmount);
             await skaleManagerMock.payBounty(validatorId, bounty);
 
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             for (const holder of holders) {
                 await distributor.connect(holder).withdrawBounty(validatorId, holder.address);
@@ -564,15 +564,15 @@ describe("Delegation", () => {
                 await delegationController.connect(validator).acceptPendingDelegation(1);
                 await delegationController.connect(validator).acceptPendingDelegation(2);
 
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
             });
 
             it("should distribute funds sent to Distributor across delegators", async () => {
-                await constantsHolder.setLaunchTimestamp(await currentTime(ethers));
+                await constantsHolder.setLaunchTimestamp(await currentTime());
 
                 await skaleManagerMock.payBounty(validatorId, 101);
 
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
 
                 // 15% fee to validator
 
@@ -605,7 +605,7 @@ describe("Delegation", () => {
                 await distributor.connect(holder1).withdrawBounty(validatorId, bountyAddress.address)
                     .should.be.eventually.rejectedWith("Bounty is locked");
 
-                await skipTime(ethers, 3 * month);
+                await nextMonth(contractManager, 3);
 
                 await distributor.connect(validator).withdrawFee(bountyAddress.address);
                 (await distributor.connect(validator).callStatic.getEarnedFeeAmount())[0].toNumber().should.be.equal(0);
@@ -714,13 +714,13 @@ describe("Delegation", () => {
                     const delegationId = 3;
                     await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
-                    await skipTime(ethers, month);
+                    await nextMonth(contractManager);
 
                     // now only holder1 has delegated and not slashed tokens
 
                     await skaleManagerMock.payBounty(validatorId, 100);
 
-                    await skipTime(ethers, month);
+                    await nextMonth(contractManager);
 
                     (await distributor.connect(validator).callStatic.getEarnedFeeAmount())[0].toNumber().should.be.equal(15);
                     (await distributor.connect(holder1).callStatic.getAndUpdateEarnedBountyAmount(

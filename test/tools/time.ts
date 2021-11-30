@@ -1,12 +1,14 @@
-import { HardhatEthersHelpers } from "@nomiclabs/hardhat-ethers/types";
+import { ethers } from "hardhat";
+import { ContractManager } from "../../typechain";
+import { deployTimeHelpers } from "./deploy/delegation/timeHelpers";
 
 
-export async function skipTime(ethers: HardhatEthersHelpers, seconds: number) {
+export async function skipTime(seconds: number) {
     await ethers.provider.send("evm_increaseTime", [seconds]);
     await ethers.provider.send("evm_mine", []);
 }
 
-export async function skipTimeToDate(ethers: HardhatEthersHelpers, day: number, monthIndex: number) {
+export async function skipTimeToDate(day: number, monthIndex: number) {
     const timestamp = (await ethers.provider.getBlock("latest")).timestamp;
     const now = new Date(timestamp * 1000);
     const targetTime = new Date(Date.UTC(now.getFullYear(), monthIndex, day));
@@ -14,17 +16,23 @@ export async function skipTimeToDate(ethers: HardhatEthersHelpers, day: number, 
         targetTime.setFullYear(now.getFullYear() + 1);
     }
     const diffInSeconds = Math.round(targetTime.getTime() / 1000) - timestamp;
-    await skipTime(ethers, diffInSeconds);
+    await skipTime(diffInSeconds);
 }
 
-export async function currentTime(ethers: HardhatEthersHelpers) {
+export async function currentTime() {
     return (await ethers.provider.getBlock("latest")).timestamp;
 }
 
 export const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
-export async function isLeapYear(ethers: HardhatEthersHelpers) {
-    const timestamp = await currentTime(ethers);
+export async function isLeapYear() {
+    const timestamp = await currentTime();
     const now = new Date(timestamp * 1000);
     return now.getFullYear() % 4 === 0;
+}
+
+export async function nextMonth(contractManager: ContractManager, monthsAmount:number = 1) {
+    const timeHelpers = await deployTimeHelpers(contractManager);
+    const currentEpoch = await timeHelpers.getCurrentMonth();
+    await skipTime((await timeHelpers.monthToTimestamp(currentEpoch.add(monthsAmount))).toNumber() - await currentTime())
 }

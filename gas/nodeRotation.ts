@@ -35,7 +35,7 @@ function findEvent(events: Event[] | undefined, eventName: string) {
     }
 }
 
-describe("createSchains", () => {
+describe("nodeRotation", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
     let node: Wallet;
@@ -271,6 +271,6 @@ describe("createSchains", () => {
 
         }
 
-        fs.writeFileSync("createSchain.json", JSON.stringify(measurementsSchainCreation, null, 4));
+        fs.writeFileSync("nodeRotation.json", JSON.stringify(measurementsSchainCreation, null, 4));
     })
 });

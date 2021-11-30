@@ -13,7 +13,7 @@ import { ContractManager,
          ValidatorService,
          SkaleManager,
          Wallets } from "../typechain";
-import { skipTime, currentTime } from "./tools/time";
+import { skipTime, currentTime, nextMonth } from "./tools/time";
 import { privateKeys } from "./tools/private-keys";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
@@ -318,7 +318,7 @@ describe("SkaleDKG", () => {
             const signature2 = await getValidatorIdSignature(validator2Id, nodeAddress2);
             await validatorService.connect(validator2).linkNodeAddress(nodeAddress2.address, signature2);
 
-            await skipTime(ethers, 60 * 60 * 24 * 31);
+            await nextMonth(contractManager);
 
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
@@ -503,7 +503,7 @@ describe("SkaleDKG", () => {
                     1
                 );
                 assert(res.should.be.true);
-                await skipTime(ethers, 1700);
+                await skipTime(1700);
                 const resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
@@ -543,7 +543,7 @@ describe("SkaleDKG", () => {
                     1
                 );
                 assert(res.should.be.true);
-                await skipTime(ethers, 1800);
+                await skipTime(1800);
                 let resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
@@ -654,7 +654,7 @@ describe("SkaleDKG", () => {
                 balance.should.be.least(balanceBefore);
                 balance.should.be.closeTo(balanceBefore, weiTolerance);
 
-                await skipTime(ethers, 1800);
+                await skipTime(1800);
                 res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
@@ -699,7 +699,7 @@ describe("SkaleDKG", () => {
                         verificationVectors[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
-                    await skipTime(ethers, 1800);
+                    await skipTime(1800);
 
                     const res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                         stringKeccak256(schainName),
@@ -752,7 +752,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0
                     );
-                    await skipTime(ethers, 1800);
+                    await skipTime(1800);
 
                     const res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
                         stringKeccak256(schainName),
@@ -811,7 +811,7 @@ describe("SkaleDKG", () => {
                         verificationVectorMultiplication[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
-                    await skipTime(ethers, 1800);
+                    await skipTime(1800);
 
                     const res = await skaleDKG.connect(validators[0].nodeAddress).isResponsePossible(
                         stringKeccak256(schainName),
@@ -855,7 +855,7 @@ describe("SkaleDKG", () => {
                         verificationVectors[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
-                    await skipTime(ethers, 1800);
+                    await skipTime(1800);
                     const balanceBefore = await validators[0].nodeAddress.getBalance();
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
                         stringKeccak256(schainName),
@@ -1047,7 +1047,7 @@ describe("SkaleDKG", () => {
                     });
 
                     it("should send complaint after missing preResponse", async () => {
-                        await skipTime(ethers, 1800);
+                        await skipTime(1800);
                         const res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
                             stringKeccak256(schainName),
                             1,
@@ -1085,7 +1085,7 @@ describe("SkaleDKG", () => {
                             0
                         );
                         assert(res.should.be.false);
-                        await skipTime(ethers, 1800);
+                        await skipTime(1800);
                         res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
                             stringKeccak256(schainName),
                             1,
@@ -1328,7 +1328,7 @@ describe("SkaleDKG", () => {
                         balance.should.be.closeTo(balanceBefore, weiTolerance);
 
                         const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
-                        assert.equal(await currentTime(ethers), leavingTimeOfNode);
+                        assert.equal(await currentTime(), leavingTimeOfNode);
 
                         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -1695,7 +1695,7 @@ describe("SkaleDKG", () => {
             assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
             assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
 
-            await skipTime(ethers, 43260);
+            await skipTime(43260);
             await skaleManager.connect(validators[0].nodeAddress).nodeExit(2);
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
@@ -2241,7 +2241,7 @@ describe("SkaleDKG", () => {
             }
             const accusedNode = "15";
             const complaintNode = "7";
-            await skipTime(ethers, 1800);
+            await skipTime(1800);
 
             let balanceBefore = await validators[0].nodeAddress.getBalance();
             await skaleDKG.connect(validators[0].nodeAddress).complaint(
@@ -2318,7 +2318,7 @@ describe("SkaleDKG", () => {
             }
             const accusedNode = "15";
             const complaintNode = "7";
-            await skipTime(ethers, 1800);
+            await skipTime(1800);
             let balanceBefore = await validators[0].nodeAddress.getBalance();
             await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
@@ -2449,7 +2449,7 @@ describe("SkaleDKG", () => {
             }
             const accusedNode = "15";
             const complaintNode = "7";
-            await skipTime(ethers, 1800);
+            await skipTime(1800);
             let balanceBefore = await validators[0].nodeAddress.getBalance();
             await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),

@@ -1,8 +1,24 @@
-// cSpell:words ipynb
 {
-    "version": "0.1",
+    "version": "0.2",
     "language": "en",
-    "ignorePaths": ["*.ipynb", "*.hbs", "package.json"],
+    "ignorePaths": [
+        "yarn-error.log",
+        ".gitignore",
+        "cspell.json",
+        ".solhint.json",
+        "dictionaries/**/*",
+        "cache/**/*",
+        "artifacts/**/*",
+        "**/typechain/**",
+        "coverage/**/*",
+        "**/venv/**/*",
+        "**/requirements.txt",
+        "**/__pycache__/**",
+        "**/*.egg-info/**",
+        "**/dist/**",
+        "**/coverage.json",
+        "**/*.hbs"
+    ],
     "dictionaries": ["domain-terms", "libraries", "names", "skale-terms", "solidity"],
     "dictionaryDefinitions": [
         { "name": "skale-terms", "path": "./dictionaries/skale-terms.txt"},

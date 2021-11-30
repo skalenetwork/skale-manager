@@ -29,7 +29,7 @@ import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { skipTime, currentTime } from "./tools/time";
+import { skipTime, currentTime, nextMonth } from "./tools/time";
 import { deployBounty } from "./tools/deploy/bounty";
 import { BigNumber, Wallet } from "ethers";
 import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
@@ -107,7 +107,7 @@ describe("SkaleManager", () => {
         const premined = "100000000000000000000000000";
         await skaleToken.mint(owner.address, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
-        await constantsHolder.setLaunchTimestamp(await currentTime(ethers)); // to allow bounty withdrawing
+        await constantsHolder.setLaunchTimestamp(await currentTime()); // to allow bounty withdrawing
         await bountyContract.enableBountyReduction();
 
         await schainsInternal.addSchainType(1, 16);
@@ -171,7 +171,7 @@ describe("SkaleManager", () => {
             const delegationId = 0;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
         });
 
         it("should create a node", async () => {
@@ -189,7 +189,7 @@ describe("SkaleManager", () => {
         });
 
         it("should not allow to create node if validator became untrusted", async () => {
-            await skipTime(ethers, 2592000);
+            await nextMonth(contractManager);
             await constantsHolder.setMSR(100);
 
             await validatorService.disableValidator(validatorId);
@@ -284,7 +284,8 @@ describe("SkaleManager", () => {
             });
 
             it("should pay bounty if Node is In Active state", async () => {
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
+                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
                 const balanceBefore = await nodeAddress.getBalance();
                 await skaleManager.connect(nodeAddress).getBounty(0);
                 const balance = await nodeAddress.getBalance();
@@ -294,20 +295,23 @@ describe("SkaleManager", () => {
 
             it("should pay bounty if Node is In Leaving state", async () => {
                 await nodesContract.initExit(0);
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
+                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
                 await skaleManager.connect(nodeAddress).getBounty(0);
             });
 
             it("should pay bounty if Node is In Maintenance state", async () => {
                 await nodesContract.connect(validator).setNodeInMaintenance(0);
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
+                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
                 await skaleManager.connect(nodeAddress).getBounty(0);
             });
 
             it("should not pay bounty if Node is In Left state", async () => {
                 await nodesContract.initExit(0);
                 await nodesContract.completeExit(0);
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
+                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
                 await skaleManager.connect(nodeAddress).getBounty(0).should.be.eventually.rejectedWith("The node must not be in Left state");
             });
 
@@ -316,7 +320,8 @@ describe("SkaleManager", () => {
                 await nodesContract.grantRole(await nodesContract.COMPLIANCE_ROLE(), owner.address);
                 await nodesContract.setNodeIncompliant(nodeIndex);
 
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
+                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
                 await skaleManager.connect(nodeAddress).getBounty(nodeIndex).should.be.eventually.rejectedWith("The node is incompliant");
             });
 
@@ -347,12 +352,12 @@ describe("SkaleManager", () => {
                 }
 
                 let mustBePaid = BigNumber.from(0);
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
                 for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timeLimit; ++year) {
                     for (let monthIndex = 0; monthIndex < 12; ++monthIndex) {
                         const monthEnd = (await timeHelpers.monthToTimestamp(launchMonth + 12 * year + monthIndex + 1)).toNumber();
-                        if (await currentTime(ethers) < monthEnd) {
-                            await skipTime(ethers, monthEnd - await currentTime(ethers) - day);
+                        if (await currentTime() < monthEnd) {
+                            await skipTime(monthEnd - await currentTime() - day);
                             await skaleManager.connect(nodeAddress).getBounty(0);
                         }
                     }

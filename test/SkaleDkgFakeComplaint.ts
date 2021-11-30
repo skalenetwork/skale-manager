@@ -15,7 +15,7 @@ import { ContractManager,
          ConstantsHolder,
          Wallets} from "../typechain";
 
-import { skipTime } from "./tools/time";
+import { nextMonth, skipTime } from "./tools/time";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
@@ -920,7 +920,7 @@ describe("SkaleDkgFakeComplaint", () => {
         const signature2 = await getValidatorIdSignature(validator2Id, nodeAddress2);
         await validatorService.connect(validator2).linkNodeAddress(nodeAddress2.address, signature2);
 
-        await skipTime(ethers, 60 * 60 * 24 * 31);
+        await nextMonth(contractManager);
 
         const nodesCount = 4;
         for (const index of Array.from(Array(nodesCount).keys())) {
@@ -1002,7 +1002,7 @@ describe("SkaleDkgFakeComplaint", () => {
                     }
                 }
 
-                await skipTime(ethers, 1800);
+                await skipTime(1800);
 
                 let isComplaintPossible = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),

@@ -7,7 +7,7 @@ import { ContractManager,
          DelegationController,
          ConstantsHolder} from "../typechain";
 import { privateKeys } from "./tools/private-keys";
-import { skipTime } from "./tools/time";
+import { nextMonth, skipTime } from "./tools/time";
 import { Wallet } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
@@ -375,7 +375,7 @@ describe("NodesFunctionality", () => {
             await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
             const delegationId = 0;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId);
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             await nodes.checkPossibilityCreatingNode(nodeAddress.address)
                 .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
@@ -410,7 +410,7 @@ describe("NodesFunctionality", () => {
             const delegationId2 = 1;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId2);
 
-            await skipTime(ethers, 2678400); // 31 days
+            await nextMonth(contractManager);
             await nodes.checkPossibilityCreatingNode(nodeAddress.address)
                 .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
 
