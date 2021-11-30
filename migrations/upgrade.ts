@@ -252,7 +252,7 @@ async function main() {
                 contractManager.interface.encodeFunctionData("setContractsAddress", [syncManagerName, syncManager.address]),
             ));
             await verifyProxy(syncManagerName, syncManager.address, []);
-            abi[getContractKeyInAbiFile(syncManagerName) + "_abi"] = syncManager.interface;
+            abi[getContractKeyInAbiFile(syncManagerName) + "_abi"] = getAbi(syncManager.interface);
             abi[getContractKeyInAbiFile(syncManagerName) + "_address"] = syncManager.address;
         },
         async (safeTransactions, abi, contractManager) => {
