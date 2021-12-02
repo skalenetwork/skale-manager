@@ -91,7 +91,7 @@ async function checkTreeAndSpaceToNodes(nodes: Nodes) {
 }
 
 async function createSchain(schains: Schains, typeOfSchain: number, name: string, owner: Signer) {
-    await schains.addSchainByFoundation(0, typeOfSchain.toString(), 0, name, await owner.getAddress(), ethers.constants.AddressZero);
+    await schains.addSchainByFoundation(0, typeOfSchain, 0, name, await owner.getAddress(), ethers.constants.AddressZero);
     console.log("Schain", name, "with type", typeOfSchain, "created");
 }
 
@@ -257,15 +257,6 @@ describe("Tree test", () => {
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         await validatorService.enableValidator(validatorIndex);
-
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
-
-        await schainsInternal.addSchainType(1, 16);
-        await schainsInternal.addSchainType(4, 16);
-        await schainsInternal.addSchainType(128, 16);
-        await schainsInternal.addSchainType(0, 2);
-        await schainsInternal.addSchainType(32, 4);
     });
 
     it("successful schain creation", async () => {

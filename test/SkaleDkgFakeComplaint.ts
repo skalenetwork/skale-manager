@@ -55,7 +55,6 @@ describe("SkaleDkgFakeComplaint", () => {
     let nodeAddress2: Wallet;
 
     let contractManager: ContractManager;
-    let keyStorage: KeyStorage
     let schainsInternal: SchainsInternal;
     let schains: Schains;
     let skaleDKG: SkaleDKG;
@@ -64,9 +63,6 @@ describe("SkaleDkgFakeComplaint", () => {
     let slashingTable: SlashingTable;
     let delegationController: DelegationController;
     let nodes: Nodes;
-    let nodeRotation: NodeRotation;
-    let skaleManager: SkaleManager;
-    let constantsHolder: ConstantsHolder;
     let wallets: Wallets;
 
     const failedDkgPenalty = 5;
@@ -884,22 +880,16 @@ describe("SkaleDkgFakeComplaint", () => {
         schainsInternal = await deploySchainsInternal(contractManager);
         schains = await deploySchains(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
-        keyStorage = await deployKeyStorage(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
         slashingTable = await deploySlashingTable(contractManager);
         delegationController = await deployDelegationController(contractManager);
-        nodeRotation = await deployNodeRotation(contractManager);
-        skaleManager = await deploySkaleManager(contractManager);
-        constantsHolder = await deployConstantsHolder(contractManager);
         wallets = await deployWallets(contractManager);
 
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
         await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
 
@@ -936,11 +926,6 @@ describe("SkaleDkgFakeComplaint", () => {
                     domainName: "some.domain.name"
                 });
         }
-        await schainsInternal.addSchainType(1, 16);
-        await schainsInternal.addSchainType(4, 16);
-        await schainsInternal.addSchainType(128, 16);
-        await schainsInternal.addSchainType(0, 2);
-        await schainsInternal.addSchainType(32, 4);
     });
 
     beforeEach(async () => {

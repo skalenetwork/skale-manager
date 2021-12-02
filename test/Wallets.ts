@@ -78,8 +78,6 @@ describe("Wallets", () => {
         await validatorService.connect(validator2).registerValidator("Validator 2", "", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
         const SCHAIN_REMOVAL_ROLE = await skaleManager.SCHAIN_REMOVAL_ROLE();
         await skaleManager.grantRole(SCHAIN_REMOVAL_ROLE, owner.address);
     });
@@ -169,11 +167,6 @@ describe("Wallets", () => {
             }
 
             await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address)
-            await schainsInternal.addSchainType(1, 16);
-            await schainsInternal.addSchainType(4, 16);
-            await schainsInternal.addSchainType(128, 16);
-            await schainsInternal.addSchainType(0, 2);
-            await schainsInternal.addSchainType(32, 4);
 
             await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address, ethers.constants.AddressZero);
             await skaleDKG.setSuccessfulDKGPublic(schain1Id);

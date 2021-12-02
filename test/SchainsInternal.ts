@@ -55,15 +55,6 @@ describe("SchainsInternal", () => {
         await validatorService.enableValidator(validatorIndex);
         const signature = await getValidatorIdSignature(validatorIndex, nodeAddress);
         await validatorService.connect(holder).linkNodeAddress(nodeAddress.address, signature);
-
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
-
-        await schainsInternal.addSchainType(1, 16);
-        await schainsInternal.addSchainType(4, 16);
-        await schainsInternal.addSchainType(128, 16);
-        await schainsInternal.addSchainType(0, 2);
-        await schainsInternal.addSchainType(32, 4);
     });
 
     it("should initialize schain", async () => {
