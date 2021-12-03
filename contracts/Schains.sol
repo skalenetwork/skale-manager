@@ -412,6 +412,7 @@ contract Schains is Permissions, ISchains {
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainHash);
             schainsInternal.removeNodeFromExceptions(schainHash, nodesInGroup[i]);
         }
+        schainsInternal.removeAllNodesFromSchainExceptions(schainHash);
         schainsInternal.deleteGroup(schainHash);
         address from = schainsInternal.getSchainOwner(schainHash);
         schainsInternal.removeHolesForSchain(schainHash);

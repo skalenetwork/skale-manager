@@ -10,6 +10,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { Event, Wallet } from "ethers";
 import { SchainsInternal } from "../typechain/SchainsInternal";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
+import { SchainType } from "../test/tools/types";
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {

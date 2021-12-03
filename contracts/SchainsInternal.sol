@@ -407,10 +407,14 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
     function removeNodeFromAllExceptionSchains(uint nodeIndex) external allow("SkaleManager") {
         uint len = _nodeToLockedSchains[nodeIndex].length;
-        if (len > 0) {
-            for (uint i = len; i > 0; i--) {
-                removeNodeFromExceptions(_nodeToLockedSchains[nodeIndex][i - 1], nodeIndex);
-            }
+        for (uint i = len; i > 0; i--) {
+            removeNodeFromExceptions(_nodeToLockedSchains[nodeIndex][i - 1], nodeIndex);
+        }
+    }
+
+    function removeAllNodesFromSchainExceptions(bytes32 schainHash) external allow("Schains") {
+        for (uint i = 0; i < _schainToExceptionNodes[schainHash].length; ++i) {
+            removeNodeFromExceptions(schainHash, _schainToExceptionNodes[schainHash][i]);
         }
     }
 
