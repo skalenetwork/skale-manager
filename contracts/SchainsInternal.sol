@@ -51,7 +51,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         uint deposit;
         uint64 index;
         uint generation;
-        address erector;
+        address originator;
     }
 
     struct SchainType {
@@ -141,7 +141,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     function initializeSchain(
         string calldata name,
         address from,
-        address erector,
+        address originator,
         uint lifetime,
         uint deposit) external allow("Schains")
     {
@@ -158,7 +158,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             deposit: deposit,
             index: numberOfSchains,
             generation: currentGeneration,
-            erector: erector
+            originator: originator
         });
         isSchainActive[schainHash] = true;
         numberOfSchains++;
@@ -530,15 +530,15 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     }
 
     /**
-     * @dev Returns an erector of the schain.
+     * @dev Returns an originator of the schain.
      *
      * Requirements:
      * 
      * - Schain must exist
      */
-    function getSchainErector(bytes32 schainHash) external view schainExists(schainHash) returns (address) {
-        require(schains[schainHash].erector != address(0), "Erector address is not set");
-        return schains[schainHash].erector;
+    function getSchainOriginator(bytes32 schainHash) external view schainExists(schainHash) returns (address) {
+        require(schains[schainHash].originator != address(0), "Originator address is not set");
+        return schains[schainHash].originator;
     }
 
     /**

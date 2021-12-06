@@ -848,21 +848,21 @@ describe("Schains", () => {
                 await schainsInternal.isOwnerAddress(holder.address, schainHash).should.be.eventually.true;
             });
 
-            it("should store erector address if schain owner is a smart contract", async () => {
+            it("should store originator address if schain owner is a smart contract", async () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
                 await schains.addSchainByFoundation(5, 5, 0, schainName, schains.address, owner.address);
-                await schainsInternal.getSchainErector(schainHash).should.be.eventually.equal(owner.address);
+                await schainsInternal.getSchainOriginator(schainHash).should.be.eventually.equal(owner.address);
             });
 
-            it("should not store erector address if schain owner is not a smart contract", async () => {
+            it("should not store originator address if schain owner is not a smart contract", async () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
                 await schains.addSchainByFoundation(5, 5, 0, schainName, owner.address, owner.address);
-                await schainsInternal.getSchainErector(schainHash)
-                    .should.be.rejectedWith("Erector address is not set");
+                await schainsInternal.getSchainOriginator(schainHash)
+                    .should.be.rejectedWith("Originator address is not set");
             });
         });
 
