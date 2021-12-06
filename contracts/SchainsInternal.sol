@@ -412,6 +412,9 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         }
     }
 
+    /**
+     * @dev Clear list of nodes that can't be chosen to schain with id {schainHash}
+     */
     function removeAllNodesFromSchainExceptions(bytes32 schainHash) external allow("Schains") {
         for (uint i = 0; i < _schainToExceptionNodes[schainHash].length; ++i) {
             removeNodeFromExceptions(schainHash, _schainToExceptionNodes[schainHash][i]);
