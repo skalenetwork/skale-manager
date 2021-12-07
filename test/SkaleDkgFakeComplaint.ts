@@ -2,17 +2,13 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          DelegationController,
-         KeyStorage,
          Nodes,
-         NodeRotation,
          SchainsInternal,
          Schains,
          SkaleDKG,
          SkaleToken,
          SlashingTable,
          ValidatorService,
-         SkaleManager,
-         ConstantsHolder,
          Wallets} from "../typechain";
 
 import { nextMonth, skipTime } from "./tools/time";
@@ -25,7 +21,6 @@ import { privateKeys } from "./tools/private-keys";
 import { Wallet } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
@@ -33,9 +28,6 @@ import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
@@ -55,7 +47,6 @@ describe("SkaleDkgFakeComplaint", () => {
     let nodeAddress2: Wallet;
 
     let contractManager: ContractManager;
-    let keyStorage: KeyStorage
     let schainsInternal: SchainsInternal;
     let schains: Schains;
     let skaleDKG: SkaleDKG;
@@ -64,9 +55,6 @@ describe("SkaleDkgFakeComplaint", () => {
     let slashingTable: SlashingTable;
     let delegationController: DelegationController;
     let nodes: Nodes;
-    let nodeRotation: NodeRotation;
-    let skaleManager: SkaleManager;
-    let constantsHolder: ConstantsHolder;
     let wallets: Wallets;
 
     const failedDkgPenalty = 5;
@@ -191,129 +179,6 @@ describe("SkaleDkgFakeComplaint", () => {
                 publicKey: [
                     "0x2d9547bbce4df3c5f822b8c353a5e36916f28325918f6db7336bce285d1da45f",
                     "0x3444c74b8d193e782d8ff9947a203277189f559d4e03b10fc30d7c468d0f55e5"
-                ]
-            }
-        ]
-    ];
-
-    const badEncryptedSecretKeyContributions = [
-        [
-            {
-                share: "0x98cc632f55b5482f2b04c75975f76057fd5601e387fc11c8f40b2281f91b02b1",
-                publicKey: [
-                    "0x18b9f4a75a693d20b50239b00830fc4ba2e9637e820262ed8a7369c2a9e63ec5",
-                    "0xb86b7e6467c814fa56a03f6cc527916080efadfa6d0b6665a7d86c4a1af00767"
-                ]
-            },
-            {
-                share: "0x36bc49e428daaaed93a2f968ae6e51082b06209a40329f124aa45f82400ebad2",
-                publicKey: [
-                    "0xf2e8ac9d22a3d0014267668b115a797dc5d6a7dc8430185a043dc6e3f727b093",
-                    "0x927eb760662fab05e9afb65b5eaab8f28c0f4208b3747eb13dd959b4e4593667"
-                ]
-            },
-            {
-                share: "0xc59ae50ba71e0a849301bbb9da959f9551e6f02893d36fcbb93a001cbf074a53",
-                publicKey: [
-                    "0x90edba0f76d6b345dafa3853ffa12cc9eb9b3a32cfd83e50abb6001bef76592e",
-                    "0xb28f590c4b6eea5d109b39f0565156a1f892c07530b2047ed9adc7c33db0a2f5"
-                ]
-            },
-            {
-                share: "0x8d0f22837bd26abdd9183251f03ec78a5aededd8d6a1f52f464aa4cb8c14cfa4",
-                publicKey: [
-                    "0xe921e5699ae18ef6a3b7372909a3cb759d2d123ef9382339c5fdd56adcaa3629",
-                    "0x38b20c244d940b1fac10cb1600976d73103746abf260b84d986a72c844dfdb73"
-                ]
-            }
-        ],
-        [
-            {
-                share: "0xc6e7f8cbecd53f6345c5210c63ef18df3d8729fd18fb7ebc983ae58e052aa666",
-                publicKey: [
-                    "0x18fb040005aca62fd7687a1b00158c37c84e4977572fc48d777000851690a214",
-                    "0xdb377b399eea293f74781ee50777421a3b035320744815bb929f55fdcfc1afdb"
-                ]
-            },
-            {
-                share: "0xf6a2b2442502a0995f4ae9bd1f3f40c68fa1c2db7f4600b5094bc7673ed5cae5",
-                publicKey: [
-                    "0x4b226d0d042b7895a8290b86c9ffdef3188a82969072c2379a4cf098178d6f9f",
-                    "0xdd74c5230d6e6f1a10e75d7e128ba922a3d86b81adacd3490fd6c50d5fda931e"
-                ]
-            },
-            {
-                share: "0xc7c407dceaefc47702474264ac1c32538674089fba9a5f18cfbef13747549108",
-                publicKey: [
-                    "0x11aac6fc451090da8187291d491ddf7268ba0ccad24e1822f9dad0560acb668a",
-                    "0x8ca0b694ac11a66da3555a732840b0e4d0db0789c55b3f7221afe95790ef346b"
-                ]
-            },
-            {
-                share: "0x2048168e881bc149cf5acd890e69db98d6a103e18050fb6bf1ed0b8dbf286a97",
-                publicKey: [
-                    "0x3104bda4ff3c583c933003a12ce2e961c16a56f2b08b8c5f542fe666470c5c49",
-                    "0xdc3eb23bc95014c3afad0b942bc5ac4ca5b1006a157b88657cc0e74b276a5bbb"
-                ]
-            }
-        ],
-        [
-            {
-                share: "0x8ec19a76f9dab88930db5ef04e4e42cfbdb6b164ccb46f8a6b913a811f2957e9",
-                publicKey: [
-                    "0xefd4935ab5199089d08aefb79e017c15b2ec1c2d1b5ce765bfa6c674bb0996ed",
-                    "0x58a09ff5a2fbc9d373e7c42c87df3b0ef24fc2094d8419da2b651d0dbb786fd1"
-                ]
-            },
-            {
-                share: "0x22ebfe9540e5d94a58d29b27d2ea52b36996072ce8e352c45c1abd4a413f4548",
-                publicKey: [
-                    "0x9a5f97abd3af002b31ffa2e2f22c619635adcd6a373849f6e6bbf3902a6ab53",
-                    "0xe8b4ab57f85e46bf7e6392f05c853a2534c08bdfbe0350a48d33cdc8a8dedc33"
-                ]
-            },
-            {
-                share: "0xb5cca2713381b16507d88271547ae2aee55229d6cbbf04935bccac7da36fae40",
-                publicKey: [
-                    "0x40b3af6ee7837e61906bb4c92c971da9c42eea8b40f62b0e8a64de8acaede30f",
-                    "0x4dbdacd4eaafd8a26dce990025536445d979bfeb2921e5f448a8e37dd9b37535"
-                ]
-            },
-            {
-                share: "0xf7a0de59d292c66071c4867cdd18f41af1e55ce94e2791794c4be074261c9431",
-                publicKey: [
-                    "0x448302065f28b1f6c62133ebbc8c00a3dadbdeba16ea69d02588aff3d41c6fc2",
-                    "0x12206829d33837f9f6d564df434a76b1e8e93f2de82bfd9d93d0b3a0daf362"
-                ]
-            }
-        ],
-        [
-            {
-                share: "0xdd585135753d84cca7ad29d1feb49c6130804bd7ee290fcf57817c0bbbd67d32",
-                publicKey: [
-                    "0xec0d22cc8a707b4cc9d5cacf2974759ba008c97617d0dffe3b78766836d51826",
-                    "0x1aa6c9392a3f7c49bae5c94d309210f44e9fd10502fd958e4b1df8df57d17df2"
-                ]
-            },
-            {
-                share: "0x7a25f61a2405598e5d7af9c3838152a62ce335968efbbef485a78318f48bd463",
-                publicKey: [
-                    "0x334a69e209c51132eb9e7f4bb227e3ddb1ff53b0e7da8ff1f0eb5478f955b2bc",
-                    "0xcf101862383b44e7be48ce61723dd7e6f1a2712fa9e8767def2f7121a2ae44f0"
-                ]
-            },
-            {
-                share: "0xf088926585f9c02c640a72e96a6787a5b16aa8a1feaecb1be08d9ae32cf4e534",
-                publicKey: [
-                    "0xc7352332da0643381bd93852ca89ba74519b12e987bdd71da94c4de11f3bd573",
-                    "0x1fdf8fbc65e943f5c3d60bef5753df77f5b8ea2f20ca356a3c93a883ac72a7d9"
-                ]
-            },
-            {
-                share: "0x90a2aa5f42ffa9a91dacef8d2951109ce9e8a121f3835e7581b5bc89c5e63035",
-                publicKey: [
-                    "0x4fe2dbe5f8436797418e5ef50b268f5c71100f9c23df3b20337238fa6c5ff9a",
-                    "0x11571aadffbeb4dac4341550363fe0a8cdb3a0e5200dfded431570cf52173370"
                 ]
             }
         ]
@@ -648,177 +513,6 @@ describe("SkaleDkgFakeComplaint", () => {
         ]
     ];
 
-    const badMultipliedShares = [
-        [
-            {
-                x: {
-                    a: "0x9ca436feeed025ef5c4905a801c3fc4c5d7b444049c510b5cdd7799cbdcf443",
-                    b: "0xac17d51383dc1286051cd5a5200b7252473641bb1b7dd479272acb043810d5a"
-                },
-                y: {
-                    a: "0x28abe38f353692bee22eaa2382fdf4fb205cda29acd251d82ed790eea50b1e26",
-                    b: "0x251fe847a6d363dd057c76729e0f3fc15c1be538eba145e1cbe4dd60189f3c34"
-                }
-            },
-            {
-                x: {
-                    a: "0x4c7236af30fe4c92881b77cd68343277b51a27b13f2dc83afba681b52ed10db",
-                    b: "0x2ac59ead1fe757200d9d46a5abc7419bec7c34d1e63db57a9be052eae7504b13"
-                },
-                y: {
-                    a: "0x2ccc6cab1fb6657c5ddf853225bb8d442ef52c04c8d0bce2b62dcd1616171592",
-                    b: "0x296227e36080e8af27b92c0833cad50d47405797c3c769e766d6db17da7ddae7"
-                }
-            },
-            {
-                x: {
-                    a: "0x18e9702d6ebdf18ca917290dc44ff7fa0490cb1fc1e0fa25c551476e25dfc4b0",
-                    b: "0x2212be8998f4c13685d9a8b6e0efd8cc1fdf9cfbab27d3745fdf2639da53110f"
-                },
-                y: {
-                    a: "0x1967d3030900437f71ec4f7d8e9198c93e93e65442594a3ece35d14a36e94e22",
-                    b: "0x20ea57e45c1244e44d69360b005da00b2107255862243e81df56afbf61f69605"
-                }
-            },
-            {
-                x: {
-                    a: "0x11da403534b8ade498907d24e779a366aaf554b0495bc9466fab7f3d4ad74334",
-                    b: "0x1e2e9ef53eabf6852cefeb58ac710a62fbddd743f9dedc52545c206235a5875d"
-                },
-                y: {
-                    a: "0x10315dca2d49b1a5649345728b207ba758766dd527e5afb9a8b16e7a48ac037",
-                    b: "0x2f0f31abda927f486ff2d5fc0a00fbc5c1b62d1bba4b791ab7c4198d64b1c9c0"
-                }
-            }
-        ],
-        [
-            {
-                x: {
-                    a: "0x2706cd84261ebb59f7dd420f3147089302dcb90aa66bcb414089f2cd4eba6c51",
-                    b: "0x171f0ae14c2bc5e03bc63ff4cace8f536efbd0f17bd55501c0c711e311260924"
-                },
-                y: {
-                    a: "0xe6ae589557630321e880486ea351bba3c3f2c453ed292b786f5a6cac4742214",
-                    b: "0x537b99ebd42319b30a8c7945f6e446d582e118388b2ae6c3a90e57650c5bfa2"
-                }
-            },
-            {
-                x: {
-                    a: "0x21644f340d90cfc3449c9cfb5be878bcfb449cadc2c306393a8c8c26e9afb8a1",
-                    b: "0x4d3b09dfd22729700bf4816187d711f523260181f582b68b5ea583dfd57ebc2"
-                },
-                y: {
-                    a: "0x477ec5c61ae9b300bf46f184d203bad03a930259469ae3152813afe147427e3",
-                    b: "0x36e6e43b1c78b29dd41f9e7c634e51543fb8c540cb5b72b2a3fe597b80e68f0"
-                }
-            },
-            {
-                x: {
-                    a: "0x733d4bce93aa70758c02d49b166dfb634d407d092d2cd99d06ac8bb07602d71",
-                    b: "0x23aee6a29b6b916fbc0b0e57d276dfa7b8ec76b605362f94113851a858bed97"
-                },
-                y: {
-                    a: "0x14151cd5f923aa32178d794b6a2935c6066a8ec8984d454539a8e17ac9405e2",
-                    b: "0x1e90f7ed92733d166acf496bb22791323bb7cef90d033dd6b3fedd93e8c812c6"
-                }
-            },
-            {
-                x: {
-                    a: "0x3a9405e5a37f5659ebb40c89c87919f30e1a9532e67d85185d7a826f44108f6",
-                    b: "0x3dfb0cd7e7e80424e5c6a3c7019eb9c5d950524475fe77d3e0b269ac0043124"
-                },
-                y: {
-                    a: "0xed491ac59c4596fd62e6ec66fe2ee064e88ab183768e138b9275d9379262dbc",
-                    b: "0x274de02a12b16a1c9b61f517b75b14ce7102bfeac2d309dfd36e12c221add117"
-                }
-            }
-        ],
-        [
-            {
-                x: {
-                    a: "0x2dd24f274d68896303284f616159ca3e0d9fed14ed539f62e625e76767c75b32",
-                    b: "0x1a47a9d84ad8d1f6f10165afd19573df2ebdae2cc2c2d0c3bfec30c3d3c4001"
-                },
-                y: {
-                    a: "0x4ee9edf5197344e0ba24d36d70be9652a005d80bf6ed3873b4cfd7c54a92400",
-                    b: "0x1b5534585c4b02f9ca1765e7b6234d924e95f1847a9d19aec3d254c8936b6a7b"
-                }
-            },
-            {
-                x: {
-                    a: "0x186e1541b41cd371f60066e6190b98b24058f2fd170245e494fdb9c00ccefb32",
-                    b: "0x128343ebae8cac92ad2d703a2e5b0d1f79367e86614dcf4e674984a823ecc85f"
-                },
-                y: {
-                    a: "0x18701602a18045a9cb6dc9c5cd864c203909c3a7c5a0f71610ec44d82f7166fc",
-                    b: "0xe3e669d9be25e5859e6bfa8c74711ff83bc18d9ad36af8df3a7a0b3c104ba8f"
-                }
-            },
-            {
-                x: {
-                    a: "0x2492be4794482da8b550ea2eb1f22f87010c53eb8164af647f4e109ccdbbd543",
-                    b: "0x6535cdf9cbfba39f98f2a6d763aee7d5c5ec0a7274db2514fd1882a292c26c7"
-                },
-                y: {
-                    a: "0x30028a0ae7bc9af6deeea1a08f4514a1476f7bbd18e23fcaf479d14b22806f9e",
-                    b: "0x298341c7b43f51faa79e511969db8a4f46115c22de10c3e4caf749a3b37a313"
-                }
-            },
-            {
-                x: {
-                    a: "0x2b0d090bac223bcfc4c7aaaf771513420639e845127ae4702ce44c126bb443e7",
-                    b: "0x1302700f0abd4082350ddaba69856b03aa37b567b33fcc18bd4d0d91196f5b5f"
-                },
-                y: {
-                    a: "0x2a70a1fc90e5c8d7d1977ef36f9b0d0397a92ea97fd7878a71fa8c73a916a3b8",
-                    b: "0x592a35d5a26152f09f0fad20732427511e497138ab1f98efeb146cd21dfb5e5"
-                }
-            }
-        ],
-        [
-            {
-                x: {
-                    a: "0x275b882669ac1f8d36985b005c1e4627481ac4ca853f6fa2aace51b65d8e75d4",
-                    b: "0x25b43270a11cd85e0e050daaa6837058c33b9e4caaa1d39f8d668f0bf2e58a61"
-                },
-                y: {
-                    a: "0x672165cfbd0aa676c987fd4bfe78d708f732fe08978fa48142fbe5cfda88fa5",
-                    b: "0xf811acc5bfa997e6c1bbdd5b38ab4e67dee26256b0aa84006cda3f77b05e63"
-                }
-            },
-            {
-                x: {
-                    a: "0x1e4667ce4f88d488b1ca25955b82e905059857e2e44963c5c5a3685f38f00bf9",
-                    b: "0x10d0afe2e11fc23355253c6a8cad2fb1e22aeb4066f7aa4885e8addad953303e"
-                },
-                y: {
-                    a: "0x206c5e5ce1d4c0066c780a26c475d77c120fbe032f1dda367ad86b0900053c4c",
-                    b: "0x1b4680ea16c1f61851653ae82bfd47d551bc4b8972a0ce9fd2962b0785cb2389"
-                }
-            },
-            {
-                x: {
-                    a: "0x20995fd8e0d3eaf9868bdd8b6e9f35490f48d72b3fbfacb8adeb552e0d1c8f25",
-                    b: "0x216bdfaee16ce3631e467c065a0c5c15b6b0c61d58b3cce139e699e7f8fd7164"
-                },
-                y: {
-                    a: "0x2c5a065dde403434a839cdd1d73f5d61496307681608329cb10d17b63b99305c",
-                    b: "0x172ca5a050a1a7414ed844c442a099eb5c4cb6d559662770654b269ae84481f5"
-                }
-            },
-            {
-                x: {
-                    a: "0x1e27960670f1f51567b660dd4c3084c03f964f28d0d09b668aa89dd3618ff67f",
-                    b: "0x208338ff486a3cc3d3c402438111ffb9756364e10861ef1847c5f83abd57bd96"
-                },
-                y: {
-                    a: "0x28da69f538b9a9decf573f60cd11195797e7e386a0dbb535f007561358635386",
-                    b: "0xe69db2b8a56a026f035368bf43ed47cd3edc5d0681a13ea1c75f5910155a420"
-                }
-            }
-        ]
-    ];
-
     const verificationVectorMultiplication = [
         {
             x: {
@@ -852,7 +546,6 @@ describe("SkaleDkgFakeComplaint", () => {
         }
     ];
 
-    const indexes = [0, 1, 2, 3];
     let schainName = "";
     const delegatedAmount = 1e7;
 
@@ -884,22 +577,16 @@ describe("SkaleDkgFakeComplaint", () => {
         schainsInternal = await deploySchainsInternal(contractManager);
         schains = await deploySchains(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
-        keyStorage = await deployKeyStorage(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
         slashingTable = await deploySlashingTable(contractManager);
         delegationController = await deployDelegationController(contractManager);
-        nodeRotation = await deployNodeRotation(contractManager);
-        skaleManager = await deploySkaleManager(contractManager);
-        constantsHolder = await deployConstantsHolder(contractManager);
         wallets = await deployWallets(contractManager);
 
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
         await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
 
@@ -936,11 +623,6 @@ describe("SkaleDkgFakeComplaint", () => {
                     domainName: "some.domain.name"
                 });
         }
-        await schainsInternal.addSchainType(1, 16);
-        await schainsInternal.addSchainType(4, 16);
-        await schainsInternal.addSchainType(128, 16);
-        await schainsInternal.addSchainType(0, 2);
-        await schainsInternal.addSchainType(32, 4);
     });
 
     beforeEach(async () => {

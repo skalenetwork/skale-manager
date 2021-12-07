@@ -26,6 +26,7 @@ import { assert } from "chai";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 import { stringKeccak256 } from "../test/tools/hashes";
 import { fastBeforeEach } from "../test/tools/mocha";
+import { SchainType } from "../test/tools/types";
 
 async function createNode(skaleManager: SkaleManager, node: Wallet, nodeId: number) {
     await skaleManager.connect(node).createNode(
@@ -90,8 +91,8 @@ async function checkTreeAndSpaceToNodes(nodes: Nodes) {
     }
 }
 
-async function createSchain(schains: Schains, typeOfSchain: number, name: string, owner: Signer) {
-    await schains.addSchainByFoundation(0, typeOfSchain.toString(), 0, name, await owner.getAddress(), ethers.constants.AddressZero);
+async function createSchain(schains: Schains, typeOfSchain: SchainType, name: string, owner: Signer) {
+    await schains.addSchainByFoundation(0, typeOfSchain, 0, name, await owner.getAddress(), ethers.constants.AddressZero);
     console.log("Schain", name, "with type", typeOfSchain, "created");
 }
 
@@ -181,7 +182,7 @@ async function rotateOnDKG(schainsInternal: SchainsInternal, name: string, skale
         getRandomVerificationVector(t),
         getRandomSecretKeyContribution(parseInt(n, 10))
     );
-    await skipTime(ethers, 1800);
+    await skipTime(1800);
     await skaleDKG.connect(node).complaint(
         stringKeccak256(name),
         randomNode1,
@@ -257,206 +258,184 @@ describe("Tree test", () => {
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         await validatorService.enableValidator(validatorIndex);
-
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
-
-        await schainsInternal.addSchainType(1, 16);
-        await schainsInternal.addSchainType(4, 16);
-        await schainsInternal.addSchainType(128, 16);
-        await schainsInternal.addSchainType(0, 2);
-        await schainsInternal.addSchainType(32, 4);
     });
 
-    it("successful schain creation", async () => {
-        const nodesAmount = 16;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-        await createSchain(schains, 1, "A", owner);
-        await finishDKG(skaleDKG, "A");
-        await checkTreeAndSpaceToNodes(nodes);
-    });
-
-    it("successful schain creation after rotation", async () => {
-        const nodesAmount = 17;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-        await createSchain(schains, 1, "A", owner);
-        await rechargeSchainWallet(wallets, "A", owner);
-        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
-        await finishDKG(skaleDKG, "A");
-        await checkTreeAndSpaceToNodes(nodes);
-    });
-
-    it("successful schain creation after unsuccessful creation", async () => {
-        const nodesAmount = 17;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-        await createSchain(schains, 1, "A", owner);
-        await rechargeSchainWallet(wallets, "A", owner);
-        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
-        await createSchain(schains, 1, "B", owner);
-        await finishDKG(skaleDKG, "B");
-        await checkTreeAndSpaceToNodes(nodes);
-    });
-
-    it("schain creation with node in maintenance", async () => {
-        const nodesAmount = 18;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-        await setNodeInMaintenance(nodes, node, "0");
-        await setNodeInMaintenance(nodes, node, "1");
-        await createSchain(schains, 1, "A", owner);
-        await rechargeSchainWallet(wallets, "A", owner);
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await removeNodeFromInMaintenance(nodes, node, "0");
-        await removeNodeFromInMaintenance(nodes, node, "1");
-        await createSchain(schains, 1, "B", owner);
-        await finishDKG(skaleDKG, "B");
-        await checkTreeAndSpaceToNodes(nodes);
-    });
-
-    it("schain creation with node in maintenance", async () => {
-        const nodesAmount = 18;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-        await createSchain(schains, 1, "A", owner);
-        await rechargeSchainWallet(wallets, "A", owner);
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await setNodeInMaintenance(nodes, node, "0");
-        await setNodeInMaintenance(nodes, node, "1");
-        await createSchain(schains, 1, "B", owner);
-        await rechargeSchainWallet(wallets, "B", owner);
-        console.log(await getNodesInSchain(schainsInternal, "B"));
-        await rotateOnDKG(schainsInternal, "B", skaleDKG, node);
-        console.log(await getNodesInSchain(schainsInternal, "B"));
-        await removeNodeFromInMaintenance(nodes, node, "0");
-        await createSchain(schains, 1, "C", owner);
-        await finishDKG(skaleDKG, "C");
-        console.log(await getNodesInSchain(schainsInternal, "C"));
-        await createSchain(schains, 1, "D", owner);
-        await rechargeSchainWallet(wallets, "D", owner);
-        console.log(await getNodesInSchain(schainsInternal, "D"));
-        await rotateOnDKG(schainsInternal, "D", skaleDKG, node);
-        console.log(await getNodesInSchain(schainsInternal, "D"));
-        await removeNodeFromInMaintenance(nodes, node, "1");
-        await createSchain(schains, 1, "E", owner);
-        await finishDKG(skaleDKG, "E");
-        console.log(await getNodesInSchain(schainsInternal, "E"));
-        await checkTreeAndSpaceToNodes(nodes);
-    });
-
-    it("schain creation after schain deletion", async () => {
-        const nodesAmount = 16;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-        await createSchain(schains, 1, "A", owner);
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await setNodeInMaintenance(nodes, node, "0");
-        await rechargeSchainWallet(wallets, "A", owner);
-        await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "1");
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await createNode(skaleManager, node, 16);
-        await deleteSchain(skaleManager, "A", owner);
-        await removeNodeFromInMaintenance(nodes, node, "0");
-        await createSchain(schains, 1, "B", owner);
-        console.log(await getNodesInSchain(schainsInternal, "B"));
-        await finishDKG(skaleDKG, "B");
-        await checkTreeAndSpaceToNodes(nodes);
-    });
-
-    it("Strange test", async () => {
-        let nodesAmount = 15;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-
-        for (let i = 0; i < 10; i++) {
-            const name = "A" + i;
-            const nodeIndex = 2 + 3 * i;
-            for (let nodeId = nodesAmount; nodeId < nodesAmount + 3; ++nodeId) {
+    describe("when 15 nodes were created", () => {
+        fastBeforeEach(async () => {
+            const nodesAmount = 15;
+            for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
                 await createNode(skaleManager, node, nodeId);
             }
-            nodesAmount += 3;
-            for (let i2 = 0; i2 < 3; i2++) {
-                await createSchain(schains, 1, name + i2, owner);
-                console.log(await getNodesInSchain(schainsInternal, name + i2));
-                // await nodeExit(skaleManager, node, (nodeIndex + i2).toString()); - revert
-                await setNodeInMaintenance(nodes, node, (nodeIndex + i2).toString());
-                await deleteSchain(skaleManager, name + i2, owner);
-                await removeNodeFromInMaintenance(nodes, node, (nodeIndex + i2).toString());
-                await nodeExit(skaleManager, node, (nodeIndex + i2).toString());
+        });
+
+        it("Strange test", async () => {
+            let nodesAmount = 15;
+            for (let i = 0; i < 10; i++) {
+                const name = "A" + i;
+                const nodeIndex = 2 + 3 * i;
+                for (let nodeId = nodesAmount; nodeId < nodesAmount + 3; ++nodeId) {
+                    await createNode(skaleManager, node, nodeId);
+                }
+                nodesAmount += 3;
+                for (let i2 = 0; i2 < 3; i2++) {
+                    await createSchain(schains, SchainType.SMALL, name + i2, owner);
+                    console.log(await getNodesInSchain(schainsInternal, name + i2));
+                    // await nodeExit(skaleManager, node, (nodeIndex + i2).toString()); - revert
+                    await setNodeInMaintenance(nodes, node, (nodeIndex + i2).toString());
+                    await deleteSchain(skaleManager, name + i2, owner);
+                    await removeNodeFromInMaintenance(nodes, node, (nodeIndex + i2).toString());
+                    await nodeExit(skaleManager, node, (nodeIndex + i2).toString());
+                }
+                // await createSchain(schains, SchainType.SMALL, "B", owner); - revert
+                await checkTreeAndSpaceToNodes(nodes);
             }
-            // await createSchain(schains, 1, "B", owner); - revert
-            await checkTreeAndSpaceToNodes(nodes);
-        }
-    });
+        });
 
-    it("nodeExit after rotation", async () => {
-        const nodesAmount = 16;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-        await createSchain(schains, 1, "A", owner);
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await rechargeSchainWallet(wallets, "A", owner);
-        await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "10");
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await createNode(skaleManager, node, 16);
-        await deleteSchain(skaleManager, "A", owner);
-        await nodeExit(skaleManager, node, "10");
-        await createSchain(schains, 1, "B", owner);
-        console.log(await getNodesInSchain(schainsInternal, "B"));
-        await checkTreeAndSpaceToNodes(nodes);
-    });
+        describe("when 16 nodes were created", () => {
+            fastBeforeEach(async () => {
+                await createNode(skaleManager, node, 15);
+            });
 
-    it("nodeExit after rotation and in_maintenance", async () => {
-        const nodesAmount = 16;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-        await createSchain(schains, 1, "A", owner);
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await setNodeInMaintenance(nodes, node, "10");
-        await rechargeSchainWallet(wallets, "A", owner);
-        await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "10");
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await createNode(skaleManager, node, 16);
-        await deleteSchain(skaleManager, "A", owner);
-        await removeNodeFromInMaintenance(nodes, node, "10");
-        await nodeExit(skaleManager, node, "10");
-        await createSchain(schains, 1, "B", owner);
-        console.log(await getNodesInSchain(schainsInternal, "B"));
-        await checkTreeAndSpaceToNodes(nodes);
-    });
+            it("successful schain creation", async () => {
+                await createSchain(schains, SchainType.SMALL, "A", owner);
+                await finishDKG(skaleDKG, "A");
+                await checkTreeAndSpaceToNodes(nodes);
+            });
 
-    it("nodeExit after rotation 2", async () => {
-        const nodesAmount = 16;
-        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
-            await createNode(skaleManager, node, nodeId);
-        }
-        await createSchain(schains, 1, "A", owner);
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await rechargeSchainWallet(wallets, "A", owner);
-        await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "10");
-        console.log(await getNodesInSchain(schainsInternal, "A"));
-        await createNode(skaleManager, node, 16);
-        await deleteSchain(skaleManager, "A", owner);
-        await nodeExit(skaleManager, node, "9");
-        await createSchain(schains, 1, "B", owner);
-        console.log(await getNodesInSchain(schainsInternal, "B"));
-        await checkTreeAndSpaceToNodes(nodes);
+            it("schain creation after schain deletion", async () => {
+                await createSchain(schains, SchainType.SMALL, "A", owner);
+                console.log(await getNodesInSchain(schainsInternal, "A"));
+                await setNodeInMaintenance(nodes, node, "0");
+                await rechargeSchainWallet(wallets, "A", owner);
+                await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "1");
+                console.log(await getNodesInSchain(schainsInternal, "A"));
+                await createNode(skaleManager, node, 16);
+                await deleteSchain(skaleManager, "A", owner);
+                await removeNodeFromInMaintenance(nodes, node, "0");
+                await createSchain(schains, SchainType.SMALL, "B", owner);
+                console.log(await getNodesInSchain(schainsInternal, "B"));
+                await finishDKG(skaleDKG, "B");
+                await checkTreeAndSpaceToNodes(nodes);
+            });
+
+            it("nodeExit after rotation", async () => {
+                await createSchain(schains, SchainType.SMALL, "A", owner);
+                console.log(await getNodesInSchain(schainsInternal, "A"));
+                await rechargeSchainWallet(wallets, "A", owner);
+                await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "10");
+                console.log(await getNodesInSchain(schainsInternal, "A"));
+                await createNode(skaleManager, node, 16);
+                await deleteSchain(skaleManager, "A", owner);
+                await nodeExit(skaleManager, node, "10");
+                await createSchain(schains, SchainType.SMALL, "B", owner);
+                console.log(await getNodesInSchain(schainsInternal, "B"));
+                await checkTreeAndSpaceToNodes(nodes);
+            });
+
+            it("nodeExit after rotation and in_maintenance", async () => {
+                await createSchain(schains, SchainType.SMALL, "A", owner);
+                console.log(await getNodesInSchain(schainsInternal, "A"));
+                await setNodeInMaintenance(nodes, node, "10");
+                await rechargeSchainWallet(wallets, "A", owner);
+                await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "10");
+                console.log(await getNodesInSchain(schainsInternal, "A"));
+                await createNode(skaleManager, node, 16);
+                await deleteSchain(skaleManager, "A", owner);
+                await removeNodeFromInMaintenance(nodes, node, "10");
+                await nodeExit(skaleManager, node, "10");
+                await createSchain(schains, SchainType.SMALL, "B", owner);
+                console.log(await getNodesInSchain(schainsInternal, "B"));
+                await checkTreeAndSpaceToNodes(nodes);
+            });
+
+            it("nodeExit after rotation 2", async () => {
+                await createSchain(schains, SchainType.SMALL, "A", owner);
+                console.log(await getNodesInSchain(schainsInternal, "A"));
+                await rechargeSchainWallet(wallets, "A", owner);
+                await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "10");
+                console.log(await getNodesInSchain(schainsInternal, "A"));
+                await createNode(skaleManager, node, 16);
+                await deleteSchain(skaleManager, "A", owner);
+                await nodeExit(skaleManager, node, "9");
+                await createSchain(schains, SchainType.SMALL, "B", owner);
+                console.log(await getNodesInSchain(schainsInternal, "B"));
+                await checkTreeAndSpaceToNodes(nodes);
+            });
+
+            describe("when 17 nodes were created", () => {
+                fastBeforeEach(async () => {
+                    await createNode(skaleManager, node, 16);
+                })
+
+                it("successful schain creation after rotation", async () => {
+                    await createSchain(schains, SchainType.SMALL, "A", owner);
+                    await rechargeSchainWallet(wallets, "A", owner);
+                    await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                    await finishDKG(skaleDKG, "A");
+                    await checkTreeAndSpaceToNodes(nodes);
+                });
+
+                it("successful schain creation after unsuccessful creation", async () => {
+                    await createSchain(schains, SchainType.SMALL, "A", owner);
+                    await rechargeSchainWallet(wallets, "A", owner);
+                    await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                    await createSchain(schains, SchainType.SMALL, "B", owner);
+                    await finishDKG(skaleDKG, "B");
+                    await checkTreeAndSpaceToNodes(nodes);
+                });
+
+                describe("when 18 nodes were created", () => {
+                    fastBeforeEach(async () => {
+                        await createNode(skaleManager, node, 17);
+                    });
+
+                    it("schain creation with node in maintenance", async () => {
+                        await setNodeInMaintenance(nodes, node, "0");
+                        await setNodeInMaintenance(nodes, node, "1");
+                        await createSchain(schains, SchainType.SMALL, "A", owner);
+                        await rechargeSchainWallet(wallets, "A", owner);
+                        console.log(await getNodesInSchain(schainsInternal, "A"));
+                        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                        console.log(await getNodesInSchain(schainsInternal, "A"));
+                        await removeNodeFromInMaintenance(nodes, node, "0");
+                        await removeNodeFromInMaintenance(nodes, node, "1");
+                        await createSchain(schains, SchainType.SMALL, "B", owner);
+                        await finishDKG(skaleDKG, "B");
+                        await checkTreeAndSpaceToNodes(nodes);
+                    });
+
+                    it("schain creation with node in maintenance", async () => {
+                        await createSchain(schains, SchainType.SMALL, "A", owner);
+                        await rechargeSchainWallet(wallets, "A", owner);
+                        console.log(await getNodesInSchain(schainsInternal, "A"));
+                        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                        console.log(await getNodesInSchain(schainsInternal, "A"));
+                        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                        console.log(await getNodesInSchain(schainsInternal, "A"));
+                        await setNodeInMaintenance(nodes, node, "0");
+                        await setNodeInMaintenance(nodes, node, "1");
+                        await createSchain(schains, SchainType.SMALL, "B", owner);
+                        await rechargeSchainWallet(wallets, "B", owner);
+                        console.log(await getNodesInSchain(schainsInternal, "B"));
+                        await rotateOnDKG(schainsInternal, "B", skaleDKG, node);
+                        console.log(await getNodesInSchain(schainsInternal, "B"));
+                        await removeNodeFromInMaintenance(nodes, node, "0");
+                        await createSchain(schains, SchainType.SMALL, "C", owner);
+                        await finishDKG(skaleDKG, "C");
+                        console.log(await getNodesInSchain(schainsInternal, "C"));
+                        await createSchain(schains, SchainType.SMALL, "D", owner);
+                        await rechargeSchainWallet(wallets, "D", owner);
+                        console.log(await getNodesInSchain(schainsInternal, "D"));
+                        await rotateOnDKG(schainsInternal, "D", skaleDKG, node);
+                        console.log(await getNodesInSchain(schainsInternal, "D"));
+                        await removeNodeFromInMaintenance(nodes, node, "1");
+                        await createSchain(schains, SchainType.SMALL, "E", owner);
+                        await finishDKG(skaleDKG, "E");
+                        console.log(await getNodesInSchain(schainsInternal, "E"));
+                        await checkTreeAndSpaceToNodes(nodes);
+                    });
+                });
+            });
+        });
     });
 });
