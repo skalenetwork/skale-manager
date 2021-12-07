@@ -29,6 +29,7 @@ import { deployWallets } from "./tools/deploy/wallets";
 import { fastBeforeEach } from "./tools/mocha";
 import { stringKeccak256 } from "./tools/hashes";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { SchainType } from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -82,8 +83,6 @@ describe("Schains", () => {
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
         await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
         const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
         await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
 
@@ -97,12 +96,6 @@ describe("Schains", () => {
         const signature3 = await getValidatorIdSignature(validatorIndex, nodeAddress3);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress3.address, signature3);
         await constantsHolder.setMSR(0);
-
-        await schainsInternal.addSchainType(1, 16);
-        await schainsInternal.addSchainType(4, 16);
-        await schainsInternal.addSchainType(128, 16);
-        await schainsInternal.addSchainType(0, 2);
-        await schainsInternal.addSchainType(32, 4);
     });
 
     describe("should add schain", async () => {
@@ -115,7 +108,7 @@ describe("Schains", () => {
         });
 
         it("should not allow everyone to create schains as the foundation", async () => {
-            await schains.addSchainByFoundation(5, 1, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero)
+            await schains.addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero)
                 .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
         })
 
@@ -388,7 +381,7 @@ describe("Schains", () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, 4, 0, schainName, schains.address, owner.address);
+                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains.address, owner.address);
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
 
                 await skaleManager.connect(nodeAddress).createNode(
@@ -473,7 +466,7 @@ describe("Schains", () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, 4, 0, schainName, schains.address, owner.address);
+                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains.address, owner.address);
                 await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("d2"), {value: 1e20.toString()});
 
                 const verificationVector = [{
@@ -828,7 +821,7 @@ describe("Schains", () => {
             it("should allow the foundation to create schain without tokens", async () => {
                 const schainCreator = holder;
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), schainCreator.address);
-                await schains.connect(schainCreator).addSchainByFoundation(5, 5, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
+                await schains.connect(schainCreator).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -839,7 +832,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, 5, 0, "d2", holder.address, ethers.constants.AddressZero);
+                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", holder.address, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -852,7 +845,7 @@ describe("Schains", () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, 5, 0, schainName, schains.address, owner.address);
+                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, schains.address, owner.address);
                 await schainsInternal.getSchainOriginator(schainHash).should.be.eventually.equal(owner.address);
             });
 
@@ -860,7 +853,7 @@ describe("Schains", () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, 5, 0, schainName, owner.address, owner.address);
+                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, owner.address, owner.address);
                 await schainsInternal.getSchainOriginator(schainHash)
                     .should.be.rejectedWith("Originator address is not set");
             });
@@ -913,7 +906,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create small schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -924,7 +917,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create medium schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 2, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -935,7 +928,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create large schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 3, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.LARGE, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);

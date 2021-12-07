@@ -11,6 +11,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { Event, Wallet } from "ethers";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 import { fastBeforeEach } from "../test/tools/mocha";
+import { SchainType } from "../test/tools/types";
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {
@@ -46,13 +47,6 @@ describe("createSchains", () => {
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
-        await schainsInternal.addSchainType(1, 16);
-        await schainsInternal.addSchainType(4, 16);
-        await schainsInternal.addSchainType(128, 16);
-        await schainsInternal.addSchainType(0, 2);
-        await schainsInternal.addSchainType(32, 4);
     });
 
     it("gas based on nodes amount", async () => {
@@ -79,7 +73,7 @@ describe("createSchains", () => {
 
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
-                const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner.address, ethers.constants.AddressZero)).wait();
+                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, "schain-" + nodeId, owner.address, ethers.constants.AddressZero)).wait();
                 const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
                 console.log("Nodes in Schain:");
                 const setOfNodes = new Set();

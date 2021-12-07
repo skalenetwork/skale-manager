@@ -10,6 +10,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { Event, Wallet } from "ethers";
 import { SchainsInternal } from "../typechain/SchainsInternal";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
+import { SchainType } from "../test/tools/types";
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {
@@ -45,13 +46,6 @@ describe("Schain creation test", () => {
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
-        await schainsInternal.addSchainType(1, 16);
-        await schainsInternal.addSchainType(4, 16);
-        await schainsInternal.addSchainType(128, 16);
-        await schainsInternal.addSchainType(0, 2);
-        await schainsInternal.addSchainType(32, 4);
     });
 
     it("create and delete medium schains", async () => {
@@ -75,7 +69,7 @@ describe("Schain creation test", () => {
             );
         }
         for (let tries = 0; tries < 10; tries++) {
-            const type = 2;;
+            const type = SchainType.MEDIUM;
             console.log(type);
             for (let try1 = 0; try1 < 32; try1++) {
                 const result = await (await schains.addSchainByFoundation(0, type, 0, "schain-" + tries + try1, owner.address, ethers.constants.AddressZero)).wait();

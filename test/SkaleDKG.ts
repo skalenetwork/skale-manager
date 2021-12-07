@@ -98,8 +98,6 @@ describe("SkaleDKG", () => {
 
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
         await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
@@ -334,11 +332,6 @@ describe("SkaleDKG", () => {
                         domainName: "some.domain.name"
                     });
             }
-            await schainsInternal.addSchainType(1, 16);
-            await schainsInternal.addSchainType(4, 16);
-            await schainsInternal.addSchainType(128, 16);
-            await schainsInternal.addSchainType(0, 2);
-            await schainsInternal.addSchainType(32, 4);
         });
 
         after(async () => {
