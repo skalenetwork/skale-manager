@@ -7,7 +7,7 @@ updates:
     day: "saturday"
 
 - package-ecosystem: "pip"
-    directory: "/scripts/"
-    schedule:
-      interval: "weekly"
-      day: "saturday"
+  directory: "/scripts/"
+  schedule:
+    interval: "weekly"
+    day: "saturday"

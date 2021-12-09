@@ -251,11 +251,21 @@ contract Schains is Permissions, ISchains {
         returns (bool)
     {
         SkaleVerifier skaleVerifier = SkaleVerifier(contractManager.getContract("SkaleVerifier"));
-        G2Operations.G2Point memory publicKey = KeyStorage(
-            contractManager.getContract("KeyStorage")
-        ).getCommonPublicKey(
-            keccak256(abi.encodePacked(schainName))
-        );
+        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
+        G2Operations.G2Point memory publicKey = G2Operations.getG2Zero();
+        if (nodeRotation.isRotationInProgress(keccak256(abi.encodePacked(schainName)))) {
+            publicKey = KeyStorage(
+                contractManager.getContract("KeyStorage")
+            ).getPreviousPublicKey(
+                keccak256(abi.encodePacked(schainName))
+            );
+        } else {
+            publicKey = KeyStorage(
+                contractManager.getContract("KeyStorage")
+            ).getCommonPublicKey(
+                keccak256(abi.encodePacked(schainName))
+            );
+        }
         return skaleVerifier.verify(
             Fp2Operations.Fp2Point({
                 a: signatureA,
