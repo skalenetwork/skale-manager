@@ -1158,146 +1158,6 @@
 :xref-ILocker-getAndUpdateLockedAmount-address-: xref:interfaces/delegation/ilocker.adoc#ILocker-getAndUpdateLockedAmount-address-
 :ILocker-getAndUpdateForbiddenForDelegationAmount: pass:normal[xref:interfaces/delegation/ilocker.adoc#ILocker-getAndUpdateForbiddenForDelegationAmount-address-[`ILocker.getAndUpdateForbiddenForDelegationAmount`]]
 :xref-ILocker-getAndUpdateForbiddenForDelegationAmount-address-: xref:interfaces/delegation/ilocker.adoc#ILocker-getAndUpdateForbiddenForDelegationAmount-address-
-:LockerMock: pass:normal[xref:test/lockermock.adoc#LockerMock[`LockerMock`]]
-:xref-LockerMock: xref:test/lockermock.adoc#LockerMock
-:LockerMock-getAndUpdateLockedAmount: pass:normal[xref:test/lockermock.adoc#LockerMock-getAndUpdateLockedAmount-address-[`LockerMock.getAndUpdateLockedAmount`]]
-:xref-LockerMock-getAndUpdateLockedAmount-address-: xref:test/lockermock.adoc#LockerMock-getAndUpdateLockedAmount-address-
-:LockerMock-getAndUpdateForbiddenForDelegationAmount: pass:normal[xref:test/lockermock.adoc#LockerMock-getAndUpdateForbiddenForDelegationAmount-address-[`LockerMock.getAndUpdateForbiddenForDelegationAmount`]]
-:xref-LockerMock-getAndUpdateForbiddenForDelegationAmount-address-: xref:test/lockermock.adoc#LockerMock-getAndUpdateForbiddenForDelegationAmount-address-
-:MathUtilsTester: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester[`MathUtilsTester`]]
-:xref-MathUtilsTester: xref:test/mathutilstester.adoc#MathUtilsTester
-:MathUtilsTester-boundedSub: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester-boundedSub-uint256-uint256-[`MathUtilsTester.boundedSub`]]
-:xref-MathUtilsTester-boundedSub-uint256-uint256-: xref:test/mathutilstester.adoc#MathUtilsTester-boundedSub-uint256-uint256-
-:MathUtilsTester-boundedSubWithoutEvent: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester-boundedSubWithoutEvent-uint256-uint256-[`MathUtilsTester.boundedSubWithoutEvent`]]
-:xref-MathUtilsTester-boundedSubWithoutEvent-uint256-uint256-: xref:test/mathutilstester.adoc#MathUtilsTester-boundedSubWithoutEvent-uint256-uint256-
-:MathUtilsTester-muchGreater: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester-muchGreater-uint256-uint256-[`MathUtilsTester.muchGreater`]]
-:xref-MathUtilsTester-muchGreater-uint256-uint256-: xref:test/mathutilstester.adoc#MathUtilsTester-muchGreater-uint256-uint256-
-:MathUtilsTester-approximatelyEqual: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester-approximatelyEqual-uint256-uint256-[`MathUtilsTester.approximatelyEqual`]]
-:xref-MathUtilsTester-approximatelyEqual-uint256-uint256-: xref:test/mathutilstester.adoc#MathUtilsTester-approximatelyEqual-uint256-uint256-
-:NodesMock: pass:normal[xref:test/nodesmock.adoc#NodesMock[`NodesMock`]]
-:xref-NodesMock: xref:test/nodesmock.adoc#NodesMock
-:NodesMock-nodesCount: pass:normal[xref:test/nodesmock.adoc#NodesMock-nodesCount-uint256[`NodesMock.nodesCount`]]
-:xref-NodesMock-nodesCount-uint256: xref:test/nodesmock.adoc#NodesMock-nodesCount-uint256
-:NodesMock-nodesLeft: pass:normal[xref:test/nodesmock.adoc#NodesMock-nodesLeft-uint256[`NodesMock.nodesLeft`]]
-:xref-NodesMock-nodesLeft-uint256: xref:test/nodesmock.adoc#NodesMock-nodesLeft-uint256
-:NodesMock-lastRewardDate: pass:normal[xref:test/nodesmock.adoc#NodesMock-lastRewardDate-mapping-uint256----uint256-[`NodesMock.lastRewardDate`]]
-:xref-NodesMock-lastRewardDate-mapping-uint256----uint256-: xref:test/nodesmock.adoc#NodesMock-lastRewardDate-mapping-uint256----uint256-
-:NodesMock-nodeLeft: pass:normal[xref:test/nodesmock.adoc#NodesMock-nodeLeft-mapping-uint256----bool-[`NodesMock.nodeLeft`]]
-:xref-NodesMock-nodeLeft-mapping-uint256----bool-: xref:test/nodesmock.adoc#NodesMock-nodeLeft-mapping-uint256----bool-
-:NodesMock-owner: pass:normal[xref:test/nodesmock.adoc#NodesMock-owner-mapping-uint256----uint256-[`NodesMock.owner`]]
-:xref-NodesMock-owner-mapping-uint256----uint256-: xref:test/nodesmock.adoc#NodesMock-owner-mapping-uint256----uint256-
-:NodesMock-registerNodes: pass:normal[xref:test/nodesmock.adoc#NodesMock-registerNodes-uint256-uint256-[`NodesMock.registerNodes`]]
-:xref-NodesMock-registerNodes-uint256-uint256-: xref:test/nodesmock.adoc#NodesMock-registerNodes-uint256-uint256-
-:NodesMock-removeNode: pass:normal[xref:test/nodesmock.adoc#NodesMock-removeNode-uint256-[`NodesMock.removeNode`]]
-:xref-NodesMock-removeNode-uint256-: xref:test/nodesmock.adoc#NodesMock-removeNode-uint256-
-:NodesMock-changeNodeLastRewardDate: pass:normal[xref:test/nodesmock.adoc#NodesMock-changeNodeLastRewardDate-uint256-[`NodesMock.changeNodeLastRewardDate`]]
-:xref-NodesMock-changeNodeLastRewardDate-uint256-: xref:test/nodesmock.adoc#NodesMock-changeNodeLastRewardDate-uint256-
-:NodesMock-getNodeLastRewardDate: pass:normal[xref:test/nodesmock.adoc#NodesMock-getNodeLastRewardDate-uint256-[`NodesMock.getNodeLastRewardDate`]]
-:xref-NodesMock-getNodeLastRewardDate-uint256-: xref:test/nodesmock.adoc#NodesMock-getNodeLastRewardDate-uint256-
-:NodesMock-isNodeLeft: pass:normal[xref:test/nodesmock.adoc#NodesMock-isNodeLeft-uint256-[`NodesMock.isNodeLeft`]]
-:xref-NodesMock-isNodeLeft-uint256-: xref:test/nodesmock.adoc#NodesMock-isNodeLeft-uint256-
-:NodesMock-getNumberOnlineNodes: pass:normal[xref:test/nodesmock.adoc#NodesMock-getNumberOnlineNodes--[`NodesMock.getNumberOnlineNodes`]]
-:xref-NodesMock-getNumberOnlineNodes--: xref:test/nodesmock.adoc#NodesMock-getNumberOnlineNodes--
-:NodesMock-getValidatorId: pass:normal[xref:test/nodesmock.adoc#NodesMock-getValidatorId-uint256-[`NodesMock.getValidatorId`]]
-:xref-NodesMock-getValidatorId-uint256-: xref:test/nodesmock.adoc#NodesMock-getValidatorId-uint256-
-:NodesMock-checkPossibilityToMaintainNode: pass:normal[xref:test/nodesmock.adoc#NodesMock-checkPossibilityToMaintainNode-uint256-uint256-[`NodesMock.checkPossibilityToMaintainNode`]]
-:xref-NodesMock-checkPossibilityToMaintainNode-uint256-uint256-: xref:test/nodesmock.adoc#NodesMock-checkPossibilityToMaintainNode-uint256-uint256-
-:PartialDifferencesTester: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester[`PartialDifferencesTester`]]
-:xref-PartialDifferencesTester: xref:test/partialdifferencestester.adoc#PartialDifferencesTester
-:PartialDifferencesTester-createSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-createSequence--[`PartialDifferencesTester.createSequence`]]
-:xref-PartialDifferencesTester-createSequence--: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-createSequence--
-:PartialDifferencesTester-addToSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-addToSequence-uint256-uint256-uint256-[`PartialDifferencesTester.addToSequence`]]
-:xref-PartialDifferencesTester-addToSequence-uint256-uint256-uint256-: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-addToSequence-uint256-uint256-uint256-
-:PartialDifferencesTester-subtractFromSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-subtractFromSequence-uint256-uint256-uint256-[`PartialDifferencesTester.subtractFromSequence`]]
-:xref-PartialDifferencesTester-subtractFromSequence-uint256-uint256-uint256-: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-subtractFromSequence-uint256-uint256-uint256-
-:PartialDifferencesTester-getAndUpdateSequenceItem: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-getAndUpdateSequenceItem-uint256-uint256-[`PartialDifferencesTester.getAndUpdateSequenceItem`]]
-:xref-PartialDifferencesTester-getAndUpdateSequenceItem-uint256-uint256-: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-getAndUpdateSequenceItem-uint256-uint256-
-:PartialDifferencesTester-reduceSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-reduceSequence-uint256-uint256-uint256-uint256-[`PartialDifferencesTester.reduceSequence`]]
-:xref-PartialDifferencesTester-reduceSequence-uint256-uint256-uint256-uint256-: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-reduceSequence-uint256-uint256-uint256-uint256-
-:PartialDifferencesTester-latestSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-latestSequence--[`PartialDifferencesTester.latestSequence`]]
-:xref-PartialDifferencesTester-latestSequence--: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-latestSequence--
-:ReentrancyTester: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester[`ReentrancyTester`]]
-:xref-ReentrancyTester: xref:test/reentrancytester.adoc#ReentrancyTester
-:ReentrancyTester-constructor: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-constructor-address-[`ReentrancyTester.constructor`]]
-:xref-ReentrancyTester-constructor-address-: xref:test/reentrancytester.adoc#ReentrancyTester-constructor-address-
-:ReentrancyTester-tokensReceived: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-tokensReceived-address-address-address-uint256-bytes-bytes-[`ReentrancyTester.tokensReceived`]]
-:xref-ReentrancyTester-tokensReceived-address-address-address-uint256-bytes-bytes-: xref:test/reentrancytester.adoc#ReentrancyTester-tokensReceived-address-address-address-uint256-bytes-bytes-
-:ReentrancyTester-tokensToSend: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-tokensToSend-address-address-address-uint256-bytes-bytes-[`ReentrancyTester.tokensToSend`]]
-:xref-ReentrancyTester-tokensToSend-address-address-address-uint256-bytes-bytes-: xref:test/reentrancytester.adoc#ReentrancyTester-tokensToSend-address-address-address-uint256-bytes-bytes-
-:ReentrancyTester-prepareToReentrancyCheck: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-prepareToReentrancyCheck--[`ReentrancyTester.prepareToReentrancyCheck`]]
-:xref-ReentrancyTester-prepareToReentrancyCheck--: xref:test/reentrancytester.adoc#ReentrancyTester-prepareToReentrancyCheck--
-:ReentrancyTester-prepareToBurningAttack: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-prepareToBurningAttack--[`ReentrancyTester.prepareToBurningAttack`]]
-:xref-ReentrancyTester-prepareToBurningAttack--: xref:test/reentrancytester.adoc#ReentrancyTester-prepareToBurningAttack--
-:ReentrancyTester-burningAttack: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-burningAttack--[`ReentrancyTester.burningAttack`]]
-:xref-ReentrancyTester-burningAttack--: xref:test/reentrancytester.adoc#ReentrancyTester-burningAttack--
-:SafeMock: pass:normal[xref:test/safemock.adoc#SafeMock[`SafeMock`]]
-:xref-SafeMock: xref:test/safemock.adoc#SafeMock
-:SafeMock-transferProxyAdminOwnership: pass:normal[xref:test/safemock.adoc#SafeMock-transferProxyAdminOwnership-contract-OwnableUpgradeSafe-address-[`SafeMock.transferProxyAdminOwnership`]]
-:xref-SafeMock-transferProxyAdminOwnership-contract-OwnableUpgradeSafe-address-: xref:test/safemock.adoc#SafeMock-transferProxyAdminOwnership-contract-OwnableUpgradeSafe-address-
-:SafeMock-destroy: pass:normal[xref:test/safemock.adoc#SafeMock-destroy--[`SafeMock.destroy`]]
-:xref-SafeMock-destroy--: xref:test/safemock.adoc#SafeMock-destroy--
-:SafeMock-multiSend: pass:normal[xref:test/safemock.adoc#SafeMock-multiSend-bytes-[`SafeMock.multiSend`]]
-:xref-SafeMock-multiSend-bytes-: xref:test/safemock.adoc#SafeMock-multiSend-bytes-
-:SchainsInternalMock: pass:normal[xref:test/schainsinternalmock.adoc#SchainsInternalMock[`SchainsInternalMock`]]
-:xref-SchainsInternalMock: xref:test/schainsinternalmock.adoc#SchainsInternalMock
-:SchainsInternalMock-removePlaceOfSchainOnNode: pass:normal[xref:test/schainsinternalmock.adoc#SchainsInternalMock-removePlaceOfSchainOnNode-bytes32-uint256-[`SchainsInternalMock.removePlaceOfSchainOnNode`]]
-:xref-SchainsInternalMock-removePlaceOfSchainOnNode-bytes32-uint256-: xref:test/schainsinternalmock.adoc#SchainsInternalMock-removePlaceOfSchainOnNode-bytes32-uint256-
-:SchainsInternalMock-removeNodeToLocked: pass:normal[xref:test/schainsinternalmock.adoc#SchainsInternalMock-removeNodeToLocked-uint256-[`SchainsInternalMock.removeNodeToLocked`]]
-:xref-SchainsInternalMock-removeNodeToLocked-uint256-: xref:test/schainsinternalmock.adoc#SchainsInternalMock-removeNodeToLocked-uint256-
-:SchainsInternalMock-removeSchainToExceptionNode: pass:normal[xref:test/schainsinternalmock.adoc#SchainsInternalMock-removeSchainToExceptionNode-bytes32-[`SchainsInternalMock.removeSchainToExceptionNode`]]
-:xref-SchainsInternalMock-removeSchainToExceptionNode-bytes32-: xref:test/schainsinternalmock.adoc#SchainsInternalMock-removeSchainToExceptionNode-bytes32-
-:SegmentTreeTester: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester[`SegmentTreeTester`]]
-:xref-SegmentTreeTester: xref:test/segmenttreetester.adoc#SegmentTreeTester
-:SegmentTreeTester-initTree: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-initTree--[`SegmentTreeTester.initTree`]]
-:xref-SegmentTreeTester-initTree--: xref:test/segmenttreetester.adoc#SegmentTreeTester-initTree--
-:SegmentTreeTester-addElemInPlaces: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-addElemInPlaces-uint256-uint256-[`SegmentTreeTester.addElemInPlaces`]]
-:xref-SegmentTreeTester-addElemInPlaces-uint256-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-addElemInPlaces-uint256-uint256-
-:SegmentTreeTester-addToLast: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-addToLast-uint256-[`SegmentTreeTester.addToLast`]]
-:xref-SegmentTreeTester-addToLast-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-addToLast-uint256-
-:SegmentTreeTester-addToPlace: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-addToPlace-uint256-uint256-[`SegmentTreeTester.addToPlace`]]
-:xref-SegmentTreeTester-addToPlace-uint256-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-addToPlace-uint256-uint256-
-:SegmentTreeTester-removeFromPlace: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-removeFromPlace-uint256-uint256-[`SegmentTreeTester.removeFromPlace`]]
-:xref-SegmentTreeTester-removeFromPlace-uint256-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-removeFromPlace-uint256-uint256-
-:SegmentTreeTester-moveFromPlaceToPlace: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-moveFromPlaceToPlace-uint256-uint256-uint256-[`SegmentTreeTester.moveFromPlaceToPlace`]]
-:xref-SegmentTreeTester-moveFromPlaceToPlace-uint256-uint256-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-moveFromPlaceToPlace-uint256-uint256-uint256-
-:SegmentTreeTester-sumFromPlaceToLast: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-sumFromPlaceToLast-uint256-[`SegmentTreeTester.sumFromPlaceToLast`]]
-:xref-SegmentTreeTester-sumFromPlaceToLast-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-sumFromPlaceToLast-uint256-
-:SegmentTreeTester-getRandomElem: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-getRandomElem-uint256-[`SegmentTreeTester.getRandomElem`]]
-:xref-SegmentTreeTester-getRandomElem-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-getRandomElem-uint256-
-:SegmentTreeTester-getElem: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-getElem-uint256-[`SegmentTreeTester.getElem`]]
-:xref-SegmentTreeTester-getElem-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-getElem-uint256-
-:SegmentTreeTester-getSize: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-getSize--[`SegmentTreeTester.getSize`]]
-:xref-SegmentTreeTester-getSize--: xref:test/segmenttreetester.adoc#SegmentTreeTester-getSize--
-:SkaleDKGTester: pass:normal[xref:test/skaledkgtester.adoc#SkaleDKGTester[`SkaleDKGTester`]]
-:xref-SkaleDKGTester: xref:test/skaledkgtester.adoc#SkaleDKGTester
-:SkaleDKGTester-setSuccessfulDKGPublic: pass:normal[xref:test/skaledkgtester.adoc#SkaleDKGTester-setSuccessfulDKGPublic-bytes32-[`SkaleDKGTester.setSuccessfulDKGPublic`]]
-:xref-SkaleDKGTester-setSuccessfulDKGPublic-bytes32-: xref:test/skaledkgtester.adoc#SkaleDKGTester-setSuccessfulDKGPublic-bytes32-
-:SkaleManagerMock: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock[`SkaleManagerMock`]]
-:xref-SkaleManagerMock: xref:test/skalemanagermock.adoc#SkaleManagerMock
-:SkaleManagerMock-ADMIN_ROLE: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock-ADMIN_ROLE-bytes32[`SkaleManagerMock.ADMIN_ROLE`]]
-:xref-SkaleManagerMock-ADMIN_ROLE-bytes32: xref:test/skalemanagermock.adoc#SkaleManagerMock-ADMIN_ROLE-bytes32
-:SkaleManagerMock-constructor: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock-constructor-address-[`SkaleManagerMock.constructor`]]
-:xref-SkaleManagerMock-constructor-address-: xref:test/skalemanagermock.adoc#SkaleManagerMock-constructor-address-
-:SkaleManagerMock-payBounty: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock-payBounty-uint256-uint256-[`SkaleManagerMock.payBounty`]]
-:xref-SkaleManagerMock-payBounty-uint256-uint256-: xref:test/skalemanagermock.adoc#SkaleManagerMock-payBounty-uint256-uint256-
-:SkaleManagerMock-tokensReceived: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock-tokensReceived-address-address-address-uint256-bytes-bytes-[`SkaleManagerMock.tokensReceived`]]
-:xref-SkaleManagerMock-tokensReceived-address-address-address-uint256-bytes-bytes-: xref:test/skalemanagermock.adoc#SkaleManagerMock-tokensReceived-address-address-address-uint256-bytes-bytes-
-:SkaleTokenInternalTester: pass:normal[xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester[`SkaleTokenInternalTester`]]
-:xref-SkaleTokenInternalTester: xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester
-:SkaleTokenInternalTester-constructor: pass:normal[xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester-constructor-address-address---[`SkaleTokenInternalTester.constructor`]]
-:xref-SkaleTokenInternalTester-constructor-address-address---: xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester-constructor-address-address---
-:SkaleTokenInternalTester-getMsgData: pass:normal[xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester-getMsgData--[`SkaleTokenInternalTester.getMsgData`]]
-:xref-SkaleTokenInternalTester-getMsgData--: xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester-getMsgData--
-:TimeHelpersWithDebug: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug[`TimeHelpersWithDebug`]]
-:xref-TimeHelpersWithDebug: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug
-:TimeHelpersWithDebug-skipTime: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-skipTime-uint256-[`TimeHelpersWithDebug.skipTime`]]
-:xref-TimeHelpersWithDebug-skipTime-uint256-: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-skipTime-uint256-
-:TimeHelpersWithDebug-initialize: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-initialize--[`TimeHelpersWithDebug.initialize`]]
-:xref-TimeHelpersWithDebug-initialize--: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-initialize--
-:TimeHelpersWithDebug-timestampToMonth: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-timestampToMonth-uint256-[`TimeHelpersWithDebug.timestampToMonth`]]
-:xref-TimeHelpersWithDebug-timestampToMonth-uint256-: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-timestampToMonth-uint256-
-:TimeHelpersWithDebug-monthToTimestamp: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-monthToTimestamp-uint256-[`TimeHelpersWithDebug.monthToTimestamp`]]
-:xref-TimeHelpersWithDebug-monthToTimestamp-uint256-: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-monthToTimestamp-uint256-
 :BokkyPooBahsDateTimeLibrary: pass:normal[xref:thirdparty/bokkypoobahsdatetimelibrary.adoc#BokkyPooBahsDateTimeLibrary[`BokkyPooBahsDateTimeLibrary`]]
 :xref-BokkyPooBahsDateTimeLibrary: xref:thirdparty/bokkypoobahsdatetimelibrary.adoc#BokkyPooBahsDateTimeLibrary
 :BokkyPooBahsDateTimeLibrary-SECONDS_PER_DAY: pass:normal[xref:thirdparty/bokkypoobahsdatetimelibrary.adoc#BokkyPooBahsDateTimeLibrary-SECONDS_PER_DAY-uint256[`BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY`]]
@@ -1647,35 +1507,35 @@ Proof-of-Use requirements.
 --
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=TokenState-onlyLockerManager-->onlyLockerManager</a>+++ `++onlyLockerManager()++` [.item-kind]#modifier#
+== +++<a class="heading-anchor" area-hidden="true" name=TokenState-onlyLockerManager-->onlyLockerManager</a>+++ `++onlyLockerManager()++` [.item-kind]#modifier#
 
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=TokenState-getAndUpdateLockedAmount-address->getAndUpdateLockedAmount</a>+++ `++getAndUpdateLockedAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=TokenState-getAndUpdateLockedAmount-address->getAndUpdateLockedAmount</a>+++ `++getAndUpdateLockedAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=TokenState-getAndUpdateForbiddenForDelegationAmount-address->getAndUpdateForbiddenForDelegationAmount</a>+++ `++getAndUpdateForbiddenForDelegationAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=TokenState-getAndUpdateForbiddenForDelegationAmount-address->getAndUpdateForbiddenForDelegationAmount</a>+++ `++getAndUpdateForbiddenForDelegationAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++++` [.item-kind]#external#
 
 See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=TokenState-removeLocker-string->removeLocker</a>+++ `++removeLocker(++[.var-type]#++string++#++ ++[.var-name]#++locker++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=TokenState-removeLocker-string->removeLocker</a>+++ `++removeLocker(++[.var-type]#++string++#++ ++[.var-name]#++locker++#++)++` [.item-kind]#external#
 
 Allows the Owner to remove a contract from the locker.
 
 Emits a {LockerWasRemoved} event.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=TokenState-initialize-address->initialize</a>+++ `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractManagerAddress++#++)++` [.item-kind]#public#
+== +++<a class="heading-anchor" area-hidden="true" name=TokenState-initialize-address->initialize</a>+++ `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractManagerAddress++#++)++` [.item-kind]#public#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=TokenState-addLocker-string->addLocker</a>+++ `++addLocker(++[.var-type]#++string++#++ ++[.var-name]#++locker++#++)++` [.item-kind]#public#
+== +++<a class="heading-anchor" area-hidden="true" name=TokenState-addLocker-string->addLocker</a>+++ `++addLocker(++[.var-type]#++string++#++ ++[.var-name]#++locker++#++)++` [.item-kind]#public#
 
 Allows the Owner to add a contract to the Locker.
 

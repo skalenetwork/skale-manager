@@ -44,7 +44,7 @@
 
 {{#each ownModifiers}}
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name={{anchor}}>{{name}}</a>+++ `++{{name}}({{> typed-variable-array args}})++` [.item-kind]#modifier#
+== +++<a class="heading-anchor" area-hidden="true" name={{anchor}}>{{name}}</a>+++ `++{{name}}({{> typed-variable-array args}})++` [.item-kind]#modifier#
 
 {{natspec.devdoc}}
 
@@ -52,7 +52,7 @@
 
 {{#each ownFunctions}}
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name={{anchor}}>{{name}}</a>+++ `++{{name}}({{> typed-variable-array args}}){{#if outputs}} → {{> typed-variable-array outputs}}{{/if}}++` [.item-kind]#{{visibility}}#
+== +++<a class="heading-anchor" area-hidden="true" name={{anchor}}>{{name}}</a>+++ `++{{name}}({{> typed-variable-array args}}){{#if outputs}} → {{> typed-variable-array outputs}}{{/if}}++` [.item-kind]#{{visibility}}#
 
 {{natspec.devdoc}}
 

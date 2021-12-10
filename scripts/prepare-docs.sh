@@ -13,6 +13,8 @@ fi
 rm -rf "$OUTDIR"
 
 solidity-docgen \
+  -i contracts/ \
+  -e contracts/test/ \
   -H docs/helpers.js \
   --solc-module=./scripts/prepare-docs-solc.js \
   -t docs \
@@ -20,3 +22,5 @@ solidity-docgen \
   --extension=adoc
 
 node scripts/gen-nav.js "$OUTDIR" > "$OUTDIR/../nav.adoc"
+
+rm -rf "$OUTDIR/thirdparty/"

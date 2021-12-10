@@ -1158,146 +1158,6 @@
 :xref-ILocker-getAndUpdateLockedAmount-address-: xref:interfaces/delegation/ilocker.adoc#ILocker-getAndUpdateLockedAmount-address-
 :ILocker-getAndUpdateForbiddenForDelegationAmount: pass:normal[xref:interfaces/delegation/ilocker.adoc#ILocker-getAndUpdateForbiddenForDelegationAmount-address-[`ILocker.getAndUpdateForbiddenForDelegationAmount`]]
 :xref-ILocker-getAndUpdateForbiddenForDelegationAmount-address-: xref:interfaces/delegation/ilocker.adoc#ILocker-getAndUpdateForbiddenForDelegationAmount-address-
-:LockerMock: pass:normal[xref:test/lockermock.adoc#LockerMock[`LockerMock`]]
-:xref-LockerMock: xref:test/lockermock.adoc#LockerMock
-:LockerMock-getAndUpdateLockedAmount: pass:normal[xref:test/lockermock.adoc#LockerMock-getAndUpdateLockedAmount-address-[`LockerMock.getAndUpdateLockedAmount`]]
-:xref-LockerMock-getAndUpdateLockedAmount-address-: xref:test/lockermock.adoc#LockerMock-getAndUpdateLockedAmount-address-
-:LockerMock-getAndUpdateForbiddenForDelegationAmount: pass:normal[xref:test/lockermock.adoc#LockerMock-getAndUpdateForbiddenForDelegationAmount-address-[`LockerMock.getAndUpdateForbiddenForDelegationAmount`]]
-:xref-LockerMock-getAndUpdateForbiddenForDelegationAmount-address-: xref:test/lockermock.adoc#LockerMock-getAndUpdateForbiddenForDelegationAmount-address-
-:MathUtilsTester: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester[`MathUtilsTester`]]
-:xref-MathUtilsTester: xref:test/mathutilstester.adoc#MathUtilsTester
-:MathUtilsTester-boundedSub: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester-boundedSub-uint256-uint256-[`MathUtilsTester.boundedSub`]]
-:xref-MathUtilsTester-boundedSub-uint256-uint256-: xref:test/mathutilstester.adoc#MathUtilsTester-boundedSub-uint256-uint256-
-:MathUtilsTester-boundedSubWithoutEvent: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester-boundedSubWithoutEvent-uint256-uint256-[`MathUtilsTester.boundedSubWithoutEvent`]]
-:xref-MathUtilsTester-boundedSubWithoutEvent-uint256-uint256-: xref:test/mathutilstester.adoc#MathUtilsTester-boundedSubWithoutEvent-uint256-uint256-
-:MathUtilsTester-muchGreater: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester-muchGreater-uint256-uint256-[`MathUtilsTester.muchGreater`]]
-:xref-MathUtilsTester-muchGreater-uint256-uint256-: xref:test/mathutilstester.adoc#MathUtilsTester-muchGreater-uint256-uint256-
-:MathUtilsTester-approximatelyEqual: pass:normal[xref:test/mathutilstester.adoc#MathUtilsTester-approximatelyEqual-uint256-uint256-[`MathUtilsTester.approximatelyEqual`]]
-:xref-MathUtilsTester-approximatelyEqual-uint256-uint256-: xref:test/mathutilstester.adoc#MathUtilsTester-approximatelyEqual-uint256-uint256-
-:NodesMock: pass:normal[xref:test/nodesmock.adoc#NodesMock[`NodesMock`]]
-:xref-NodesMock: xref:test/nodesmock.adoc#NodesMock
-:NodesMock-nodesCount: pass:normal[xref:test/nodesmock.adoc#NodesMock-nodesCount-uint256[`NodesMock.nodesCount`]]
-:xref-NodesMock-nodesCount-uint256: xref:test/nodesmock.adoc#NodesMock-nodesCount-uint256
-:NodesMock-nodesLeft: pass:normal[xref:test/nodesmock.adoc#NodesMock-nodesLeft-uint256[`NodesMock.nodesLeft`]]
-:xref-NodesMock-nodesLeft-uint256: xref:test/nodesmock.adoc#NodesMock-nodesLeft-uint256
-:NodesMock-lastRewardDate: pass:normal[xref:test/nodesmock.adoc#NodesMock-lastRewardDate-mapping-uint256----uint256-[`NodesMock.lastRewardDate`]]
-:xref-NodesMock-lastRewardDate-mapping-uint256----uint256-: xref:test/nodesmock.adoc#NodesMock-lastRewardDate-mapping-uint256----uint256-
-:NodesMock-nodeLeft: pass:normal[xref:test/nodesmock.adoc#NodesMock-nodeLeft-mapping-uint256----bool-[`NodesMock.nodeLeft`]]
-:xref-NodesMock-nodeLeft-mapping-uint256----bool-: xref:test/nodesmock.adoc#NodesMock-nodeLeft-mapping-uint256----bool-
-:NodesMock-owner: pass:normal[xref:test/nodesmock.adoc#NodesMock-owner-mapping-uint256----uint256-[`NodesMock.owner`]]
-:xref-NodesMock-owner-mapping-uint256----uint256-: xref:test/nodesmock.adoc#NodesMock-owner-mapping-uint256----uint256-
-:NodesMock-registerNodes: pass:normal[xref:test/nodesmock.adoc#NodesMock-registerNodes-uint256-uint256-[`NodesMock.registerNodes`]]
-:xref-NodesMock-registerNodes-uint256-uint256-: xref:test/nodesmock.adoc#NodesMock-registerNodes-uint256-uint256-
-:NodesMock-removeNode: pass:normal[xref:test/nodesmock.adoc#NodesMock-removeNode-uint256-[`NodesMock.removeNode`]]
-:xref-NodesMock-removeNode-uint256-: xref:test/nodesmock.adoc#NodesMock-removeNode-uint256-
-:NodesMock-changeNodeLastRewardDate: pass:normal[xref:test/nodesmock.adoc#NodesMock-changeNodeLastRewardDate-uint256-[`NodesMock.changeNodeLastRewardDate`]]
-:xref-NodesMock-changeNodeLastRewardDate-uint256-: xref:test/nodesmock.adoc#NodesMock-changeNodeLastRewardDate-uint256-
-:NodesMock-getNodeLastRewardDate: pass:normal[xref:test/nodesmock.adoc#NodesMock-getNodeLastRewardDate-uint256-[`NodesMock.getNodeLastRewardDate`]]
-:xref-NodesMock-getNodeLastRewardDate-uint256-: xref:test/nodesmock.adoc#NodesMock-getNodeLastRewardDate-uint256-
-:NodesMock-isNodeLeft: pass:normal[xref:test/nodesmock.adoc#NodesMock-isNodeLeft-uint256-[`NodesMock.isNodeLeft`]]
-:xref-NodesMock-isNodeLeft-uint256-: xref:test/nodesmock.adoc#NodesMock-isNodeLeft-uint256-
-:NodesMock-getNumberOnlineNodes: pass:normal[xref:test/nodesmock.adoc#NodesMock-getNumberOnlineNodes--[`NodesMock.getNumberOnlineNodes`]]
-:xref-NodesMock-getNumberOnlineNodes--: xref:test/nodesmock.adoc#NodesMock-getNumberOnlineNodes--
-:NodesMock-getValidatorId: pass:normal[xref:test/nodesmock.adoc#NodesMock-getValidatorId-uint256-[`NodesMock.getValidatorId`]]
-:xref-NodesMock-getValidatorId-uint256-: xref:test/nodesmock.adoc#NodesMock-getValidatorId-uint256-
-:NodesMock-checkPossibilityToMaintainNode: pass:normal[xref:test/nodesmock.adoc#NodesMock-checkPossibilityToMaintainNode-uint256-uint256-[`NodesMock.checkPossibilityToMaintainNode`]]
-:xref-NodesMock-checkPossibilityToMaintainNode-uint256-uint256-: xref:test/nodesmock.adoc#NodesMock-checkPossibilityToMaintainNode-uint256-uint256-
-:PartialDifferencesTester: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester[`PartialDifferencesTester`]]
-:xref-PartialDifferencesTester: xref:test/partialdifferencestester.adoc#PartialDifferencesTester
-:PartialDifferencesTester-createSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-createSequence--[`PartialDifferencesTester.createSequence`]]
-:xref-PartialDifferencesTester-createSequence--: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-createSequence--
-:PartialDifferencesTester-addToSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-addToSequence-uint256-uint256-uint256-[`PartialDifferencesTester.addToSequence`]]
-:xref-PartialDifferencesTester-addToSequence-uint256-uint256-uint256-: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-addToSequence-uint256-uint256-uint256-
-:PartialDifferencesTester-subtractFromSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-subtractFromSequence-uint256-uint256-uint256-[`PartialDifferencesTester.subtractFromSequence`]]
-:xref-PartialDifferencesTester-subtractFromSequence-uint256-uint256-uint256-: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-subtractFromSequence-uint256-uint256-uint256-
-:PartialDifferencesTester-getAndUpdateSequenceItem: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-getAndUpdateSequenceItem-uint256-uint256-[`PartialDifferencesTester.getAndUpdateSequenceItem`]]
-:xref-PartialDifferencesTester-getAndUpdateSequenceItem-uint256-uint256-: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-getAndUpdateSequenceItem-uint256-uint256-
-:PartialDifferencesTester-reduceSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-reduceSequence-uint256-uint256-uint256-uint256-[`PartialDifferencesTester.reduceSequence`]]
-:xref-PartialDifferencesTester-reduceSequence-uint256-uint256-uint256-uint256-: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-reduceSequence-uint256-uint256-uint256-uint256-
-:PartialDifferencesTester-latestSequence: pass:normal[xref:test/partialdifferencestester.adoc#PartialDifferencesTester-latestSequence--[`PartialDifferencesTester.latestSequence`]]
-:xref-PartialDifferencesTester-latestSequence--: xref:test/partialdifferencestester.adoc#PartialDifferencesTester-latestSequence--
-:ReentrancyTester: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester[`ReentrancyTester`]]
-:xref-ReentrancyTester: xref:test/reentrancytester.adoc#ReentrancyTester
-:ReentrancyTester-constructor: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-constructor-address-[`ReentrancyTester.constructor`]]
-:xref-ReentrancyTester-constructor-address-: xref:test/reentrancytester.adoc#ReentrancyTester-constructor-address-
-:ReentrancyTester-tokensReceived: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-tokensReceived-address-address-address-uint256-bytes-bytes-[`ReentrancyTester.tokensReceived`]]
-:xref-ReentrancyTester-tokensReceived-address-address-address-uint256-bytes-bytes-: xref:test/reentrancytester.adoc#ReentrancyTester-tokensReceived-address-address-address-uint256-bytes-bytes-
-:ReentrancyTester-tokensToSend: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-tokensToSend-address-address-address-uint256-bytes-bytes-[`ReentrancyTester.tokensToSend`]]
-:xref-ReentrancyTester-tokensToSend-address-address-address-uint256-bytes-bytes-: xref:test/reentrancytester.adoc#ReentrancyTester-tokensToSend-address-address-address-uint256-bytes-bytes-
-:ReentrancyTester-prepareToReentrancyCheck: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-prepareToReentrancyCheck--[`ReentrancyTester.prepareToReentrancyCheck`]]
-:xref-ReentrancyTester-prepareToReentrancyCheck--: xref:test/reentrancytester.adoc#ReentrancyTester-prepareToReentrancyCheck--
-:ReentrancyTester-prepareToBurningAttack: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-prepareToBurningAttack--[`ReentrancyTester.prepareToBurningAttack`]]
-:xref-ReentrancyTester-prepareToBurningAttack--: xref:test/reentrancytester.adoc#ReentrancyTester-prepareToBurningAttack--
-:ReentrancyTester-burningAttack: pass:normal[xref:test/reentrancytester.adoc#ReentrancyTester-burningAttack--[`ReentrancyTester.burningAttack`]]
-:xref-ReentrancyTester-burningAttack--: xref:test/reentrancytester.adoc#ReentrancyTester-burningAttack--
-:SafeMock: pass:normal[xref:test/safemock.adoc#SafeMock[`SafeMock`]]
-:xref-SafeMock: xref:test/safemock.adoc#SafeMock
-:SafeMock-transferProxyAdminOwnership: pass:normal[xref:test/safemock.adoc#SafeMock-transferProxyAdminOwnership-contract-OwnableUpgradeSafe-address-[`SafeMock.transferProxyAdminOwnership`]]
-:xref-SafeMock-transferProxyAdminOwnership-contract-OwnableUpgradeSafe-address-: xref:test/safemock.adoc#SafeMock-transferProxyAdminOwnership-contract-OwnableUpgradeSafe-address-
-:SafeMock-destroy: pass:normal[xref:test/safemock.adoc#SafeMock-destroy--[`SafeMock.destroy`]]
-:xref-SafeMock-destroy--: xref:test/safemock.adoc#SafeMock-destroy--
-:SafeMock-multiSend: pass:normal[xref:test/safemock.adoc#SafeMock-multiSend-bytes-[`SafeMock.multiSend`]]
-:xref-SafeMock-multiSend-bytes-: xref:test/safemock.adoc#SafeMock-multiSend-bytes-
-:SchainsInternalMock: pass:normal[xref:test/schainsinternalmock.adoc#SchainsInternalMock[`SchainsInternalMock`]]
-:xref-SchainsInternalMock: xref:test/schainsinternalmock.adoc#SchainsInternalMock
-:SchainsInternalMock-removePlaceOfSchainOnNode: pass:normal[xref:test/schainsinternalmock.adoc#SchainsInternalMock-removePlaceOfSchainOnNode-bytes32-uint256-[`SchainsInternalMock.removePlaceOfSchainOnNode`]]
-:xref-SchainsInternalMock-removePlaceOfSchainOnNode-bytes32-uint256-: xref:test/schainsinternalmock.adoc#SchainsInternalMock-removePlaceOfSchainOnNode-bytes32-uint256-
-:SchainsInternalMock-removeNodeToLocked: pass:normal[xref:test/schainsinternalmock.adoc#SchainsInternalMock-removeNodeToLocked-uint256-[`SchainsInternalMock.removeNodeToLocked`]]
-:xref-SchainsInternalMock-removeNodeToLocked-uint256-: xref:test/schainsinternalmock.adoc#SchainsInternalMock-removeNodeToLocked-uint256-
-:SchainsInternalMock-removeSchainToExceptionNode: pass:normal[xref:test/schainsinternalmock.adoc#SchainsInternalMock-removeSchainToExceptionNode-bytes32-[`SchainsInternalMock.removeSchainToExceptionNode`]]
-:xref-SchainsInternalMock-removeSchainToExceptionNode-bytes32-: xref:test/schainsinternalmock.adoc#SchainsInternalMock-removeSchainToExceptionNode-bytes32-
-:SegmentTreeTester: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester[`SegmentTreeTester`]]
-:xref-SegmentTreeTester: xref:test/segmenttreetester.adoc#SegmentTreeTester
-:SegmentTreeTester-initTree: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-initTree--[`SegmentTreeTester.initTree`]]
-:xref-SegmentTreeTester-initTree--: xref:test/segmenttreetester.adoc#SegmentTreeTester-initTree--
-:SegmentTreeTester-addElemInPlaces: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-addElemInPlaces-uint256-uint256-[`SegmentTreeTester.addElemInPlaces`]]
-:xref-SegmentTreeTester-addElemInPlaces-uint256-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-addElemInPlaces-uint256-uint256-
-:SegmentTreeTester-addToLast: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-addToLast-uint256-[`SegmentTreeTester.addToLast`]]
-:xref-SegmentTreeTester-addToLast-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-addToLast-uint256-
-:SegmentTreeTester-addToPlace: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-addToPlace-uint256-uint256-[`SegmentTreeTester.addToPlace`]]
-:xref-SegmentTreeTester-addToPlace-uint256-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-addToPlace-uint256-uint256-
-:SegmentTreeTester-removeFromPlace: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-removeFromPlace-uint256-uint256-[`SegmentTreeTester.removeFromPlace`]]
-:xref-SegmentTreeTester-removeFromPlace-uint256-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-removeFromPlace-uint256-uint256-
-:SegmentTreeTester-moveFromPlaceToPlace: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-moveFromPlaceToPlace-uint256-uint256-uint256-[`SegmentTreeTester.moveFromPlaceToPlace`]]
-:xref-SegmentTreeTester-moveFromPlaceToPlace-uint256-uint256-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-moveFromPlaceToPlace-uint256-uint256-uint256-
-:SegmentTreeTester-sumFromPlaceToLast: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-sumFromPlaceToLast-uint256-[`SegmentTreeTester.sumFromPlaceToLast`]]
-:xref-SegmentTreeTester-sumFromPlaceToLast-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-sumFromPlaceToLast-uint256-
-:SegmentTreeTester-getRandomElem: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-getRandomElem-uint256-[`SegmentTreeTester.getRandomElem`]]
-:xref-SegmentTreeTester-getRandomElem-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-getRandomElem-uint256-
-:SegmentTreeTester-getElem: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-getElem-uint256-[`SegmentTreeTester.getElem`]]
-:xref-SegmentTreeTester-getElem-uint256-: xref:test/segmenttreetester.adoc#SegmentTreeTester-getElem-uint256-
-:SegmentTreeTester-getSize: pass:normal[xref:test/segmenttreetester.adoc#SegmentTreeTester-getSize--[`SegmentTreeTester.getSize`]]
-:xref-SegmentTreeTester-getSize--: xref:test/segmenttreetester.adoc#SegmentTreeTester-getSize--
-:SkaleDKGTester: pass:normal[xref:test/skaledkgtester.adoc#SkaleDKGTester[`SkaleDKGTester`]]
-:xref-SkaleDKGTester: xref:test/skaledkgtester.adoc#SkaleDKGTester
-:SkaleDKGTester-setSuccessfulDKGPublic: pass:normal[xref:test/skaledkgtester.adoc#SkaleDKGTester-setSuccessfulDKGPublic-bytes32-[`SkaleDKGTester.setSuccessfulDKGPublic`]]
-:xref-SkaleDKGTester-setSuccessfulDKGPublic-bytes32-: xref:test/skaledkgtester.adoc#SkaleDKGTester-setSuccessfulDKGPublic-bytes32-
-:SkaleManagerMock: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock[`SkaleManagerMock`]]
-:xref-SkaleManagerMock: xref:test/skalemanagermock.adoc#SkaleManagerMock
-:SkaleManagerMock-ADMIN_ROLE: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock-ADMIN_ROLE-bytes32[`SkaleManagerMock.ADMIN_ROLE`]]
-:xref-SkaleManagerMock-ADMIN_ROLE-bytes32: xref:test/skalemanagermock.adoc#SkaleManagerMock-ADMIN_ROLE-bytes32
-:SkaleManagerMock-constructor: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock-constructor-address-[`SkaleManagerMock.constructor`]]
-:xref-SkaleManagerMock-constructor-address-: xref:test/skalemanagermock.adoc#SkaleManagerMock-constructor-address-
-:SkaleManagerMock-payBounty: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock-payBounty-uint256-uint256-[`SkaleManagerMock.payBounty`]]
-:xref-SkaleManagerMock-payBounty-uint256-uint256-: xref:test/skalemanagermock.adoc#SkaleManagerMock-payBounty-uint256-uint256-
-:SkaleManagerMock-tokensReceived: pass:normal[xref:test/skalemanagermock.adoc#SkaleManagerMock-tokensReceived-address-address-address-uint256-bytes-bytes-[`SkaleManagerMock.tokensReceived`]]
-:xref-SkaleManagerMock-tokensReceived-address-address-address-uint256-bytes-bytes-: xref:test/skalemanagermock.adoc#SkaleManagerMock-tokensReceived-address-address-address-uint256-bytes-bytes-
-:SkaleTokenInternalTester: pass:normal[xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester[`SkaleTokenInternalTester`]]
-:xref-SkaleTokenInternalTester: xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester
-:SkaleTokenInternalTester-constructor: pass:normal[xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester-constructor-address-address---[`SkaleTokenInternalTester.constructor`]]
-:xref-SkaleTokenInternalTester-constructor-address-address---: xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester-constructor-address-address---
-:SkaleTokenInternalTester-getMsgData: pass:normal[xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester-getMsgData--[`SkaleTokenInternalTester.getMsgData`]]
-:xref-SkaleTokenInternalTester-getMsgData--: xref:test/skaletokeninternaltester.adoc#SkaleTokenInternalTester-getMsgData--
-:TimeHelpersWithDebug: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug[`TimeHelpersWithDebug`]]
-:xref-TimeHelpersWithDebug: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug
-:TimeHelpersWithDebug-skipTime: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-skipTime-uint256-[`TimeHelpersWithDebug.skipTime`]]
-:xref-TimeHelpersWithDebug-skipTime-uint256-: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-skipTime-uint256-
-:TimeHelpersWithDebug-initialize: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-initialize--[`TimeHelpersWithDebug.initialize`]]
-:xref-TimeHelpersWithDebug-initialize--: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-initialize--
-:TimeHelpersWithDebug-timestampToMonth: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-timestampToMonth-uint256-[`TimeHelpersWithDebug.timestampToMonth`]]
-:xref-TimeHelpersWithDebug-timestampToMonth-uint256-: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-timestampToMonth-uint256-
-:TimeHelpersWithDebug-monthToTimestamp: pass:normal[xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-monthToTimestamp-uint256-[`TimeHelpersWithDebug.monthToTimestamp`]]
-:xref-TimeHelpersWithDebug-monthToTimestamp-uint256-: xref:test/timehelperswithdebug.adoc#TimeHelpersWithDebug-monthToTimestamp-uint256-
 :BokkyPooBahsDateTimeLibrary: pass:normal[xref:thirdparty/bokkypoobahsdatetimelibrary.adoc#BokkyPooBahsDateTimeLibrary[`BokkyPooBahsDateTimeLibrary`]]
 :xref-BokkyPooBahsDateTimeLibrary: xref:thirdparty/bokkypoobahsdatetimelibrary.adoc#BokkyPooBahsDateTimeLibrary
 :BokkyPooBahsDateTimeLibrary-SECONDS_PER_DAY: pass:normal[xref:thirdparty/bokkypoobahsdatetimelibrary.adoc#BokkyPooBahsDateTimeLibrary-SECONDS_PER_DAY-uint256[`BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY`]]
@@ -1742,28 +1602,28 @@ Note: Online nodes contain both Active and Leaving states.
 --
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-checkNodeExists-uint256->checkNodeExists</a>+++ `++checkNodeExists(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#modifier#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-checkNodeExists-uint256->checkNodeExists</a>+++ `++checkNodeExists(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#modifier#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-onlyNodeOrNodeManager-uint256->onlyNodeOrNodeManager</a>+++ `++onlyNodeOrNodeManager(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#modifier#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-onlyNodeOrNodeManager-uint256->onlyNodeOrNodeManager</a>+++ `++onlyNodeOrNodeManager(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#modifier#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-onlyCompliance-->onlyCompliance</a>+++ `++onlyCompliance()++` [.item-kind]#modifier#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-onlyCompliance-->onlyCompliance</a>+++ `++onlyCompliance()++` [.item-kind]#modifier#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-nonZeroIP-bytes4->nonZeroIP</a>+++ `++nonZeroIP(++[.var-type]#++bytes4++#++ ++[.var-name]#++ip++#++)++` [.item-kind]#modifier#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-nonZeroIP-bytes4->nonZeroIP</a>+++ `++nonZeroIP(++[.var-type]#++bytes4++#++ ++[.var-name]#++ip++#++)++` [.item-kind]#modifier#
 
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-removeSpaceFromNode-uint256-uint8->removeSpaceFromNode</a>+++ `++removeSpaceFromNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++space++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-removeSpaceFromNode-uint256-uint8->removeSpaceFromNode</a>+++ `++removeSpaceFromNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++space++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
 
 Allows Schains and SchainsInternal contracts to occupy available
 space on a node.
@@ -1771,24 +1631,24 @@ space on a node.
 Returns whether operation is successful.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-addSpaceToNode-uint256-uint8->addSpaceToNode</a>+++ `++addSpaceToNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++space++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-addSpaceToNode-uint256-uint8->addSpaceToNode</a>+++ `++addSpaceToNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++space++#++)++` [.item-kind]#external#
 
 Allows Schains contract to occupy free space on a node.
 
 Returns whether operation is successful.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-changeNodeLastRewardDate-uint256->changeNodeLastRewardDate</a>+++ `++changeNodeLastRewardDate(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-changeNodeLastRewardDate-uint256->changeNodeLastRewardDate</a>+++ `++changeNodeLastRewardDate(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
 
 Allows SkaleManager to change a node's last reward date.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-changeNodeFinishTime-uint256-uint256->changeNodeFinishTime</a>+++ `++changeNodeFinishTime(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-changeNodeFinishTime-uint256-uint256->changeNodeFinishTime</a>+++ `++changeNodeFinishTime(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++)++` [.item-kind]#external#
 
 Allows SkaleManager to change a node's finish time.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-createNode-address-struct-Nodes-NodeCreationParams->createNode</a>+++ `++createNode(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++struct Nodes.NodeCreationParams++#++ ++[.var-name]#++params++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-createNode-address-struct-Nodes-NodeCreationParams->createNode</a>+++ `++createNode(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++struct Nodes.NodeCreationParams++#++ ++[.var-name]#++params++#++)++` [.item-kind]#external#
 
 Allows SkaleManager contract to create new node and add it to the
 Nodes contract.
@@ -1803,7 +1663,7 @@ Requirements:
 - Node port must be greater than zero.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-initExit-uint256->initExit</a>+++ `++initExit(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-initExit-uint256->initExit</a>+++ `++initExit(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
 
 Allows SkaleManager contract to initiate a node exit procedure.
 
@@ -1812,7 +1672,7 @@ Returns whether the operation is successful.
 Emits an {ExitInitialized} event.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-completeExit-uint256->completeExit</a>+++ `++completeExit(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-completeExit-uint256->completeExit</a>+++ `++completeExit(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
 
 Allows SkaleManager contract to complete a node exit procedure.
 
@@ -1825,7 +1685,7 @@ Requirements:
 - Node must have already initialized a node exit procedure.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-deleteNodeForValidator-uint256-uint256->deleteNodeForValidator</a>+++ `++deleteNodeForValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-deleteNodeForValidator-uint256-uint256->deleteNodeForValidator</a>+++ `++deleteNodeForValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
 
 Allows SkaleManager contract to delete a validator's node.
 
@@ -1834,7 +1694,7 @@ Requirements:
 - Validator ID must exist.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-checkPossibilityCreatingNode-address->checkPossibilityCreatingNode</a>+++ `++checkPossibilityCreatingNode(++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-checkPossibilityCreatingNode-address->checkPossibilityCreatingNode</a>+++ `++checkPossibilityCreatingNode(++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#external#
 
 Allows SkaleManager contract to check whether a validator has
 sufficient stake to create another node.
@@ -1845,7 +1705,7 @@ Requirements:
 - Validator must have sufficient stake to operate an additional node.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-checkPossibilityToMaintainNode-uint256-uint256->checkPossibilityToMaintainNode</a>+++ `++checkPossibilityToMaintainNode(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-checkPossibilityToMaintainNode-uint256-uint256->checkPossibilityToMaintainNode</a>+++ `++checkPossibilityToMaintainNode(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
 
 Allows SkaleManager contract to check whether a validator has
 sufficient stake to maintain a node.
@@ -1857,7 +1717,7 @@ Requirements:
 - Validator ID and nodeIndex must both exist.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-setNodeInMaintenance-uint256->setNodeInMaintenance</a>+++ `++setNodeInMaintenance(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-setNodeInMaintenance-uint256->setNodeInMaintenance</a>+++ `++setNodeInMaintenance(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
 
 Allows Node to set In_Maintenance status.
 
@@ -1867,7 +1727,7 @@ Requirements:
 - `msg.sender` must be owner of Node, validator, or SkaleManager.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-removeNodeFromInMaintenance-uint256->removeNodeFromInMaintenance</a>+++ `++removeNodeFromInMaintenance(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-removeNodeFromInMaintenance-uint256->removeNodeFromInMaintenance</a>+++ `++removeNodeFromInMaintenance(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
 
 Allows Node to remove In_Maintenance status.
 
@@ -1877,49 +1737,49 @@ Requirements:
 - `msg.sender` must be owner of Node, validator, or SkaleManager.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-setNodeIncompliant-uint256->setNodeIncompliant</a>+++ `++setNodeIncompliant(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-setNodeIncompliant-uint256->setNodeIncompliant</a>+++ `++setNodeIncompliant(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
 
 Marks the node as incompliant
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-setNodeCompliant-uint256->setNodeCompliant</a>+++ `++setNodeCompliant(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-setNodeCompliant-uint256->setNodeCompliant</a>+++ `++setNodeCompliant(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
 
 Marks the node as compliant
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-setDomainName-uint256-string->setDomainName</a>+++ `++setDomainName(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++string++#++ ++[.var-name]#++domainName++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-setDomainName-uint256-string->setDomainName</a>+++ `++setDomainName(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++string++#++ ++[.var-name]#++domainName++#++)++` [.item-kind]#external#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-makeNodeVisible-uint256->makeNodeVisible</a>+++ `++makeNodeVisible(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-makeNodeVisible-uint256->makeNodeVisible</a>+++ `++makeNodeVisible(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-makeNodeInvisible-uint256->makeNodeInvisible</a>+++ `++makeNodeInvisible(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-makeNodeInvisible-uint256->makeNodeInvisible</a>+++ `++makeNodeInvisible(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-changeIP-uint256-bytes4-bytes4->changeIP</a>+++ `++changeIP(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++newIP++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++newPublicIP++#++)++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-changeIP-uint256-bytes4-bytes4->changeIP</a>+++ `++changeIP(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++newIP++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++newPublicIP++#++)++` [.item-kind]#external#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getRandomNodeWithFreeSpace-uint8-struct-Random-RandomGenerator->getRandomNodeWithFreeSpace</a>+++ `++getRandomNodeWithFreeSpace(++[.var-type]#++uint8++#++ ++[.var-name]#++freeSpace++#++, ++[.var-type]#++struct Random.RandomGenerator++#++ ++[.var-name]#++randomGenerator++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getRandomNodeWithFreeSpace-uint8-struct-Random-RandomGenerator->getRandomNodeWithFreeSpace</a>+++ `++getRandomNodeWithFreeSpace(++[.var-type]#++uint8++#++ ++[.var-name]#++freeSpace++#++, ++[.var-type]#++struct Random.RandomGenerator++#++ ++[.var-name]#++randomGenerator++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isTimeForReward-uint256->isTimeForReward</a>+++ `++isTimeForReward(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isTimeForReward-uint256->isTimeForReward</a>+++ `++isTimeForReward(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
 
 Checks whether it is time for a node's reward.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeIP-uint256->getNodeIP</a>+++ `++getNodeIP(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bytes4++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeIP-uint256->getNodeIP</a>+++ `++getNodeIP(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bytes4++#++++` [.item-kind]#external#
 
 Returns IP address of a given node.
 
@@ -1928,7 +1788,7 @@ Requirements:
 - Node must exist.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeDomainName-uint256->getNodeDomainName</a>+++ `++getNodeDomainName(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++string++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeDomainName-uint256->getNodeDomainName</a>+++ `++getNodeDomainName(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++string++#++++` [.item-kind]#external#
 
 Returns domain name of a given node.
 
@@ -1937,7 +1797,7 @@ Requirements:
 - Node must exist.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodePort-uint256->getNodePort</a>+++ `++getNodePort(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint16++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodePort-uint256->getNodePort</a>+++ `++getNodePort(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint16++#++++` [.item-kind]#external#
 
 Returns the port of a given node.
 
@@ -1946,64 +1806,64 @@ Requirements:
 - Node must exist.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodePublicKey-uint256->getNodePublicKey</a>+++ `++getNodePublicKey(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bytes32[2]++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodePublicKey-uint256->getNodePublicKey</a>+++ `++getNodePublicKey(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bytes32[2]++#++++` [.item-kind]#external#
 
 Returns the public key of a given node.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeAddress-uint256->getNodeAddress</a>+++ `++getNodeAddress(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++address++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeAddress-uint256->getNodeAddress</a>+++ `++getNodeAddress(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++address++#++++` [.item-kind]#external#
 
 Returns an address of a given node.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeFinishTime-uint256->getNodeFinishTime</a>+++ `++getNodeFinishTime(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeFinishTime-uint256->getNodeFinishTime</a>+++ `++getNodeFinishTime(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
 
 Returns the finish exit time of a given node.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeLeft-uint256->isNodeLeft</a>+++ `++isNodeLeft(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeLeft-uint256->isNodeLeft</a>+++ `++isNodeLeft(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
 
 Checks whether a node has left the network.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeInMaintenance-uint256->isNodeInMaintenance</a>+++ `++isNodeInMaintenance(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeInMaintenance-uint256->isNodeInMaintenance</a>+++ `++isNodeInMaintenance(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeLastRewardDate-uint256->getNodeLastRewardDate</a>+++ `++getNodeLastRewardDate(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeLastRewardDate-uint256->getNodeLastRewardDate</a>+++ `++getNodeLastRewardDate(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
 
 Returns a given node's last reward date.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeNextRewardDate-uint256->getNodeNextRewardDate</a>+++ `++getNodeNextRewardDate(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeNextRewardDate-uint256->getNodeNextRewardDate</a>+++ `++getNodeNextRewardDate(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
 
 Returns a given node's next reward date.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNumberOfNodes-->getNumberOfNodes</a>+++ `++getNumberOfNodes() → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNumberOfNodes-->getNumberOfNodes</a>+++ `++getNumberOfNodes() → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
 
 Returns the total number of registered nodes.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNumberOnlineNodes-->getNumberOnlineNodes</a>+++ `++getNumberOnlineNodes() → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNumberOnlineNodes-->getNumberOnlineNodes</a>+++ `++getNumberOnlineNodes() → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
 
 Returns the total number of online nodes.
 
 Note: Online nodes are equal to the number of active plus leaving nodes.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getActiveNodeIds-->getActiveNodeIds</a>+++ `++getActiveNodeIds() → ++[.var-type]#++uint256[]++#++ ++[.var-name]#++activeNodeIds++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getActiveNodeIds-->getActiveNodeIds</a>+++ `++getActiveNodeIds() → ++[.var-type]#++uint256[]++#++ ++[.var-name]#++activeNodeIds++#++++` [.item-kind]#external#
 
 Return active node IDs.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeStatus-uint256->getNodeStatus</a>+++ `++getNodeStatus(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++enum Nodes.NodeStatus++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getNodeStatus-uint256->getNodeStatus</a>+++ `++getNodeStatus(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++enum Nodes.NodeStatus++#++++` [.item-kind]#external#
 
 Return a given node's current status.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getValidatorNodeIndexes-uint256->getValidatorNodeIndexes</a>+++ `++getValidatorNodeIndexes(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256[]++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getValidatorNodeIndexes-uint256->getValidatorNodeIndexes</a>+++ `++getValidatorNodeIndexes(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256[]++#++++` [.item-kind]#external#
 
 Return a validator's linked nodes.
 
@@ -2012,37 +1872,37 @@ Requirements:
 - Validator ID must exist.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-countNodesWithFreeSpace-uint8->countNodesWithFreeSpace</a>+++ `++countNodesWithFreeSpace(++[.var-type]#++uint8++#++ ++[.var-name]#++freeSpace++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++count++#++++` [.item-kind]#external#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-countNodesWithFreeSpace-uint8->countNodesWithFreeSpace</a>+++ `++countNodesWithFreeSpace(++[.var-type]#++uint8++#++ ++[.var-name]#++freeSpace++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++count++#++++` [.item-kind]#external#
 
 Returns number of nodes with available space.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-initialize-address->initialize</a>+++ `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractsAddress++#++)++` [.item-kind]#public#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-initialize-address->initialize</a>+++ `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractsAddress++#++)++` [.item-kind]#public#
 
 constructor in Permissions approach.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getValidatorId-uint256->getValidatorId</a>+++ `++getValidatorId(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-getValidatorId-uint256->getValidatorId</a>+++ `++getValidatorId(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
 
 Returns the Validator ID for a given node.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeExist-address-uint256->isNodeExist</a>+++ `++isNodeExist(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeExist-address-uint256->isNodeExist</a>+++ `++isNodeExist(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
 
 Checks whether a node exists for a given address.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeActive-uint256->isNodeActive</a>+++ `++isNodeActive(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeActive-uint256->isNodeActive</a>+++ `++isNodeActive(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
 
 Checks whether a node's status is Active.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeLeaving-uint256->isNodeLeaving</a>+++ `++isNodeLeaving(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-isNodeLeaving-uint256->isNodeLeaving</a>+++ `++isNodeLeaving(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
 
 Checks whether a node's status is Leaving.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-_removeNodeFromSpaceToNodes-uint256-uint8->_removeNodeFromSpaceToNodes</a>+++ `++_removeNodeFromSpaceToNodes(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++space++#++)++` [.item-kind]#internal#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-_removeNodeFromSpaceToNodes-uint256-uint8->_removeNodeFromSpaceToNodes</a>+++ `++_removeNodeFromSpaceToNodes(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++space++#++)++` [.item-kind]#internal#
 
 
 
