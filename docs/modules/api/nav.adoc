@@ -1,5 +1,4 @@
 .API
-* xref:thirdparty/BokkyPooBahsDateTimeLibrary.adoc[Bokky Poo Bahs Date Time Library]
 * xref:BountyV2.adoc[Bounty V 2]
 * xref:ConstantsHolder.adoc[Constants Holder]
 * xref:ContractManager.adoc[Contract Manager]
@@ -7,8 +6,6 @@
 * xref:delegation/DelegationController.adoc[Delegation Controller]
 * xref:delegation/DelegationPeriodManager.adoc[Delegation Period Manager]
 * xref:delegation/Distributor.adoc[Distributor]
-* xref:thirdparty/ECDH.adoc[ECDH]
-* xref:thirdparty/openzeppelin/ERC777.adoc[ERC 777]
 * xref:utils/Fp2Operations.adoc[Fp 2 Operations]
 * xref:utils/FractionUtils.adoc[Fraction Utils]
 * xref:utils/G1Operations.adoc[G 1 Operations]
