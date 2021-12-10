@@ -14,9 +14,11 @@ function getPageTitle (directory) {
   return startCase(directory);
 }
 
+const exceptionFolders = ["test/", "interfaces/"];
+
 const files = proc.execFileSync(
   'find', [baseDir, '-type', 'f'], { encoding: 'utf8' }
-).split('\n').filter(s => s !== '');
+).split('\n').filter(s => s !== '' && exceptionFolders.every((folder) => s.indexOf(folder) == -1));
 
 const links = files.map((file) => {
   const doc = file.replace(baseDir, '').replace(/^\/|\/$/g, '');
