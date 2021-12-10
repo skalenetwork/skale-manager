@@ -1712,7 +1712,7 @@
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=BountyV2-NodeCreationWindowWasChanged-uint256-uint256->NodeCreationWindowWasChanged</a>+++ `++NodeCreationWindowWasChanged(++[.var-type]#++uint256++#++ ++[.var-name]#++oldValue++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newValue++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=BountyV2-NodeCreationWindowWasChanged-uint256-uint256->NodeCreationWindowWasChanged</a>+++ `++NodeCreationWindowWasChanged(++[.var-type]#++uint256++#++ ++[.var-name]#++oldValue++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newValue++#++)++` [.item-kind]#event#
 
 Emitted when a node creation window was changed.
 

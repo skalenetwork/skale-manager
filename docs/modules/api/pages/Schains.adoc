@@ -1734,27 +1734,27 @@ Returns the current price in SKL tokens for given Schain type and lifetime.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Schains-SchainCreated-string-address-uint256-uint256-uint256-uint256-uint16-bytes32-uint256-uint256->SchainCreated</a>+++ `++SchainCreated(++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++partOfNode++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++lifetime++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++numberOfNodes++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++deposit++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++nonce++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Schains-SchainCreated-string-address-uint256-uint256-uint256-uint256-uint16-bytes32-uint256-uint256->SchainCreated</a>+++ `++SchainCreated(++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++partOfNode++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++lifetime++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++numberOfNodes++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++deposit++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++nonce++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
 
 Emitted when an schain is created.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Schains-SchainDeleted-address-string-bytes32->SchainDeleted</a>+++ `++SchainDeleted(++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Schains-SchainDeleted-address-string-bytes32->SchainDeleted</a>+++ `++SchainDeleted(++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
 
 Emitted when an schain is deleted.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Schains-NodeRotated-bytes32-uint256-uint256->NodeRotated</a>+++ `++NodeRotated(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++oldNode++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newNode++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Schains-NodeRotated-bytes32-uint256-uint256->NodeRotated</a>+++ `++NodeRotated(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++oldNode++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newNode++#++)++` [.item-kind]#event#
 
 Emitted when a node in an schain is rotated.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Schains-NodeAdded-bytes32-uint256->NodeAdded</a>+++ `++NodeAdded(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newNode++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Schains-NodeAdded-bytes32-uint256->NodeAdded</a>+++ `++NodeAdded(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newNode++#++)++` [.item-kind]#event#
 
 Emitted when a node is added to an schain.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Schains-SchainNodes-string-bytes32-uint256---uint256-uint256->SchainNodes</a>+++ `++SchainNodes(++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256[]++#++ ++[.var-name]#++nodesInGroup++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Schains-SchainNodes-string-bytes32-uint256---uint256-uint256->SchainNodes</a>+++ `++SchainNodes(++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256[]++#++ ++[.var-name]#++nodesInGroup++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
 
 Emitted when a group of nodes is created for an schain.
 

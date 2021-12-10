@@ -1650,7 +1650,7 @@ Initial delegation period and multiplier settings.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=DelegationPeriodManager-DelegationPeriodWasSet-uint256-uint256->DelegationPeriodWasSet</a>+++ `++DelegationPeriodWasSet(++[.var-type]#++uint256++#++ ++[.var-name]#++length++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++stakeMultiplier++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=DelegationPeriodManager-DelegationPeriodWasSet-uint256-uint256->DelegationPeriodWasSet</a>+++ `++DelegationPeriodWasSet(++[.var-type]#++uint256++#++ ++[.var-name]#++length++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++stakeMultiplier++#++)++` [.item-kind]#event#
 
 Emitted when a new delegation period is specified.
 

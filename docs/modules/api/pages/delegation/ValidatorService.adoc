@@ -1941,32 +1941,32 @@ Checks whether the validator is currently accepting new delegation requests.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-ValidatorRegistered-uint256->ValidatorRegistered</a>+++ `++ValidatorRegistered(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-ValidatorRegistered-uint256->ValidatorRegistered</a>+++ `++ValidatorRegistered(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
 
 Emitted when a validator registers.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-ValidatorAddressChanged-uint256-address->ValidatorAddressChanged</a>+++ `++ValidatorAddressChanged(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++newAddress++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-ValidatorAddressChanged-uint256-address->ValidatorAddressChanged</a>+++ `++ValidatorAddressChanged(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++newAddress++#++)++` [.item-kind]#event#
 
 Emitted when a validator address changes.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-ValidatorWasEnabled-uint256->ValidatorWasEnabled</a>+++ `++ValidatorWasEnabled(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-ValidatorWasEnabled-uint256->ValidatorWasEnabled</a>+++ `++ValidatorWasEnabled(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
 
 Emitted when a validator is enabled.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-ValidatorWasDisabled-uint256->ValidatorWasDisabled</a>+++ `++ValidatorWasDisabled(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-ValidatorWasDisabled-uint256->ValidatorWasDisabled</a>+++ `++ValidatorWasDisabled(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
 
 Emitted when a validator is disabled.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-NodeAddressWasAdded-uint256-address->NodeAddressWasAdded</a>+++ `++NodeAddressWasAdded(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-NodeAddressWasAdded-uint256-address->NodeAddressWasAdded</a>+++ `++NodeAddressWasAdded(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#event#
 
 Emitted when a node address is linked to a validator.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-NodeAddressWasRemoved-uint256-address->NodeAddressWasRemoved</a>+++ `++NodeAddressWasRemoved(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=ValidatorService-NodeAddressWasRemoved-uint256-address->NodeAddressWasRemoved</a>+++ `++NodeAddressWasRemoved(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#event#
 
 Emitted when a node address is unlinked from a validator.
 

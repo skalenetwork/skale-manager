@@ -1642,7 +1642,7 @@ Requirements:
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgBroadcast-BroadcastAndKeyShare-bytes32-uint256-struct-G2Operations-G2Point---struct-SkaleDKG-KeyShare--->BroadcastAndKeyShare</a>+++ `++BroadcastAndKeyShare(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNode++#++, ++[.var-type]#++struct G2Operations.G2Point[]++#++ ++[.var-name]#++verificationVector++#++, ++[.var-type]#++struct SkaleDKG.KeyShare[]++#++ ++[.var-name]#++secretKeyContribution++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgBroadcast-BroadcastAndKeyShare-bytes32-uint256-struct-G2Operations-G2Point---struct-SkaleDKG-KeyShare--->BroadcastAndKeyShare</a>+++ `++BroadcastAndKeyShare(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNode++#++, ++[.var-type]#++struct G2Operations.G2Point[]++#++ ++[.var-name]#++verificationVector++#++, ++[.var-type]#++struct SkaleDKG.KeyShare[]++#++ ++[.var-name]#++secretKeyContribution++#++)++` [.item-kind]#event#
 
 Emitted when a node broadcasts key share.
 

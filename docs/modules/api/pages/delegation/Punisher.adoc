@@ -1681,12 +1681,12 @@ delegations.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Punisher-Slash-uint256-uint256->Slash</a>+++ `++Slash(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Punisher-Slash-uint256-uint256->Slash</a>+++ `++Slash(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
 
 Emitted upon slashing condition.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Punisher-Forgive-address-uint256->Forgive</a>+++ `++Forgive(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Punisher-Forgive-address-uint256->Forgive</a>+++ `++Forgive(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
 
 Emitted upon forgive condition.
 

@@ -1628,12 +1628,12 @@ Joint-Feldman protocol.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgAlright-AllDataReceived-bytes32-uint256->AllDataReceived</a>+++ `++AllDataReceived(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgAlright-AllDataReceived-bytes32-uint256->AllDataReceived</a>+++ `++AllDataReceived(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
 
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgAlright-SuccessfulDKG-bytes32->SuccessfulDKG</a>+++ `++SuccessfulDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgAlright-SuccessfulDKG-bytes32->SuccessfulDKG</a>+++ `++SuccessfulDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
 
 
 

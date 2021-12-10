@@ -1881,22 +1881,22 @@ Checks whether there are any unprocessed slashes.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=DelegationController-DelegationProposed-uint256->DelegationProposed</a>+++ `++DelegationProposed(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=DelegationController-DelegationProposed-uint256->DelegationProposed</a>+++ `++DelegationProposed(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
 
 Emitted when a delegation is proposed to a validator.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=DelegationController-DelegationAccepted-uint256->DelegationAccepted</a>+++ `++DelegationAccepted(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=DelegationController-DelegationAccepted-uint256->DelegationAccepted</a>+++ `++DelegationAccepted(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
 
 Emitted when a delegation is accepted by a validator.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=DelegationController-DelegationRequestCanceledByUser-uint256->DelegationRequestCanceledByUser</a>+++ `++DelegationRequestCanceledByUser(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=DelegationController-DelegationRequestCanceledByUser-uint256->DelegationRequestCanceledByUser</a>+++ `++DelegationRequestCanceledByUser(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
 
 Emitted when a delegation is cancelled by the delegator.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=DelegationController-UndelegationRequested-uint256->UndelegationRequested</a>+++ `++UndelegationRequested(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=DelegationController-UndelegationRequested-uint256->UndelegationRequested</a>+++ `++UndelegationRequested(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
 
 Emitted when a delegation is requested to undelegate.
 

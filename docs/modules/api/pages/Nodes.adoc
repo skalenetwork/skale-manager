@@ -2048,17 +2048,17 @@ Checks whether a node's status is Leaving.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-NodeCreated-uint256-address-string-bytes4-bytes4-uint16-uint16-string-uint256-uint256->NodeCreated</a>+++ `++NodeCreated(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++ip++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++publicIP++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++port++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++nonce++#++, ++[.var-type]#++string++#++ ++[.var-name]#++domainName++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-NodeCreated-uint256-address-string-bytes4-bytes4-uint16-uint16-string-uint256-uint256->NodeCreated</a>+++ `++NodeCreated(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++ip++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++publicIP++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++port++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++nonce++#++, ++[.var-type]#++string++#++ ++[.var-name]#++domainName++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
 
 Emitted when a node is created.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-ExitCompleted-uint256-uint256-uint256->ExitCompleted</a>+++ `++ExitCompleted(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-ExitCompleted-uint256-uint256-uint256->ExitCompleted</a>+++ `++ExitCompleted(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
 
 Emitted when a node completes a network exit.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Nodes-ExitInitialized-uint256-uint256-uint256-uint256->ExitInitialized</a>+++ `++ExitInitialized(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++startLeavingPeriod++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Nodes-ExitInitialized-uint256-uint256-uint256-uint256->ExitInitialized</a>+++ `++ExitInitialized(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++startLeavingPeriod++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
 
 Emitted when a node begins to exit from the network.
 

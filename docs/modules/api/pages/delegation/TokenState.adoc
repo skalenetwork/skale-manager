@@ -1683,12 +1683,12 @@ Emits a {LockerWasAdded} event.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=TokenState-LockerWasAdded-string->LockerWasAdded</a>+++ `++LockerWasAdded(++[.var-type]#++string++#++ ++[.var-name]#++locker++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=TokenState-LockerWasAdded-string->LockerWasAdded</a>+++ `++LockerWasAdded(++[.var-type]#++string++#++ ++[.var-name]#++locker++#++)++` [.item-kind]#event#
 
 Emitted when a contract is added to the locker.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=TokenState-LockerWasRemoved-string->LockerWasRemoved</a>+++ `++LockerWasRemoved(++[.var-type]#++string++#++ ++[.var-name]#++locker++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=TokenState-LockerWasRemoved-string->LockerWasRemoved</a>+++ `++LockerWasRemoved(++[.var-type]#++string++#++ ++[.var-name]#++locker++#++)++` [.item-kind]#event#
 
 Emitted when a contract is removed from the locker.
 

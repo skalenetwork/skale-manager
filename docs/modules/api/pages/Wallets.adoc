@@ -1750,22 +1750,22 @@ Requirements:
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Wallets-ValidatorWalletRecharged-address-uint256-uint256->ValidatorWalletRecharged</a>+++ `++ValidatorWalletRecharged(++[.var-type]#++address++#++ ++[.var-name]#++sponsor++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Wallets-ValidatorWalletRecharged-address-uint256-uint256->ValidatorWalletRecharged</a>+++ `++ValidatorWalletRecharged(++[.var-type]#++address++#++ ++[.var-name]#++sponsor++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
 
 Emitted when the validator wallet was funded
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Wallets-SchainWalletRecharged-address-uint256-bytes32->SchainWalletRecharged</a>+++ `++SchainWalletRecharged(++[.var-type]#++address++#++ ++[.var-name]#++sponsor++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Wallets-SchainWalletRecharged-address-uint256-bytes32->SchainWalletRecharged</a>+++ `++SchainWalletRecharged(++[.var-type]#++address++#++ ++[.var-name]#++sponsor++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
 
 Emitted when the schain wallet was funded
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Wallets-NodeRefundedByValidator-address-uint256-uint256->NodeRefundedByValidator</a>+++ `++NodeRefundedByValidator(++[.var-type]#++address++#++ ++[.var-name]#++node++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Wallets-NodeRefundedByValidator-address-uint256-uint256->NodeRefundedByValidator</a>+++ `++NodeRefundedByValidator(++[.var-type]#++address++#++ ++[.var-name]#++node++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
 
 Emitted when the node received a refund from validator to its wallet
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Wallets-NodeRefundedBySchain-address-bytes32-uint256->NodeRefundedBySchain</a>+++ `++NodeRefundedBySchain(++[.var-type]#++address++#++ ++[.var-name]#++node++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Wallets-NodeRefundedBySchain-address-bytes32-uint256->NodeRefundedBySchain</a>+++ `++NodeRefundedBySchain(++[.var-type]#++address++#++ ++[.var-name]#++node++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
 
 Emitted when the node received a refund from schain to its wallet
 

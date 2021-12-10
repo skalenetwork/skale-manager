@@ -1646,7 +1646,7 @@
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=MathUtils-UnderflowError-uint256-uint256->UnderflowError</a>+++ `++UnderflowError(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=MathUtils-UnderflowError-uint256-uint256->UnderflowError</a>+++ `++UnderflowError(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++)++` [.item-kind]#event#
 
 
 

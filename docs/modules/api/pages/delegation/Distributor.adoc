@@ -1697,17 +1697,17 @@ Return the amount of earned fees by validator ID.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Distributor-WithdrawBounty-address-uint256-address-uint256->WithdrawBounty</a>+++ `++WithdrawBounty(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++destination++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Distributor-WithdrawBounty-address-uint256-address-uint256->WithdrawBounty</a>+++ `++WithdrawBounty(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++destination++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
 
 Emitted when bounty is withdrawn.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Distributor-WithdrawFee-uint256-address-uint256->WithdrawFee</a>+++ `++WithdrawFee(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++destination++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Distributor-WithdrawFee-uint256-address-uint256->WithdrawFee</a>+++ `++WithdrawFee(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++destination++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
 
 Emitted when a validator fee is withdrawn.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=Distributor-BountyWasPaid-uint256-uint256->BountyWasPaid</a>+++ `++BountyWasPaid(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=Distributor-BountyWasPaid-uint256-uint256->BountyWasPaid</a>+++ `++BountyWasPaid(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
 
 Emitted when bounty is distributed.
 

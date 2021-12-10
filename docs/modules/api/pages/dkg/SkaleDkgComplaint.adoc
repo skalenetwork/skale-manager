@@ -1642,12 +1642,12 @@ Requirements:
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgComplaint-ComplaintError-string->ComplaintError</a>+++ `++ComplaintError(++[.var-type]#++string++#++ ++[.var-name]#++error++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgComplaint-ComplaintError-string->ComplaintError</a>+++ `++ComplaintError(++[.var-type]#++string++#++ ++[.var-name]#++error++#++)++` [.item-kind]#event#
 
 Emitted when an incorrect complaint is sent.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgComplaint-ComplaintSent-bytes32-uint256-uint256->ComplaintSent</a>+++ `++ComplaintSent(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++toNodeIndex++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDkgComplaint-ComplaintSent-bytes32-uint256-uint256->ComplaintSent</a>+++ `++ComplaintSent(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++toNodeIndex++#++)++` [.item-kind]#event#
 
 Emitted when a complaint is sent.
 

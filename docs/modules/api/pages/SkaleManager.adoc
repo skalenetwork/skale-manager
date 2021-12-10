@@ -1682,7 +1682,7 @@ management, and monitoring verdicts.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleManager-BountyReceived-uint256-address-uint256-uint256-uint256-uint256-uint256-uint256->BountyReceived</a>+++ `++BountyReceived(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++averageDowntime++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++averageLatency++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++bounty++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++previousBlockEvent++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleManager-BountyReceived-uint256-address-uint256-uint256-uint256-uint256-uint256-uint256->BountyReceived</a>+++ `++BountyReceived(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++averageDowntime++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++averageLatency++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++bounty++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++previousBlockEvent++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
 
 Emitted when bounty is received.
 

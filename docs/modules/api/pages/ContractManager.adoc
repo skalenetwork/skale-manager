@@ -1721,7 +1721,7 @@ Requirements:
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=ContractManager-ContractUpgraded-string-address->ContractUpgraded</a>+++ `++ContractUpgraded(++[.var-type]#++string++#++ ++[.var-name]#++contractsName++#++, ++[.var-type]#++address++#++ ++[.var-name]#++contractsAddress++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=ContractManager-ContractUpgraded-string-address->ContractUpgraded</a>+++ `++ContractUpgraded(++[.var-type]#++string++#++ ++[.var-name]#++contractsName++#++, ++[.var-type]#++address++#++ ++[.var-name]#++contractsAddress++#++)++` [.item-kind]#event#
 
 Emitted when contract is upgraded.
 

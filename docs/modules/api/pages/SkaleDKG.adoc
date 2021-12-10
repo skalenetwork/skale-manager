@@ -1930,52 +1930,52 @@ Checks whether all data has been received by node.
 
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-ChannelOpened-bytes32->ChannelOpened</a>+++ `++ChannelOpened(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-ChannelOpened-bytes32->ChannelOpened</a>+++ `++ChannelOpened(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
 
 Emitted when a channel is opened.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-ChannelClosed-bytes32->ChannelClosed</a>+++ `++ChannelClosed(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-ChannelClosed-bytes32->ChannelClosed</a>+++ `++ChannelClosed(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
 
 Emitted when a channel is closed.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-BroadcastAndKeyShare-bytes32-uint256-struct-G2Operations-G2Point---struct-SkaleDKG-KeyShare--->BroadcastAndKeyShare</a>+++ `++BroadcastAndKeyShare(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNode++#++, ++[.var-type]#++struct G2Operations.G2Point[]++#++ ++[.var-name]#++verificationVector++#++, ++[.var-type]#++struct SkaleDKG.KeyShare[]++#++ ++[.var-name]#++secretKeyContribution++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-BroadcastAndKeyShare-bytes32-uint256-struct-G2Operations-G2Point---struct-SkaleDKG-KeyShare--->BroadcastAndKeyShare</a>+++ `++BroadcastAndKeyShare(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNode++#++, ++[.var-type]#++struct G2Operations.G2Point[]++#++ ++[.var-name]#++verificationVector++#++, ++[.var-type]#++struct SkaleDKG.KeyShare[]++#++ ++[.var-name]#++secretKeyContribution++#++)++` [.item-kind]#event#
 
 Emitted when a node broadcasts key share.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-AllDataReceived-bytes32-uint256->AllDataReceived</a>+++ `++AllDataReceived(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-AllDataReceived-bytes32-uint256->AllDataReceived</a>+++ `++AllDataReceived(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
 
 Emitted when all group data is received by node.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-SuccessfulDKG-bytes32->SuccessfulDKG</a>+++ `++SuccessfulDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-SuccessfulDKG-bytes32->SuccessfulDKG</a>+++ `++SuccessfulDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
 
 Emitted when DKG is successful.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-BadGuy-uint256->BadGuy</a>+++ `++BadGuy(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-BadGuy-uint256->BadGuy</a>+++ `++BadGuy(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
 
 Emitted when a complaint against a node is verified.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-FailedDKG-bytes32->FailedDKG</a>+++ `++FailedDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-FailedDKG-bytes32->FailedDKG</a>+++ `++FailedDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++)++` [.item-kind]#event#
 
 Emitted when DKG failed.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-NewGuy-uint256->NewGuy</a>+++ `++NewGuy(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-NewGuy-uint256->NewGuy</a>+++ `++NewGuy(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
 
 Emitted when a new node is rotated in.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-ComplaintError-string->ComplaintError</a>+++ `++ComplaintError(++[.var-type]#++string++#++ ++[.var-name]#++error++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-ComplaintError-string->ComplaintError</a>+++ `++ComplaintError(++[.var-type]#++string++#++ ++[.var-name]#++error++#++)++` [.item-kind]#event#
 
 Emitted when an incorrect complaint is sent.
 
 [.contract-item]
-==== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-ComplaintSent-bytes32-uint256-uint256->ComplaintSent</a>+++ `++ComplaintSent(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++toNodeIndex++#++)++` [.item-kind]#event#
+== +++<a class="heading-anchor" area-hidden="true" name=SkaleDKG-ComplaintSent-bytes32-uint256-uint256->ComplaintSent</a>+++ `++ComplaintSent(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++toNodeIndex++#++)++` [.item-kind]#event#
 
 Emitted when a complaint is sent.
 
