@@ -281,8 +281,8 @@ describe("SkaleManager", () => {
                 const balanceBefore = await nodeAddress.getBalance();
                 await skaleManager.connect(nodeAddress).getBounty(0);
                 const balance = await nodeAddress.getBalance();
-                balance.sub(balanceBefore).toNumber().should.not.be.lessThan(0);
-                parseFloat(ethers.utils.formatEther(balance.sub(balanceBefore))).should.be.almost(0);
+                balance.should.be.least(balanceBefore);
+                balance.should.be.closeTo(balanceBefore, ethers.utils.parseEther("0.002").toNumber());
             });
 
             it("should pay bounty if Node is In Leaving state", async () => {
