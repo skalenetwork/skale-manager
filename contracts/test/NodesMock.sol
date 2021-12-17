@@ -34,6 +34,10 @@ contract NodesMock is Permissions {
     mapping (uint => bool) public nodeLeft;
     //     nodeId => validatorId
     mapping (uint => uint) public owner;
+
+    constructor (address contractManagerAddress) {
+        Permissions.initialize(contractManagerAddress);
+    }
     
     function registerNodes(uint amount, uint validatorId) external {
         for (uint nodeId = nodesCount; nodeId < nodesCount + amount; ++nodeId) {

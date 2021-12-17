@@ -7,9 +7,7 @@ upgrades.silenceWarnings();
 async function defaultDeploy(contractName: string,
                              contractManager: ContractManager) {
     const contractFactory = await ethers.getContractFactory(contractName);
-    const instance = await contractFactory.deploy();
-    await instance.initialize(contractManager.address);
-    return instance;
+    return await upgrades.deployProxy(contractFactory, [contractManager.address]);
 }
 
 async function defaultDeployWithConstructor(
