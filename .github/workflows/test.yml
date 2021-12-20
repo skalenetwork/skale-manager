@@ -41,7 +41,9 @@ jobs:
 
     - name: List available nodes
       shell: bash -l -eo pipefail {0}
-      run: nvm ls
+      run: |
+        nvm ls
+        echo $NVM_DIR
 
     - name: Set up Python
       uses: actions/setup-python@v2

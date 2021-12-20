@@ -11,6 +11,8 @@ CURRENT_NODE_VERSION=$(nvm current)
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 cd $DEPLOYED_DIR
+export NVM_DIR=~/.nvm;
+source $NVM_DIR/nvm.sh;
 nvm install $DEPLOYED_WITH_NODE_VERSION
 nvm use $DEPLOYED_WITH_NODE_VERSION
 yarn install
