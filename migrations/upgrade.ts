@@ -230,9 +230,8 @@ export async function upgrade(
 
 async function main() {
     await upgrade(
-        "1.8.1",
+        "1.8.2",
         ["ContractManager"].concat(contracts),
-        async (safeTransactions, abi, contractManager) => undefined,
         async (safeTransactions, abi, contractManager) => {
             const safe = await contractManager.owner();
             const [ deployer ] = await ethers.getSigners();
