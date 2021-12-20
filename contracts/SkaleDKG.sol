@@ -219,7 +219,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             channels,
             dkgProcess,
             complaints,
-            lastSuccessfulDKG
+            lastSuccessfulDKG,
+            startAlrightTimestamp
         );
     }
 
@@ -475,6 +476,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[schainHash].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
+            channels[schainHash].startedBlockTimestamp.add(_getComplaintTimelimit()) > block.timestamp &&
             !dkgProcess[schainHash].broadcasted[index];
     }
 
@@ -533,6 +535,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             channels[schainHash].n == dkgProcess[schainHash].numberOfBroadcasted &&
             (complaints[schainHash].fromNodeToComplaint != nodeIndex ||
             (nodeIndex == 0 && complaints[schainHash].startComplaintBlockTimestamp == 0)) &&
+            startAlrightTimestamp[schainHash].add(_getComplaintTimelimit()) > block.timestamp &&
             !dkgProcess[schainHash].completed[index];
     }
 
@@ -545,6 +548,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
             complaints[schainHash].nodeToComplaint == nodeIndex &&
+            complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimelimit()) > block.timestamp &&
             !complaints[schainHash].isResponse;
     }
 
@@ -557,6 +561,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
             complaints[schainHash].nodeToComplaint == nodeIndex &&
+            complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimelimit()) > block.timestamp &&
             complaints[schainHash].isResponse;
     }
 
