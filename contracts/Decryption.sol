@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
 /**
  * @title Decryption
@@ -32,14 +32,14 @@ contract Decryption {
     /**
      * @dev Returns an encrypted text given a secret and a key.
      */
-    function encrypt(uint256 secretNumber, bytes32 key) external pure returns (bytes32 ciphertext) {
+    function encrypt(uint256 secretNumber, bytes32 key) external pure returns (bytes32) {
         return bytes32(secretNumber) ^ key;
     }
 
     /**
      * @dev Returns a secret given an encrypted text and a key.
      */
-    function decrypt(bytes32 ciphertext, bytes32 key) external pure returns (uint256 secretNumber) {
-        return uint256(ciphertext ^ key);
+    function decrypt(bytes32 cipherText, bytes32 key) external pure returns (uint256) {
+        return uint256(cipherText ^ key);
     }
 }

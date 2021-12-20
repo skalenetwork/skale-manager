@@ -19,9 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9; 
 
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "./interfaces/ISkaleDKG.sol";
 import "./utils/Random.sol";
 
@@ -38,12 +38,31 @@ import "./Schains.sol";
  */
 contract NodeRotation is Permissions {
     using Random for Random.RandomGenerator;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
     /**
      * nodeIndex - index of Node which is in process of rotation (left from schain)
      * newNodeIndex - index of Node which is rotated(added to schain)
      * freezeUntil - time till which Node should be turned on
-     * rotationCounter - how many rotations were on this schain
+     * rotationCounter - how many _rotations were on this schain
+     * previousNodes - queue of nodeIndex -> previous nodeIndexes
+     * newNodeIndexes - set of all newNodeIndexes for this schain
+     */
+    struct RotationWithPreviousNodes {
+        uint nodeIndex;
+        uint newNodeIndex;
+        uint freezeUntil;
+        uint rotationCounter;
+        //    schainHash =>        nodeIndex => nodeIndex
+        mapping (uint256 => uint256) previousNodes;
+        EnumerableSetUpgradeable.UintSet newNodeIndexes;
+    }
+
+    /**
+     * nodeIndex - index of Node which is in process of rotation (left from schain)
+     * newNodeIndex - index of Node which is rotated(added to schain)
+     * freezeUntil - time till which Node should be turned on
+     * rotationCounter - how many _rotations were on this schain
      */
     struct Rotation {
         uint nodeIndex;
@@ -53,17 +72,22 @@ contract NodeRotation is Permissions {
     }
 
     struct LeavingHistory {
-        bytes32 schainIndex;
+        bytes32 schainHash;
         uint finishedRotation;
     }
 
-    mapping (bytes32 => Rotation) public rotations;
+    mapping (bytes32 => RotationWithPreviousNodes) private _rotations;
 
     mapping (uint => LeavingHistory[]) public leavingHistory;
 
     mapping (bytes32 => bool) public waitForNewNode;
 
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
+
+    /**
+     * @dev Emitted when rotation delay skipped.
+     */
+    event RotationDelaySkipped(bytes32 indexed schainHash);
 
     modifier onlyDebugger() {
         require(hasRole(DEBUGGER_ROLE, msg.sender), "DEBUGGER_ROLE is required");
@@ -95,17 +119,17 @@ contract NodeRotation is Permissions {
     function freezeSchains(uint nodeIndex) external allow("SkaleManager") {
         bytes32[] memory schains = SchainsInternal(
             contractManager.getContract("SchainsInternal")
-        ).getSchainHashsForNode(nodeIndex);
+        ).getSchainHashesForNode(nodeIndex);
         for (uint i = 0; i < schains.length; i++) {
             if (schains[i] != bytes32(0)) {
                 require(
                     ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schains[i]),
                     "DKG did not finish on Schain"
                 );
-                if (rotations[schains[i]].freezeUntil < now) {
+                if (_rotations[schains[i]].freezeUntil < block.timestamp) {
                     _startWaiting(schains[i], nodeIndex);
                 } else {
-                    if (rotations[schains[i]].nodeIndex != nodeIndex) {
+                    if (_rotations[schains[i]].nodeIndex != nodeIndex) {
                         revert("Occupied by rotation on Schain");
                     }
                 }
@@ -116,22 +140,31 @@ contract NodeRotation is Permissions {
     /**
      * @dev Allows Schains contract to remove a rotation from an schain.
      */
-    function removeRotation(bytes32 schainIndex) external allow("Schains") {
-        delete rotations[schainIndex];
+    function removeRotation(bytes32 schainHash) external allow("Schains") {
+        delete _rotations[schainHash].nodeIndex;
+        delete _rotations[schainHash].newNodeIndex;
+        delete _rotations[schainHash].freezeUntil;
+        delete _rotations[schainHash].rotationCounter;
     }
 
     /**
      * @dev Allows Owner to immediately rotate an schain.
      */
-    function skipRotationDelay(bytes32 schainIndex) external onlyDebugger {
-        rotations[schainIndex].freezeUntil = now;
+    function skipRotationDelay(bytes32 schainHash) external onlyDebugger {
+        _rotations[schainHash].freezeUntil = block.timestamp;
+        emit RotationDelaySkipped(schainHash);
     }
 
     /**
      * @dev Returns rotation details for a given schain.
      */
-    function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
-        return rotations[schainIndex];
+    function getRotation(bytes32 schainHash) external view returns (Rotation memory) {
+        return Rotation({
+            nodeIndex: _rotations[schainHash].nodeIndex,
+            newNodeIndex: _rotations[schainHash].newNodeIndex,
+            freezeUntil: _rotations[schainHash].freezeUntil,
+            rotationCounter: _rotations[schainHash].rotationCounter
+        });
     }
 
     /**
@@ -141,8 +174,18 @@ contract NodeRotation is Permissions {
         return leavingHistory[nodeIndex];
     }
 
-    function isRotationInProgress(bytes32 schainIndex) external view returns (bool) {
-        return rotations[schainIndex].freezeUntil >= now && !waitForNewNode[schainIndex];
+    function isRotationInProgress(bytes32 schainHash) external view returns (bool) {
+        return _rotations[schainHash].freezeUntil >= block.timestamp && !waitForNewNode[schainHash];
+    }
+
+    /**
+     * @dev Returns a previous node of the node in schain.
+     * If there is no previous node for given node would return an error:
+     * "No previous node"
+     */
+    function getPreviousNode(bytes32 schainHash, uint256 nodeIndex) external view returns (uint256) {
+        require(_rotations[schainHash].newNodeIndexes.contains(nodeIndex), "No previous node");
+        return _rotations[schainHash].previousNodes[nodeIndex];
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -169,10 +212,6 @@ contract NodeRotation is Permissions {
             schainsInternal.removeNodeFromExceptions(schainHash, nodeIndex);
         }
         newNode = selectNodeToGroup(schainHash);
-        Nodes(contractManager.getContract("Nodes")).addSpaceToNode(
-            nodeIndex,
-            schainsInternal.getSchainsPartOfNode(schainHash)
-        );
         _finishRotation(schainHash, nodeIndex, newNode, shouldDelay);
     }
 
@@ -212,22 +251,22 @@ contract NodeRotation is Permissions {
     /**
      * @dev Initiates rotation of a node from an schain.
      */
-    function _startRotation(bytes32 schainIndex, uint nodeIndex) private {
-        rotations[schainIndex].newNodeIndex = nodeIndex;
-        waitForNewNode[schainIndex] = true;
+    function _startRotation(bytes32 schainHash, uint nodeIndex) private {
+        _rotations[schainHash].newNodeIndex = nodeIndex;
+        waitForNewNode[schainHash] = true;
     }
 
-    function _startWaiting(bytes32 schainIndex, uint nodeIndex) private {
+    function _startWaiting(bytes32 schainHash, uint nodeIndex) private {
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        rotations[schainIndex].nodeIndex = nodeIndex;
-        rotations[schainIndex].freezeUntil = now.add(constants.rotationDelay());
+        _rotations[schainHash].nodeIndex = nodeIndex;
+        _rotations[schainHash].freezeUntil = block.timestamp + constants.rotationDelay();
     }
 
     /**
      * @dev Completes rotation of a node from an schain.
      */
     function _finishRotation(
-        bytes32 schainIndex,
+        bytes32 schainHash,
         uint nodeIndex,
         uint newNodeIndex,
         bool shouldDelay)
@@ -235,30 +274,17 @@ contract NodeRotation is Permissions {
     {
         leavingHistory[nodeIndex].push(
             LeavingHistory(
-                schainIndex,
-                shouldDelay ? now.add(
+                schainHash,
+                shouldDelay ? block.timestamp + 
                     ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay()
-                ) : now
+                : block.timestamp
             )
         );
-        rotations[schainIndex].newNodeIndex = newNodeIndex;
-        rotations[schainIndex].rotationCounter++;
-        delete waitForNewNode[schainIndex];
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainIndex);
+        require(_rotations[schainHash].newNodeIndexes.add(newNodeIndex), "New node was already added");
+        _rotations[schainHash].newNodeIndex = newNodeIndex;
+        _rotations[schainHash].rotationCounter++;
+        _rotations[schainHash].previousNodes[newNodeIndex] = nodeIndex;
+        delete waitForNewNode[schainHash];
+        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
     }
-
-    /**
-     * @dev Checks whether a rotation can be performed.
-     * 
-     * Requirements:
-     * 
-     * - Schain must exist.
-     */
-    function _checkRotation(bytes32 schainHash ) private view returns (bool) {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        require(schainsInternal.isSchainExist(schainHash), "Schain does not exist for rotation");
-        return schainsInternal.isAnyFreeNode(schainHash);
-    }
-
-
 }

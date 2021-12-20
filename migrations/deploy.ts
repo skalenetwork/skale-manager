@@ -93,7 +93,8 @@ export const contracts = [
     "SkaleManager",
     "Pricing",
     "BountyV2",
-    "Wallets"
+    "Wallets",
+    "SyncManager"
 ]
 
 async function main() {

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleVerifier.sol - SKALE Manager
-    Copyright (C) 2018-Present SKALE Labs
-    @author Dmytro Stebaiev
+    FieldOperationsTester.sol - SKALE Manager
+    Copyright (C) 2021-Present SKALE Labs
+    @author Artem Payvin
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -19,27 +19,23 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
+
+import "../utils/FieldOperations.sol";
 
 
-contract Migrations {
-    address public owner;
-    uint public last_completed_migration;
+contract FieldOperationsTester {
 
-    modifier restricted() {
-        if (msg.sender == owner) _;
-    }
+    using Fp2Operations for Fp2Operations.Fp2Point;
+    using G2Operations for G2Operations.G2Point;
 
-    constructor() public {
-        owner = msg.sender;
-    }
-
-    function setCompleted(uint completed) external restricted {
-        last_completed_migration = completed;
-    }
-
-    function upgrade(address new_address) external restricted {
-        Migrations upgraded = Migrations(new_address);
-        upgraded.setCompleted(last_completed_migration);
+    function add(G2Operations.G2Point memory value1, G2Operations.G2Point memory value2)
+        external
+        view
+        returns (G2Operations.G2Point memory)
+    {
+        require(value1.isG2(), "First value not in G2");
+        require(value2.isG2(), "Second value not in G2");
+        return value1.addG2(value2);
     }
 }

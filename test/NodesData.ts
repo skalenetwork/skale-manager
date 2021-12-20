@@ -1,61 +1,29 @@
 import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          Nodes,
-         SkaleManager,
          ValidatorService} from "../typechain";
-import { currentTime, skipTime } from "./tools/time";
-
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
+import { skipTime } from "./tools/time";
 import { privateKeys } from "./tools/private-keys";
-
 import chai = require("chai");
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { BigNumber } from "ethers";
-import { ethers, web3 } from "hardhat";
-import { solidity } from "ethereum-waffle";
+import { BigNumber, Wallet } from "ethers";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
+import { assert } from "chai";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
-    } else {
-        return "";
-    }
-}
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
-    }
-}
 
 describe("NodesData", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
-    let nodeAddress: SignerWithAddress;
+    let nodeAddress: Wallet;
     let admin: SignerWithAddress;
     let hacker: SignerWithAddress;
 
@@ -63,8 +31,12 @@ describe("NodesData", () => {
     let nodes: Nodes;
     let validatorService: ValidatorService;
 
-    beforeEach(async () => {
-        [owner, validator, nodeAddress, admin, hacker] = await ethers.getSigners();
+    fastBeforeEach(async () => {
+        [owner, validator, admin, hacker] = await ethers.getSigners();
+
+        nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
+
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
@@ -88,7 +60,6 @@ describe("NodesData", () => {
     });
 
     it("should add node", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         await nodes.createNode(
             nodeAddress.address,
             {
@@ -96,9 +67,9 @@ describe("NodesData", () => {
                 nonce: 0,
                 ip: "0x7f000001",
                 publicIp: "0x7f000002",
-                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                publicKey: getPublicKey(nodeAddress),
                 name: "d2",
-                domainName: "somedomain.name"
+                domainName: "some.domain.name"
             });
 
         const node = await nodes.nodes(0);
@@ -107,12 +78,10 @@ describe("NodesData", () => {
         node[1].should.be.equal("0x7f000001");
         node[2].should.be.equal("0x7f000002");
         node[3].should.be.equal(8545);
-        (await nodes.getNodePublicKey(0)).should.be.deep.equal(
-            ["0x" + pubKey.x.toString('hex'),
-            "0x" + pubKey.y.toString('hex')]);
+        (await nodes.getNodePublicKey(0)).should.be.deep.equal(getPublicKey(nodeAddress));
         node[7].should.be.equal(0);
 
-        const nodeId = stringValue(web3.utils.soliditySha3("d2"));
+        const nodeId = stringKeccak256("d2");
         await nodes.nodesIPCheck("0x7f000001").should.be.eventually.true;
         await nodes.nodesNameCheck(nodeId).should.be.eventually.true;
         const nodeByName = await nodes.nodes(await nodes.nodesNameToIndex(nodeId));
@@ -126,8 +95,7 @@ describe("NodesData", () => {
     });
 
     describe("when a node is added", async () => {
-        beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        fastBeforeEach(async () => {
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -135,35 +103,11 @@ describe("NodesData", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "d2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
         });
-
-        // it("should add a fractional node", async () => {
-        //     await nodes.addFractionalNode(0);
-
-        //     const nodeFilling = await nodes.fractionalNodes(0);
-        //     nodeFilling[0].should.be.deep.equal(web3.utils.toBN(0));
-        //     nodeFilling[1].should.be.deep.equal(web3.utils.toBN(128));
-
-        //     const link = await nodes.nodesLink(0);
-        //     link[0].should.be.deep.equal(web3.utils.toBN(0));
-        //     expect(link[1]).to.be.false;
-        // });
-
-        // it("should add a full node", async () => {
-        //     await nodes.addFullNode(0);
-
-        //     const nodeFilling = await nodes.fullNodes(0);
-        //     nodeFilling[0].should.be.deep.equal(web3.utils.toBN(0));
-        //     nodeFilling[1].should.be.deep.equal(web3.utils.toBN(128));
-
-        //     const link = await nodes.nodesLink(0);
-        //     link[0].should.be.deep.equal(web3.utils.toBN(0));
-        //     expect(link[1]).to.be.true;
-        // });
 
         it("should set node as leaving", async () => {
             await nodes.initExit(0);
@@ -177,16 +121,16 @@ describe("NodesData", () => {
             await nodes.completeExit(0);
 
             await nodes.nodesIPCheck("0x7f000001").should.be.eventually.false;
-            await nodes.nodesNameCheck(stringValue(web3.utils.soliditySha3("d2"))).should.be.eventually.false;
+            await nodes.nodesNameCheck(stringKeccak256("d2")).should.be.eventually.false;
 
             (await nodes.numberOfActiveNodes()).should.be.equal(0);
             (await nodes.numberOfLeftNodes()).should.be.equal(1);
         });
 
         it("should change node last reward date", async () => {
-            await skipTime(ethers, 5);
+            await skipTime(5);
             const res = await(await nodes.changeNodeLastRewardDate(0)).wait();
-            const currentTimeLocal = BigNumber.from((await web3.eth.getBlock(res.blockNumber)).timestamp);
+            const currentTimeLocal = BigNumber.from((await ethers.provider.getBlock(res.blockNumber)).timestamp);
 
             (await nodes.nodes(0))[5].should.be.equal(currentTimeLocal);
             (await nodes.getNodeLastRewardDate(0)).should.be.equal(currentTimeLocal);
@@ -218,37 +162,37 @@ describe("NodesData", () => {
 
         it("should check node domain name", async () => {
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("somedomain.name");
+            nodeDomainName.should.be.equal("some.domain.name");
         });
 
         it("should modify node domain name by node owner", async () => {
-            await nodes.connect(nodeAddress).setDomainName(0, "newdomain.name");
+            await nodes.connect(nodeAddress).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should modify node domain name by validator", async () => {
-            await nodes.connect(validator).setDomainName(0, "newdomain.name");
+            await nodes.connect(validator).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should modify node domain name by contract owner", async () => {
-            await nodes.setDomainName(0, "newdomain.name");
+            await nodes.setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should modify node domain name by NODE_MANAGER_ROLE", async () => {
             const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
             await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
-            await nodes.connect(admin).setDomainName(0, "newdomain.name");
+            await nodes.connect(admin).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should not modify node domain name by hacker", async () => {
-            await nodes.connect(hacker).setDomainName(0, "newdomain.name")
+            await nodes.connect(hacker).setDomainName(0, "new.domain.name")
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
@@ -401,65 +345,8 @@ describe("NodesData", () => {
             assert.equal(numberOfActiveNodesAfter.toNumber(), numberOfActiveNodes.toNumber()-1);
         });
 
-        // describe("when node is registered as fractional", async () => {
-        //     beforeEach(async () => {
-        //         await nodes.addFractionalNode(0);
-        //     });
-
-        //     it("should remove fractional node", async () => {
-        //         await nodes.removeFractionalNode(0);
-
-        //         await nodes.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
-        //     });
-
-        //     it("should remove space from fractional node", async () => {
-        //         await nodes.removeSpaceFromFractionalNode(0, 2);
-
-        //         (await nodes.fractionalNodes(0))[1].should.be.deep.equal(web3.utils.toBN(126));
-        //     });
-
-        //     it("should add space to fractional node", async () => {
-        //         await nodes.addSpaceToFractionalNode(0, 2);
-
-        //         (await nodes.fractionalNodes(0))[1].should.be.deep.equal(web3.utils.toBN(130));
-        //     });
-
-        //     it("should get number of free fractional nodes", async () => {
-        //         await nodes.getNumberOfFreeFractionalNodes(128, 1).should.be.eventually.deep.equal(true);
-        //     });
-        // });
-
-        // describe("when node is registered as full", async () => {
-        //     beforeEach(async () => {
-        //         await nodes.addFullNode(0);
-        //     });
-
-        //     it("should remove fractional node", async () => {
-        //         await nodes.removeFullNode(0);
-
-        //         await nodes.getNumberOfFullNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
-        //     });
-
-        //     it("should remove space from full node", async () => {
-        //         await nodes.removeSpaceFromFullNode(0, 2);
-
-        //         (await nodes.fullNodes(0))[1].should.be.deep.equal(web3.utils.toBN(126));
-        //     });
-
-        //     it("should add space to full node", async () => {
-        //         await nodes.addSpaceToFullNode(0, 2);
-
-        //         (await nodes.fullNodes(0))[1].should.be.deep.equal(web3.utils.toBN(130));
-        //     });
-
-        //     it("should get number of free full nodes", async () => {
-        //         await nodes.getNumberOfFreeFullNodes(1).should.be.eventually.deep.equal(true);
-        //     });
-        // });
-
         describe("when node is registered", async () => {
-            beforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            fastBeforeEach(async () => {
                 await nodes.createNode(
                     nodeAddress.address,
                     {
@@ -467,9 +354,9 @@ describe("NodesData", () => {
                         nonce: 0,
                         ip: "0x7f000003",
                         publicIp: "0x7f000004",
-                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        publicKey: getPublicKey(nodeAddress),
                         name: "d3",
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             });
 
@@ -505,8 +392,7 @@ describe("NodesData", () => {
     });
 
     describe("when two nodes are added", async () => {
-        beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        fastBeforeEach(async () => {
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -514,9 +400,9 @@ describe("NodesData", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "d1",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
             await nodes.createNode(
                 nodeAddress.address,
@@ -525,43 +411,14 @@ describe("NodesData", () => {
                     nonce: 0,
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "d2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
         });
 
-        // describe("when nodes are registered as fractional", async () => {
-        //     beforeEach(async () => {
-        //         await nodes.addFractionalNode(0);
-        //         await nodes.addFractionalNode(1);
-        //     });
-
-        //     it("should remove first fractional node", async () => {
-        //         await nodes.removeFractionalNode(0);
-
-        //         await nodes.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
-        //     });
-
-        //     it("should remove second fractional node", async () => {
-        //         await nodes.removeFractionalNode(1);
-
-        //         await nodes.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
-        //     });
-
-        //     it("should not remove larger space from fractional node than its has", async () => {
-        //         const nodesFillingBefore = await nodes.fractionalNodes(0);
-        //         const spaceBefore = nodesFillingBefore["1"];
-        //         await nodes.removeSpaceFromFractionalNode(0, 129);
-        //         const nodesFillingAfter = await nodes.fractionalNodes(0);
-        //         const spaceAfter = nodesFillingAfter["1"];
-        //         parseInt(spaceBefore.toString(), 10).should.be.equal(parseInt(spaceAfter.toString(), 10));
-        //     });
-        // });
-
         describe("when nodes are registered", async () => {
-            beforeEach(async () => {
-                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            fastBeforeEach(async () => {
                 await nodes.createNode(
                     nodeAddress.address,
                     {
@@ -569,9 +426,9 @@ describe("NodesData", () => {
                         nonce: 0,
                         ip: "0x7f000003",
                         publicIp: "0x7f000003",
-                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        publicKey: getPublicKey(nodeAddress),
                         name: "d3",
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
                 await nodes.createNode(
                     nodeAddress.address,
@@ -580,9 +437,9 @@ describe("NodesData", () => {
                         nonce: 0,
                         ip: "0x7f000004",
                         publicIp: "0x7f000004",
-                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        publicKey: getPublicKey(nodeAddress),
                         name: "d4",
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             });
 

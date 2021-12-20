@@ -21,10 +21,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../SkaleDKG.sol";
 import "../KeyStorage.sol";
 import "../utils/FieldOperations.sol";
@@ -36,10 +34,9 @@ import "../utils/FieldOperations.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgBroadcast {
-    using SafeMath for uint;
 
     /**
-     * @dev Emitted when a node broadcasts keyshare.
+     * @dev Emitted when a node broadcasts key share.
      */
     event BroadcastAndKeyShare(
         bytes32 indexed schainHash,
@@ -80,7 +77,7 @@ library SkaleDkgBroadcast {
             "Incorrect number of secret key shares"
         );
         require(
-            channels[schainHash].startedBlockTimestamp.add(_getComplaintTimelimit(contractManager)) > block.timestamp,
+            channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit(contractManager) > block.timestamp,
             "Incorrect time for broadcast"
         );
         (uint index, ) = SkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
@@ -105,11 +102,11 @@ library SkaleDkgBroadcast {
     }
 
     function getT(uint n) public pure returns (uint) {
-        return n.mul(2).add(1).div(3);
+        return (n * 2 + 1) / 3;
     }
 
-    function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

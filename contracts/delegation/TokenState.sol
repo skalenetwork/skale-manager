@@ -19,8 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
 import "../interfaces/delegation/ILocker.sol";
 import "../Permissions.sol";
@@ -53,11 +52,6 @@ contract TokenState is Permissions, ILocker {
 
     bytes32 public constant LOCKER_MANAGER_ROLE = keccak256("LOCKER_MANAGER_ROLE");
 
-    modifier onlyLockerManager() {
-        require(hasRole(LOCKER_MANAGER_ROLE, msg.sender), "LOCKER_MANAGER_ROLE is required");
-        _;
-    }
-
     /**
      * @dev Emitted when a contract is added to the locker.
      */
@@ -72,6 +66,11 @@ contract TokenState is Permissions, ILocker {
         string locker
     );
 
+    modifier onlyLockerManager() {
+        require(hasRole(LOCKER_MANAGER_ROLE, msg.sender), "LOCKER_MANAGER_ROLE is required");
+        _;
+    }
+
     /**
      *  @dev See {ILocker-getAndUpdateLockedAmount}.
      */
@@ -85,7 +84,7 @@ contract TokenState is Permissions, ILocker {
             // the holder ever delegated
             for (uint i = 0; i < _lockers.length; ++i) {
                 ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
-                locked = locked.add(locker.getAndUpdateLockedAmount(holder));
+                locked = locked + locker.getAndUpdateLockedAmount(holder);
             }
         }
         return locked;
@@ -98,7 +97,7 @@ contract TokenState is Permissions, ILocker {
         uint forbidden = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
             ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
-            forbidden = forbidden.add(locker.getAndUpdateForbiddenForDelegationAmount(holder));
+            forbidden = forbidden + locker.getAndUpdateForbiddenForDelegationAmount(holder);
         }
         return forbidden;
     }
@@ -117,10 +116,10 @@ contract TokenState is Permissions, ILocker {
             }
         }
         if (index < _lockers.length) {
-            if (index < _lockers.length.sub(1)) {
-                _lockers[index] = _lockers[_lockers.length.sub(1)];
+            if (index < _lockers.length - 1) {
+                _lockers[index] = _lockers[_lockers.length - 1];
             }
-            delete _lockers[_lockers.length.sub(1)];
+            delete _lockers[_lockers.length - 1];
             _lockers.pop();
             emit LockerWasRemoved(locker);
         }

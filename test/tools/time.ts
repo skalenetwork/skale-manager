@@ -1,13 +1,14 @@
-import Web3 from "web3";
-import { providers } from "ethers";
+import { ethers } from "hardhat";
+import { ContractManager } from "../../typechain";
+import { deployTimeHelpers } from "./deploy/delegation/timeHelpers";
 
 
-export async function skipTime(ethers: {provider: providers.JsonRpcProvider}, seconds: number) {
+export async function skipTime(seconds: number) {
     await ethers.provider.send("evm_increaseTime", [seconds]);
     await ethers.provider.send("evm_mine", []);
 }
 
-export async function skipTimeToDate(ethers: {provider: providers.JsonRpcProvider}, day: number, monthIndex: number) {
+export async function skipTimeToDate(day: number, monthIndex: number) {
     const timestamp = (await ethers.provider.getBlock("latest")).timestamp;
     const now = new Date(timestamp * 1000);
     const targetTime = new Date(Date.UTC(now.getFullYear(), monthIndex, day));
@@ -15,17 +16,23 @@ export async function skipTimeToDate(ethers: {provider: providers.JsonRpcProvide
         targetTime.setFullYear(now.getFullYear() + 1);
     }
     const diffInSeconds = Math.round(targetTime.getTime() / 1000) - timestamp;
-    await skipTime(ethers, diffInSeconds);
+    await skipTime(diffInSeconds);
 }
 
-export async function currentTime(web3: Web3) {
-    return parseInt((await web3.eth.getBlock("latest")).timestamp.toString(16), 16);
+export async function currentTime() {
+    return (await ethers.provider.getBlock("latest")).timestamp;
 }
 
 export const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
-export async function isLeapYear(web3: Web3) {
-    const timestamp = await currentTime(web3);
+export async function isLeapYear() {
+    const timestamp = await currentTime();
     const now = new Date(timestamp * 1000);
     return now.getFullYear() % 4 === 0;
+}
+
+export async function nextMonth(contractManager: ContractManager, monthsAmount:number = 1) {
+    const timeHelpers = await deployTimeHelpers(contractManager);
+    const currentEpoch = await timeHelpers.getCurrentMonth();
+    await skipTime((await timeHelpers.monthToTimestamp(currentEpoch.add(monthsAmount))).toNumber() - await currentTime())
 }

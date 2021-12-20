@@ -19,13 +19,13 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 
 import "../Permissions.sol";
 import "../delegation/DelegationController.sol";
@@ -38,7 +38,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
     bool private _burningAttack = false;
     uint private _amount = 0;
 
-    constructor (address contractManagerAddress) public {
+    constructor (address contractManagerAddress) {
         Permissions.initialize(contractManagerAddress);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensSender"), address(this));
@@ -83,7 +83,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
         }
     }
 
-    function prepareToReentracyCheck() external {
+    function prepareToReentrancyCheck() external {
         _reentrancyCheck = true;
     }
 

@@ -21,10 +21,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../SkaleDKG.sol";
 import "../ConstantsHolder.sol";
 import "../Wallets.sol";
@@ -36,7 +34,6 @@ import "../Nodes.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgComplaint {
-    using SafeMath for uint;
 
     /**
      * @dev Emitted when an incorrect complaint is sent.
@@ -102,7 +99,7 @@ library SkaleDkgComplaint {
         require(skaleDKG.isNodeBroadcasted(schainHash, fromNodeIndex), "Node has not broadcasted");
         require(skaleDKG.isNodeBroadcasted(schainHash, toNodeIndex), "Accused node has not broadcasted");
         require(!skaleDKG.isAllDataReceived(schainHash, fromNodeIndex), "Node has already sent alright");
-        if (complaints[schainHash].nodeToComplaint == uint(-1)) {
+        if (complaints[schainHash].nodeToComplaint == type(uint).max) {
             complaints[schainHash].nodeToComplaint = toNodeIndex;
             complaints[schainHash].fromNodeToComplaint = fromNodeIndex;
             complaints[schainHash].startComplaintBlockTimestamp = block.timestamp;
@@ -124,11 +121,11 @@ library SkaleDkgComplaint {
     {
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         // missing alright
-        if (complaints[schainHash].nodeToComplaint == uint(-1)) {
+        if (complaints[schainHash].nodeToComplaint == type(uint).max) {
             if (
                 skaleDKG.isEveryoneBroadcasted(schainHash) &&
                 !skaleDKG.isAllDataReceived(schainHash, toNodeIndex) &&
-                startAlrightTimestamp[schainHash].add(_getComplaintTimelimit(contractManager)) <= block.timestamp
+                startAlrightTimestamp[schainHash] + _getComplaintTimeLimit(contractManager) <= block.timestamp
             ) {
                 // missing alright
                 skaleDKG.finalizeSlashing(schainHash, toNodeIndex);
@@ -142,9 +139,9 @@ library SkaleDkgComplaint {
             return;
         } else if (complaints[schainHash].nodeToComplaint == toNodeIndex) {
             // 30 min after incorrect data complaint
-            if (complaints[schainHash].startComplaintBlockTimestamp.add(
-                _getComplaintTimelimit(contractManager)
-            ) <= block.timestamp) {
+            if (complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit(contractManager)
+                <= block.timestamp
+            ) {
                 skaleDKG.finalizeSlashing(schainHash, complaints[schainHash].nodeToComplaint);
                 return;
             }
@@ -163,17 +160,15 @@ library SkaleDkgComplaint {
     ) 
         private
     {
-        if (channels[schainHash].startedBlockTimestamp.add(
-                _getComplaintTimelimit(contractManager)
-            ) <= block.timestamp) {
+        if (channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit(contractManager) <= block.timestamp) {
             SkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainHash, toNodeIndex);
             return;
         }
         emit ComplaintError("Complaint sent too early");
     }
 
-    function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

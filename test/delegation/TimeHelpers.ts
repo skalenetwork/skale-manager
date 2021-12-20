@@ -5,7 +5,7 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 import { currentTime } from "../tools/time";
-import { web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();
@@ -155,10 +155,10 @@ describe("TimeHelpers", () => {
         const currentMonth = (await timeHelpersWithDebug.getCurrentMonth()).toNumber();
         let nextMonthEndTimestamp = (await timeHelpersWithDebug.monthToTimestamp(currentMonth + 2)).toNumber();
         const diff = 60 * 60 * 24;
-        await timeHelpersWithDebug.skipTime(nextMonthEndTimestamp - diff - await currentTime(web3));
+        await timeHelpersWithDebug.skipTime(nextMonthEndTimestamp - diff - await currentTime());
         (await timeHelpersWithDebug.getCurrentMonth()).toNumber()
             .should.be.equal(currentMonth + 1);
         nextMonthEndTimestamp = (await timeHelpersWithDebug.monthToTimestamp(currentMonth + 2)).toNumber();
-        Math.abs(await currentTime(web3) + diff - nextMonthEndTimestamp).should.be.lessThan(5);
+        Math.abs(await currentTime() + diff - nextMonthEndTimestamp).should.be.lessThan(5);
     })
 });

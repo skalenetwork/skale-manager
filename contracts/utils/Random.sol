@@ -20,17 +20,14 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 /**
  * @title Random
  * @dev The library for generating of pseudo random numbers
  */
 library Random {
-    using SafeMath for uint;
 
     struct RandomGenerator {
         uint seed;
@@ -60,23 +57,15 @@ library Random {
      */
     function random(RandomGenerator memory self, uint max) internal pure returns (uint) {
         assert(max > 0);
-        uint maxRand = uint(-1).sub(uint(-1).mod(max));
-        if (uint(-1).sub(maxRand) == max.sub(1)) {
-            return random(self).mod(max);
+        uint maxRand = type(uint).max - type(uint).max % max;
+        if (type(uint).max - maxRand == max - 1) {
+            return random(self) % max;
         } else {
             uint rand = random(self);
             while (rand >= maxRand) {
                 rand = random(self);
             }
-            return rand.mod(max);
+            return rand % max;
         }
-    }
-
-    /**
-     * @dev Generates random value in range [min, max)
-     */
-    function random(RandomGenerator memory self, uint min, uint max) internal pure returns (uint) {
-        assert(min < max);
-        return min.add(random(self, max.sub(min)));
     }
 }

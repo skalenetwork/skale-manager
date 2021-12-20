@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
@@ -61,6 +61,16 @@ contract Wallets is Permissions, IWallets {
     event NodeRefundedBySchain(address node, bytes32 schainHash, uint amount);
 
     /**
+     * @dev Emitted when the validator withdrawn funds from validator wallet
+     */
+    event WithdrawFromValidatorWallet(uint indexed validatorId, uint amount);
+
+    /**
+     * @dev Emitted when the schain owner withdrawn funds from schain wallet
+     */
+    event WithdrawFromSchainWallet(bytes32 indexed schainHash, uint amount);
+
+    /**
      * @dev Is executed on a call to the contract with empty calldata. 
      * This is the function that is executed on plain Ether transfers,
      * so validator or schain owner can use usual transfer ether to recharge wallet.
@@ -68,9 +78,9 @@ contract Wallets is Permissions, IWallets {
     receive() external payable {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        bytes32[] memory schainHashs = schainsInternal.getSchainHashsByAddress(msg.sender);
-        if (schainHashs.length == 1) {
-            rechargeSchainWallet(schainHashs[0]);
+        bytes32[] memory schainHashes = schainsInternal.getSchainHashesByAddress(msg.sender);
+        if (schainHashes.length == 1) {
+            rechargeSchainWallet(schainHashes[0]);
         } else {
             uint validatorId = validatorService.getValidatorId(msg.sender);
             rechargeValidatorWallet(validatorId);
@@ -97,10 +107,11 @@ contract Wallets is Permissions, IWallets {
         external
         allowTwo("SkaleManager", "SkaleDKG")
     {
+        require(spender != address(0), "Spender must be specified");
         require(validatorId != 0, "ValidatorId could not be zero");
         uint amount = tx.gasprice * spentGas;
         if (amount <= _validatorWallets[validatorId]) {
-            _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
+            _validatorWallets[validatorId] = _validatorWallets[validatorId] - amount;
             emit NodeRefundedByValidator(spender, validatorId, amount);
             spender.transfer(amount);
         } else {
@@ -121,12 +132,12 @@ contract Wallets is Permissions, IWallets {
         uint debtAmount = _schainDebts[schainHash];
         uint validatorWallet = _validatorWallets[validatorId];
         if (debtAmount <= validatorWallet) {
-            _validatorWallets[validatorId] = validatorWallet.sub(debtAmount);
+            _validatorWallets[validatorId] = validatorWallet - debtAmount;
         } else {
             debtAmount = validatorWallet;
             delete _validatorWallets[validatorId];
         }
-        _schainWallets[schainHash] = _schainWallets[schainHash].add(debtAmount);
+        _schainWallets[schainHash] = _schainWallets[schainHash] + debtAmount;
         delete _schainDebts[schainHash];
     }
 
@@ -154,14 +165,15 @@ contract Wallets is Permissions, IWallets {
         override
         allowTwo("SkaleDKG", "CommunityPool")
     {
+        require(spender != address(0), "Spender must be specified");
         uint amount = tx.gasprice * spentGas;
         if (isDebt) {
             amount += (_schainDebts[schainHash] == 0 ? 21000 : 6000) * tx.gasprice;
-            _schainDebts[schainHash] = _schainDebts[schainHash].add(amount);
+            _schainDebts[schainHash] = _schainDebts[schainHash] + amount;
         }
         require(schainHash != bytes32(0), "SchainHash cannot be null");
         require(amount <= _schainWallets[schainHash], "Schain wallet has not enough funds");
-        _schainWallets[schainHash] = _schainWallets[schainHash].sub(amount);
+        _schainWallets[schainHash] = _schainWallets[schainHash] - amount;
         emit NodeRefundedBySchain(spender, schainHash, amount);
         spender.transfer(amount);
     }
@@ -172,16 +184,18 @@ contract Wallets is Permissions, IWallets {
      * `schainHash` - schain wallet from which money is withdrawn
      * 
      * Requirements: 
-     * - Executable only after initing delete schain
+     * - Executable only after initializing delete schain
      */
     function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainHash) external allow("Schains") {
+        require(schainOwner != address(0), "Schain owner must be specified");
         uint amount = _schainWallets[schainHash];
         delete _schainWallets[schainHash];
+        emit WithdrawFromSchainWallet(schainHash, amount);
         schainOwner.transfer(amount);
     }
     
     /**
-     * @dev Withdraws money from vaildator wallet.
+     * @dev Withdraws money from validator wallet.
      * `amount` - the amount of money in wei
      * 
      * Requirements: 
@@ -191,8 +205,9 @@ contract Wallets is Permissions, IWallets {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(msg.sender);
         require(amount <= _validatorWallets[validatorId], "Balance is too low");
-        _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
-        msg.sender.transfer(amount);
+        _validatorWallets[validatorId] = _validatorWallets[validatorId] - amount;
+        emit WithdrawFromValidatorWallet(validatorId, amount);
+        payable(msg.sender).transfer(amount);
     }
 
     function getSchainBalance(bytes32 schainHash) external view override returns (uint) {
@@ -215,7 +230,7 @@ contract Wallets is Permissions, IWallets {
     function rechargeValidatorWallet(uint validatorId) public payable {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator does not exists");
-        _validatorWallets[validatorId] = _validatorWallets[validatorId].add(msg.value);
+        _validatorWallets[validatorId] = _validatorWallets[validatorId] + msg.value;
         emit ValidatorWalletRecharged(msg.sender, msg.value, validatorId);
     }
 
@@ -231,7 +246,7 @@ contract Wallets is Permissions, IWallets {
     function rechargeSchainWallet(bytes32 schainHash) public payable override {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isSchainActive(schainHash), "Schain should be active for recharging");
-        _schainWallets[schainHash] = _schainWallets[schainHash].add(msg.value);
+        _schainWallets[schainHash] = _schainWallets[schainHash] + msg.value;
         emit SchainWalletRecharged(msg.sender, msg.value, schainHash);
     }
 

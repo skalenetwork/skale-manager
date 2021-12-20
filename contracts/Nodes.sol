@@ -21,10 +21,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
 import "./delegation/DelegationController.sol";
 import "./delegation/ValidatorService.sol";
@@ -54,7 +53,7 @@ import "./Permissions.sol";
 contract Nodes is Permissions {
     
     using Random for Random.RandomGenerator;
-    using SafeCast for uint;
+    using SafeCastUpgradeable for uint;
     using SegmentTree for SegmentTree.Tree;
 
     // All Nodes states
@@ -139,18 +138,14 @@ contract Nodes is Permissions {
         bytes4 publicIP,
         uint16 port,
         uint16 nonce,
-        string domainName,
-        uint time,
-        uint gasSpend
+        string domainName
     );
 
     /**
      * @dev Emitted when a node completes a network exit.
      */
     event ExitCompleted(
-        uint nodeIndex,
-        uint time,
-        uint gasSpend
+        uint nodeIndex
     );
 
     /**
@@ -158,9 +153,32 @@ contract Nodes is Permissions {
      */
     event ExitInitialized(
         uint nodeIndex,
-        uint startLeavingPeriod,
-        uint time,
-        uint gasSpend
+        uint startLeavingPeriod
+    );
+
+    /**
+     * @dev Emitted when a node set to in compliant or compliant.
+     */
+    event IncompliantNode(
+        uint indexed nodeIndex,
+        bool status
+    );
+
+    /**
+     * @dev Emitted when a node set to in maintenance or from in maintenance.
+     */
+    event MaintenanceNode(
+        uint indexed nodeIndex,
+        bool status
+    );
+
+    /**
+     * @dev Emitted when a node status changed.
+     */
+    event IPChanged(
+        uint indexed nodeIndex,
+        bytes4 previousIP,
+        bytes4 newIP
     );
 
     modifier checkNodeExists(uint nodeIndex) {
@@ -201,7 +219,7 @@ contract Nodes is Permissions {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
-                uint(spaceOfNodes[nodeIndex].freeSpace).sub(space).toUint8()
+                (uint(spaceOfNodes[nodeIndex].freeSpace) - space).toUint8()
             );
         }
         return true;
@@ -215,12 +233,12 @@ contract Nodes is Permissions {
     function addSpaceToNode(uint nodeIndex, uint8 space)
         external
         checkNodeExists(nodeIndex)
-        allowTwo("Schains", "NodeRotation")
+        allow("SchainsInternal")
     {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
-                uint(spaceOfNodes[nodeIndex].freeSpace).add(space).toUint8()
+                (uint(spaceOfNodes[nodeIndex].freeSpace) + space).toUint8()
             );
         }
     }
@@ -284,7 +302,7 @@ contract Nodes is Permissions {
             status: NodeStatus.Active,
             validatorId: validatorId
         }));
-        uint nodeIndex = nodes.length.sub(1);
+        uint nodeIndex = nodes.length - 1;
         validatorToNodeIndexes[validatorId].push(nodeIndex);
         bytes32 nodeId = keccak256(abi.encodePacked(params.name));
         nodesIPCheck[params.ip] = true;
@@ -306,9 +324,7 @@ contract Nodes is Permissions {
             params.publicIp,
             params.port,
             params.nonce,
-            params.domainName,
-            block.timestamp,
-            gasleft());
+            params.domainName);
     }
 
     /**
@@ -328,11 +344,7 @@ contract Nodes is Permissions {
     
         _setNodeLeaving(nodeIndex);
 
-        emit ExitInitialized(
-            nodeIndex,
-            block.timestamp,
-            block.timestamp,
-            gasleft());
+        emit ExitInitialized(nodeIndex, block.timestamp);
         return true;
     }
 
@@ -357,10 +369,7 @@ contract Nodes is Permissions {
 
         _setNodeLeft(nodeIndex);
 
-        emit ExitCompleted(
-            nodeIndex,
-            block.timestamp,
-            gasleft());
+        emit ExitCompleted(nodeIndex);
         return true;
     }
 
@@ -382,7 +391,7 @@ contract Nodes is Permissions {
         uint position = _findNode(validatorNodes, nodeIndex);
         if (position < validatorNodes.length) {
             validatorToNodeIndexes[validatorId][position] =
-                validatorToNodeIndexes[validatorId][validatorNodes.length.sub(1)];
+                validatorToNodeIndexes[validatorId][validatorNodes.length - 1];
         }
         validatorToNodeIndexes[validatorId].pop();
         address nodeOwner = _publicKeyToAddress(nodes[nodeIndex].publicKey);
@@ -451,6 +460,7 @@ contract Nodes is Permissions {
     function setNodeInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         _setNodeInMaintenance(nodeIndex);
+        emit MaintenanceNode(nodeIndex, true);
     }
 
     /**
@@ -464,6 +474,7 @@ contract Nodes is Permissions {
     function removeNodeFromInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
         _setNodeActive(nodeIndex);
+        emit MaintenanceNode(nodeIndex, false);
     }
 
     /**
@@ -474,6 +485,7 @@ contract Nodes is Permissions {
         if (!incompliant[nodeIndex]) {
             incompliant[nodeIndex] = true;
             _makeNodeInvisible(nodeIndex);
+            emit IncompliantNode(nodeIndex, true);
         }
     }
 
@@ -485,6 +497,7 @@ contract Nodes is Permissions {
         if (incompliant[nodeIndex]) {
             incompliant[nodeIndex] = false;
             _tryToMakeNodeVisible(nodeIndex);
+            emit IncompliantNode(nodeIndex, false);
         }
     }
 
@@ -519,6 +532,7 @@ contract Nodes is Permissions {
         }
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesIPCheck[newIP] = true;
+        emit IPChanged(nodeIndex, nodes[nodeIndex].ip, newIP);
         nodes[nodeIndex].ip = newIP;
     }
 
@@ -547,7 +561,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (bool)
     {
-        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= now;
+        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= block.timestamp;
     }
 
     /**
@@ -694,7 +708,7 @@ contract Nodes is Permissions {
      * Note: Online nodes are equal to the number of active plus leaving nodes.
      */
     function getNumberOnlineNodes() external view returns (uint) {
-        return numberOfActiveNodes.add(numberOfLeavingNodes);
+        return numberOfActiveNodes + numberOfLeavingNodes ;
     }
 
     /**
@@ -808,7 +822,7 @@ contract Nodes is Permissions {
 
     function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) internal {
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        uint len = spaceToNodes[space].length.sub(1);
+        uint len = spaceToNodes[space].length - 1;
         if (indexInArray < len) {
             uint shiftedIndex = spaceToNodes[space][len];
             spaceToNodes[space][indexInArray] = shiftedIndex;
@@ -816,23 +830,6 @@ contract Nodes is Permissions {
         }
         spaceToNodes[space].pop();
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
-    }
-
-    function _getNodesAmountBySpace() internal view returns (SegmentTree.Tree storage) {
-        return _nodesAmountBySpace;
-    }
-
-    /**
-     * @dev Returns the index of a given node within the validator's node index.
-     */
-    function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
-        uint i;
-        for (i = 0; i < validatorNodeIndexes.length; i++) {
-            if (validatorNodeIndexes[i] == nodeIndex) {
-                return i;
-            }
-        }
-        return validatorNodeIndexes.length;
     }
 
     /**
@@ -854,7 +851,7 @@ contract Nodes is Permissions {
      */
     function _setNodeActive(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.Active;
-        numberOfActiveNodes = numberOfActiveNodes.add(1);
+        numberOfActiveNodes = numberOfActiveNodes + 1;
         if (_invisible[nodeIndex]) {
             _tryToMakeNodeVisible(nodeIndex);
         } else {
@@ -869,7 +866,7 @@ contract Nodes is Permissions {
      */
     function _setNodeInMaintenance(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.In_Maintenance;
-        numberOfActiveNodes = numberOfActiveNodes.sub(1);
+        numberOfActiveNodes = numberOfActiveNodes - 1;
         _makeNodeInvisible(nodeIndex);
     }
 
@@ -926,7 +923,7 @@ contract Nodes is Permissions {
 
     function _addNodeToSpaceToNodes(uint nodeIndex, uint8 space) private {
         spaceToNodes[space].push(nodeIndex);
-        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length - 1;
     }
 
     function _addNodeToTree(uint8 space) private {
@@ -947,7 +944,7 @@ contract Nodes is Permissions {
         );
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = ConstantsHolder(contractManager.getConstantsHolder()).msr();
-        return position.add(1).mul(msr) <= delegationsTotal;
+        return (position + 1) * msr <= delegationsTotal;
     }
 
     function _checkNodeIndex(uint nodeIndex) private view {
@@ -965,6 +962,23 @@ contract Nodes is Permissions {
         );
     }
 
+    function _canBeVisible(uint nodeIndex) private view returns (bool) {
+        return !incompliant[nodeIndex] && nodes[nodeIndex].status == NodeStatus.Active;
+    }
+
+    /**
+     * @dev Returns the index of a given node within the validator's node index.
+     */
+    function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
+        uint i;
+        for (i = 0; i < validatorNodeIndexes.length; i++) {
+            if (validatorNodeIndexes[i] == nodeIndex) {
+                return i;
+            }
+        }
+        return validatorNodeIndexes.length;
+    }
+
     function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address) {
         bytes32 hash = keccak256(abi.encodePacked(pubKey[0], pubKey[1]));
         bytes20 addr;
@@ -972,9 +986,5 @@ contract Nodes is Permissions {
             addr |= bytes20(hash[i] & 0xFF) >> ((i - 12) * 8);
         }
         return address(addr);
-    }
-
-    function _canBeVisible(uint nodeIndex) private view returns (bool) {
-        return !incompliant[nodeIndex] && nodes[nodeIndex].status == NodeStatus.Active;
     }
 }

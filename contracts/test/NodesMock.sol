@@ -18,13 +18,14 @@
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
-pragma solidity 0.6.10;
+pragma solidity 0.8.9;
 
 import "../BountyV2.sol";
 import "../Permissions.sol";
 
 
 contract NodesMock is Permissions {
+
     uint public nodesCount = 0;
     uint public nodesLeft = 0;
     //     nodeId => timestamp
@@ -33,10 +34,14 @@ contract NodesMock is Permissions {
     mapping (uint => bool) public nodeLeft;
     //     nodeId => validatorId
     mapping (uint => uint) public owner;
+
+    constructor (address contractManagerAddress) {
+        Permissions.initialize(contractManagerAddress);
+    }
     
     function registerNodes(uint amount, uint validatorId) external {
         for (uint nodeId = nodesCount; nodeId < nodesCount + amount; ++nodeId) {
-            lastRewardDate[nodeId] = now;
+            lastRewardDate[nodeId] = block.timestamp;
             owner[nodeId] = validatorId;
         }
         nodesCount += amount;
@@ -46,7 +51,7 @@ contract NodesMock is Permissions {
         nodeLeft[nodeId] = true;
     }
     function changeNodeLastRewardDate(uint nodeId) external {
-        lastRewardDate[nodeId] = now;
+        lastRewardDate[nodeId] = block.timestamp;
     }
     function getNodeLastRewardDate(uint nodeIndex) external view returns (uint) {
         require(nodeIndex < nodesCount, "Node does not exist");
@@ -56,12 +61,12 @@ contract NodesMock is Permissions {
         return nodeLeft[nodeId];
     }
     function getNumberOnlineNodes() external view returns (uint) {
-        return nodesCount.sub(nodesLeft);
-    }
-    function checkPossibilityToMaintainNode(uint /* validatorId */, uint /* nodeIndex */) external pure returns (bool) {
-        return true;
+        return nodesCount - nodesLeft;
     }
     function getValidatorId(uint nodeId) external view returns (uint) {
         return owner[nodeId];
+    }
+    function checkPossibilityToMaintainNode(uint /* validatorId */, uint /* nodeIndex */) external pure returns (bool) {
+        return true;
     }
 }

@@ -11,9 +11,9 @@ import { ConstantsHolder,
     Nodes,
     SlashingTable} from "../../typechain";
 
-import { currentTime, skipTime, skipTimeToDate } from "../tools/time";
+import { currentTime, nextMonth, skipTime, skipTimeToDate } from "../tools/time";
 
-import { BigNumber } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
@@ -30,37 +30,17 @@ import { deployNodes } from "../tools/deploy/nodes";
 import { deploySlashingTable } from "../tools/deploy/slashingTable";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 import { deploySkaleManager } from "../tools/deploy/skaleManager";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { solidity } from "ethereum-waffle"
 import { assert, expect } from "chai";
-import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+import { getValidatorIdSignature } from "../tools/signatures";
+import { fastBeforeEach } from "../tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 const allowedDelegationPeriods = [2, 6, 12];
-
-export async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
-    } else {
-        return "";
-    }
-}
 
 describe("Delegation", () => {
     let owner: SignerWithAddress;
@@ -82,13 +62,15 @@ describe("Delegation", () => {
     let punisher: Punisher;
     let nodes: Nodes;
 
-    const defaultAmount = 100 * 1e18;
+    const defaultAmount = ethers.utils.parseEther("100");
     const month = 60 * 60 * 24 * 31;
 
-    let snapshot: number;
-    let cleanContracts: number;
+    interface IValidator {
+        id: number;
+        account: Wallet
+    }
 
-    before(async () => {
+    fastBeforeEach(async () => {
         [owner, holder1, holder2, holder3, validator, bountyAddress] = await ethers.getSigners();
 
         contractManager = await deployContractManager();
@@ -110,7 +92,7 @@ describe("Delegation", () => {
         await contractManager.setContractsAddress("SkaleDKG", nodes.address);
 
         // each test will start from Nov 10
-        await skipTimeToDate(ethers, 10, 10);
+        await skipTimeToDate(10, 10);
 
         const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
         await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
@@ -120,14 +102,6 @@ describe("Delegation", () => {
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         const FORGIVER_ROLE = await punisher.FORGIVER_ROLE();
         await punisher.grantRole(FORGIVER_ROLE, owner.address);
-    });
-
-    beforeEach(async () => {
-        snapshot = await makeSnapshot();
-    });
-
-    afterEach(async () => {
-        await applySnapshot(snapshot);
     });
 
     it("should allow owner to remove locker", async () => {
@@ -154,25 +128,125 @@ describe("Delegation", () => {
             .should.be.equal(13);
     });
 
+    it("should check limit of validators", async () => {
+        await skaleToken.mint(holder1.address, defaultAmount, "0x", "0x");
+        const validatorsLimit = (await constantsHolder.limitValidatorsPerDelegator()).toNumber();
+        const validatorsAmount = validatorsLimit + 1;
+        const validators: IValidator[] = [];
+        for (let i = 0; i < validatorsAmount; ++i) {
+            validators.push({
+                id: i + 1,
+                account: Wallet.createRandom().connect(ethers.provider)
+            });
+        }
+        const etherAmount = ethers.utils.parseEther("5000");
+        for (const newValidator of validators) {
+            await holder1.sendTransaction({to: newValidator.account.address, value: etherAmount});
+            await validatorService.connect(newValidator.account).registerValidator("Validator", "Good Validator", 150, 0);
+            await validatorService.enableValidator(newValidator.id);
+        }
+
+        for (let i = 0; i < validatorsLimit; i++) {
+            await delegationController.connect(holder1).delegate(validators[i].id, 100, 2, "OK delegation");
+            const delegationId = i;
+            await delegationController.connect(validators[i].account).acceptPendingDelegation(delegationId);
+        }
+
+        // could send delegation request to already delegated validator
+        await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
+
+        // could not send delegation request to new validator
+        await delegationController.connect(holder1).delegate(validators[validatorsLimit].id, 100, 2, "OK delegation")
+            .should.be.eventually.rejectedWith("Limit of validators is reached");
+
+        // still could send delegation request to already delegated validator
+        await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
+
+        await nextMonth(contractManager);
+        // could send undelegation request from 1 delegationId
+        await delegationController.connect(holder1).requestUndelegation(0);
+
+        // still could send delegation request to already delegated validator
+        await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
+
+        // could send delegation request to new validator
+        await delegationController.connect(holder1).delegate(validators[validatorsLimit].id, 100, 2, "OK delegation");
+        await delegationController.connect(validators[validatorsLimit].account).acceptPendingDelegation(23);
+
+        // could not send delegation request to previously delegated validator
+        await delegationController.connect(holder1).delegate(1, 100, 2, "OK delegation")
+            .should.be.eventually.rejectedWith("Limit of validators is reached");
+    });
+
+    it("should check limit of validators when delegations was not accepted", async () => {
+        await skaleToken.mint(holder1.address, defaultAmount, "0x", "0x");
+        const validatorsLimit = (await constantsHolder.limitValidatorsPerDelegator()).toNumber();
+        const validatorsAmount = validatorsLimit + 1;
+        const validators: IValidator[] = [];
+        for (let i = 0; i < validatorsAmount; ++i) {
+            validators.push({
+                id: i + 1,
+                account: Wallet.createRandom().connect(ethers.provider)
+            });
+        }
+        const etherAmount = ethers.utils.parseEther("5000");
+        for (const newValidator of validators) {
+            await holder1.sendTransaction({to: newValidator.account.address, value: etherAmount});
+            await validatorService.connect(newValidator.account).registerValidator("Validator", "Good Validator", 150, 0);
+            await validatorService.enableValidator(newValidator.id);
+        }
+
+        for (let i = 0; i < validatorsAmount; i++) {
+            await delegationController.connect(holder1).delegate(validators[i].id, 100, 2, "OK delegation");
+        }
+
+        for (let i = 0; i < validatorsLimit; i++) {
+            const delegationId = i;
+            await delegationController.connect(validators[i].account).acceptPendingDelegation(delegationId);
+        }
+
+        await delegationController.connect(validators[validatorsLimit].account).acceptPendingDelegation(validatorsLimit)
+            .should.be.eventually.rejectedWith("Limit of validators is reached");
+
+        // could send delegation request to already delegated validator
+        await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
+
+        // could not send delegation request to new validator
+        await delegationController.connect(holder1).delegate(validators[validatorsLimit].id, 100, 2, "OK delegation")
+            .should.be.eventually.rejectedWith("Limit of validators is reached");
+
+        // still could send delegation request to already delegated validator
+        await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
+
+        await nextMonth(contractManager);
+        // could send undelegation request from 1 delegationId (2 validatorId)
+        await delegationController.connect(holder1).requestUndelegation(0);
+
+        // still could send delegation request to already delegated validator
+        await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
+
+        // could send delegation request to new validator
+        await delegationController.connect(holder1).delegate(validators[validatorsLimit].id, 100, 2, "OK delegation");
+        await delegationController.connect(validators[validatorsLimit].account).acceptPendingDelegation(24);
+
+        // could not send delegation request to previously delegated validator
+        await delegationController.connect(holder1).delegate(validators[0].id, 100, 2, "OK delegation")
+            .should.be.eventually.rejectedWith("Limit of validators is reached");
+    });
+
     describe("when holders have tokens and validator is registered", async () => {
         let validatorId: number;
-        let holderCouldMakeDelegation: number;
-        before(async () => {
-            cleanContracts = await makeSnapshot();
+        fastBeforeEach(async () => {
             validatorId = 1;
             await skaleToken.mint(holder1.address, defaultAmount.toString(), "0x", "0x");
             await skaleToken.mint(holder2.address, defaultAmount.toString(), "0x", "0x");
             await skaleToken.mint(holder3.address, defaultAmount.toString(), "0x", "0x");
             await validatorService.connect(validator).registerValidator(
-                "First validator", "Super-pooper validator", 150, 0);
+                "First validator", "Super-duper validator", 150, 0);
             await validatorService.enableValidator(validatorId);
             await delegationPeriodManager.setDelegationPeriod(12, 200);
             await delegationPeriodManager.setDelegationPeriod(6, 150);
         });
-
-        after(async () => {
-            await applySnapshot(cleanContracts);
-        })
 
         for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
             it("should check " + delegationPeriod + " month" + (delegationPeriod > 1 ? "s" : "")
@@ -199,17 +273,11 @@ describe("Delegation", () => {
                     });
 
                     describe("when delegation request is sent", async () => {
-                        let holder1DelegatedToValidator: number;
 
-                        before(async () => {
-                            holderCouldMakeDelegation = await makeSnapshot();
+                        fastBeforeEach(async () => {
                             await delegationController.connect(holder1).delegate(
                                 validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even");
                             requestId = 0;
-                        });
-
-                        after(async () => {
-                            await applySnapshot(holderCouldMakeDelegation);
                         });
 
                         it("should not allow to burn locked tokens", async () => {
@@ -238,7 +306,7 @@ describe("Delegation", () => {
                         });
 
                         it("should unlock token if validator does not accept delegation request", async () => {
-                            await skipTimeToDate(ethers, 1, 11);
+                            await skipTimeToDate(1, 11);
 
                             await skaleToken.connect(holder1).transfer(holder2.address, 1);
                             await skaleToken.connect(holder1).approve(holder2.address, 1);
@@ -252,18 +320,13 @@ describe("Delegation", () => {
                         });
 
                         describe("when delegation request is accepted", async () => {
-                            before(async () => {
-                                holder1DelegatedToValidator = await makeSnapshot();
+                            fastBeforeEach(async () => {
                                 await delegationController.connect(validator).acceptPendingDelegation(requestId);
-                            });
-
-                            after(async () => {
-                                await applySnapshot(holder1DelegatedToValidator);
                             });
 
                             it("should extend delegation period if undelegation request was not sent",
                                 async () => {
-                                    await skipTimeToDate(ethers, 1, (11 + delegationPeriod) % 12);
+                                    await skipTimeToDate(1, (11 + delegationPeriod) % 12);
 
                                     await skaleToken.connect(holder1).transfer(holder2.address, 1)
                                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
@@ -275,7 +338,7 @@ describe("Delegation", () => {
 
                                     await delegationController.connect(holder1).requestUndelegation(requestId);
 
-                                    await skipTimeToDate(ethers, 27, (11 + delegationPeriod + delegationPeriod - 1) % 12);
+                                    await skipTimeToDate(27, (11 + delegationPeriod + delegationPeriod - 1) % 12);
 
                                     await skaleToken.connect(holder1).transfer(holder2.address, 1)
                                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
@@ -286,7 +349,7 @@ describe("Delegation", () => {
                                     await skaleToken.connect(holder1).send(holder2.address, 1, "0x")
                                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
-                                    await skipTimeToDate(ethers, 1, (11 + delegationPeriod + delegationPeriod) % 12);
+                                    await skipTimeToDate(1, (11 + delegationPeriod + delegationPeriod) % 12);
 
                                     await skaleToken.connect(holder1).transfer(holder2.address, 1);
                                     await skaleToken.connect(holder1).approve(holder2.address, 1);
@@ -322,7 +385,7 @@ describe("Delegation", () => {
             await delegationController.connect(validator).acceptPendingDelegation(0);
             await delegationController.connect(validator).acceptPendingDelegation(1);
 
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             const bondAmount = await validatorService.callStatic.getAndUpdateBondAmount(validatorId);
             assert.equal(defaultAmount.toString(), bondAmount.toString());
@@ -337,7 +400,7 @@ describe("Delegation", () => {
             await delegationController.connect(validator).acceptPendingDelegation(0);
             await delegationController.connect(validator).acceptPendingDelegation(1);
 
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             const bondAmount = await validatorService.callStatic.getAndUpdateBondAmount(validatorId);
             assert.equal(18, bondAmount.toNumber());
@@ -349,7 +412,7 @@ describe("Delegation", () => {
             const validator1Id = 1;
             const validator2Id = 2;
             await validatorService.connect(validator2).registerValidator(
-                "Second validator", "Super-pooper validator", 150, 0);
+                "Second validator", "Super-duper validator", 150, 0);
             await validatorService.enableValidator(validator2Id);
             await delegationController.connect(validator2).delegate(
                 validator1Id, 200, 2, "D2 is even");
@@ -357,7 +420,7 @@ describe("Delegation", () => {
                 validator2Id, 200, 2, "D2 is even");
             await delegationController.connect(validator1).acceptPendingDelegation(0);
             await delegationController.connect(validator2).acceptPendingDelegation(1);
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             const bondAmount1 = await validatorService.callStatic.getAndUpdateBondAmount(validator1Id);
             let bondAmount2 = await validatorService.callStatic.getAndUpdateBondAmount(validator2Id);
@@ -367,54 +430,53 @@ describe("Delegation", () => {
                 validator2Id, 200, 2, "D2 is even");
             await delegationController.connect(validator2).acceptPendingDelegation(2);
 
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
             bondAmount2 = await validatorService.callStatic.getAndUpdateBondAmount(validator2Id);
             assert.equal(bondAmount2.toNumber(), 400);
         });
 
         it("should not pay bounty for slashed tokens", async () => {
-            const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
             const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
             await contractManager.setContractsAddress("TimeHelpers", timeHelpersWithDebug.address);
-            await skaleToken.mint(holder1.address, ten18.muln(10000).toString(10), "0x", "0x");
-            await skaleToken.mint(holder2.address, ten18.muln(10000).toString(10), "0x", "0x");
+            await skaleToken.mint(holder1.address, ethers.utils.parseEther("10000"), "0x", "0x");
+            await skaleToken.mint(holder2.address, ethers.utils.parseEther("10000"), "0x", "0x");
 
-            await constantsHolder.setMSR(ten18.muln(2000).toString(10));
+            await constantsHolder.setMSR(ethers.utils.parseEther("2000"));
 
             const slashingTable: SlashingTable = await deploySlashingTable(contractManager);
             const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
             await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
-            slashingTable.setPenalty("FailedDKG", ten18.muln(10000).toString(10));
+            slashingTable.setPenalty("FailedDKG", ethers.utils.parseEther("10000"));
 
-            await constantsHolder.setLaunchTimestamp((await currentTime(web3)) - 4 * month);
+            await constantsHolder.setLaunchTimestamp((await currentTime()) - 4 * month);
 
-            await delegationController.connect(holder1).delegate(validatorId, ten18.muln(10000).toString(10), 2, "First delegation");
+            await delegationController.connect(holder1).delegate(validatorId, ethers.utils.parseEther("10000"), 2, "First delegation");
             const delegationId1 = 0;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId1);
 
             await timeHelpersWithDebug.skipTime(month);
             (await delegationController.getState(delegationId1)).should.be.equal(State.DELEGATED);
 
-            const bounty = ten18;
+            const bounty = ethers.utils.parseEther("1");
             for (let i = 0; i < 5; ++i) {
-                await skaleManagerMock.payBounty(validatorId, bounty.toString(10));
+                await skaleManagerMock.payBounty(validatorId, bounty);
             }
 
             await timeHelpersWithDebug.skipTime(month);
 
             await distributor.connect(holder1).withdrawBounty(validatorId, bountyAddress.address);
             let balance = (await skaleToken.balanceOf(bountyAddress.address)).toString();
-            balance.should.be.equal(bounty.muln(5).muln(85).divn(100).toString(10));
+            balance.should.be.equal(bounty.mul(5).mul(85).div(100));
             await skaleToken.connect(bountyAddress).transfer(holder1.address, balance);
 
-            await punisher.slash(validatorId, ten18.muln(10000).toString(10));
+            await punisher.slash(validatorId, ethers.utils.parseEther("10000"));
 
             (await skaleToken.callStatic.getAndUpdateSlashedAmount(holder1.address)).toString()
-                .should.be.equal(ten18.muln(10000).toString(10));
+                .should.be.equal(ethers.utils.parseEther("10000"));
             (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toString()
                 .should.be.equal("0");
 
-            await delegationController.connect(holder2).delegate(validatorId, ten18.muln(10000).toString(10), 2, "Second delegation");
+            await delegationController.connect(holder2).delegate(validatorId, ethers.utils.parseEther("10000"), 2, "Second delegation");
             const delegationId2 = 1;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId2);
 
@@ -422,7 +484,7 @@ describe("Delegation", () => {
             (await delegationController.getState(delegationId2)).should.be.equal(State.DELEGATED);
 
             for (let i = 0; i < 5; ++i) {
-                await skaleManagerMock.payBounty(validatorId, bounty.toString(10));
+                await skaleManagerMock.payBounty(validatorId, bounty);
             }
 
             await timeHelpersWithDebug.skipTime(month);
@@ -434,16 +496,65 @@ describe("Delegation", () => {
 
             await distributor.connect(holder2).withdrawBounty(validatorId, bountyAddress.address);
             balance = (await skaleToken.balanceOf(bountyAddress.address)).toString();
-            balance.should.be.equal(bounty.muln(5).muln(85).divn(100).toString(10));
+            balance.should.be.equal(bounty.mul(5).mul(85).div(100));
             await skaleToken.connect(bountyAddress).transfer(holder2.address, balance);
+        });
+
+        it("should be possible to distribute bounty across thousands of holders", async () => {
+            let holdersAmount = 1000;
+            if (process.env.CI) {
+                console.log("Reduce holders amount to fit GitHub time limit");
+                holdersAmount = 10;
+            }
+            const delegatedAmount = 1e7;
+            const holders: Wallet[] = [];
+            for (let i = 0; i < holdersAmount; ++i) {
+                holders.push(Wallet.createRandom().connect(ethers.provider));
+            }
+            const etherAmount = ethers.utils.parseEther("5000");
+
+            await constantsHolder.setLaunchTimestamp(0);
+
+            let delegationId = 0;
+            for (const holder of holders) {
+                await holder1.sendTransaction({to: holder.address, value: etherAmount});
+                await skaleToken.mint(holder.address, delegatedAmount, "0x", "0x");
+                await delegationController.connect(holder).delegate(validatorId, delegatedAmount, 2, "D2 is even");
+                await delegationController.connect(validator).acceptPendingDelegation(delegationId++);
+            }
+
+            await nextMonth(contractManager);
+
+            const bounty = Math.floor(holdersAmount * delegatedAmount / 0.85);
+            (bounty - Math.floor(bounty * 0.15)).should.be.equal(holdersAmount * delegatedAmount);
+            await skaleManagerMock.payBounty(validatorId, bounty);
+
+            await nextMonth(contractManager);
+
+            for (const holder of holders) {
+                await distributor.connect(holder).withdrawBounty(validatorId, holder.address);
+                (await skaleToken.balanceOf(holder.address)).toNumber().should.be.equal(delegatedAmount * 2);
+                (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder.address))
+                    .toNumber().should.be.equal(delegatedAmount);
+
+                const balance = await holder.getBalance();
+                const gas = 21 * 1e3;
+                const gasPrice = 20 * 1e9;
+                await holder.sendTransaction({
+                    to: holder1.address,
+                    gasLimit: gas,
+                    gasPrice,
+                    value: balance.sub(gas * gasPrice)
+                });
+                (await holder.getBalance()).toNumber().should.be.equal(0);
+            }
         });
 
         describe("when 3 holders delegated", async () => {
             const delegatedAmount1 = 2e6;
             const delegatedAmount2 = 3e6;
             const delegatedAmount3 = 5e6;
-            before(async () => {
-                holderCouldMakeDelegation = await makeSnapshot();
+            fastBeforeEach(async () => {
                 delegationController.connect(holder1).delegate(validatorId, delegatedAmount1, 12, "D2 is even");
                 delegationController.connect(holder2).delegate(validatorId, delegatedAmount2, 6,
                     "D2 is even more even");
@@ -453,19 +564,15 @@ describe("Delegation", () => {
                 await delegationController.connect(validator).acceptPendingDelegation(1);
                 await delegationController.connect(validator).acceptPendingDelegation(2);
 
-                await skipTime(ethers, month);
-            });
-
-            after(async () => {
-                await applySnapshot(holderCouldMakeDelegation);
+                await nextMonth(contractManager);
             });
 
             it("should distribute funds sent to Distributor across delegators", async () => {
-                await constantsHolder.setLaunchTimestamp(await currentTime(web3));
+                await constantsHolder.setLaunchTimestamp(await currentTime());
 
                 await skaleManagerMock.payBounty(validatorId, 101);
 
-                await skipTime(ethers, month);
+                await nextMonth(contractManager);
 
                 // 15% fee to validator
 
@@ -498,7 +605,7 @@ describe("Delegation", () => {
                 await distributor.connect(holder1).withdrawBounty(validatorId, bountyAddress.address)
                     .should.be.eventually.rejectedWith("Bounty is locked");
 
-                await skipTime(ethers, 3 * month);
+                await nextMonth(contractManager, 3);
 
                 await distributor.connect(validator).withdrawFee(bountyAddress.address);
                 (await distributor.connect(validator).callStatic.getEarnedFeeAmount())[0].toNumber().should.be.equal(0);
@@ -607,13 +714,13 @@ describe("Delegation", () => {
                     const delegationId = 3;
                     await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
-                    await skipTime(ethers, month);
+                    await nextMonth(contractManager);
 
                     // now only holder1 has delegated and not slashed tokens
 
                     await skaleManagerMock.payBounty(validatorId, 100);
 
-                    await skipTime(ethers, month);
+                    await nextMonth(contractManager);
 
                     (await distributor.connect(validator).callStatic.getEarnedFeeAmount())[0].toNumber().should.be.equal(15);
                     (await distributor.connect(holder1).callStatic.getAndUpdateEarnedBountyAmount(
@@ -655,301 +762,6 @@ describe("Delegation", () => {
             const signature = await getValidatorIdSignature(validatorIndex, bountyAddress);
             await validatorService.connect(validator).linkNodeAddress(bountyAddress.address, signature);
             await nodes.checkPossibilityCreatingNode(bountyAddress.address);
-        });
-
-        it("should check limit of validators", async () => {
-            const validatorsAmount = 20;
-            const validators = [];
-            for (let i = 0; i < validatorsAmount; ++i) {
-                validators.push(web3.eth.accounts.create());
-            }
-            const etherAmount = 5 * 1e18;
-
-            const web3ValidatorService = new web3.eth.Contract(
-                JSON.parse(validatorService.interface.format('json') as string),
-                validatorService.address);
-            const web3DelegationController = new web3.eth.Contract(
-                JSON.parse(delegationController.interface.format('json') as string),
-                delegationController.address);
-            let newValidatorId = 2;
-            for (const newValidator of validators) {
-                await web3.eth.sendTransaction({from: holder1.address, to: newValidator.address, value: etherAmount});
-
-                const callData = web3ValidatorService.methods.registerValidator("Validator", "Good Validator", 150, 0).encodeABI();
-
-                const registerTX = {
-                    data: callData,
-                    from: newValidator.address,
-                    gas: 1e6,
-                    to: validatorService.address,
-                };
-
-                const signedRegisterTx = await newValidator.signTransaction(registerTX);
-                if (signedRegisterTx.rawTransaction) {
-                    await web3.eth.sendSignedTransaction(signedRegisterTx.rawTransaction);
-                    await validatorService.enableValidator(newValidatorId);
-                    newValidatorId++;
-                } else {
-                    assert(false, "Can't sign a transaction");
-                }
-            }
-
-            let delegationId = 0;
-            for (let i = 2; i < 22; i++) {
-                await delegationController.connect(holder1).delegate(i, 100, 2, "OK delegation");
-                const callData = web3DelegationController.methods.acceptPendingDelegation(delegationId++).encodeABI();
-                const AcceptTX = {
-                    data: callData,
-                    from: validators[i - 2].address,
-                    gas: 1e6,
-                    to: delegationController.address,
-                };
-
-                const signedAcceptTX = await validators[i - 2].signTransaction(AcceptTX);
-                if (signedAcceptTX.rawTransaction) {
-                    await web3.eth.sendSignedTransaction(signedAcceptTX.rawTransaction);
-                } else {
-                    assert(false, "Can't sign a transaction");
-                }
-            }
-
-            // could send delegation request to already delegated validator
-            await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
-
-            // console.log("Delegated to 2");
-
-            // could not send delegation request to new validator
-            await delegationController.connect(holder1).delegate(1, 100, 2, "OK delegation")
-                .should.be.eventually.rejectedWith("Limit of validators is reached");
-
-            // console.log("Not delegated to 1");
-
-            // still could send delegation request to already delegated validator
-            await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
-
-            // console.log("Delegated to 2");
-
-            await skipTime(ethers, 60 * 60 * 24 * 31);
-            // could send undelegation request from 1 delegationId (3 validatorId)
-            await delegationController.connect(holder1).requestUndelegation(1);
-
-            // console.log("Request undelegation from 3");
-
-            // still could send delegation request to already delegated validator
-            await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
-
-            // console.log("Delegated to 2");
-
-            // could send delegation request to new validator
-            await delegationController.connect(holder1).delegate(1, 100, 2, "OK delegation");
-            await delegationController.connect(validator).acceptPendingDelegation(23);
-
-            // console.log("Delegated to 1");
-
-            // could not send delegation request to previously delegated validator
-            await delegationController.connect(holder1).delegate(3, 100, 2, "OK delegation")
-                .should.be.eventually.rejectedWith("Limit of validators is reached");
-
-            // console.log("Not delegated to 3");
-        });
-
-        it("should check limit of validators when delegations was not accepted", async () => {
-            const validatorsAmount = 20;
-            const validators = [];
-            for (let i = 0; i < validatorsAmount; ++i) {
-                validators.push(web3.eth.accounts.create());
-            }
-            const etherAmount = 5 * 1e18;
-
-            const web3ValidatorService = new web3.eth.Contract(
-                JSON.parse(validatorService.interface.format('json') as string),
-                validatorService.address);
-            const web3DelegationController = new web3.eth.Contract(
-                JSON.parse(delegationController.interface.format('json') as string),
-                delegationController.address);
-            let newValidatorId = 2;
-            for (const newValidator of validators) {
-                await web3.eth.sendTransaction({from: holder1.address, to: newValidator.address, value: etherAmount});
-
-                const callData = web3ValidatorService.methods.registerValidator("Validator", "Good Validator", 150, 0).encodeABI();
-
-                const registerTX = {
-                    data: callData,
-                    from: newValidator.address,
-                    gas: 1e6,
-                    to: validatorService.address,
-                };
-
-                const signedRegisterTx = await newValidator.signTransaction(registerTX);
-                if (signedRegisterTx.rawTransaction) {
-                    await web3.eth.sendSignedTransaction(signedRegisterTx.rawTransaction);
-                    await validatorService.enableValidator(newValidatorId);
-                    newValidatorId++;
-                } else {
-                    assert(false);
-                }
-            }
-
-            for (let i = 1; i < 22; i++) {
-                await delegationController.connect(holder1).delegate(i, 100, 2, "OK delegation");
-            }
-
-            let delegationId = 1;
-            for (let i = 2; i < 22; i++) {
-                const callData = web3DelegationController.methods.acceptPendingDelegation(delegationId++).encodeABI();
-                const AcceptTX = {
-                    data: callData,
-                    from: validators[i - 2].address,
-                    gas: 1e6,
-                    to: delegationController.address,
-                };
-
-                const signedAcceptTX = await validators[i - 2].signTransaction(AcceptTX);
-                if (signedAcceptTX.rawTransaction) {
-                    await web3.eth.sendSignedTransaction(signedAcceptTX.rawTransaction);
-                } else {
-                    assert(false);
-                }
-            }
-
-            await delegationController.connect(validator).acceptPendingDelegation(0)
-                .should.be.eventually.rejectedWith("Limit of validators is reached");
-
-            // could send delegation request to already delegated validator
-            await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
-
-            // console.log("Delegated to 2");
-
-            // could not send delegation request to new validator
-            await delegationController.connect(holder1).delegate(1, 100, 2, "OK delegation")
-                .should.be.eventually.rejectedWith("Limit of validators is reached");
-
-            // console.log("Not delegated to 1");
-
-            // still could send delegation request to already delegated validator
-            await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
-
-            // console.log("Delegated to 2");
-
-            await skipTime(ethers, 60 * 60 * 24 * 31);
-            // could send undelegation request from 1 delegationId (2 validatorId)
-            await delegationController.connect(holder1).requestUndelegation(1);
-
-            // console.log("Request undelegation from 3");
-
-            // still could send delegation request to already delegated validator
-            await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation");
-
-            // console.log("Delegated to 2");
-
-            // could send delegation request to new validator
-            const res = await delegationController.connect(holder1).delegate(1, 100, 2, "OK delegation");
-            await delegationController.connect(validator).acceptPendingDelegation(24);
-
-            // console.log("Delegated to 1");
-
-            // could not send delegation request to previously delegated validator
-            await delegationController.connect(holder1).delegate(2, 100, 2, "OK delegation")
-                .should.be.eventually.rejectedWith("Limit of validators is reached");
-
-            // console.log("Not delegated to 3");
-        });
-
-        it("should be possible to distribute bounty across thousands of holders", async () => {
-            let holdersAmount = 1000;
-            if (process.env.CI) {
-                console.log("Reduce holders amount to fit GitHub timelimit");
-                holdersAmount = 10;
-            }
-            const delegatedAmount = 1e7;
-            const holders = [];
-            for (let i = 0; i < holdersAmount; ++i) {
-                holders.push(web3.eth.accounts.create());
-            }
-            const etherAmount = 5 * 1e18;
-
-            const web3DelegationController = new web3.eth.Contract(
-                JSON.parse(delegationController.interface.format('json') as string),
-                delegationController.address);
-            const web3Distributor = new web3.eth.Contract(
-                JSON.parse(distributor.interface.format('json') as string),
-                distributor.address);
-
-            await constantsHolder.setLaunchTimestamp(0);
-
-            let delegationId = 0;
-            for (const holder of holders) {
-                await web3.eth.sendTransaction({from: holder1.address, to: holder.address, value: etherAmount});
-                await skaleToken.mint(holder.address, delegatedAmount, "0x", "0x");
-
-                const callData = web3DelegationController.methods.delegate(
-                    validatorId, delegatedAmount, 2, "D2 is even").encodeABI();
-
-                const delegateTx = {
-                    data: callData,
-                    from: holder.address,
-                    gas: 1e6,
-                    to: delegationController.address,
-                };
-
-                const signedDelegateTx = await holder.signTransaction(delegateTx);
-                if (signedDelegateTx.rawTransaction) {
-                    await web3.eth.sendSignedTransaction(signedDelegateTx.rawTransaction);
-                } else {
-                    assert(false);
-                }
-
-                await delegationController.connect(validator).acceptPendingDelegation(delegationId++);
-            }
-
-            await skipTime(ethers, month);
-
-            const bounty = Math.floor(holdersAmount * delegatedAmount / 0.85);
-            (bounty - Math.floor(bounty * 0.15)).should.be.equal(holdersAmount * delegatedAmount);
-            await skaleManagerMock.payBounty(validatorId, bounty);
-
-            await skipTime(ethers, month);
-
-            for (const holder of holders) {
-                const callData = web3Distributor.methods.withdrawBounty(
-                    validatorId, holder.address).encodeABI();
-
-                const withdrawTx = {
-                    data: callData,
-                    from: holder.address,
-                    gas: 1e6,
-                    to: distributor.address,
-                };
-
-                const signedWithdrawTx = await holder.signTransaction(withdrawTx);
-                if (signedWithdrawTx.rawTransaction) {
-                    await web3.eth.sendSignedTransaction(signedWithdrawTx.rawTransaction);
-                } else {
-                    assert(false);
-                }
-
-                (await skaleToken.balanceOf(holder.address)).toNumber().should.be.equal(delegatedAmount * 2);
-                (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder.address))
-                    .toNumber().should.be.equal(delegatedAmount);
-
-                const balance = Number.parseInt(await web3.eth.getBalance(holder.address), 10);
-                const gas = 21 * 1e3;
-                const gasPrice = 20 * 1e9;
-                const sendTx = {
-                    from: holder.address,
-                    gas,
-                    gasPrice,
-                    to: holder1.address,
-                    value: balance - gas * gasPrice,
-                };
-                const signedSendTx = await holder.signTransaction(sendTx);
-                if (signedSendTx.rawTransaction) {
-                    await web3.eth.sendSignedTransaction(signedSendTx.rawTransaction);
-                    await web3.eth.getBalance(holder.address).should.be.eventually.equal("0");
-                } else {
-                    assert(false);
-                }
-            }
         });
     });
 });

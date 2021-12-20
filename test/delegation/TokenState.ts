@@ -1,28 +1,24 @@
 import { ContractManager,
          DelegationController,
          SkaleToken,
-         TokenState,
          ValidatorService} from "../../typechain";
 
 import { deployContractManager } from "../tools/deploy/contractManager";
-import { currentTime, skipTime } from "../tools/time";
+import { nextMonth, skipTime } from "../tools/time";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { State } from "../tools/types";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { solidity } from "ethereum-waffle";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("DelegationController (token state)", () => {
     let owner: SignerWithAddress;
@@ -30,7 +26,6 @@ describe("DelegationController (token state)", () => {
     let validator: SignerWithAddress;
     let contractManager: ContractManager;
     let delegationController: DelegationController;
-    let tokenState: TokenState;
     let validatorService: ValidatorService;
     let skaleToken: SkaleToken;
     let snapshot: number;
@@ -43,7 +38,6 @@ describe("DelegationController (token state)", () => {
 
         contractManager = await deployContractManager();
         delegationController = await deployDelegationController(contractManager);
-        tokenState = await deployTokenState(contractManager);
         validatorService = await deployValidatorService(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
 
@@ -96,7 +90,7 @@ describe("DelegationController (token state)", () => {
         });
 
         it("should automatically unlock tokens after delegation request if validator don't accept", async () => {
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             const state = await delegationController.getState(delegationId);
             state.should.be.equal(State.REJECTED);
@@ -124,7 +118,7 @@ describe("DelegationController (token state)", () => {
 
         it("should not allow to accept request after end of the month", async () => {
             // skip month
-            await skipTime(ethers, month);
+            await nextMonth(contractManager);
 
             await delegationController.connect(validator).acceptPendingDelegation(delegationId)
                 .should.eventually.be.rejectedWith("The delegation request is outdated");
@@ -171,7 +165,7 @@ describe("DelegationController (token state)", () => {
                 let validatorAcceptedDelegation: number;
                 before(async () => {
                     validatorAcceptedDelegation = await makeSnapshot();
-                    await skipTime(ethers, month);
+                    await nextMonth(contractManager);
                 });
 
                 after(async () => {
@@ -197,7 +191,7 @@ describe("DelegationController (token state)", () => {
                     let delegated = await delegationController.callStatic.getAndUpdateDelegatedAmount(holder.address);
                     delegated.toNumber().should.be.equal(amount);
 
-                    await skipTime(ethers, month * period);
+                    await nextMonth(contractManager, period);
 
                     state = await delegationController.getState(delegationId);
                     state.should.be.equal(State.COMPLETED);

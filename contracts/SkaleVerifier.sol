@@ -19,8 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.9;
 
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
@@ -33,7 +32,6 @@ import "./utils/FieldOperations.sol";
  */
 contract SkaleVerifier is Permissions {  
     using Fp2Operations for Fp2Operations.Fp2Point;
-
 
     /**
     * @dev Verifies a BLS signature.
@@ -105,14 +103,14 @@ contract SkaleVerifier is Permissions {
             return false;
         }
         uint xCoord = uint(hash) % Fp2Operations.P;
-        xCoord = (xCoord.add(counter)) % Fp2Operations.P;
+        xCoord = (xCoord + counter) % Fp2Operations.P;
 
         uint ySquared = addmod(
             mulmod(mulmod(xCoord, xCoord, Fp2Operations.P), xCoord, Fp2Operations.P),
             3,
             Fp2Operations.P
         );
-        if (hashB < Fp2Operations.P.div(2) || mulmod(hashB, hashB, Fp2Operations.P) != ySquared || xCoord != hashA) {
+        if (hashB < Fp2Operations.P / 2 || mulmod(hashB, hashB, Fp2Operations.P) != ySquared || xCoord != hashA) {
             return false;
         }
 
