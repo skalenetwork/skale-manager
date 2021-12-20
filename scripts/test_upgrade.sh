@@ -13,8 +13,10 @@ DEPLOYED_WITH_NODE_VERSION="lts/erbium"
 CURRENT_NODE_VERSION=$(nvm current)
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
+
 npx ganache-cli --gasLimit 8000000 --quiet &
 GANACHE_PID=$!
+
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
 nvm use $DEPLOYED_WITH_NODE_VERSION
