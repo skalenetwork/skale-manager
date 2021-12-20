@@ -860,10 +860,10 @@
     widest-line "^3.1.0"
     wrap-ansi "^4.0.0"
 
-"@openzeppelin/contracts-upgradeable@^4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.3.3.tgz#dfd8ac012fd7f53ece4b31b736fcab09565a2615"
-  integrity sha512-2ELsJkBQ0xirVQnx0utl3N+/iTPF+S0r3j0IVQIMG0HgAWreFXumY+yhGcwSV5JZ/yNNAXWR4mjIYRH/FEgu2Q==
+"@openzeppelin/contracts-upgradeable@^4.4.1":
+  version "4.4.1"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.4.1.tgz#5d2c0e82cc1f94ee38a27572217ef103d5c3d0ef"
+  integrity sha512-84dUN+TBY42D52BzUc4RHxU4KORs8Ys7dj3nH0WX1QKtlS6rrN45gL+sxaotkPdCqFLVLPyj+kd8GfJ4puxVjA==
 
 "@openzeppelin/contracts@^4.3.2":
   version "4.3.2"
@@ -1171,20 +1171,15 @@
     "@types/node" "*"
     form-data "^3.0.0"
 
-"@types/node@*":
-  version "16.4.5"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.4.5.tgz#eac95d4e52775190c405f0b9061ddcfb0304f7fc"
-  integrity sha512-+0GPv/hIFNoy8r5MFf7vRpBjnqNYNrlHdetoy23E7TYc7JB2ctwyi3GMKpviozaHQ/Sy2kBNUTvG9ywN66zV1g==
+"@types/node@*", "@types/node@^17.0.1":
+  version "17.0.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.1.tgz#88d501e84b6185f6489ecee4ba9e8fcec7f29bb2"
+  integrity sha512-NXKvBVUzIbs6ylBwmOwHFkZS2EXCcjnqr8ZCRNaXBkHAf+3mn/rPcJxwrzuc6movh8fxQAsUUfYklJ/EG+hZqQ==
 
 "@types/node@^12.12.6":
   version "12.20.17"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.17.tgz#ffd44c2801fc527a6fe6e86bc9b900261df1c87e"
   integrity sha512-so8EHl4S6MmatPS0f9sE1ND94/ocbcEshW5OpyYthRqeRpiYyW2uXYTo/84kmfdfeNrDycARkvuiXl6nO40NGg==
-
-"@types/node@^14.14.25":
-  version "14.17.6"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.17.6.tgz#cc61c8361c89e70c468cda464d1fa3dd7e5ebd62"
-  integrity sha512-iBxsxU7eswQDGhlr3AiamBxOssaYxbM+NKXVil8jg9yFXvrfEFbDumLD/2dMTB+zYyg7w+Xjt8yuxfdbUHAtcQ==
 
 "@types/parse-json@^4.0.0":
   version "4.0.0"
