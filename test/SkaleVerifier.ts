@@ -1,6 +1,7 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManager,
+import { ConstantsHolder,
+         ContractManager,
          KeyStorage,
          Nodes,
          Schains,
@@ -10,6 +11,7 @@ import { ContractManager,
          SkaleVerifier,
          ValidatorService } from "../typechain";
 import { privateKeys } from "./tools/private-keys";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
@@ -38,6 +40,7 @@ describe("SkaleVerifier", () => {
     let hacker: SignerWithAddress;
     let nodeAddress: Wallet;
 
+    let constantsHolder: ConstantsHolder;
     let contractManager: ContractManager;
     let schains: Schains;
     let skaleVerifier: SkaleVerifier;
@@ -55,6 +58,7 @@ describe("SkaleVerifier", () => {
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
+        constantsHolder = await deployConstantsHolder(contractManager);
 
         nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -65,7 +69,6 @@ describe("SkaleVerifier", () => {
         skaleManager = await deploySkaleManager(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-        // await contractManager.setContractsAddress("SkaleManager", skaleManager.address);
 
         await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
@@ -307,7 +310,6 @@ describe("SkaleVerifier", () => {
                 ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
 
             const bobHash = stringKeccak256("Bob");
-            // await keyStorage.initPublicKeyInProgress(bobHash);
 
             await keyStorage.adding(
                 bobHash,
@@ -350,8 +352,6 @@ describe("SkaleVerifier", () => {
 
             await skaleManager.nodeExit(0);
 
-            console.log("OK");
-
             await keyStorage.adding(
                 bobHash,
                 {
@@ -366,7 +366,16 @@ describe("SkaleVerifier", () => {
                 }
             );
 
-            console.log("OK2");
+            res = await schains.verifySchainSignature(
+                "2968563502518615975252640488966295157676313493262034332470965194448741452860",
+                "16493689853238003409059452483538012733393673636730410820890208241342865935903",
+                "0x243b6ce34e3c772e4e01685954b027e691f67622d21d261ae0b324c78b315fc3",
+                "1",
+                "16388258042572094315763275220684810298941672685551867426142229042700479455172",
+                "16728155475357375553025720334221543875807222325459385994874825666479685652110",
+                "Bob",
+            );
+            assert(res.should.be.true);
 
             await skaleDKG.setSuccessfulDKGPublic(bobHash);
             res = await schains.verifySchainSignature(
@@ -380,7 +389,9 @@ describe("SkaleVerifier", () => {
             );
             assert(res.should.be.true);
 
-            skipTime(43200);
+            const rotDelay = await constantsHolder.rotationDelay();
+
+            skipTime(rotDelay.toNumber());
 
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
@@ -393,7 +404,9 @@ describe("SkaleVerifier", () => {
             );
             assert(res.should.be.true);
 
-            skipTime(3700);
+            const oneHour = 60 * 60;
+
+            skipTime(oneHour);
 
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
