@@ -39,12 +39,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: List available nodes
-      shell: bash -l -eo pipefail {0}
-      run: |
-        nvm ls
-        echo $NVM_DIR
-
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -59,11 +53,11 @@ jobs:
     - name: Show slither version
       run: slither --version
 
-    # - name: lint
-    #   run: yarn fullCheck
+    - name: lint
+      run: yarn fullCheck
 
-    # - name: Test deployment
-    #   run: ./scripts/test_deploy.sh
+    - name: Test deployment
+      run: ./scripts/test_deploy.sh
 
     - name: Test upgrade
       env:
