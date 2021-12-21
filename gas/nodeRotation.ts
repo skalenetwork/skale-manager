@@ -111,10 +111,10 @@ describe("nodeRotation", () => {
         console.log("Will process", schainHashes.length, "rotations");
         const gas = [];
         for (let i = 0; i < schainHashes.length; i++) {
-            const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
-            console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
+            const estimatedGas = await skaleManager.connect(node).estimateGas.nodeExit(rotIndex);
+            console.log("Estimated gas on nodeExit", estimatedGas.toString());
             const overrides = {
-                gasLimit: estimatedGas.toNumber()
+                gasLimit: estimatedGas
             }
             const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
             // console.log("Gas limit was:", result);
@@ -204,7 +204,7 @@ describe("nodeRotation", () => {
         }
     });
 
-    it("random rotation on dynamically creating schains", async () => {
+    it.only("random rotation on dynamically creating schains", async () => {
         const validatorId = 1;
 
         await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
@@ -249,10 +249,10 @@ describe("nodeRotation", () => {
                 console.log("Will process", schainHashes.length, "rotations");
                 const gas = [];
                 for (let i = 0; i < schainHashes.length; i++) {
-                    const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
-                    console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
+                    const estimatedGas = await skaleManager.connect(node).estimateGas.nodeExit(rotIndex);
+                    console.log("Estimated gas on nodeExit", estimatedGas.toString());
                     const overrides = {
-                        gasLimit: estimatedGas.toNumber()
+                        gasLimit: estimatedGas
                     }
                     const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
                     // console.log("Gas limit was:", result);
