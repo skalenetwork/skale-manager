@@ -204,7 +204,7 @@ describe("nodeRotation", () => {
         }
     });
 
-    it.only("random rotation on dynamically creating schains", async () => {
+    it("random rotation on dynamically creating schains", async () => {
         const validatorId = 1;
 
         await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
@@ -218,6 +218,10 @@ describe("nodeRotation", () => {
         const measurementsRotation = [];
         const exitedNode = new Set();
         for (let nodeId = 0; nodeId < maxNodesAmount; ++nodeId) {
+            if ((await node.getBalance()).lt(ethers.utils.parseEther("0.1"))) {
+                await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});
+            }
+
             await skaleManager.connect(node).createNode(
                 1, // port
                 0, // nonce
