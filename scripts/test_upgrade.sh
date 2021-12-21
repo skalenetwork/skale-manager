@@ -15,7 +15,6 @@ CURRENT_NODE_VERSION=$(nvm current)
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 
 npx ganache-cli --gasLimit 8000000 --quiet &
-GANACHE_PID=$!
 
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
@@ -34,4 +33,4 @@ rm -r --interactive=never $DEPLOYED_DIR
 
 ABI="data/$ABI_FILENAME" npx hardhat run migrations/upgrade.ts --network localhost
 
-kill $GANACHE_PID
+npx kill-port 8545
