@@ -111,10 +111,10 @@ describe("nodeRotation", () => {
         console.log("Will process", schainHashes.length, "rotations");
         const gas = [];
         for (let i = 0; i < schainHashes.length; i++) {
-            const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
-            console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
+            const estimatedGas = await skaleManager.connect(node).estimateGas.nodeExit(rotIndex);
+            console.log("Estimated gas on nodeExit", estimatedGas.toString());
             const overrides = {
-                gasLimit: estimatedGas.toNumber()
+                gasLimit: estimatedGas
             }
             const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
             // console.log("Gas limit was:", result);
@@ -218,6 +218,10 @@ describe("nodeRotation", () => {
         const measurementsRotation = [];
         const exitedNode = new Set();
         for (let nodeId = 0; nodeId < maxNodesAmount; ++nodeId) {
+            if ((await node.getBalance()).lt(ethers.utils.parseEther("0.1"))) {
+                await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});
+            }
+
             await skaleManager.connect(node).createNode(
                 1, // port
                 0, // nonce
@@ -249,10 +253,10 @@ describe("nodeRotation", () => {
                 console.log("Will process", schainHashes.length, "rotations");
                 const gas = [];
                 for (let i = 0; i < schainHashes.length; i++) {
-                    const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
-                    console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
+                    const estimatedGas = await skaleManager.connect(node).estimateGas.nodeExit(rotIndex);
+                    console.log("Estimated gas on nodeExit", estimatedGas.toString());
                     const overrides = {
-                        gasLimit: estimatedGas.toNumber()
+                        gasLimit: estimatedGas
                     }
                     const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
                     // console.log("Gas limit was:", result);
