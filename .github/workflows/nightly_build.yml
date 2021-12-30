@@ -45,7 +45,7 @@ jobs:
 
     - name: Run gas measurements
       env:
-        NODE_OPTIONS: --max_old_space_size=4096
+        NODE_OPTIONS: --max_old_space_size=6952
       run: npx hardhat test gas/*.ts
 
     - name: Run long tests
