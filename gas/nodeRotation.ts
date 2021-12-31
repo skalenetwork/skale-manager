@@ -22,6 +22,7 @@ import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures"
 import { stringKeccak256 } from "../test/tools/hashes";
 import { fastBeforeEach } from "../test/tools/mocha";
 import { SchainType } from "../test/tools/types";
+import { applySnapshot, makeSnapshot } from "../test/tools/snapshot";
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {
@@ -132,16 +133,25 @@ describe("nodeRotation", () => {
                 );
             }
         });
+    });
 
-        it("max node rotation on 17 nodes", async () => {
-            const validatorId = 1;
+    describe("max node rotation on 17 nodes", () => {
+        const validatorId = 1;
+        const nodesAmount = 16;
+        const numberOfSchains = 128;
+        const gasLimit = 12e6;
+        const leavingNode = Math.floor(Math.random() * nodesAmount);
+        const gas = [];
+        let schainHashes: string[];
+        let stateBefore: number;
 
+        before(async () => {
+            stateBefore = await makeSnapshot();
             await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
             const signature = await getValidatorIdSignature(validatorId, node);
             await validatorService.connect(validator).linkNodeAddress(node.address, signature);
             await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
 
-            const nodesAmount = 16;
             for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
                 await skaleManager.connect(node).createNode(
                     1, // port
@@ -154,7 +164,6 @@ describe("nodeRotation", () => {
                 );
             }
 
-            const numberOfSchains = 128;
             for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
                 const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, "schain-" + schainNumber, owner.address, ethers.constants.AddressZero)).wait();
                 const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
@@ -183,30 +192,32 @@ describe("nodeRotation", () => {
                 "some.domain.name"
             );
 
-            const gasLimit = 12e6;
-            const rotIndex = Math.floor(Math.random() * nodesAmount);
-            const schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
-            console.log("Rotation for node", rotIndex);
-            console.log("Will process", schainHashes.length, "rotations");
-            const gas = [];
-            for (let i = 0; i < schainHashes.length; i++) {
-                const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
+            schainHashes = await schainsInternal.getSchainHashesForNode(leavingNode);
+        });
+
+        for(let test = 1; test <= numberOfSchains; ++test) {
+            it("should exit schain #" + test, async () => {
+                const estimatedGas = await skaleManager.estimateGas.nodeExit(leavingNode);
                 const overrides = {
                     gasLimit: Math.ceil(estimatedGas.toNumber() * 1.1)
                 }
                 console.log("Estimated gas on nodeExit", overrides.gasLimit);
-                const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
+                const result = await (await skaleManager.connect(node).nodeExit(leavingNode, overrides)).wait();
                 // console.log("Gas limit was:", result);
-                console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
+                console.log("" + test + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
                 gas.push(result.gasUsed.toNumber());
                 if (result.gasUsed.toNumber() > gasLimit) {
-                    break;
+                    return;
                 }
                 await skaleDKG.setSuccessfulDKGPublic(
-                    schainHashes[schainHashes.length - i - 1]
+                    schainHashes[schainHashes.length - test]
                 );
-            }
-        });
+            });
+        }
+
+        after(async () => {
+            await applySnapshot(stateBefore);
+        })
     });
 
     describe("random rotation on dynamically creating schains", () => {
@@ -220,8 +231,10 @@ describe("nodeRotation", () => {
 
         let nodeId = 0;
         let nodesAmount: number;
+        let stateBefore: number;
 
         before(async () => {
+            stateBefore = await makeSnapshot();
             await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
             const signature = await getValidatorIdSignature(validatorId, node);
             await validatorService.connect(validator).linkNodeAddress(node.address, signature);
@@ -294,6 +307,7 @@ describe("nodeRotation", () => {
 
         after(async () => {
             fs.writeFileSync("nodeRotation.json", JSON.stringify(measurementsSchainCreation, null, 4));
+            await applySnapshot(stateBefore);
         })
     });
 });
