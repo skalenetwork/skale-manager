@@ -197,6 +197,10 @@ describe("nodeRotation", () => {
 
         for(let test = 1; test <= numberOfSchains; ++test) {
             it("should exit schain #" + test, async () => {
+                if ((await node.getBalance()).lt(ethers.utils.parseEther("0.1"))) {
+                    await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});
+                }
+
                 const estimatedGas = await skaleManager.estimateGas.nodeExit(leavingNode);
                 const overrides = {
                     gasLimit: Math.ceil(estimatedGas.toNumber() * 1.1)
