@@ -287,6 +287,9 @@ describe("nodeRotation", () => {
                     console.log("Will process", schainHashes.length, "rotations");
                     const gas = [];
                     for (let i = 0; i < schainHashes.length; i++) {
+                        if ((await node.getBalance()).lt(ethers.utils.parseEther("0.1"))) {
+                            await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});
+                        }
                         const estimatedGas = await skaleManager.connect(node).estimateGas.nodeExit(leavingNode);
                         console.log("Estimated gas on nodeExit", estimatedGas.toString());
                         const overrides = {
