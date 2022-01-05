@@ -2,7 +2,6 @@ name: Nightly build
 on:
   schedule:
     - cron:  '14 3 * * *'
-  push:
 env:
   NODE_VERSION: 14
   PYTHON_VERSION: 3.9
