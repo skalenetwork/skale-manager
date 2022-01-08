@@ -44,7 +44,7 @@
     "@openzeppelin/contracts": "^4.4.1",
     "@openzeppelin/contracts-upgradeable": "^4.4.1",
     "@openzeppelin/hardhat-upgrades": "^1.12.0",
-    "@skalenetwork/skale-manager-interfaces": "^0.1.2",
+    "@skalenetwork/skale-manager-interfaces": "0.1.2-skale-4466-add-all-functions.4",
     "axios": "^0.24.0",
     "dotenv": "^10.0.0",
     "ethereumjs-util": "^7.1.3",

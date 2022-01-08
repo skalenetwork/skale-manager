@@ -105,6 +105,7 @@ contract Wallets is Permissions, IWallets {
         uint spentGas
     )
         external
+        override
         allowTwo("SkaleManager", "SkaleDKG")
     {
         require(spender != address(0), "Spender must be specified");
@@ -128,7 +129,7 @@ contract Wallets is Permissions, IWallets {
      * if the validator does not have enough funds, then everything 
      * that the validator has will be returned to the owner of the chain.
      */
-    function refundGasByValidatorToSchain(uint validatorId, bytes32 schainHash) external allow("SkaleDKG") {
+    function refundGasByValidatorToSchain(uint validatorId, bytes32 schainHash) external override allow("SkaleDKG") {
         uint debtAmount = _schainDebts[schainHash];
         uint validatorWallet = _validatorWallets[validatorId];
         if (debtAmount <= validatorWallet) {
@@ -186,7 +187,11 @@ contract Wallets is Permissions, IWallets {
      * Requirements: 
      * - Executable only after initializing delete schain
      */
-    function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainHash) external allow("Schains") {
+    function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainHash)
+        external
+        override
+        allow("Schains")
+    {
         require(schainOwner != address(0), "Schain owner must be specified");
         uint amount = _schainWallets[schainHash];
         delete _schainWallets[schainHash];
@@ -201,7 +206,7 @@ contract Wallets is Permissions, IWallets {
      * Requirements: 
      * - Validator must have sufficient withdrawal amount
      */
-    function withdrawFundsFromValidatorWallet(uint amount) external {
+    function withdrawFundsFromValidatorWallet(uint amount) external override {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(msg.sender);
         require(amount <= _validatorWallets[validatorId], "Balance is too low");
@@ -214,7 +219,7 @@ contract Wallets is Permissions, IWallets {
         return _schainWallets[schainHash];
     }
 
-    function getValidatorBalance(uint validatorId) external view returns (uint) {
+    function getValidatorBalance(uint validatorId) external view override returns (uint) {
         return _validatorWallets[validatorId];
     }
 
@@ -227,7 +232,7 @@ contract Wallets is Permissions, IWallets {
      * Requirements: 
      * - Given validator must exist
      */
-    function rechargeValidatorWallet(uint validatorId) public payable {
+    function rechargeValidatorWallet(uint validatorId) public payable override {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator does not exists");
         _validatorWallets[validatorId] = _validatorWallets[validatorId] + msg.value;

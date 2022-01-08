@@ -105,16 +105,6 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
     bytes32 public constant GENERATION_MANAGER_ROLE = keccak256("GENERATION_MANAGER_ROLE");
 
-    /**
-     * @dev Emitted when schain type added.
-     */
-    event SchainTypeAdded(uint indexed schainType, uint partOfNode, uint numberOfNodes);
-
-    /**
-     * @dev Emitted when schain type removed.
-     */
-    event SchainTypeRemoved(uint indexed schainType);
-
     modifier onlySchainTypeManager() {
         require(hasRole(SCHAIN_TYPE_MANAGER_ROLE, msg.sender), "SCHAIN_TYPE_MANAGER_ROLE is required");
         _;
@@ -143,7 +133,11 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         address from,
         address originator,
         uint lifetime,
-        uint deposit) external allow("Schains")
+        uint deposit
+    )
+        external
+        override
+        allow("Schains")
     {
         bytes32 schainHash = keccak256(abi.encodePacked(name));
 
@@ -181,6 +175,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         uint8 partOfNode
     )
         external
+        override
         allow("Schains")
         schainExists(schainHash)
         returns (uint[] memory)
@@ -209,6 +204,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         uint deposit
     )
         external
+        override
         allow("Schains")
         schainExists(schainHash)
     {
@@ -226,7 +222,12 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * - Message sender is Schains smart contract
      * - Schain must exist
      */
-    function removeSchain(bytes32 schainHash, address from) external allow("Schains") schainExists(schainHash) {
+    function removeSchain(bytes32 schainHash, address from)
+        external
+        override
+        allow("Schains")
+        schainExists(schainHash)
+    {
         isSchainActive[schainHash] = false;
         uint length = schainIndexes[from].length;
         uint index = schains[schainHash].indexInOwnerList;
@@ -265,6 +266,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         bytes32 schainHash
     )
         external
+        override
         allowThree("NodeRotation", "SkaleDKG", "Schains")
         schainExists(schainHash)
     {
@@ -298,7 +300,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * - Message sender is Schains smart contract
      * - Schain must exist
      */
-    function deleteGroup(bytes32 schainHash) external allow("Schains") schainExists(schainHash) {
+    function deleteGroup(bytes32 schainHash) external override allow("Schains") schainExists(schainHash) {
         // delete channel
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         delete schainsGroups[schainHash];
@@ -319,6 +321,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         uint nodeIndex
     )
         external
+        override
         allowTwo("Schains", "NodeRotation")
         schainExists(schainHash)
     {
@@ -339,6 +342,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         uint nodeIndex
     )
         external
+        override
         allowTwo("Schains", "NodeRotation")
         schainExists(schainHash)
     {
@@ -373,14 +377,14 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * - Message sender is Schains smart contract
      * - Schain must exist
      */
-    function removeHolesForSchain(bytes32 schainHash) external allow("Schains") schainExists(schainHash) {
+    function removeHolesForSchain(bytes32 schainHash) external override allow("Schains") schainExists(schainHash) {
         delete holesForSchains[schainHash];
     }
 
     /**
      * @dev Allows Admin to add schain type
      */
-    function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlySchainTypeManager {
+    function addSchainType(uint8 partOfNode, uint numberOfNodes) external override onlySchainTypeManager {
         require(_keysOfSchainTypes.add(numberOfSchainTypes + 1), "Schain type is already added");
         schainTypes[numberOfSchainTypes + 1].partOfNode = partOfNode;
         schainTypes[numberOfSchainTypes + 1].numberOfNodes = numberOfNodes;
@@ -391,7 +395,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     /**
      * @dev Allows Admin to remove schain type
      */
-    function removeSchainType(uint typeOfSchain) external onlySchainTypeManager {
+    function removeSchainType(uint typeOfSchain) external override onlySchainTypeManager {
         require(_keysOfSchainTypes.remove(typeOfSchain), "Schain type is already removed");
         delete schainTypes[typeOfSchain].partOfNode;
         delete schainTypes[typeOfSchain].numberOfNodes;
@@ -401,11 +405,11 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     /**
      * @dev Allows Admin to set number of schain types
      */
-    function setNumberOfSchainTypes(uint newNumberOfSchainTypes) external onlySchainTypeManager {
+    function setNumberOfSchainTypes(uint newNumberOfSchainTypes) external override onlySchainTypeManager {
         numberOfSchainTypes = newNumberOfSchainTypes;
     }
 
-    function removeNodeFromAllExceptionSchains(uint nodeIndex) external allow("SkaleManager") {
+    function removeNodeFromAllExceptionSchains(uint nodeIndex) external override allow("SkaleManager") {
         uint len = _nodeToLockedSchains[nodeIndex].length;
         for (uint i = len; i > 0; i--) {
             removeNodeFromExceptions(_nodeToLockedSchains[nodeIndex][i - 1], nodeIndex);
@@ -415,7 +419,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     /**
      * @dev Clear list of nodes that can't be chosen to schain with id {schainHash}
      */
-    function removeAllNodesFromSchainExceptions(bytes32 schainHash) external allow("Schains") {
+    function removeAllNodesFromSchainExceptions(bytes32 schainHash) external override allow("Schains") {
         for (uint i = 0; i < _schainToExceptionNodes[schainHash].length; ++i) {
             removeNodeFromExceptions(schainHash, _schainToExceptionNodes[schainHash][i]);
         }
@@ -434,6 +438,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         bytes32 schainHash
     )
         external
+        override
         allowTwo("NodeRotation", "SkaleDKG")
         schainExists(schainHash)
     {
@@ -455,6 +460,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         bytes32 schainHash
     )
         external
+        override
         allowTwo("NodeRotation", "SkaleDKG")
         schainExists(schainHash)
     {
@@ -468,14 +474,14 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Sender must be granted with GENERATION_MANAGER_ROLE
      */
-    function newGeneration() external onlyGenerationManager {
+    function newGeneration() external override onlyGenerationManager {
         currentGeneration += 1;
     }
 
     /**
      * @dev Returns all Schains in the network.
      */
-    function getSchains() external view returns (bytes32[] memory) {
+    function getSchains() external view override returns (bytes32[] memory) {
         return schainsAtSystem;
     }
 
@@ -486,42 +492,42 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function getSchainsPartOfNode(bytes32 schainHash) external view schainExists(schainHash) returns (uint8) {
+    function getSchainsPartOfNode(bytes32 schainHash) external view override schainExists(schainHash) returns (uint8) {
         return schains[schainHash].partOfNode;
     }
 
     /**
      * @dev Returns number of schains by schain owner.
      */
-    function getSchainListSize(address from) external view returns (uint) {
+    function getSchainListSize(address from) external view override returns (uint) {
         return schainIndexes[from].length;
     }
 
     /**
      * @dev Returns hashes of schain names by schain owner.
      */
-    function getSchainHashesByAddress(address from) external view returns (bytes32[] memory) {
+    function getSchainHashesByAddress(address from) external view override returns (bytes32[] memory) {
         return schainIndexes[from];
     }
 
     /**
      * @dev Returns hashes of schain names by schain owner.
      */
-    function getSchainIdsByAddress(address from) external view returns (bytes32[] memory) {
+    function getSchainIdsByAddress(address from) external view override returns (bytes32[] memory) {
         return schainIndexes[from];
     }
 
     /**
      * @dev Returns hashes of schain names running on a node.
      */
-    function getSchainHashesForNode(uint nodeIndex) external view returns (bytes32[] memory) {
+    function getSchainHashesForNode(uint nodeIndex) external view override returns (bytes32[] memory) {
         return schainsForNodes[nodeIndex];
     }
 
     /**
      * @dev Returns hashes of schain names running on a node.
      */
-    function getSchainIdsForNode(uint nodeIndex) external view returns (bytes32[] memory) {
+    function getSchainIdsForNode(uint nodeIndex) external view override returns (bytes32[] memory) {
         return schainsForNodes[nodeIndex];
     }
 
@@ -532,7 +538,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function getSchainOwner(bytes32 schainHash) external view schainExists(schainHash) returns (address) {
+    function getSchainOwner(bytes32 schainHash) external view override schainExists(schainHash) returns (address) {
         return schains[schainHash].owner;
     }
 
@@ -543,7 +549,13 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function getSchainOriginator(bytes32 schainHash) external view schainExists(schainHash) returns (address) {
+    function getSchainOriginator(bytes32 schainHash)
+        external
+        view
+        override
+        schainExists(schainHash)
+        returns (address)
+    {
         require(schains[schainHash].originator != address(0), "Originator address is not set");
         return schains[schainHash].originator;
     }
@@ -552,7 +564,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * @dev Checks whether schain name is available.
      * TODO Need to delete - copy of web3.utils.soliditySha3
      */
-    function isSchainNameAvailable(string calldata name) external view returns (bool) {
+    function isSchainNameAvailable(string calldata name) external view override returns (bool) {
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         return schains[schainHash].owner == address(0) &&
             !usedSchainNames[schainHash] &&
@@ -566,7 +578,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function isTimeExpired(bytes32 schainHash) external view schainExists(schainHash) returns (bool) {
+    function isTimeExpired(bytes32 schainHash) external view override schainExists(schainHash) returns (bool) {
         return uint(schains[schainHash].startDate) + schains[schainHash].lifetime < block.timestamp;
     }
 
@@ -597,14 +609,19 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function getSchainName(bytes32 schainHash) external view schainExists(schainHash) returns (string memory) {
+    function getSchainName(bytes32 schainHash)
+        external
+        view
+        override schainExists(schainHash)
+        returns (string memory)
+    {
         return schains[schainHash].name;
     }
 
     /**
      * @dev Returns last active schain of a node.
      */
-    function getActiveSchain(uint nodeIndex) external view returns (bytes32) {
+    function getActiveSchain(uint nodeIndex) external view override returns (bytes32) {
         for (uint i = schainsForNodes[nodeIndex].length; i > 0; i--) {
             if (schainsForNodes[nodeIndex][i - 1] != bytes32(0)) {
                 return schainsForNodes[nodeIndex][i - 1];
@@ -616,7 +633,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     /**
      * @dev Returns active schains of a node.
      */
-    function getActiveSchains(uint nodeIndex) external view returns (bytes32[] memory activeSchains) {
+    function getActiveSchains(uint nodeIndex) external view override returns (bytes32[] memory activeSchains) {
         uint activeAmount = 0;
         for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
             if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
@@ -640,7 +657,13 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function getNumberOfNodesInGroup(bytes32 schainHash) external view schainExists(schainHash) returns (uint) {
+    function getNumberOfNodesInGroup(bytes32 schainHash)
+        external
+        view
+        override
+        schainExists(schainHash)
+        returns (uint)
+    {
         return schainsGroups[schainHash].length;
     }
 
@@ -651,7 +674,13 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function getNodesInGroup(bytes32 schainHash) external view schainExists(schainHash) returns (uint[] memory) {
+    function getNodesInGroup(bytes32 schainHash)
+        external
+        view
+        override
+        schainExists(schainHash)
+        returns (uint[] memory)
+    {
         return schainsGroups[schainHash];
     }
 
@@ -694,6 +723,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     )
         external
         view
+        override
         schainExists(schainHash)
         returns (uint)
     {
@@ -713,7 +743,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function isAnyFreeNode(bytes32 schainHash) external view schainExists(schainHash) returns (bool) {
+    function isAnyFreeNode(bytes32 schainHash) external view override schainExists(schainHash) returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainHash].partOfNode;
         return nodes.countNodesWithFreeSpace(space) > 0;
@@ -726,7 +756,13 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function checkException(bytes32 schainHash, uint nodeIndex) external view schainExists(schainHash) returns (bool) {
+    function checkException(bytes32 schainHash, uint nodeIndex)
+        external
+        view
+        override
+        schainExists(schainHash)
+        returns (bool)
+    {
         return _exceptionsForGroups[schainHash][nodeIndex];
     }
 
@@ -743,6 +779,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     )
         external
         view
+        override
         schainExists(schainHash)
         returns (bool)
     {
@@ -767,13 +804,14 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     )
         external
         view
+        override
         schainExists(schainHash)
         returns (bool)
     {
         return placeOfSchainOnNode[schainHash][nodeIndex] != 0;
     }
 
-    function getSchainType(uint typeOfSchain) external view returns(uint8, uint) {
+    function getSchainType(uint typeOfSchain) external view override returns(uint8, uint) {
         require(_keysOfSchainTypes.contains(typeOfSchain), "Invalid type of schain");
         return (schainTypes[typeOfSchain].partOfNode, schainTypes[typeOfSchain].numberOfNodes);
     }
@@ -785,7 +823,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * 
      * - Schain must exist
      */
-    function getGeneration(bytes32 schainHash) external view schainExists(schainHash) returns (uint) {
+    function getGeneration(bytes32 schainHash) external view override schainExists(schainHash) returns (uint) {
         return schains[schainHash].generation;
     }
 
@@ -810,6 +848,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         bytes32 schainHash
     )
         public
+        override
         allowTwo("Schains", "NodeRotation")
         schainExists(schainHash)
     {
@@ -830,6 +869,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      */
     function removeSchainForNode(uint nodeIndex, uint schainIndex)
         public
+        override
         allowThree("NodeRotation", "SkaleDKG", "Schains")
     {
         uint length = schainsForNodes[nodeIndex].length;
@@ -857,6 +897,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      */
     function removeNodeFromExceptions(bytes32 schainHash, uint nodeIndex)
         public
+        override
         allowThree("Schains", "NodeRotation", "SkaleManager")
         schainExists(schainHash)
     {
@@ -886,7 +927,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     /**
      * @dev Checks whether schain exists.
      */
-    function isSchainExist(bytes32 schainHash) public view returns (bool) {
+    function isSchainExist(bytes32 schainHash) public view override returns (bool) {
         return bytes(schains[schainHash].name).length != 0;
     }
 
