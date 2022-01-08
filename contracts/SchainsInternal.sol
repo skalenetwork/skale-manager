@@ -40,26 +40,6 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     using Random for Random.RandomGenerator;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
-    struct Schain {
-        string name;
-        address owner;
-        uint indexInOwnerList;
-        uint8 partOfNode;
-        uint lifetime;
-        uint startDate;
-        uint startBlock;
-        uint deposit;
-        uint64 index;
-        uint generation;
-        address originator;
-    }
-
-    struct SchainType {
-        uint8 partOfNode;
-        uint numberOfNodes;
-    }
-
-
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
 

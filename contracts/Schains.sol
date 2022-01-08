@@ -53,55 +53,6 @@ contract Schains is Permissions, ISchains {
     bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
     /**
-     * @dev Emitted when an schain is created.
-     */
-    event SchainCreated(
-        string name,
-        address owner,
-        uint partOfNode,
-        uint lifetime,
-        uint numberOfNodes,
-        uint deposit,
-        uint16 nonce,
-        bytes32 schainHash
-    );
-
-    /**
-     * @dev Emitted when an schain is deleted.
-     */
-    event SchainDeleted(
-        address owner,
-        string name,
-        bytes32 indexed schainHash
-    );
-
-    /**
-     * @dev Emitted when a node in an schain is rotated.
-     */
-    event NodeRotated(
-        bytes32 schainHash,
-        uint oldNode,
-        uint newNode
-    );
-
-    /**
-     * @dev Emitted when a node is added to an schain.
-     */
-    event NodeAdded(
-        bytes32 schainHash,
-        uint newNode
-    );
-
-    /**
-     * @dev Emitted when a group of nodes is created for an schain.
-     */
-    event SchainNodes(
-        string name,
-        bytes32 schainHash,
-        uint[] nodesInGroup
-    );
-
-    /**
      * @dev Allows SkaleManager contract to create an Schain.
      * 
      * Emits an {SchainCreated} event.
@@ -112,7 +63,7 @@ contract Schains is Permissions, ISchains {
      * - There is sufficient deposit to create type of schain.
      * - If from is a smart contract originator must be specified
      */
-    function addSchain(address from, uint deposit, bytes calldata data) external allow("SkaleManager") {
+    function addSchain(address from, uint deposit, bytes calldata data) external override allow("SkaleManager") {
         SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
@@ -149,6 +100,7 @@ contract Schains is Permissions, ISchains {
     )
         external
         payable
+        override
     {
         require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schain");
 
@@ -182,7 +134,7 @@ contract Schains is Permissions, ISchains {
      * 
      * - Executed by schain owner.
      */
-    function deleteSchain(address from, string calldata name) external allow("SkaleManager") {
+    function deleteSchain(address from, string calldata name) external override allow("SkaleManager") {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         require(
@@ -203,7 +155,7 @@ contract Schains is Permissions, ISchains {
      * 
      * - Schain exists.
      */
-    function deleteSchainByRoot(string calldata name) external allow("SkaleManager") {
+    function deleteSchainByRoot(string calldata name) external override allow("SkaleManager") {
         _deleteSchain(name, SchainsInternal(contractManager.getContract("SchainsInternal")));
     }
 
@@ -219,7 +171,7 @@ contract Schains is Permissions, ISchains {
      * - DKG failure got stuck because there were no free nodes to rotate in.
      * - A free node must be released in the network.
      */
-    function restartSchainCreation(string calldata name) external allow("SkaleManager") {
+    function restartSchainCreation(string calldata name) external override allow("SkaleManager") {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
@@ -287,7 +239,7 @@ contract Schains is Permissions, ISchains {
     /**
      * @dev Returns the current price in SKL tokens for given Schain type and lifetime.
      */
-    function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
+    function getSchainPrice(uint typeOfSchain, uint lifetime) public view override returns (uint) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         uint nodeDeposit = constantsHolder.NODE_DEPOSIT();

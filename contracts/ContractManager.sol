@@ -49,11 +49,6 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public contracts;
 
-    /**
-     * @dev Emitted when contract is upgraded.
-     */
-    event ContractUpgraded(string contractsName, address contractsAddress);
-
     function initialize() external initializer {
         OwnableUpgradeable.__Ownable_init();
     }
