@@ -22,6 +22,7 @@
 pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import "@skalenetwork/skale-manager-interfaces/ISyncManager.sol";
 import "./Permissions.sol";
 
 /**
@@ -29,27 +30,19 @@ import "./Permissions.sol";
  * @dev SyncManager is a contract on the mainnet 
  * that keeps a list of allowed sync IP address ranges.
  */
-contract SyncManager is Permissions {
+contract SyncManager is Permissions, ISyncManager {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.Bytes32Set;
-
-    struct IPRange {
-        bytes4 startIP;
-        bytes4 endIP;
-    }
 
     bytes32 constant public SYNC_MANAGER_ROLE = keccak256("SYNC_MANAGER_ROLE");
     EnumerableSetUpgradeable.Bytes32Set private _ipRangeNames;
     mapping (bytes32 => IPRange) public ipRanges;
-
-    event IPRangeAdded(string name, bytes4 startIP, bytes4 endIP);
-    event IPRangeRemoved(string name);
 
     modifier onlySyncManager() {
         require(hasRole(SYNC_MANAGER_ROLE, msg.sender), "SYNC_MANAGER_ROLE is required");
         _;
     }
 
-    function addIPRange(string memory name, bytes4 startIP, bytes4 endIP) external onlySyncManager {
+    function addIPRange(string memory name, bytes4 startIP, bytes4 endIP) external override onlySyncManager {
         require(startIP <= endIP && startIP != bytes4(0) && endIP != bytes4(0), "Invalid IP ranges provided");
         bytes32 ipRangeNameHash = keccak256(abi.encodePacked(name));
         require(_ipRangeNames.add(ipRangeNameHash), "IP range name is already taken");
@@ -57,23 +50,23 @@ contract SyncManager is Permissions {
         emit IPRangeAdded(name, startIP, endIP);
     }
 
-    function removeIPRange(string memory name) external onlySyncManager {
+    function removeIPRange(string memory name) external override onlySyncManager {
         bytes32 ipRangeNameHash = keccak256(abi.encodePacked(name));
         require(_ipRangeNames.remove(ipRangeNameHash), "IP range does not exist");
         delete ipRanges[ipRangeNameHash];
         emit IPRangeRemoved(name);
     }
 
-    function getIPRangesNumber() external view returns (uint) {
+    function getIPRangesNumber() external view override returns (uint) {
         return _ipRangeNames.length();
     }
 
-    function getIPRangeByIndex(uint index) external view returns (IPRange memory) {
+    function getIPRangeByIndex(uint index) external view override returns (IPRange memory) {
         bytes32 ipRangeNameHash = _ipRangeNames.at(index);
         return ipRanges[ipRangeNameHash];
     }
 
-    function getIPRangeByName(string memory name) external view returns (IPRange memory) {
+    function getIPRangeByName(string memory name) external view override returns (IPRange memory) {
         bytes32 ipRangeNameHash = keccak256(abi.encodePacked(name));
         return ipRanges[ipRangeNameHash];
     }
