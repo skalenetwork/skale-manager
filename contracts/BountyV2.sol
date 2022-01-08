@@ -25,13 +25,14 @@ import "./delegation/DelegationController.sol";
 import "./delegation/PartialDifferences.sol";
 import "./delegation/TimeHelpers.sol";
 import "./delegation/ValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 import "./Permissions.sol";
 
 
-contract BountyV2 is Permissions {
+contract BountyV2 is Permissions, IBountyV2 {
     using PartialDifferences for PartialDifferences.Value;
     using PartialDifferences for PartialDifferences.Sequence;
 
@@ -65,18 +66,6 @@ contract BountyV2 is Permissions {
 
     // validatorId => BountyHistory
     mapping (uint => BountyHistory) private _bountyHistory;
-    
-    /**
-     * @dev Emitted when bounty reduction is turned on or turned off.
-     */
-    event BountyReduction(bool status);
-    /**
-     * @dev Emitted when a node creation window was changed.
-     */
-    event NodeCreationWindowWasChanged(
-        uint oldValue,
-        uint newValue
-    );
 
     modifier onlyBountyReductionManager() {
         require(hasRole(BOUNTY_REDUCTION_MANAGER_ROLE, msg.sender), "BOUNTY_REDUCTION_MANAGER_ROLE is required");
@@ -85,6 +74,7 @@ contract BountyV2 is Permissions {
 
     function calculateBounty(uint nodeIndex)
         external
+        override
         allow("SkaleManager")
         returns (uint)
     {
@@ -135,17 +125,17 @@ contract BountyV2 is Permissions {
         return bounty;
     }
 
-    function enableBountyReduction() external onlyBountyReductionManager {
+    function enableBountyReduction() external override onlyBountyReductionManager {
         bountyReduction = true;
         emit BountyReduction(true);
     }
 
-    function disableBountyReduction() external onlyBountyReductionManager {
+    function disableBountyReduction() external override onlyBountyReductionManager {
         bountyReduction = false;
         emit BountyReduction(false);
     }
 
-    function setNodeCreationWindowSeconds(uint window) external allow("Nodes") {
+    function setNodeCreationWindowSeconds(uint window) external override allow("Nodes") {
         emit NodeCreationWindowWasChanged(nodeCreationWindowSeconds, window);
         nodeCreationWindowSeconds = window;
     }
@@ -155,6 +145,7 @@ contract BountyV2 is Permissions {
         uint month
     )
         external
+        override
         allow("DelegationController")
     {
         _effectiveDelegatedSum.addToValue(amount, month);
@@ -165,12 +156,13 @@ contract BountyV2 is Permissions {
         uint month
     )
         external
+        override
         allow("DelegationController")
     {
         _effectiveDelegatedSum.subtractFromValue(amount, month);
     }
 
-    function estimateBounty(uint nodeIndex) external view returns (uint) {
+    function estimateBounty(uint nodeIndex) external view override returns (uint) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
@@ -197,7 +189,7 @@ contract BountyV2 is Permissions {
         );
     }
 
-    function getNextRewardTimestamp(uint nodeIndex) external view returns (uint) {
+    function getNextRewardTimestamp(uint nodeIndex) external view override returns (uint) {
         return _getNextRewardTimestamp(
             nodeIndex,
             Nodes(contractManager.getContract("Nodes")),
@@ -205,7 +197,7 @@ contract BountyV2 is Permissions {
         );
     }
 
-    function getEffectiveDelegatedSum() external view returns (uint[] memory) {
+    function getEffectiveDelegatedSum() external view override returns (uint[] memory) {
         return _effectiveDelegatedSum.getValues();
     }
 

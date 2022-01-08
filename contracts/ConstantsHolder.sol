@@ -21,6 +21,8 @@
 
 pragma solidity 0.8.9;
 
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+
 import "./Permissions.sol";
 
 
@@ -28,7 +30,7 @@ import "./Permissions.sol";
  * @title ConstantsHolder
  * @dev Contract contains constants and common variables for the SKALE Network.
  */
-contract ConstantsHolder is Permissions {
+contract ConstantsHolder is Permissions, IConstantsHolder {
 
     // initial price for creating Node (100 SKL)
     uint public constant NODE_DEPOSIT = 100 * 1e18;
@@ -128,15 +130,6 @@ contract ConstantsHolder is Permissions {
 
     bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
 
-    /**
-     * @dev Emitted when constants updated.
-     */
-    event ConstantUpdated(
-        bytes32 indexed constantHash,
-        uint previousValue,
-        uint newValue
-    );
-
     modifier onlyConstantsHolderManager() {
         require(hasRole(CONSTANTS_HOLDER_MANAGER_ROLE, msg.sender), "CONSTANTS_HOLDER_MANAGER_ROLE is required");
         _;
@@ -146,7 +139,7 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set new reward and delta periods
      * This function is only for tests.
      */
-    function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyConstantsHolderManager {
+    function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external override onlyConstantsHolderManager {
         require(
             newRewardPeriod >= newDeltaPeriod && newRewardPeriod - newDeltaPeriod >= checkTime,
             "Incorrect Periods"
@@ -169,7 +162,7 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the new check time.
      * This function is only for tests.
      */
-    function setCheckTime(uint newCheckTime) external onlyConstantsHolderManager {
+    function setCheckTime(uint newCheckTime) external override onlyConstantsHolderManager {
         require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");
         emit ConstantUpdated(
             keccak256(abi.encodePacked("CheckTime")),
@@ -183,7 +176,7 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the allowable latency in milliseconds.
      * This function is only for testing purposes.
      */
-    function setLatency(uint32 newAllowableLatency) external onlyConstantsHolderManager {
+    function setLatency(uint32 newAllowableLatency) external override onlyConstantsHolderManager {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("AllowableLatency")),
             uint(allowableLatency),
@@ -195,7 +188,7 @@ contract ConstantsHolder is Permissions {
     /**
      * @dev Allows the Owner to set the minimum stake requirement.
      */
-    function setMSR(uint newMSR) external onlyConstantsHolderManager {
+    function setMSR(uint newMSR) external override onlyConstantsHolderManager {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("MSR")),
             uint(msr),
@@ -207,7 +200,7 @@ contract ConstantsHolder is Permissions {
     /**
      * @dev Allows the Owner to set the launch timestamp.
      */
-    function setLaunchTimestamp(uint timestamp) external onlyConstantsHolderManager {
+    function setLaunchTimestamp(uint timestamp) external override onlyConstantsHolderManager {
         require(
             block.timestamp < launchTimestamp,
             "Cannot set network launch timestamp because network is already launched"
@@ -223,7 +216,7 @@ contract ConstantsHolder is Permissions {
     /**
      * @dev Allows the Owner to set the node rotation delay.
      */
-    function setRotationDelay(uint newDelay) external onlyConstantsHolderManager {
+    function setRotationDelay(uint newDelay) external override onlyConstantsHolderManager {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("RotationDelay")),
             uint(rotationDelay),
@@ -235,7 +228,7 @@ contract ConstantsHolder is Permissions {
     /**
      * @dev Allows the Owner to set the proof-of-use lockup period.
      */
-    function setProofOfUseLockUpPeriod(uint periodDays) external onlyConstantsHolderManager {
+    function setProofOfUseLockUpPeriod(uint periodDays) external override onlyConstantsHolderManager {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("ProofOfUseLockUpPeriodDays")),
             uint(proofOfUseLockUpPeriodDays),
@@ -248,7 +241,7 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the proof-of-use delegation percentage
      * requirement.
      */
-    function setProofOfUseDelegationPercentage(uint percentage) external onlyConstantsHolderManager {
+    function setProofOfUseDelegationPercentage(uint percentage) external override onlyConstantsHolderManager {
         require(percentage <= 100, "Percentage value is incorrect");
         emit ConstantUpdated(
             keccak256(abi.encodePacked("ProofOfUseDelegationPercentage")),
@@ -262,7 +255,7 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the maximum number of validators that a
      * single delegator can delegate to.
      */
-    function setLimitValidatorsPerDelegator(uint newLimit) external onlyConstantsHolderManager {
+    function setLimitValidatorsPerDelegator(uint newLimit) external override onlyConstantsHolderManager {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("LimitValidatorsPerDelegator")),
             uint(limitValidatorsPerDelegator),
@@ -271,7 +264,7 @@ contract ConstantsHolder is Permissions {
         limitValidatorsPerDelegator = newLimit;
     }
 
-    function setSchainCreationTimeStamp(uint timestamp) external onlyConstantsHolderManager {
+    function setSchainCreationTimeStamp(uint timestamp) external override onlyConstantsHolderManager {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("SchainCreationTimeStamp")),
             uint(schainCreationTimeStamp),
@@ -280,7 +273,7 @@ contract ConstantsHolder is Permissions {
         schainCreationTimeStamp = timestamp;
     }
 
-    function setMinimalSchainLifetime(uint lifetime) external onlyConstantsHolderManager {
+    function setMinimalSchainLifetime(uint lifetime) external override onlyConstantsHolderManager {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("MinimalSchainLifetime")),
             uint(minimalSchainLifetime),
@@ -289,7 +282,7 @@ contract ConstantsHolder is Permissions {
         minimalSchainLifetime = lifetime;
     }
 
-    function setComplaintTimeLimit(uint timeLimit) external onlyConstantsHolderManager {
+    function setComplaintTimeLimit(uint timeLimit) external override onlyConstantsHolderManager {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("ComplaintTimeLimit")),
             uint(complaintTimeLimit),
