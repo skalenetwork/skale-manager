@@ -22,6 +22,7 @@
 
 pragma solidity 0.8.9;
 
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
 /**
  * @title Random
@@ -29,25 +30,21 @@ pragma solidity 0.8.9;
  */
 library Random {
 
-    struct RandomGenerator {
-        uint seed;
-    }
-
     /**
-     * @dev Create an instance of RandomGenerator
+     * @dev Create an instance of INodes.RandomGenerator
      */
-    function create(uint seed) internal pure returns (RandomGenerator memory) {
-        return RandomGenerator({seed: seed});
+    function create(uint seed) internal pure returns (INodes.RandomGenerator memory) {
+        return INodes.RandomGenerator({seed: seed});
     }
 
-    function createFromEntropy(bytes memory entropy) internal pure returns (RandomGenerator memory) {
+    function createFromEntropy(bytes memory entropy) internal pure returns (INodes.RandomGenerator memory) {
         return create(uint(keccak256(entropy)));
     }
 
     /**
      * @dev Generates random value
      */
-    function random(RandomGenerator memory self) internal pure returns (uint) {
+    function random(INodes.RandomGenerator memory self) internal pure returns (uint) {
         self.seed = uint(sha256(abi.encodePacked(self.seed)));
         return self.seed;
     }
@@ -55,7 +52,7 @@ library Random {
     /**
      * @dev Generates random value in range [0, max)
      */
-    function random(RandomGenerator memory self, uint max) internal pure returns (uint) {
+    function random(INodes.RandomGenerator memory self, uint max) internal pure returns (uint) {
         assert(max > 0);
         uint maxRand = type(uint).max - type(uint).max % max;
         if (type(uint).max - maxRand == max - 1) {

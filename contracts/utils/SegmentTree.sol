@@ -22,6 +22,8 @@
 
 pragma solidity 0.8.9;
 
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+
 import "./Random.sol";
 
 /**
@@ -58,7 +60,7 @@ import "./Random.sol";
  * +----+----+----+---+---+----+----+---+---+---+---+---+---+---+---+
  */
 library SegmentTree {
-    using Random for Random.RandomGenerator;   
+    using Random for INodes.RandomGenerator;   
 
     struct Tree {
         uint[] tree;
@@ -204,7 +206,7 @@ library SegmentTree {
     function getRandomNonZeroElementFromPlaceToLast(
         Tree storage self,
         uint place,
-        Random.RandomGenerator memory randomGenerator
+        INodes.RandomGenerator memory randomGenerator
     )
         external
         view

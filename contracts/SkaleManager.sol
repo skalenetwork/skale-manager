@@ -24,6 +24,7 @@ pragma solidity 0.8.9;
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleManager.sol";
 
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
@@ -40,7 +41,7 @@ import "./Wallets.sol";
  * @dev Contract contains functions for node registration and exit, bounty
  * management, and monitoring verdicts.
  */
-contract SkaleManager is IERC777Recipient, Permissions {
+contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
 
     IERC1820Registry private _erc1820;
 
@@ -53,23 +54,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
 
-    /**
-     * @dev Emitted when the version was updated
-     */
-    event VersionUpdated(string oldVersion, string newVersion);
-
-    /**
-     * @dev Emitted when bounty is received.
-     */
-    event BountyReceived(
-        uint indexed nodeIndex,
-        address owner,
-        uint averageDowntime,
-        uint averageLatency,
-        uint bounty,
-        uint previousBlockEvent
-    );
-
     function tokensReceived(
         address, // operator
         address from,
@@ -78,7 +62,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         bytes calldata userData,
         bytes calldata // operator data
     )
-        external override
+        external
+        override
         allow("SkaleToken")
     {
         require(to == address(this), "Receiver is incorrect");
@@ -99,12 +84,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
         string calldata domainName
     )
         external
+        override
     {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         // validators checks inside checkPossibilityCreatingNode
         nodes.checkPossibilityCreatingNode(msg.sender);
 
-        Nodes.NodeCreationParams memory params = Nodes.NodeCreationParams({
+        INodes.NodeCreationParams memory params = INodes.NodeCreationParams({
             name: name,
             ip: ip,
             publicIp: publicIp,
@@ -116,7 +102,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         nodes.createNode(msg.sender, params);
     }
 
-    function nodeExit(uint nodeIndex) external {
+    function nodeExit(uint nodeIndex) external override {
         uint gasTotal = gasleft();
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
@@ -151,19 +137,19 @@ contract SkaleManager is IERC777Recipient, Permissions {
         _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
     }
 
-    function deleteSchain(string calldata name) external {
+    function deleteSchain(string calldata name) external override {
         Schains schains = Schains(contractManager.getContract("Schains"));
         // schain owner checks inside deleteSchain
         schains.deleteSchain(msg.sender, name);
     }
 
-    function deleteSchainByRoot(string calldata name) external {
+    function deleteSchainByRoot(string calldata name) external override {
         require(hasRole(SCHAIN_REMOVAL_ROLE, msg.sender), "SCHAIN_REMOVAL_ROLE is required");
         Schains schains = Schains(contractManager.getContract("Schains"));
         schains.deleteSchainByRoot(name);
     }
 
-    function getBounty(uint nodeIndex) external {
+    function getBounty(uint nodeIndex) external override {
         uint gasTotal = gasleft();
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
@@ -191,7 +177,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
     }
 
-    function setVersion(string calldata newVersion) external onlyOwner {
+    function setVersion(string calldata newVersion) external override onlyOwner {
         emit VersionUpdated(version, newVersion);
         version = newVersion;
     }

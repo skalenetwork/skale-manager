@@ -22,6 +22,8 @@
 
 pragma solidity 0.8.9;
 
+import "@skalenetwork/skale-manager-interfaces/IPricing.sol";
+
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
 import "./Nodes.sol";
@@ -30,7 +32,7 @@ import "./Nodes.sol";
  * @title Pricing
  * @dev Contains pricing operations for SKALE network.
  */
-contract Pricing is Permissions {
+contract Pricing is Permissions, IPricing {
 
     uint public constant INITIAL_PRICE = 5 * 10**6;
 
@@ -38,7 +40,7 @@ contract Pricing is Permissions {
     uint public totalNodes;
     uint public lastUpdated;
 
-    function initNodes() external {
+    function initNodes() external override {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         totalNodes = nodes.getNumberOnlineNodes();
     }
@@ -50,7 +52,7 @@ contract Pricing is Permissions {
      * 
      * - Cooldown time has exceeded.
      */
-    function adjustPrice() external {
+    function adjustPrice() external override {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         require(
             block.timestamp > lastUpdated + constantsHolder.COOLDOWN_TIME(),
@@ -98,7 +100,7 @@ contract Pricing is Permissions {
     /**
      * @dev Returns the total load percentage.
      */
-    function getTotalLoadPercentage() external view returns (uint) {
+    function getTotalLoadPercentage() external view override returns (uint) {
         return _getTotalLoad() * 100 / _getTotalCapacity();
     }
 
@@ -108,7 +110,7 @@ contract Pricing is Permissions {
         price = INITIAL_PRICE;
     }
 
-    function checkAllNodes() public {
+    function checkAllNodes() public override {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint numberOfActiveNodes = nodes.getNumberOnlineNodes();
 

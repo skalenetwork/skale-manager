@@ -66,7 +66,7 @@ contract SegmentTreeTester {
     }
 
     function getRandomElem(uint place) external view returns (uint) {
-        Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
+        INodes.RandomGenerator memory randomGenerator = Random.createFromEntropy(
             abi.encodePacked(uint(blockhash(block.number - 1)), place)
         );
         return _tree.getRandomNonZeroElementFromPlaceToLast(place, randomGenerator);

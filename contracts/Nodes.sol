@@ -25,6 +25,8 @@ pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+
 import "./delegation/DelegationController.sol";
 import "./delegation/ValidatorService.sol";
 import "./utils/Random.sol";
@@ -50,49 +52,11 @@ import "./Permissions.sol";
  * 
  * Note: Online nodes contain both Active and Leaving states.
  */
-contract Nodes is Permissions {
+contract Nodes is Permissions, INodes {
     
-    using Random for Random.RandomGenerator;
+    using Random for INodes.RandomGenerator;
     using SafeCastUpgradeable for uint;
     using SegmentTree for SegmentTree.Tree;
-
-    // All Nodes states
-    enum NodeStatus {Active, Leaving, Left, In_Maintenance}
-
-    struct Node {
-        string name;
-        bytes4 ip;
-        bytes4 publicIP;
-        uint16 port;
-        bytes32[2] publicKey;
-        uint startBlock;
-        uint lastRewardDate;
-        uint finishTime;
-        NodeStatus status;
-        uint validatorId;
-    }
-
-    // struct to note which Nodes and which number of Nodes owned by user
-    struct CreatedNodes {
-        mapping (uint => bool) isNodeExist;
-        uint numberOfNodes;
-    }
-
-    struct SpaceManaging {
-        uint8 freeSpace;
-        uint indexInSpaceMap;
-    }
-
-    // TODO: move outside the contract
-    struct NodeCreationParams {
-        string name;
-        bytes4 ip;
-        bytes4 publicIp;
-        uint16 port;
-        bytes32[2] publicKey;
-        uint16 nonce;
-        string domainName;
-    }
 
     bytes32 constant public COMPLIANCE_ROLE = keccak256("COMPLIANCE_ROLE");
     bytes32 public constant NODE_MANAGER_ROLE = keccak256("NODE_MANAGER_ROLE");
@@ -127,60 +91,6 @@ contract Nodes is Permissions {
 
     mapping (uint => bool) public incompliant;
 
-    /**
-     * @dev Emitted when a node is created.
-     */
-    event NodeCreated(
-        uint nodeIndex,
-        address owner,
-        string name,
-        bytes4 ip,
-        bytes4 publicIP,
-        uint16 port,
-        uint16 nonce,
-        string domainName
-    );
-
-    /**
-     * @dev Emitted when a node completes a network exit.
-     */
-    event ExitCompleted(
-        uint nodeIndex
-    );
-
-    /**
-     * @dev Emitted when a node begins to exit from the network.
-     */
-    event ExitInitialized(
-        uint nodeIndex,
-        uint startLeavingPeriod
-    );
-
-    /**
-     * @dev Emitted when a node set to in compliant or compliant.
-     */
-    event IncompliantNode(
-        uint indexed nodeIndex,
-        bool status
-    );
-
-    /**
-     * @dev Emitted when a node set to in maintenance or from in maintenance.
-     */
-    event MaintenanceNode(
-        uint indexed nodeIndex,
-        bool status
-    );
-
-    /**
-     * @dev Emitted when a node status changed.
-     */
-    event IPChanged(
-        uint indexed nodeIndex,
-        bytes4 previousIP,
-        bytes4 newIP
-    );
-
     modifier checkNodeExists(uint nodeIndex) {
         _checkNodeIndex(nodeIndex);
         _;
@@ -209,6 +119,7 @@ contract Nodes is Permissions {
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
         external
+        override
         checkNodeExists(nodeIndex)
         allowTwo("NodeRotation", "SchainsInternal")
         returns (bool)
@@ -232,6 +143,7 @@ contract Nodes is Permissions {
      */
     function addSpaceToNode(uint nodeIndex, uint8 space)
         external
+        override
         checkNodeExists(nodeIndex)
         allow("SchainsInternal")
     {
@@ -248,6 +160,7 @@ contract Nodes is Permissions {
      */
     function changeNodeLastRewardDate(uint nodeIndex)
         external
+        override
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
     {
@@ -259,6 +172,7 @@ contract Nodes is Permissions {
      */
     function changeNodeFinishTime(uint nodeIndex, uint time)
         external
+        override
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
     {
@@ -280,6 +194,7 @@ contract Nodes is Permissions {
      */
     function createNode(address from, NodeCreationParams calldata params)
         external
+        override
         allow("SkaleManager")
         nonZeroIP(params.ip)
     {
@@ -336,6 +251,7 @@ contract Nodes is Permissions {
      */
     function initExit(uint nodeIndex)
         external
+        override
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
         returns (bool)
@@ -361,6 +277,7 @@ contract Nodes is Permissions {
      */
     function completeExit(uint nodeIndex)
         external
+        override
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
         returns (bool)
@@ -382,6 +299,7 @@ contract Nodes is Permissions {
      */
     function deleteNodeForValidator(uint validatorId, uint nodeIndex)
         external
+        override
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
     {
@@ -413,7 +331,7 @@ contract Nodes is Permissions {
      * - Validator must be included on trusted list if trusted list is enabled.
      * - Validator must have sufficient stake to operate an additional node.
      */
-    function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
+    function checkPossibilityCreatingNode(address nodeAddress) external override allow("SkaleManager") {
         ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
         uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
         require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
@@ -437,6 +355,7 @@ contract Nodes is Permissions {
         uint nodeIndex
     )
         external
+        override
         checkNodeExists(nodeIndex)
         allow("Bounty")
         returns (bool)
@@ -457,7 +376,7 @@ contract Nodes is Permissions {
      * - Node must already be Active.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function setNodeInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
+    function setNodeInMaintenance(uint nodeIndex) external override onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         _setNodeInMaintenance(nodeIndex);
         emit MaintenanceNode(nodeIndex, true);
@@ -471,7 +390,7 @@ contract Nodes is Permissions {
      * - Node must already be In Maintenance.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function removeNodeFromInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
+    function removeNodeFromInMaintenance(uint nodeIndex) external override onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
         _setNodeActive(nodeIndex);
         emit MaintenanceNode(nodeIndex, false);
@@ -481,7 +400,7 @@ contract Nodes is Permissions {
      * @dev Marks the node as incompliant
      * 
      */
-    function setNodeIncompliant(uint nodeIndex) external onlyCompliance checkNodeExists(nodeIndex) {
+    function setNodeIncompliant(uint nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
         if (!incompliant[nodeIndex]) {
             incompliant[nodeIndex] = true;
             _makeNodeInvisible(nodeIndex);
@@ -493,7 +412,7 @@ contract Nodes is Permissions {
      * @dev Marks the node as compliant
      * 
      */
-    function setNodeCompliant(uint nodeIndex) external onlyCompliance checkNodeExists(nodeIndex) {
+    function setNodeCompliant(uint nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
         if (incompliant[nodeIndex]) {
             incompliant[nodeIndex] = false;
             _tryToMakeNodeVisible(nodeIndex);
@@ -503,16 +422,17 @@ contract Nodes is Permissions {
 
     function setDomainName(uint nodeIndex, string memory domainName)
         external
+        override
         onlyNodeOrNodeManager(nodeIndex)
     {
         domainNames[nodeIndex] = domainName;
     }
     
-    function makeNodeVisible(uint nodeIndex) external allow("SchainsInternal") {
+    function makeNodeVisible(uint nodeIndex) external override allow("SchainsInternal") {
         _tryToMakeNodeVisible(nodeIndex);
     }
 
-    function makeNodeInvisible(uint nodeIndex) external allow("SchainsInternal") {
+    function makeNodeInvisible(uint nodeIndex) external override allow("SchainsInternal") {
         _makeNodeInvisible(nodeIndex);
     }
 
@@ -522,6 +442,7 @@ contract Nodes is Permissions {
         bytes4 newPublicIP
     )
         external
+        override
         onlyAdmin
         checkNodeExists(nodeIndex)
         nonZeroIP(newIP)
@@ -538,10 +459,11 @@ contract Nodes is Permissions {
 
     function getRandomNodeWithFreeSpace(
         uint8 freeSpace,
-        Random.RandomGenerator memory randomGenerator
+        INodes.RandomGenerator memory randomGenerator
     )
         external
         view
+        override
         returns (uint)
     {
         uint8 place = _nodesAmountBySpace.getRandomNonZeroElementFromPlaceToLast(
@@ -689,6 +611,7 @@ contract Nodes is Permissions {
     function getNodeNextRewardDate(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (uint)
     {
@@ -698,7 +621,7 @@ contract Nodes is Permissions {
     /**
      * @dev Returns the total number of registered nodes.
      */
-    function getNumberOfNodes() external view returns (uint) {
+    function getNumberOfNodes() external view override returns (uint) {
         return nodes.length;
     }
 
@@ -707,14 +630,14 @@ contract Nodes is Permissions {
      * 
      * Note: Online nodes are equal to the number of active plus leaving nodes.
      */
-    function getNumberOnlineNodes() external view returns (uint) {
+    function getNumberOnlineNodes() external view override returns (uint) {
         return numberOfActiveNodes + numberOfLeavingNodes ;
     }
 
     /**
      * @dev Return active node IDs.
      */
-    function getActiveNodeIds() external view returns (uint[] memory activeNodeIds) {
+    function getActiveNodeIds() external view override returns (uint[] memory activeNodeIds) {
         activeNodeIds = new uint[](numberOfActiveNodes);
         uint indexOfActiveNodeIds = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
@@ -731,6 +654,7 @@ contract Nodes is Permissions {
     function getNodeStatus(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (NodeStatus)
     {
@@ -744,7 +668,7 @@ contract Nodes is Permissions {
      * 
      * - Validator ID must exist.
      */
-    function getValidatorNodeIndexes(uint validatorId) external view returns (uint[] memory) {
+    function getValidatorNodeIndexes(uint validatorId) external view override returns (uint[] memory) {
         ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         return validatorToNodeIndexes[validatorId];
@@ -753,7 +677,7 @@ contract Nodes is Permissions {
     /**
      * @dev Returns number of nodes with available space.
      */
-    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
+    function countNodesWithFreeSpace(uint8 freeSpace) external view override returns (uint count) {
         if (freeSpace == 0) {
             return _nodesAmountBySpace.sumFromPlaceToLast(1);
         }
@@ -778,6 +702,7 @@ contract Nodes is Permissions {
     function getValidatorId(uint nodeIndex)
         public
         view
+        override
         checkNodeExists(nodeIndex)
         returns (uint)
     {
@@ -790,6 +715,7 @@ contract Nodes is Permissions {
     function isNodeExist(address from, uint nodeIndex)
         public
         view
+        override
         checkNodeExists(nodeIndex)
         returns (bool)
     {
@@ -802,6 +728,7 @@ contract Nodes is Permissions {
     function isNodeActive(uint nodeIndex)
         public
         view
+        override
         checkNodeExists(nodeIndex)
         returns (bool)
     {
@@ -814,6 +741,7 @@ contract Nodes is Permissions {
     function isNodeLeaving(uint nodeIndex)
         public
         view
+        override
         checkNodeExists(nodeIndex)
         returns (bool)
     {
