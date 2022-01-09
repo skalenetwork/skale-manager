@@ -22,9 +22,9 @@
 pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
 
 import "../Permissions.sol";
-import "../interfaces/delegation/ILocker.sol";
 
 import "./ValidatorService.sol";
 import "./DelegationController.sol";

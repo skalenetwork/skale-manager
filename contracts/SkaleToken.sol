@@ -22,12 +22,12 @@
 pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegatableToken.sol";
+import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
 
 import "./thirdparty/openzeppelin/ERC777.sol";
 
 import "./Permissions.sol";
-import "./interfaces/delegation/IDelegatableToken.sol";
-import "./interfaces/IMintableToken.sol";
 import "./delegation/Punisher.sol";
 import "./delegation/TokenState.sol";
 

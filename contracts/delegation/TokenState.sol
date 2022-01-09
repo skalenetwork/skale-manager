@@ -22,8 +22,8 @@
 pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
 
-import "../interfaces/delegation/ILocker.sol";
 import "../Permissions.sol";
 
 import "./DelegationController.sol";

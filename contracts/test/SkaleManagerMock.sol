@@ -24,8 +24,8 @@ pragma solidity 0.8.9;
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
 
-import "../interfaces/IMintableToken.sol";
 import "../Permissions.sol";
 
 

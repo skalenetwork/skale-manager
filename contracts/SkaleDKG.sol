@@ -28,20 +28,12 @@ import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
 import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
-// import "./interfaces/ISkaleDKG.sol";
-
 
 import "./Permissions.sol";
 import "./delegation/Punisher.sol";
-// import "./SlashingTable.sol";
-// import "./Schains.sol";
-// import "./SchainsInternal.sol";
 import "./utils/FieldOperations.sol";
-// import "./NodeRotation.sol";
-// import "./KeyStorage.sol";
 import "./thirdparty/ECDH.sol";
 import "./utils/Precompiled.sol";
-// import "./Wallets.sol";
 import "./dkg/SkaleDkgAlright.sol";
 import "./dkg/SkaleDkgBroadcast.sol";
 import "./dkg/SkaleDkgComplaint.sol";

@@ -45,7 +45,7 @@ contract Wallets is Permissions, IWallets {
      * This is the function that is executed on plain Ether transfers,
      * so validator or schain owner can use usual transfer ether to recharge wallet.
      */
-    receive() external payable {
+    receive() external payable override {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32[] memory schainHashes = schainsInternal.getSchainHashesByAddress(msg.sender);
