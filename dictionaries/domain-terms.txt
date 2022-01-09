@@ -1,5 +1,6 @@
 agpl
 ecdh
+IECDH
 IERC1820
 IERC20
 IERC777
