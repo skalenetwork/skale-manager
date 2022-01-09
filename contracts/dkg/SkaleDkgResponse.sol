@@ -36,16 +36,16 @@ import "../utils/FieldOperations.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgResponse {
-    using G2Operations for G2Operations.G2Point;
+    using G2Operations for ISkaleDKG.G2Point;
 
     function response(
         bytes32 schainHash,
         uint fromNodeIndex,
         uint secretNumber,
-        G2Operations.G2Point memory multipliedShare,
+        ISkaleDKG.G2Point memory multipliedShare,
         ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.Channel) storage channels,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels,
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
     )
         external
     {
@@ -72,9 +72,9 @@ library SkaleDkgResponse {
     function _verifyDataAndSlash(
         bytes32 schainHash,
         uint secretNumber,
-        G2Operations.G2Point memory multipliedShare,
+        ISkaleDKG.G2Point memory multipliedShare,
         ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
     )
         private
         returns (uint badNode)
@@ -103,7 +103,7 @@ library SkaleDkgResponse {
     }
 
     function _checkCorrectMultipliedShare(
-        G2Operations.G2Point memory multipliedShare,
+        ISkaleDKG.G2Point memory multipliedShare,
         uint secret
     )
         private
@@ -113,9 +113,9 @@ library SkaleDkgResponse {
         if (!multipliedShare.isG2()) {
             return false;
         }
-        G2Operations.G2Point memory tmp = multipliedShare;
-        Fp2Operations.Fp2Point memory g1 = G1Operations.getG1Generator();
-        Fp2Operations.Fp2Point memory share = Fp2Operations.Fp2Point({
+        ISkaleDKG.G2Point memory tmp = multipliedShare;
+        ISkaleDKG.Fp2Point memory g1 = G1Operations.getG1Generator();
+        ISkaleDKG.Fp2Point memory share = ISkaleDKG.Fp2Point({
             a: 0,
             b: 0
         });
@@ -125,7 +125,7 @@ library SkaleDkgResponse {
 
         require(G1Operations.isG1(share), "mulShare not in G1");
 
-        G2Operations.G2Point memory g2 = G2Operations.getG2Generator();
+        ISkaleDKG.G2Point memory g2 = G2Operations.getG2Generator();
 
         return Precompiled.bn256Pairing(
             share.a, share.b,

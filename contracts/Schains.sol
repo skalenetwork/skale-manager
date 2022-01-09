@@ -22,15 +22,15 @@
 pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
 import "./ConstantsHolder.sol";
 import "./KeyStorage.sol";
-import "./SkaleVerifier.sol";
 import "./utils/FieldOperations.sol";
 import "./NodeRotation.sol";
-import "./interfaces/ISkaleDKG.sol";
 import "./Wallets.sol";
 
 
@@ -202,8 +202,8 @@ contract Schains is Permissions, ISchains {
         override
         returns (bool)
     {
-        SkaleVerifier skaleVerifier = SkaleVerifier(contractManager.getContract("SkaleVerifier"));
-        G2Operations.G2Point memory publicKey = G2Operations.getG2Zero();
+        ISkaleVerifier skaleVerifier = ISkaleVerifier(contractManager.getContract("SkaleVerifier"));
+        ISkaleDKG.G2Point memory publicKey = G2Operations.getG2Zero();
         bytes32 schainHash = keccak256(abi.encodePacked(schainName));
         if (
             NodeRotation(contractManager.getContract("NodeRotation")).isRotationInProgress(schainHash) &&
@@ -222,7 +222,7 @@ contract Schains is Permissions, ISchains {
             );
         }
         return skaleVerifier.verify(
-            Fp2Operations.Fp2Point({
+            ISkaleDKG.Fp2Point({
                 a: signatureA,
                 b: signatureB
             }),

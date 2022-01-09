@@ -42,9 +42,9 @@ library SkaleDkgAlright {
         bytes32 schainHash,
         uint fromNodeIndex,
         ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.Channel) storage channels,
-        mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels,
+        mapping(bytes32 => ISkaleDKG.ProcessDKG) storage dkgProcess,
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => uint) storage lastSuccessfulDKG,
         mapping(bytes32 => uint) storage startAlrightTimestamp
         

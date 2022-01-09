@@ -21,8 +21,10 @@
 
 pragma solidity 0.8.9;
 
+import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
+
 import "./Permissions.sol";
-import "./SchainsInternal.sol";
+// import "./SchainsInternal.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
 
@@ -30,8 +32,9 @@ import "./utils/FieldOperations.sol";
  * @title SkaleVerifier
  * @dev Contains verify function to perform BLS signature verification.
  */
-contract SkaleVerifier is Permissions {  
-    using Fp2Operations for Fp2Operations.Fp2Point;
+contract SkaleVerifier is Permissions, ISkaleVerifier {  
+    using Fp2Operations for ISkaleDKG.Fp2Point;
+    using G2Operations for ISkaleDKG.G2Point;
 
     /**
     * @dev Verifies a BLS signature.
@@ -44,15 +47,16 @@ contract SkaleVerifier is Permissions {
     * - Public Key in G2.
     */
     function verify(
-        Fp2Operations.Fp2Point calldata signature,
+        ISkaleDKG.Fp2Point calldata signature,
         bytes32 hash,
         uint counter,
         uint hashA,
         uint hashB,
-        G2Operations.G2Point calldata publicKey
+        ISkaleDKG.G2Point calldata publicKey
     )
         external
         view
+        override
         returns (bool)
     {
         require(G1Operations.checkRange(signature), "Signature is not valid");
@@ -71,7 +75,7 @@ contract SkaleVerifier is Permissions {
         require(G1Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
         require(G1Operations.isG1Point(hashA, hashB), "Hash not in G1");
 
-        G2Operations.G2Point memory g2 = G2Operations.getG2Generator();
+        ISkaleDKG.G2Point memory g2 = G2Operations.getG2Generator();
         require(
             G2Operations.isG2(publicKey),
             "Public Key not in G2"

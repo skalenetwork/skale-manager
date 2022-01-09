@@ -22,6 +22,8 @@
 
 pragma solidity 0.8.9;
 
+import "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
+
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 
@@ -29,21 +31,16 @@ import "./ConstantsHolder.sol";
  * @title Slashing Table
  * @dev This contract manages slashing conditions and penalties.
  */
-contract SlashingTable is Permissions {
+contract SlashingTable is Permissions, ISlashingTable {
     mapping (uint => uint) private _penalties;
 
     bytes32 public constant PENALTY_SETTER_ROLE = keccak256("PENALTY_SETTER_ROLE");
-
-    /**
-     * @dev Emitted when penalty was added
-     */
-    event PenaltyAdded(uint indexed offenseHash, string offense, uint penalty);
     
     /**
      * @dev Allows the Owner to set a slashing penalty in SKL tokens for a
      * given offense.
      */
-    function setPenalty(string calldata offense, uint penalty) external {
+    function setPenalty(string calldata offense, uint penalty) external override {
         require(hasRole(PENALTY_SETTER_ROLE, msg.sender), "PENALTY_SETTER_ROLE is required");
         uint offenseHash = uint(keccak256(abi.encodePacked(offense)));
         _penalties[offenseHash] = penalty;
@@ -53,7 +50,7 @@ contract SlashingTable is Permissions {
     /**
      * @dev Returns the penalty in SKL tokens for a given offense.
      */
-    function getPenalty(string calldata offense) external view returns (uint) {
+    function getPenalty(string calldata offense) external view override returns (uint) {
         uint penalty = _penalties[uint(keccak256(abi.encodePacked(offense)))];
         return penalty;
     }

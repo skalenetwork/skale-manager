@@ -41,8 +41,8 @@ library SkaleDkgBroadcast {
     event BroadcastAndKeyShare(
         bytes32 indexed schainHash,
         uint indexed fromNode,
-        G2Operations.G2Point[] verificationVector,
-        SkaleDKG.KeyShare[] secretKeyContribution
+        ISkaleDKG.G2Point[] verificationVector,
+        ISkaleDKG.KeyShare[] secretKeyContribution
     );
 
 
@@ -61,11 +61,11 @@ library SkaleDkgBroadcast {
     function broadcast(
         bytes32 schainHash,
         uint nodeIndex,
-        G2Operations.G2Point[] memory verificationVector,
-        SkaleDKG.KeyShare[] memory secretKeyContribution,
+        ISkaleDKG.G2Point[] memory verificationVector,
+        ISkaleDKG.KeyShare[] memory secretKeyContribution,
         ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.Channel) storage channels,
-        mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels,
+        mapping(bytes32 => ISkaleDKG.ProcessDKG) storage dkgProcess,
         mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
     )
         external

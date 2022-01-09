@@ -62,8 +62,8 @@ library SkaleDkgComplaint {
         uint fromNodeIndex,
         uint toNodeIndex,
         ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.Channel) storage channels,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels,
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => uint) storage startAlrightTimestamp
     )
         external
@@ -91,7 +91,7 @@ library SkaleDkgComplaint {
         uint fromNodeIndex,
         uint toNodeIndex,
         ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
     )
         external
     { 
@@ -114,7 +114,7 @@ library SkaleDkgComplaint {
         uint fromNodeIndex,
         uint toNodeIndex,
         ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => uint) storage startAlrightTimestamp
     )
         private
@@ -156,7 +156,7 @@ library SkaleDkgComplaint {
         bytes32 schainHash,
         uint toNodeIndex,
         ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.Channel) storage channels
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels
     ) 
         private
     {
