@@ -25,8 +25,13 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../delegation/TimeHelpers.sol";
 
+interface ITimeHelpersWithDebug {
+    function initialize() external;
+    function skipTime(uint sec) external;
+}
 
-contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
+
+contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWithDebug {
 
     struct TimeShift {
         uint pointInTime;
@@ -35,7 +40,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
 
     TimeShift[] private _timeShift;
 
-    function skipTime(uint sec) external onlyOwner {
+    function skipTime(uint sec) external override onlyOwner {
         if (_timeShift.length > 0) {
             _timeShift.push(TimeShift({
                 pointInTime: block.timestamp,
@@ -46,7 +51,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
         }
     }
 
-    function initialize() external initializer {
+    function initialize() external override initializer {
         OwnableUpgradeable.__Ownable_init();
     }
 

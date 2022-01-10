@@ -47,9 +47,9 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
     string public constant VALIDATOR_SERVICE = "ValidatorService";
 
     // mapping of actual smart contracts addresses
-    mapping (bytes32 => address) public contracts;
+    mapping (bytes32 => address) public override contracts;
 
-    function initialize() external initializer {
+    function initialize() external override initializer {
         OwnableUpgradeable.__Ownable_init();
     }
 

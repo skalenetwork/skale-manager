@@ -23,8 +23,15 @@ pragma solidity 0.8.9;
 
 import "../utils/FieldOperations.sol";
 
+interface IFieldOperationsTester {
+    function add(ISkaleDKG.G2Point memory value1, ISkaleDKG.G2Point memory value2)
+        external
+        view
+        returns (ISkaleDKG.G2Point memory);
+}
 
-contract FieldOperationsTester {
+
+contract FieldOperationsTester is IFieldOperationsTester {
 
     using Fp2Operations for ISkaleDKG.Fp2Point;
     using G2Operations for ISkaleDKG.G2Point;
@@ -32,6 +39,7 @@ contract FieldOperationsTester {
     function add(ISkaleDKG.G2Point memory value1, ISkaleDKG.G2Point memory value2)
         external
         view
+        override
         returns (ISkaleDKG.G2Point memory)
     {
         require(value1.isG2(), "First value not in G2");

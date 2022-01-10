@@ -23,8 +23,12 @@ pragma solidity 0.8.9;
 
 import "../SkaleDKG.sol";
 
-contract SkaleDKGTester is SkaleDKG {
-    function setSuccessfulDKGPublic(bytes32 schainHash) external {
+interface ISkaleDKGTester {
+    function setSuccessfulDKGPublic(bytes32 schainHash) external;
+}
+
+contract SkaleDKGTester is SkaleDKG, ISkaleDKGTester {
+    function setSuccessfulDKGPublic(bytes32 schainHash) external override {
         lastSuccessfulDKG[schainHash] = block.timestamp;
         channels[schainHash].active = false;
         IKeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);

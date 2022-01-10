@@ -22,6 +22,7 @@
 pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
 
 import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
 
@@ -30,7 +31,7 @@ import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
  * @title Permissions
  * @dev Contract is connected module for Upgradeable approach, knows ContractManager
  */
-contract Permissions is AccessControlUpgradeableLegacy {
+contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
     using AddressUpgradeable for address;
     
     IContractManager public contractManager;
@@ -110,7 +111,7 @@ contract Permissions is AccessControlUpgradeableLegacy {
         _;
     }
 
-    function initialize(address contractManagerAddress) public virtual initializer {
+    function initialize(address contractManagerAddress) public virtual override initializer {
         AccessControlUpgradeableLegacy.__AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setContractManager(contractManagerAddress);

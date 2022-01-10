@@ -480,6 +480,7 @@ contract Nodes is Permissions, INodes {
     function isTimeForReward(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (bool)
     {
@@ -496,6 +497,7 @@ contract Nodes is Permissions, INodes {
     function getNodeIP(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (bytes4)
     {
@@ -513,6 +515,7 @@ contract Nodes is Permissions, INodes {
     function getNodeDomainName(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (string memory)
     {
@@ -529,6 +532,7 @@ contract Nodes is Permissions, INodes {
     function getNodePort(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (uint16)
     {
@@ -541,6 +545,7 @@ contract Nodes is Permissions, INodes {
     function getNodePublicKey(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (bytes32[2] memory)
     {
@@ -553,6 +558,7 @@ contract Nodes is Permissions, INodes {
     function getNodeAddress(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (address)
     {
@@ -566,6 +572,7 @@ contract Nodes is Permissions, INodes {
     function getNodeFinishTime(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (uint)
     {
@@ -578,6 +585,7 @@ contract Nodes is Permissions, INodes {
     function isNodeLeft(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (bool)
     {
@@ -587,6 +595,7 @@ contract Nodes is Permissions, INodes {
     function isNodeInMaintenance(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (bool)
     {
@@ -599,6 +608,7 @@ contract Nodes is Permissions, INodes {
     function getNodeLastRewardDate(uint nodeIndex)
         external
         view
+        override
         checkNodeExists(nodeIndex)
         returns (uint)
     {

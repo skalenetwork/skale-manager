@@ -65,7 +65,7 @@ contract KeyStorage is Permissions, IKeyStorage {
         _publicKeysInProgress[schainHash] = value.addG2(_publicKeysInProgress[schainHash]);
     }
 
-    function finalizePublicKey(bytes32 schainHash) external allow("SkaleDKG") {
+    function finalizePublicKey(bytes32 schainHash) external override allow("SkaleDKG") {
         if (!_isSchainsPublicKeyZero(schainHash)) {
             _previousSchainsPublicKeys[schainHash].push(_schainsPublicKeys[schainHash]);
         }
