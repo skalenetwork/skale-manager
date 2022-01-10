@@ -23,11 +23,10 @@ pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
 import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
 import "../Permissions.sol";
-
-import "./ValidatorService.sol";
-import "./DelegationController.sol";
 
 /**
  * @title Punisher
@@ -50,8 +49,8 @@ contract Punisher is Permissions, ILocker, IPunisher {
      * - Validator must exist.
      */
     function slash(uint validatorId, uint amount) external override allow("SkaleDKG") {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        DelegationController delegationController = DelegationController(
+        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController"));
 
         require(validatorService.validatorExists(validatorId), "Validator does not exist");
@@ -72,7 +71,7 @@ contract Punisher is Permissions, ILocker, IPunisher {
      */
     function forgive(address holder, uint amount) external override {
         require(hasRole(FORGIVER_ROLE, msg.sender), "FORGIVER_ROLE is required");
-        DelegationController delegationController = DelegationController(
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController"));
 
         require(!delegationController.hasUnprocessedSlashes(holder), "Not all slashes were calculated");
@@ -118,7 +117,7 @@ contract Punisher is Permissions, ILocker, IPunisher {
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
-        DelegationController delegationController = DelegationController(
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController"));
 
         delegationController.processAllSlashes(wallet);

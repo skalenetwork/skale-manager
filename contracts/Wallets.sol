@@ -24,11 +24,10 @@
 pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
 
 import "./Permissions.sol";
-import "./delegation/ValidatorService.sol";
-import "./SchainsInternal.sol";
-import "./Nodes.sol";
 
 /**
  * @title Wallets
@@ -46,8 +45,8 @@ contract Wallets is Permissions, IWallets {
      * so validator or schain owner can use usual transfer ether to recharge wallet.
      */
     receive() external payable override {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32[] memory schainHashes = schainsInternal.getSchainHashesByAddress(msg.sender);
         if (schainHashes.length == 1) {
             rechargeSchainWallet(schainHashes[0]);
@@ -177,7 +176,7 @@ contract Wallets is Permissions, IWallets {
      * - Validator must have sufficient withdrawal amount
      */
     function withdrawFundsFromValidatorWallet(uint amount) external override {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(msg.sender);
         require(amount <= _validatorWallets[validatorId], "Balance is too low");
         _validatorWallets[validatorId] = _validatorWallets[validatorId] - amount;
@@ -203,7 +202,7 @@ contract Wallets is Permissions, IWallets {
      * - Given validator must exist
      */
     function rechargeValidatorWallet(uint validatorId) public payable override {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator does not exists");
         _validatorWallets[validatorId] = _validatorWallets[validatorId] + msg.value;
         emit ValidatorWalletRecharged(msg.sender, msg.value, validatorId);
@@ -219,7 +218,7 @@ contract Wallets is Permissions, IWallets {
      * - Given schain must be created
      */
     function rechargeSchainWallet(bytes32 schainHash) public payable override {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isSchainActive(schainHash), "Schain should be active for recharging");
         _schainWallets[schainHash] = _schainWallets[schainHash] + msg.value;
         emit SchainWalletRecharged(msg.sender, msg.value, schainHash);

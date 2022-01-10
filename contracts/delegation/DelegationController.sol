@@ -23,19 +23,22 @@
 pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
-import "../BountyV2.sol";
-import "../Nodes.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+
 import "../Permissions.sol";
 import "../utils/FractionUtils.sol";
 import "../utils/MathUtils.sol";
-
-import "./DelegationPeriodManager.sol";
 import "./PartialDifferences.sol";
-import "./Punisher.sol";
-import "./TokenState.sol";
-import "./ValidatorService.sol";
 
 /**
  * @title Delegation Controller
@@ -233,7 +236,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
 
         // check that there is enough money
         uint holderBalance = IERC777(contractManager.getSkaleToken()).balanceOf(msg.sender);
-        uint forbiddenForDelegation = TokenState(contractManager.getTokenState())
+        uint forbiddenForDelegation = ILocker(contractManager.getTokenState())
             .getAndUpdateForbiddenForDelegationAmount(msg.sender);
         require(holderBalance >= forbiddenForDelegation, "Token holder does not have enough tokens to delegate");
 
@@ -308,7 +311,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
      */
     function requestUndelegation(uint delegationId) external override checkDelegationExists(delegationId) {
         require(getState(delegationId) == State.DELEGATED, "Cannot request undelegation");
-        ValidatorService validatorService = _getValidatorService();
+        IValidatorService validatorService = _getValidatorService();
         require(
             delegations[delegationId].holder == msg.sender ||
             (validatorService.validatorAddressExists(msg.sender) &&
@@ -364,7 +367,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         _putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
         _slashes.push(SlashingEvent({reducingCoefficient: coefficient, validatorId: validatorId, month: currentMonth}));
 
-        BountyV2 bounty = _getBounty();
+        IBountyV2 bounty = _getBounty();
         bounty.handleDelegationRemoving(
             initialEffectiveDelegated - 
                 _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth),
@@ -750,7 +753,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     }
 
     function _sendSlashingSignals(SlashingSignal[] memory slashingSignals) private {
-        Punisher punisher = Punisher(contractManager.getPunisher());
+        IPunisher punisher = IPunisher(contractManager.getPunisher());
         address previousHolder = address(0);
         uint accumulatedPenalty = 0;
         for (uint i = 0; i < slashingSignals.length; ++i) {
@@ -945,23 +948,23 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         );
     }
 
-    function _getDelegationPeriodManager() private view returns (DelegationPeriodManager) {
-        return DelegationPeriodManager(contractManager.getDelegationPeriodManager());
+    function _getDelegationPeriodManager() private view returns (IDelegationPeriodManager) {
+        return IDelegationPeriodManager(contractManager.getDelegationPeriodManager());
     }
 
-    function _getBounty() private view returns (BountyV2) {
-        return BountyV2(contractManager.getBounty());
+    function _getBounty() private view returns (IBountyV2) {
+        return IBountyV2(contractManager.getBounty());
     }
 
-    function _getValidatorService() private view returns (ValidatorService) {
-        return ValidatorService(contractManager.getValidatorService());
+    function _getValidatorService() private view returns (IValidatorService) {
+        return IValidatorService(contractManager.getValidatorService());
     }
 
-    function _getTimeHelpers() private view returns (TimeHelpers) {
-        return TimeHelpers(contractManager.getTimeHelpers());
+    function _getTimeHelpers() private view returns (ITimeHelpers) {
+        return ITimeHelpers(contractManager.getTimeHelpers());
     }
 
-    function _getConstantsHolder() private view returns (ConstantsHolder) {
-        return ConstantsHolder(contractManager.getConstantsHolder());
+    function _getConstantsHolder() private view returns (IConstantsHolder) {
+        return IConstantsHolder(contractManager.getConstantsHolder());
     }
 }

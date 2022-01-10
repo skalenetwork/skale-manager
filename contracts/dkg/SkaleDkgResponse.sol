@@ -23,11 +23,14 @@
 
 pragma solidity 0.8.9;
 
-import "../SkaleDKG.sol";
-import "../Wallets.sol";
-import "../Decryption.sol";
-import "../Nodes.sol";
-import "../thirdparty/ECDH.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "@skalenetwork/skale-manager-interfaces/IDecryption.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+
 import "../utils/FieldOperations.sol";
 
 /**
@@ -43,13 +46,13 @@ library SkaleDkgResponse {
         uint fromNodeIndex,
         uint secretNumber,
         ISkaleDKG.G2Point memory multipliedShare,
-        ContractManager contractManager,
+        IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
     )
         external
     {
-        uint index = SchainsInternal(contractManager.getContract("SchainsInternal"))
+        uint index = ISchainsInternal(contractManager.getContract("SchainsInternal"))
             .getNodeIndexInGroup(schainHash, fromNodeIndex);
         require(index < channels[schainHash].n, "Node is not in this group");
         require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
@@ -66,29 +69,29 @@ library SkaleDkgResponse {
             contractManager,
             complaints
          );
-        SkaleDKG(contractManager.getContract("SkaleDKG")).setBadNode(schainHash, badNode);
+        ISkaleDKG(contractManager.getContract("SkaleDKG")).setBadNode(schainHash, badNode);
     }
 
     function _verifyDataAndSlash(
         bytes32 schainHash,
         uint secretNumber,
         ISkaleDKG.G2Point memory multipliedShare,
-        ContractManager contractManager,
+        IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
     )
         private
         returns (uint badNode)
     {
-        bytes32[2] memory publicKey = Nodes(contractManager.getContract("Nodes")).getNodePublicKey(
+        bytes32[2] memory publicKey = INodes(contractManager.getContract("Nodes")).getNodePublicKey(
             complaints[schainHash].fromNodeToComplaint
         );
         uint256 pkX = uint(publicKey[0]);
 
-        (pkX, ) = ECDH(contractManager.getContract("ECDH")).deriveKey(secretNumber, pkX, uint(publicKey[1]));
+        (pkX, ) = IECDH(contractManager.getContract("ECDH")).deriveKey(secretNumber, pkX, uint(publicKey[1]));
         bytes32 key = bytes32(pkX);
 
         // Decrypt secret key contribution
-        uint secret = Decryption(contractManager.getContract("Decryption")).decrypt(
+        uint secret = IDecryption(contractManager.getContract("Decryption")).decrypt(
             complaints[schainHash].keyShare,
             sha256(abi.encodePacked(key))
         );
@@ -99,7 +102,7 @@ library SkaleDkgResponse {
             complaints[schainHash].fromNodeToComplaint :
             complaints[schainHash].nodeToComplaint
         );
-        SkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainHash, badNode);
+        ISkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainHash, badNode);
     }
 
     function _checkCorrectMultipliedShare(
@@ -134,8 +137,8 @@ library SkaleDkgResponse {
             tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
     }
 
-    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
+    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint) {
+        return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

@@ -23,8 +23,11 @@
 
 pragma solidity 0.8.9;
 
-import "../SkaleDKG.sol";
-import "../KeyStorage.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+
 import "../utils/FieldOperations.sol";
 
 
@@ -63,7 +66,7 @@ library SkaleDkgBroadcast {
         uint nodeIndex,
         ISkaleDKG.G2Point[] memory verificationVector,
         ISkaleDKG.KeyShare[] memory secretKeyContribution,
-        ContractManager contractManager,
+        IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels,
         mapping(bytes32 => ISkaleDKG.ProcessDKG) storage dkgProcess,
         mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
@@ -80,19 +83,19 @@ library SkaleDkgBroadcast {
             channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit(contractManager) > block.timestamp,
             "Incorrect time for broadcast"
         );
-        (uint index, ) = SkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
+        (uint index, ) = ISkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
             schainHash, nodeIndex, true
         );
         require(!dkgProcess[schainHash].broadcasted[index], "This node has already broadcasted");
         dkgProcess[schainHash].broadcasted[index] = true;
         dkgProcess[schainHash].numberOfBroadcasted++;
         if (dkgProcess[schainHash].numberOfBroadcasted == channels[schainHash].n) {
-            SkaleDKG(contractManager.getContract("SkaleDKG")).setStartAlrightTimestamp(schainHash);
+            ISkaleDKG(contractManager.getContract("SkaleDKG")).setStartAlrightTimestamp(schainHash);
         }
-        hashedData[schainHash][index] = SkaleDKG(contractManager.getContract("SkaleDKG")).hashData(
+        hashedData[schainHash][index] = ISkaleDKG(contractManager.getContract("SkaleDKG")).hashData(
             secretKeyContribution, verificationVector
         );
-        KeyStorage(contractManager.getContract("KeyStorage")).adding(schainHash, verificationVector[0]);
+        IKeyStorage(contractManager.getContract("KeyStorage")).adding(schainHash, verificationVector[0]);
         emit BroadcastAndKeyShare(
             schainHash,
             nodeIndex,
@@ -105,8 +108,8 @@ library SkaleDkgBroadcast {
         return (n * 2 + 1) / 3;
     }
 
-    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
+    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint) {
+        return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

@@ -25,7 +25,6 @@ pragma solidity 0.8.9;
 import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
 
 import "../Permissions.sol";
-import "../ConstantsHolder.sol";
 
 /**
  * @title Delegation Period Manager

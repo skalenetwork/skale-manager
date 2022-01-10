@@ -21,15 +21,14 @@
 
 pragma solidity 0.8.9;
 
-import "./delegation/DelegationController.sol";
-import "./delegation/PartialDifferences.sol";
-import "./delegation/TimeHelpers.sol";
-import "./delegation/ValidatorService.sol";
 import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
-import "./ConstantsHolder.sol";
-import "./Nodes.sol";
 import "./Permissions.sol";
+import "./ConstantsHolder.sol";
+import "./delegation/PartialDifferences.sol";
 
 
 contract BountyV2 is Permissions, IBountyV2 {
@@ -79,9 +78,9 @@ contract BountyV2 is Permissions, IBountyV2 {
         returns (uint)
     {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        DelegationController delegationController = DelegationController(
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
+        ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController")
         );
         
@@ -164,9 +163,9 @@ contract BountyV2 is Permissions, IBountyV2 {
 
     function estimateBounty(uint nodeIndex) external view override returns (uint) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        DelegationController delegationController = DelegationController(
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
+        ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController")
         );
 
@@ -192,8 +191,8 @@ contract BountyV2 is Permissions, IBountyV2 {
     function getNextRewardTimestamp(uint nodeIndex) external view override returns (uint) {
         return _getNextRewardTimestamp(
             nodeIndex,
-            Nodes(contractManager.getContract("Nodes")),
-            TimeHelpers(contractManager.getContract("TimeHelpers"))
+            INodes(contractManager.getContract("Nodes")),
+            ITimeHelpers(contractManager.getContract("TimeHelpers"))
         );
     }
 
@@ -212,7 +211,7 @@ contract BountyV2 is Permissions, IBountyV2 {
 
     // private
 
-    function _refillEpochPool(uint currentMonth, TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private {
+    function _refillEpochPool(uint currentMonth, ITimeHelpers timeHelpers, ConstantsHolder constantsHolder) private {
         uint epochPool;
         uint nextEpoch;
         (epochPool, nextEpoch) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
@@ -225,7 +224,7 @@ contract BountyV2 is Permissions, IBountyV2 {
     function _reduceBounty(
         uint bounty,
         uint nodeIndex,
-        Nodes nodes,
+        INodes nodes,
         ConstantsHolder constants
     )
         private
@@ -258,7 +257,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         uint effectiveDelegated,
         uint delegated,
         ConstantsHolder constantsHolder,
-        Nodes nodes
+        INodes nodes
     )
         private
         view
@@ -294,13 +293,13 @@ contract BountyV2 is Permissions, IBountyV2 {
         return bounty;
     }
 
-    function _getFirstEpoch(TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private view returns (uint) {
+    function _getFirstEpoch(ITimeHelpers timeHelpers, ConstantsHolder constantsHolder) private view returns (uint) {
         return timeHelpers.timestampToMonth(constantsHolder.launchTimestamp());
     }
 
     function _getEpochPool(
         uint currentMonth,
-        TimeHelpers timeHelpers,
+        ITimeHelpers timeHelpers,
         ConstantsHolder constantsHolder
     )
         private
@@ -315,7 +314,7 @@ contract BountyV2 is Permissions, IBountyV2 {
 
     function _getEpochReward(
         uint epoch,
-        TimeHelpers timeHelpers,
+        ITimeHelpers timeHelpers,
         ConstantsHolder constantsHolder
     )
         private
@@ -357,7 +356,11 @@ contract BountyV2 is Permissions, IBountyV2 {
         }
     }
 
-    function _getNextRewardTimestamp(uint nodeIndex, Nodes nodes, TimeHelpers timeHelpers) private view returns (uint) {
+    function _getNextRewardTimestamp(uint nodeIndex, INodes nodes, ITimeHelpers timeHelpers)
+        private
+        view
+        returns (uint)
+    {
         uint lastRewardTimestamp = nodes.getNodeLastRewardDate(nodeIndex);
         uint lastRewardMonth = timeHelpers.timestampToMonth(lastRewardTimestamp);
         uint lastRewardMonthStart = timeHelpers.monthToTimestamp(lastRewardMonth);

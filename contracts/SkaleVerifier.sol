@@ -24,7 +24,6 @@ pragma solidity 0.8.9;
 import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
 
 import "./Permissions.sol";
-// import "./SchainsInternal.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
 

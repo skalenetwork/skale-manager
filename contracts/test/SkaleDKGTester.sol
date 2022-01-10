@@ -27,7 +27,7 @@ contract SkaleDKGTester is SkaleDKG {
     function setSuccessfulDKGPublic(bytes32 schainHash) external {
         lastSuccessfulDKG[schainHash] = block.timestamp;
         channels[schainHash].active = false;
-        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
+        IKeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
         emit SuccessfulDKG(schainHash);
     }
 }

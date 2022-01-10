@@ -28,11 +28,12 @@ import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
 import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
 
 import "./Permissions.sol";
-import "./delegation/Punisher.sol";
+import "./ConstantsHolder.sol";
 import "./utils/FieldOperations.sol";
-import "./thirdparty/ECDH.sol";
 import "./utils/Precompiled.sol";
 import "./dkg/SkaleDkgAlright.sol";
 import "./dkg/SkaleDkgBroadcast.sol";
@@ -303,7 +304,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete channels[schainHash];
         delete dkgProcess[schainHash];
         delete complaints[schainHash];
-        KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(schainHash);
+        IKeyStorage(contractManager.getContract("KeyStorage")).deleteKey(schainHash);
     }
 
     function setStartAlrightTimestamp(bytes32 schainHash) external override allow("SkaleDKG") {
@@ -340,8 +341,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             channels[schainHash].active = false;
         }
         schainsInternal.makeSchainNodesVisible(schainHash);
-        Punisher(contractManager.getPunisher()).slash(
-            Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
+        IPunisher(contractManager.getPunisher()).slash(
+            INodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
             ISlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
         );
     }
@@ -552,7 +553,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _refundGasBySchain(bytes32 schainHash, uint gasTotal, Context memory context) private {
-        Wallets wallets = Wallets(payable(contractManager.getContract("Wallets")));
+        IWallets wallets = IWallets(payable(contractManager.getContract("Wallets")));
         bool isLastNode = channels[schainHash].n == dkgProcess[schainHash].numberOfCompleted;
         if (context.dkgFunction == DkgFunction.Alright && isLastNode) {
             wallets.refundGasBySchain(
@@ -578,9 +579,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _refundGasByValidatorToSchain(bytes32 schainHash) private {
-        uint validatorId = Nodes(contractManager.getContract("Nodes"))
+        uint validatorId = INodes(contractManager.getContract("Nodes"))
          .getValidatorId(_badNodes[schainHash]);
-         Wallets(payable(contractManager.getContract("Wallets")))
+         IWallets(payable(contractManager.getContract("Wallets")))
          .refundGasByValidatorToSchain(validatorId, schainHash);
         delete _badNodes[schainHash];
     }
@@ -610,7 +611,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _isNodeOwnedByMessageSender(uint nodeIndex, address from) private view returns (bool) {
-        return Nodes(contractManager.getContract("Nodes")).isNodeExist(from, nodeIndex);
+        return INodes(contractManager.getContract("Nodes")).isNodeExist(from, nodeIndex);
     }
 
     function _checkMsgSenderIsNodeOwner(uint nodeIndex) private view {

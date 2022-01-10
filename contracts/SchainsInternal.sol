@@ -22,13 +22,14 @@
 pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+
 import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
-import "./utils/Random.sol";
-
+import "./Permissions.sol";
 import "./ConstantsHolder.sol";
-import "./Nodes.sol";
+import "./utils/Random.sol";
 
 
 /**
@@ -43,7 +44,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
 
-    mapping (bytes32 => bool) public isSchainActive;
+    mapping (bytes32 => bool) public override isSchainActive;
 
     mapping (bytes32 => uint[]) public schainsGroups;
 
@@ -58,9 +59,9 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     mapping (bytes32 => uint[]) public holesForSchains;
 
     // array which contain all schains
-    bytes32[] public schainsAtSystem;
+    bytes32[] public override schainsAtSystem;
 
-    uint64 public numberOfSchains;
+    uint64 public override numberOfSchains;
     // total resources that schains occupied
     uint public sumOfSchainsResources;
 
@@ -268,7 +269,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
         removeSchainForNode(nodeIndex, placeOfSchainOnNode[schainHash][nodeIndex] - 1);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         nodes.addSpaceToNode(nodeIndex, schains[schainHash].partOfNode);
     }
 
@@ -422,7 +423,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         allowTwo("NodeRotation", "SkaleDKG")
         schainExists(schainHash)
     {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainHash].length; i++) {
             nodes.makeNodeInvisible(_schainToExceptionNodes[schainHash][i]);
         }
@@ -681,7 +682,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         schainExists(schainHash)
         returns (bool)
     {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < schainsGroups[schainHash].length; i++) {
             if (nodes.getNodeAddress(schainsGroups[schainHash][i]) == sender) {
                 return true;
@@ -724,7 +725,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * - Schain must exist
      */
     function isAnyFreeNode(bytes32 schainHash) external view override schainExists(schainHash) returns (bool) {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainHash].partOfNode;
         return nodes.countNodesWithFreeSpace(space) > 0;
     }
@@ -923,7 +924,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * @dev Generates schain group using a pseudo-random generator.
      */
     function _generateGroup(bytes32 schainHash, uint numberOfNodes) private returns (uint[] memory nodesInGroup) {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainHash].partOfNode;
         nodesInGroup = new uint[](numberOfNodes);
 
@@ -951,7 +952,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     }
 
     function _makeSchainNodesVisible(bytes32 schainHash) private {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainHash].length; i++) {
             nodes.makeNodeVisible(_schainToExceptionNodes[schainHash][i]);
         }

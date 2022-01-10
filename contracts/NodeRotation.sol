@@ -24,13 +24,12 @@ pragma solidity 0.8.9;
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "./utils/Random.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 
-import "./ConstantsHolder.sol";
-import "./Nodes.sol";
+import "./utils/Random.sol";
 import "./Permissions.sol";
-import "./SchainsInternal.sol";
-import "./Schains.sol";
 
 
 /**
@@ -86,7 +85,7 @@ contract NodeRotation is Permissions, INodeRotation {
      * - A free node must exist.
      */
     function exitFromSchain(uint nodeIndex) external override allow("SkaleManager") returns (bool, bool) {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainHash = schainsInternal.getActiveSchain(nodeIndex);
         if (schainHash == bytes32(0)) {
             return (true, false);
@@ -100,7 +99,7 @@ contract NodeRotation is Permissions, INodeRotation {
      * @dev Allows SkaleManager contract to freeze all schains on a given node.
      */
     function freezeSchains(uint nodeIndex) external override allow("SkaleManager") {
-        bytes32[] memory schains = SchainsInternal(
+        bytes32[] memory schains = ISchainsInternal(
             contractManager.getContract("SchainsInternal")
         ).getSchainHashesForNode(nodeIndex);
         for (uint i = 0; i < schains.length; i++) {
@@ -190,7 +189,7 @@ contract NodeRotation is Permissions, INodeRotation {
         allowTwo("SkaleDKG", "SkaleManager")
         returns (uint newNode)
     {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         schainsInternal.removeNodeFromSchain(nodeIndex, schainHash);
         if (!isBadNode) {
             schainsInternal.removeNodeFromExceptions(schainHash, nodeIndex);
@@ -215,8 +214,8 @@ contract NodeRotation is Permissions, INodeRotation {
         allowThree("SkaleManager", "Schains", "SkaleDKG")
         returns (uint nodeIndex)
     {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         require(schainsInternal.isSchainActive(schainHash), "Group is not active");
         uint8 space = schainsInternal.getSchainsPartOfNode(schainHash);
         schainsInternal.makeSchainNodesInvisible(schainHash);
@@ -242,7 +241,7 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     function _startWaiting(bytes32 schainHash, uint nodeIndex) private {
-        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        IConstantsHolder constants = IConstantsHolder(contractManager.getContract("ConstantsHolder"));
         _rotations[schainHash].nodeIndex = nodeIndex;
         _rotations[schainHash].freezeUntil = block.timestamp + constants.rotationDelay();
     }
@@ -261,7 +260,7 @@ contract NodeRotation is Permissions, INodeRotation {
             LeavingHistory(
                 schainHash,
                 shouldDelay ? block.timestamp + 
-                    ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay()
+                    IConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay()
                 : block.timestamp
             )
         );

@@ -25,7 +25,6 @@ pragma solidity 0.8.9;
 import "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
 
 import "./Permissions.sol";
-import "./ConstantsHolder.sol";
 
 /**
  * @title Slashing Table

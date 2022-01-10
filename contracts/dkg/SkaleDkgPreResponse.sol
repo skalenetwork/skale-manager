@@ -23,8 +23,9 @@
 
 pragma solidity 0.8.9;
 
-import "../SkaleDKG.sol";
-import "../Wallets.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+
 import "../utils/FieldOperations.sol";
 
 /**
@@ -41,13 +42,13 @@ library SkaleDkgPreResponse {
         ISkaleDKG.G2Point[] memory verificationVector,
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication,
         ISkaleDKG.KeyShare[] memory secretKeyContribution,
-        ContractManager contractManager,
+        IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
     )
         external
     {
-        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         uint index = _preResponseCheck(
             schainHash,
             fromNodeIndex,
@@ -85,7 +86,7 @@ library SkaleDkgPreResponse {
         ISkaleDKG.G2Point[] memory verificationVector,
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication,
         ISkaleDKG.KeyShare[] memory secretKeyContribution,
-        SkaleDKG skaleDKG,
+        ISkaleDKG skaleDKG,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
     )

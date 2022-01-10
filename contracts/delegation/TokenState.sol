@@ -23,11 +23,9 @@ pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
 import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
 import "../Permissions.sol";
-
-import "./DelegationController.sol";
-import "./TimeHelpers.sol";
 
 
 /**
@@ -50,7 +48,7 @@ contract TokenState is Permissions, ILocker, ITokenState {
 
     string[] private _lockers;
 
-    DelegationController private _delegationController;
+    IDelegationController private _delegationController;
 
     bytes32 public constant LOCKER_MANAGER_ROLE = keccak256("LOCKER_MANAGER_ROLE");
 
@@ -65,7 +63,7 @@ contract TokenState is Permissions, ILocker, ITokenState {
     function getAndUpdateLockedAmount(address holder) external override returns (uint) {
         if (address(_delegationController) == address(0)) {
             _delegationController =
-                DelegationController(contractManager.getContract("DelegationController"));
+                IDelegationController(contractManager.getContract("DelegationController"));
         }
         uint locked = 0;
         if (_delegationController.getDelegationsByHolderLength(holder) > 0) {

@@ -23,10 +23,11 @@
 pragma solidity 0.8.9;
 
 import "@skalenetwork/skale-manager-interfaces/IPricing.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
 import "./Permissions.sol";
-import "./SchainsInternal.sol";
-import "./Nodes.sol";
+import "./ConstantsHolder.sol";
 
 /**
  * @title Pricing
@@ -41,7 +42,7 @@ contract Pricing is Permissions, IPricing {
     uint public lastUpdated;
 
     function initNodes() external override {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         totalNodes = nodes.getNumberOnlineNodes();
     }
 
@@ -111,7 +112,7 @@ contract Pricing is Permissions, IPricing {
     }
 
     function checkAllNodes() public override {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         uint numberOfActiveNodes = nodes.getNumberOnlineNodes();
 
         require(totalNodes != numberOfActiveNodes, "No changes to node supply");
@@ -119,7 +120,7 @@ contract Pricing is Permissions, IPricing {
     }
 
     function _getTotalLoad() private view returns (uint) {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
 
         uint load = 0;
         uint numberOfSchains = schainsInternal.numberOfSchains();
@@ -133,7 +134,7 @@ contract Pricing is Permissions, IPricing {
     }
 
     function _getTotalCapacity() private view returns (uint) {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
         return nodes.getNumberOnlineNodes() * constantsHolder.TOTAL_SPACE_ON_NODE();

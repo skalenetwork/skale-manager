@@ -26,15 +26,15 @@ pragma solidity 0.8.9;
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
 import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 
-import "./delegation/DelegationController.sol";
-import "./delegation/ValidatorService.sol";
+import "./Permissions.sol";
+import "./ConstantsHolder.sol";
 import "./utils/Random.sol";
 import "./utils/SegmentTree.sol";
 
-import "./BountyV2.sol";
-import "./ConstantsHolder.sol";
-import "./Permissions.sol";
 
 
 /**
@@ -79,7 +79,7 @@ contract Nodes is Permissions, INodes {
 
     mapping (uint => uint[]) public validatorToNodeIndexes;
 
-    uint public numberOfActiveNodes;
+    uint public override numberOfActiveNodes;
     uint public numberOfLeavingNodes;
     uint public numberOfLeftNodes;
 
@@ -89,7 +89,7 @@ contract Nodes is Permissions, INodes {
 
     SegmentTree.Tree private _nodesAmountBySpace;
 
-    mapping (uint => bool) public incompliant;
+    mapping (uint => bool) public override incompliant;
 
     modifier checkNodeExists(uint nodeIndex) {
         _checkNodeIndex(nodeIndex);
@@ -202,7 +202,7 @@ contract Nodes is Permissions, INodes {
         require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name is already registered");
         require(params.port > 0, "Port is zero");
         require(from == _publicKeyToAddress(params.publicKey), "Public Key is incorrect");
-        uint validatorId = ValidatorService(
+        uint validatorId = IValidatorService(
             contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
         uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
         nodes.push(Node({
@@ -303,7 +303,7 @@ contract Nodes is Permissions, INodes {
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
     {
-        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
+        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint position = _findNode(validatorNodes, nodeIndex);
@@ -332,7 +332,7 @@ contract Nodes is Permissions, INodes {
      * - Validator must have sufficient stake to operate an additional node.
      */
     function checkPossibilityCreatingNode(address nodeAddress) external override allow("SkaleManager") {
-        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
+        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
         require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
         require(
@@ -360,7 +360,7 @@ contract Nodes is Permissions, INodes {
         allow("Bounty")
         returns (bool)
     {
-        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
+        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint position = _findNode(validatorNodes, nodeIndex);
@@ -483,7 +483,7 @@ contract Nodes is Permissions, INodes {
         checkNodeExists(nodeIndex)
         returns (bool)
     {
-        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= block.timestamp;
+        return IBountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= block.timestamp;
     }
 
     /**
@@ -615,7 +615,7 @@ contract Nodes is Permissions, INodes {
         checkNodeExists(nodeIndex)
         returns (uint)
     {
-        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex);
+        return IBountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex);
     }
 
     /**
@@ -669,7 +669,7 @@ contract Nodes is Permissions, INodes {
      * - Validator ID must exist.
      */
     function getValidatorNodeIndexes(uint validatorId) external view override returns (uint[] memory) {
-        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
+        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         return validatorToNodeIndexes[validatorId];
     }
@@ -867,11 +867,11 @@ contract Nodes is Permissions, INodes {
     }
 
     function _checkValidatorPositionToMaintainNode(uint validatorId, uint position) private returns (bool) {
-        DelegationController delegationController = DelegationController(
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController")
         );
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint msr = ConstantsHolder(contractManager.getConstantsHolder()).msr();
+        uint msr = IConstantsHolder(contractManager.getConstantsHolder()).msr();
         return (position + 1) * msr <= delegationsTotal;
     }
 
@@ -880,7 +880,7 @@ contract Nodes is Permissions, INodes {
     }
 
     function _checkNodeOrNodeManager(uint nodeIndex, address sender) private view {
-        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
+        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
 
         require(
             isNodeExist(sender, nodeIndex) ||

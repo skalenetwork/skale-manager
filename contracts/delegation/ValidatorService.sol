@@ -24,13 +24,11 @@
 pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+
 import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
 import "../Permissions.sol";
-import "../ConstantsHolder.sol";
-
-import "./DelegationController.sol";
-import "./TimeHelpers.sol";
 
 /**
  * @title ValidatorService
@@ -344,7 +342,7 @@ contract ValidatorService is Permissions, IValidatorService {
         override
         returns (uint)
     {
-        DelegationController delegationController = DelegationController(
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController")
         );
         return delegationController.getAndUpdateDelegatedByHolderToValidatorNow(
