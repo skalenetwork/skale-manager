@@ -58,13 +58,14 @@ describe("SchainsInternal", () => {
     });
 
     it("should initialize schain", async () => {
-        await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.constants.AddressZero, 5, 5, "0x");
+        await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.constants.AddressZero, 5, 5, "0x010203");
 
         const schain = await schainsInternal.schains(stringKeccak256("TestSchain"));
         schain.name.should.be.equal("TestSchain");
         schain.owner.should.be.equal(holder.address);
         schain.lifetime.should.be.equal(5);
         schain.deposit.should.be.equal(5);
+        schain.options.should.be.equal("0x010203");
     });
 
     it("should increase generation number", async () => {
