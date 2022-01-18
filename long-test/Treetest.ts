@@ -92,7 +92,7 @@ async function checkTreeAndSpaceToNodes(nodes: Nodes) {
 }
 
 async function createSchain(schains: Schains, typeOfSchain: SchainType, name: string, owner: Signer) {
-    await schains.addSchainByFoundation(0, typeOfSchain, 0, name, await owner.getAddress(), ethers.constants.AddressZero);
+    await schains.addSchainByFoundation(0, typeOfSchain, 0, name, await owner.getAddress(), ethers.constants.AddressZero, "");
     console.log("Schain", name, "with type", typeOfSchain, "created");
 }
 

@@ -48,6 +48,7 @@ contract Schains is Permissions, ISchains {
         uint16 nonce;
         string name;
         address originator;
+        bytes options;
     }
 
     bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
@@ -145,7 +146,8 @@ contract Schains is Permissions, ISchains {
         uint16 nonce,
         string calldata name,
         address schainOwner,
-        address schainOriginator
+        address schainOriginator,
+        bytes calldata options
     )
         external
         payable
@@ -157,7 +159,8 @@ contract Schains is Permissions, ISchains {
             typeOfSchain: typeOfSchain,
             nonce: nonce,
             name: name,
-            originator: schainOriginator
+            originator: schainOriginator,
+            options: options
         });
 
         address _schainOwner;
@@ -321,14 +324,15 @@ contract Schains is Permissions, ISchains {
         address originator,
         uint deposit,
         uint lifetime,
-        SchainsInternal schainsInternal
+        SchainsInternal schainsInternal,
+        bytes memory options
     )
         private
     {
         require(schainsInternal.isSchainNameAvailable(name), "Schain name is not available");
 
         // initialize Schain
-        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit);
+        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit, options);
     }
 
     /**
@@ -380,7 +384,8 @@ contract Schains is Permissions, ISchains {
             schainParameters.originator,
             deposit,
             schainParameters.lifetime,
-            schainsInternal
+            schainsInternal,
+            schainParameters.options
         );
 
         // create a group for Schain
@@ -450,6 +455,7 @@ contract Schains is Permissions, ISchains {
         schainParameters.typeOfSchain,
         schainParameters.nonce,
         schainParameters.name,
-        schainParameters.originator) = abi.decode(data, (uint, uint8, uint16, string, address));
+        schainParameters.originator,
+        schainParameters.options) = abi.decode(data, (uint, uint8, uint16, string, address, bytes));
     }
 }
