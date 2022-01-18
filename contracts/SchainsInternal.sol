@@ -52,7 +52,6 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         uint64 index;
         uint generation;
         address originator;
-        bytes options;
     }
 
     struct SchainType {
@@ -144,8 +143,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         address from,
         address originator,
         uint lifetime,
-        uint deposit,
-        bytes calldata options) external allow("Schains")
+        uint deposit) external allow("Schains")
     {
         bytes32 schainHash = keccak256(abi.encodePacked(name));
 
@@ -160,8 +158,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             deposit: deposit,
             index: numberOfSchains,
             generation: currentGeneration,
-            originator: originator,
-            options: options
+            originator: originator
         });
         isSchainActive[schainHash] = true;
         numberOfSchains++;

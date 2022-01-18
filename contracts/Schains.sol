@@ -41,6 +41,7 @@ import "./Wallets.sol";
  */
 contract Schains is Permissions, ISchains {
     using AddressUpgradeable for address;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.Bytes32Set;
 
     struct SchainParameters {
         uint lifetime;
@@ -48,8 +49,18 @@ contract Schains is Permissions, ISchains {
         uint16 nonce;
         string name;
         address originator;
-        bytes options;
+        SchainOption[] options;
     }
+
+    struct SchainOption {
+        string name;
+        bytes value;
+    }
+
+    //    schainHash => Set of options hashes
+    mapping (bytes32 => EnumerableSetUpgradeable.Bytes32Set) private _optionsIndex;
+    //    schainHash => optionHash => schain option
+    mapping (bytes32 => mapping (bytes32 => SchainOption)) private _options;
 
     bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
@@ -102,6 +113,11 @@ contract Schains is Permissions, ISchains {
         uint[] nodesInGroup
     );
 
+    modifier schainExists(SchainsInternal schainsInternal, bytes32 schainHash) {
+        require(schainsInternal.isSchainExist(schainHash), "The schain does not exist");
+        _;
+    }
+
     /**
      * @dev Allows SkaleManager contract to create an Schain.
      * 
@@ -114,7 +130,7 @@ contract Schains is Permissions, ISchains {
      * - If from is a smart contract originator must be specified
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow("SkaleManager") {
-        SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
+        SchainParameters memory schainParameters = abi.decode(data, (SchainParameters));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
         uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
@@ -147,7 +163,7 @@ contract Schains is Permissions, ISchains {
         string calldata name,
         address schainOwner,
         address schainOriginator,
-        bytes calldata options
+        SchainOption[] calldata options
     )
         external
         payable
@@ -283,6 +299,21 @@ contract Schains is Permissions, ISchains {
         );
     }
 
+    function getOption(bytes32 schainHash, string calldata optionName) external view returns (bytes memory) {
+        bytes32 optionHash = keccak256(abi.encodePacked(optionName));
+        SchainsInternal schainsInternal = SchainsInternal(
+            contractManager.getContract("SchainsInternal"));
+        return _getOption(schainHash, optionHash, schainsInternal);
+    }
+
+    function getOptions(bytes32 schainHash) external view returns (SchainOption[] memory) {
+        SchainOption[] memory options = new SchainOption[](_optionsIndex[schainHash].length());
+        for (uint i = 0; i < options.length; ++i) {
+            options[i] = _options[schainHash][_optionsIndex[schainHash].at(i)];
+        }
+        return options;
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
     }
@@ -325,14 +356,18 @@ contract Schains is Permissions, ISchains {
         uint deposit,
         uint lifetime,
         SchainsInternal schainsInternal,
-        bytes memory options
+        SchainOption[] memory options
     )
         private
     {
         require(schainsInternal.isSchainNameAvailable(name), "Schain name is not available");
 
         // initialize Schain
-        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit, options);
+        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit);
+        bytes32 schainHash = keccak256(abi.encodePacked(name));
+        for (uint i = 0; i < options.length; ++i) {
+            _setOption(schainHash, options[i], schainsInternal);
+        }
     }
 
     /**
@@ -442,20 +477,30 @@ contract Schains is Permissions, ISchains {
         emit SchainDeleted(from, name, schainHash);
     }
 
-    /**
-     * @dev Converts data from bytes to normal schain parameters of lifetime,
-     * type, nonce, and name.
-     */
-    function _fallbackSchainParametersDataConverter(bytes memory data)
+    function _setOption(
+        bytes32 schainHash,
+        SchainOption memory option,
+        SchainsInternal schainsInternal
+    )
         private
-        pure
-        returns (SchainParameters memory schainParameters)
+        schainExists(schainsInternal, schainHash)
     {
-        (schainParameters.lifetime,
-        schainParameters.typeOfSchain,
-        schainParameters.nonce,
-        schainParameters.name,
-        schainParameters.originator,
-        schainParameters.options) = abi.decode(data, (uint, uint8, uint16, string, address, bytes));
+        bytes32 optionHash = keccak256(abi.encodePacked(option.name));
+        _options[schainHash][optionHash] = option;
+        _optionsIndex[schainHash].add(optionHash);
+    }
+
+    function _getOption(
+        bytes32 schainHash,
+        bytes32 optionHash,
+        SchainsInternal schainsInternal
+    )
+        private
+        view
+        schainExists(schainsInternal, schainHash)
+        returns (bytes memory)
+    {
+        require(_optionsIndex[schainHash].contains(optionHash), "Option is not set");
+        return _options[schainHash][optionHash].value;
     }
 }
