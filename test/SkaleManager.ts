@@ -500,11 +500,13 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                             5, // lifetime
                             3, // type of schain
                             0, // nonce
-                            "d2"])); // name
+                            "d2", // name
+                            ethers.constants.AddressZero, // originator
+                            "0x"])); // options
 
                     const schain = await schainsInternal.schains(d2SchainHash);
                     schain[0].should.be.equal("d2");
@@ -517,11 +519,13 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                             0, // lifetime
                             3, // type of schain
                             0, // nonce
-                            "d2"]), // name
+                            "d2", // name
+                            ethers.constants.AddressZero, // originator
+                            "0x"]), // options
                         )
                         .should.be.eventually.rejectedWith("Minimal schain lifetime should be satisfied");
 
@@ -529,11 +533,13 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                             5, // lifetime
                             3, // type of schain
                             0, // nonce
-                            "d2"]), // name
+                            "d2", // name
+                            ethers.constants.AddressZero, // originator
+                            "0x"]), // options
                         );
 
                     const schain = await schainsInternal.schains(d2SchainHash);
@@ -547,11 +553,13 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                             4, // lifetime
                             3, // type of schain
                             0, // nonce
-                            "d2"]), // name
+                            "d2", // name
+                            ethers.constants.AddressZero, // originator
+                            "0x"]), // options
                         )
                         .should.be.eventually.rejectedWith("It is not a time for creating Schain");
                 });
@@ -561,11 +569,13 @@ describe("SkaleManager", () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                                 5, // lifetime
                                 3, // type of schain
                                 0, // nonce
-                                "d2"]), // name
+                                "d2", // name
+                                ethers.constants.AddressZero, // originator
+                                "0x"]), // options
                             );
                         await skaleDKG.setSuccessfulDKGPublic(
                             d2SchainHash
@@ -599,11 +609,13 @@ describe("SkaleManager", () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                                 5, // lifetime
                                 3, // type of schain
                                 0, // nonce
-                                "d3"]), // name
+                                "d3", // name
+                                ethers.constants.AddressZero, // originator
+                                "0x"]), // options
                             );
                     });
 
@@ -656,11 +668,13 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         price,
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                             5, // lifetime
                             3, // type of schain
                             0, // nonce
-                            "d2"]), // name
+                            "d2", // name
+                            ethers.constants.AddressZero, // originator
+                            "0x"]), // options
                         );
 
                     const schain1 = await schainsInternal.schains(d2SchainHash);
@@ -669,11 +683,13 @@ describe("SkaleManager", () => {
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         price,
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                             5, // lifetime
                             3, // type of schain
                             0, // nonce
-                            "d3"]), // name
+                            "d3", // name
+                            ethers.constants.AddressZero, // originator
+                            "0x"]), // options
                         );
 
                     const schain2 = await schainsInternal.schains(d3SchainHash);
@@ -686,21 +702,25 @@ describe("SkaleManager", () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                                 5, // lifetime
                                 3, // type of schain
                                 0, // nonce
-                                "d2"]), // name
+                                "d2", // name
+                                ethers.constants.AddressZero, // originator
+                                "0x"]), // options
                             );
 
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                            ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                                 5, // lifetime
                                 3, // type of schain
                                 0, // nonce
-                                "d3"]), // name
+                                "d3", // name
+                                ethers.constants.AddressZero, // originator
+                                "0x"]), // options
                             );
                     });
 
@@ -741,11 +761,13 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                         5, // lifetime
                         1, // type of schain
                         0, // nonce
-                        "d2"]), // name
+                        "d2", // name
+                        ethers.constants.AddressZero, // originator
+                        "0x"]), // options
                     );
 
                 let schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d2"]));
@@ -759,11 +781,13 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                         5, // lifetime
                         2, // type of schain
                         0, // nonce
-                        "d3"]), // name
+                        "d3", // name
+                        ethers.constants.AddressZero, // originator
+                        "0x"]), // options
                     );
 
                 schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d3"]));
@@ -776,11 +800,13 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                         5, // lifetime
                         3, // type of schain
                         0, // nonce
-                        "d4"]), // name
+                        "d4", // name
+                        ethers.constants.AddressZero, // originator
+                        "0x"]), // options
                     );
 
                 schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d4"]));
@@ -793,11 +819,13 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                         5, // lifetime
                         4, // type of schain
                         0, // nonce
-                        "d5"]), // name
+                        "d5", // name
+                        ethers.constants.AddressZero, // originator
+                        "0x"]), // options
                     );
 
                 schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d5"]));
@@ -810,11 +838,13 @@ describe("SkaleManager", () => {
                 await skaleToken.connect(developer).send(
                     skaleManager.address,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [
                         5, // lifetime
                         5, // type of schain
                         0, // nonce
-                        "d6"]), // name
+                        "d6", // name
+                        ethers.constants.AddressZero, // originator
+                        "0x"]), // options
                     );
 
                 schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d6"]));

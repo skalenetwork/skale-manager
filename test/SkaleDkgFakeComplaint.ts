@@ -642,7 +642,7 @@ describe("SkaleDkgFakeComplaint", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 5, 0, "d2", ethers.constants.AddressZero, "0x"]));
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
@@ -655,7 +655,7 @@ describe("SkaleDkgFakeComplaint", () => {
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, schainName]));
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 5, 0, schainName, ethers.constants.AddressZero, "0x"]));
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
                 await wallets.rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
             }

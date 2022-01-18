@@ -168,10 +168,10 @@ describe("Wallets", () => {
 
             await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address)
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address, ethers.constants.AddressZero, "");
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address, ethers.constants.AddressZero, "0x");
             await skaleDKG.setSuccessfulDKGPublic(schain1Id);
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address, ethers.constants.AddressZero, "");
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address, ethers.constants.AddressZero, "0x");
             await skaleDKG.setSuccessfulDKGPublic(schain2Id);
         });
 
@@ -181,7 +181,7 @@ describe("Wallets", () => {
 
         it("should automatically recharge wallet after creating schain by foundation", async () => {
             const amount = 1e9;
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, ethers.constants.AddressZero, "", {value: amount.toString()});
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, ethers.constants.AddressZero, "0x", {value: amount.toString()});
             const schainBalance = await wallets.getSchainBalance(stringKeccak256("schain-3"));
             amount.should.be.equal(schainBalance.toNumber());
         });

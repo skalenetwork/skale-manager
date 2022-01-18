@@ -344,7 +344,7 @@ describe("SkaleDKG", () => {
             const res = await (await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]))).wait();
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, "d2", ethers.constants.AddressZero, "0x"]))).wait();
 
             assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
             (await skaleDKG.getChannelStartedBlock(stringKeccak256("d2"))).should.be.equal(res.blockNumber);
@@ -356,7 +356,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, "d2", ethers.constants.AddressZero, "0x"]));
 
             assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
         });
@@ -367,7 +367,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, "d2", ethers.constants.AddressZero, "0x"]));
 
             assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
 
@@ -386,7 +386,7 @@ describe("SkaleDKG", () => {
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, "d2", ethers.constants.AddressZero, "0x"]));
 
                 let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
                 schainName = "d2";
@@ -399,7 +399,7 @@ describe("SkaleDKG", () => {
                     await schains.addSchain(
                         validator1.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
+                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, schainName, ethers.constants.AddressZero, "0x"]));
                     nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
                     await wallets.rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 }
@@ -1372,7 +1372,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, "d2", ethers.constants.AddressZero, "0x"]));
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
@@ -1384,7 +1384,7 @@ describe("SkaleDKG", () => {
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, schainName, ethers.constants.AddressZero, "0x"]));
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
             }
 
@@ -1543,7 +1543,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, "d2", ethers.constants.AddressZero, "0x"]));
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
@@ -1555,7 +1555,7 @@ describe("SkaleDKG", () => {
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
+                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, schainName, ethers.constants.AddressZero, "0x"]));
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
             }
 
@@ -1748,7 +1748,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 3, 0, "New16NodeSchain", ethers.constants.AddressZero, "0x"]));
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -1855,7 +1855,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 3, 0, "New16NodeSchain", ethers.constants.AddressZero, "0x"]));
 
             await nodes.createNode(validators[0].nodeAddress.address,
                 {
@@ -2202,7 +2202,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 3, 0, "New16NodeSchain", ethers.constants.AddressZero, "0x"]));
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -2279,7 +2279,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 3, 0, "New16NodeSchain", ethers.constants.AddressZero, "0x"]));
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -2410,7 +2410,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 1, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 1, 0, "New16NodeSchain", ethers.constants.AddressZero, "0x"]));
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -2477,7 +2477,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 1, 0, "New16NodeSchain1"])
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 1, 0, "New16NodeSchain1", ethers.constants.AddressZero, "0x"])
             );
 
             await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain1"), {value: 1e20.toString()});

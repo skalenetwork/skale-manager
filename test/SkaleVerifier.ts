@@ -250,7 +250,7 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, "Bob", ethers.constants.AddressZero, "0x"]));
 
             const bobHash = stringKeccak256("Bob");
             if (bobHash) {
@@ -307,7 +307,7 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
+                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 4, 0, "Bob", ethers.constants.AddressZero, "0x"]));
 
             const bobHash = stringKeccak256("Bob");
 
