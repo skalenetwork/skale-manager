@@ -127,10 +127,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
-        nodeRotation.freezeSchains(nodeIndex);
-        if (nodes.isNodeActive(nodeIndex)) {
-            require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
-        }
         require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
         (bool completed, bool isSchains) = nodeRotation.exitFromSchain(nodeIndex);
         if (completed) {

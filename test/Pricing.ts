@@ -71,6 +71,8 @@ describe("Pricing", () => {
         const validatorIndex = await validatorService.getValidatorId(validator.address);
         const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
     });
 
     describe("on initialized contracts", async () => {

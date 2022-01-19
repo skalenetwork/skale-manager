@@ -205,7 +205,10 @@ async function removeNodeFromInMaintenance(nodes: Nodes, node: Wallet, nodeId: s
     console.log("Remove Node From In Maintenance", nodeId);
 }
 
-async function nodeExit(skaleManager: SkaleManager, node: Wallet, nodeId: string) {
+async function nodeExit(skaleManager: SkaleManager, nodes: Nodes, node: Wallet, nodeId: string) {
+    if (await nodes.isNodeActive(nodeId)) {
+        await nodes.initExit(nodeId);
+    }
     await skaleManager.connect(node).nodeExit(nodeId);
     console.log("Exited node", nodeId);
 }
@@ -258,6 +261,7 @@ describe("Tree test", () => {
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         await validatorService.enableValidator(validatorIndex);
+        await nodes.grantRole(await nodes.NODE_MANAGER_ROLE(), owner.address);
     });
 
     describe("when 15 nodes were created", () => {
@@ -280,11 +284,11 @@ describe("Tree test", () => {
                 for (let i2 = 0; i2 < 3; i2++) {
                     await createSchain(schains, SchainType.SMALL, name + i2, owner);
                     console.log(await getNodesInSchain(schainsInternal, name + i2));
-                    // await nodeExit(skaleManager, node, (nodeIndex + i2).toString()); - revert
+                    // await nodeExit(skaleManager, nodes, node, (nodeIndex + i2).toString()); - revert
                     await setNodeInMaintenance(nodes, node, (nodeIndex + i2).toString());
                     await deleteSchain(skaleManager, name + i2, owner);
                     await removeNodeFromInMaintenance(nodes, node, (nodeIndex + i2).toString());
-                    await nodeExit(skaleManager, node, (nodeIndex + i2).toString());
+                    await nodeExit(skaleManager, nodes, node, (nodeIndex + i2).toString());
                 }
                 // await createSchain(schains, SchainType.SMALL, "B", owner); - revert
                 await checkTreeAndSpaceToNodes(nodes);
@@ -326,7 +330,7 @@ describe("Tree test", () => {
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await createNode(skaleManager, node, 16);
                 await deleteSchain(skaleManager, "A", owner);
-                await nodeExit(skaleManager, node, "10");
+                await nodeExit(skaleManager, nodes, node, "10");
                 await createSchain(schains, SchainType.SMALL, "B", owner);
                 console.log(await getNodesInSchain(schainsInternal, "B"));
                 await checkTreeAndSpaceToNodes(nodes);
@@ -342,7 +346,7 @@ describe("Tree test", () => {
                 await createNode(skaleManager, node, 16);
                 await deleteSchain(skaleManager, "A", owner);
                 await removeNodeFromInMaintenance(nodes, node, "10");
-                await nodeExit(skaleManager, node, "10");
+                await nodeExit(skaleManager, nodes, node, "10");
                 await createSchain(schains, SchainType.SMALL, "B", owner);
                 console.log(await getNodesInSchain(schainsInternal, "B"));
                 await checkTreeAndSpaceToNodes(nodes);
@@ -356,7 +360,7 @@ describe("Tree test", () => {
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await createNode(skaleManager, node, 16);
                 await deleteSchain(skaleManager, "A", owner);
-                await nodeExit(skaleManager, node, "9");
+                await nodeExit(skaleManager, nodes, node, "9");
                 await createSchain(schains, SchainType.SMALL, "B", owner);
                 console.log(await getNodesInSchain(schainsInternal, "B"));
                 await checkTreeAndSpaceToNodes(nodes);
