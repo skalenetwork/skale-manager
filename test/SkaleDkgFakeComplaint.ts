@@ -35,6 +35,7 @@ import { deployWallets } from "./tools/deploy/wallets";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
+import { schainParametersType, SchainType } from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -642,7 +643,17 @@ describe("SkaleDkgFakeComplaint", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 5, 0, "d2", ethers.constants.AddressZero, "0x"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.MEDIUM_TEST,
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
@@ -655,7 +666,17 @@ describe("SkaleDkgFakeComplaint", () => {
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string", "address", "bytes"], [5, 5, 0, schainName, ethers.constants.AddressZero, "0x"]));
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: schainName,
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    ));
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
                 await wallets.rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
             }
