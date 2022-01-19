@@ -98,20 +98,6 @@ describe("Schains", () => {
         await constantsHolder.setMSR(0);
     });
 
-    // struct SchainParameters {
-    //     uint lifetime;
-    //     uint8 typeOfSchain;
-    //     uint16 nonce;
-    //     string name;
-    //     address originator;
-    //     SchainOption[] options;
-    // }
-
-    // struct SchainOption {
-    //     string name;
-    //     bytes value;
-    // }
-
     describe("should add schain", async () => {
         it("should fail when user does not have enough money", async () => {
             await schains.addSchain(
@@ -1008,7 +994,16 @@ describe("Schains", () => {
                             nonce: 0,
                             name: "d2",
                             originator: ethers.constants.AddressZero,
-                            options: []
+                            options: [
+                                {
+                                    name: "one",
+                                    value: "0x01"
+                                },
+                                {
+                                    name: "two",
+                                    value: "0x02"
+                                }
+                            ]
                         }]
                     )
                 );
@@ -1019,12 +1014,24 @@ describe("Schains", () => {
 
                 await schainsInternal.isOwnerAddress(holder.address, schainHash).should.be.eventually.true;
 
+                await schains.getOption(schainHash, "one")
+                    .should.be.eventually.equal("0x01");
+
+                const options = await schains.getOptions(schainHash);
+                options.length.should.be.equal(2);
+                options[0].name.should.be.equal("one");
+                options[0].value.should.be.equal("0x01");
+                options[1].name.should.be.equal("two");
+                options[1].value.should.be.equal("0x02");
+
                 await schains.deleteSchain(
                     holder.address,
                     "d2",
                 );
 
                 await schainsInternal.getSchains().should.be.eventually.empty;
+                await schains.getOption(schainHash, "one")
+                    .should.be.eventually.rejectedWith("The schain does not exist");
             });
 
             it("should allow the foundation to create schain without tokens", async () => {

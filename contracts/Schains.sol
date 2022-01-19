@@ -364,7 +364,7 @@ contract Schains is Permissions, ISchains {
 
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         for (uint i = 0; i < options.length; ++i) {
-            _setOption(schainHash, options[i], schainsInternal);
+            _setOption(schainHash, options[i]);
         }
 
         // initialize Schain
@@ -482,11 +482,9 @@ contract Schains is Permissions, ISchains {
 
     function _setOption(
         bytes32 schainHash,
-        SchainOption memory option,
-        SchainsInternal schainsInternal
+        SchainOption memory option
     )
         private
-        schainExists(schainsInternal, schainHash)
     {
         bytes32 optionHash = keccak256(abi.encodePacked(option.name));
         _options[schainHash][optionHash] = option;
