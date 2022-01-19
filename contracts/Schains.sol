@@ -362,12 +362,13 @@ contract Schains is Permissions, ISchains {
     {
         require(schainsInternal.isSchainNameAvailable(name), "Schain name is not available");
 
-        // initialize Schain
-        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit);
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         for (uint i = 0; i < options.length; ++i) {
             _setOption(schainHash, options[i], schainsInternal);
         }
+
+        // initialize Schain
+        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit);
     }
 
     /**
@@ -487,7 +488,7 @@ contract Schains is Permissions, ISchains {
     {
         bytes32 optionHash = keccak256(abi.encodePacked(option.name));
         _options[schainHash][optionHash] = option;
-        _optionsIndex[schainHash].add(optionHash);
+        require(_optionsIndex[schainHash].add(optionHash), "The option has been set already");
     }
 
     function _getOption(
