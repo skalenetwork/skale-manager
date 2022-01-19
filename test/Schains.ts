@@ -2015,13 +2015,15 @@ describe("Schains", () => {
                     break;
                 }
             }
-            await nodes.initExit(rotIndex1);
             for (const schainHash of Array.from(schainHashes1).reverse()) {
                 if (rotIndex1 === 7) {
+                    await nodes.initExit(rotIndex1);
                     await skaleManager.connect(nodeAddress).nodeExit(rotIndex1);
                 } else if (rotIndex1 === 6) {
+                    await nodes.initExit(rotIndex1);
                     await skaleManager.connect(nodeAddress2).nodeExit(rotIndex1);
                 } else if (rotIndex1 < 6) {
+                    await nodes.initExit(rotIndex1);
                     await skaleManager.connect(nodeAddress).nodeExit(rotIndex1);
                 } else {
                     break;
@@ -2045,13 +2047,15 @@ describe("Schains", () => {
             }
 
             await skipTime(43260);
-            await nodes.initExit(rotIndex2);
             for (const schainHash of Array.from(schainHashes2).reverse()) {
                 if (rotIndex2 === 7) {
+                    await nodes.initExit(rotIndex2);
                     await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
                 } else if (rotIndex2 === 6) {
+                    await nodes.initExit(rotIndex2);
                     await skaleManager.connect(nodeAddress2).nodeExit(rotIndex2);
                 } else if (rotIndex2 < 6) {
+                    await nodes.initExit(rotIndex2);
                     await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
                 } else {
                     break;
