@@ -454,6 +454,8 @@ contract Schains is Permissions, ISchains {
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         require(schainsInternal.isSchainExist(schainHash), "Schain does not exist");
 
+        _deleteOptions(schainHash, schainsInternal);
+
         uint[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             if (schainsInternal.checkHoleForSchain(schainHash, i)) {
@@ -489,6 +491,20 @@ contract Schains is Permissions, ISchains {
         bytes32 optionHash = keccak256(abi.encodePacked(option.name));
         _options[schainHash][optionHash] = option;
         require(_optionsIndex[schainHash].add(optionHash), "The option has been set already");
+    }
+
+    function _deleteOptions(
+        bytes32 schainHash,
+        SchainsInternal schainsInternal
+    )
+        private
+        schainExists(schainsInternal, schainHash)
+    {
+        while (_optionsIndex[schainHash].length() > 0) {
+            bytes32 optionHash = _optionsIndex[schainHash].at(0);
+            delete _options[schainHash][optionHash];
+            require(_optionsIndex[schainHash].remove(optionHash), "Removing error");
+        }
     }
 
     function _getOption(
