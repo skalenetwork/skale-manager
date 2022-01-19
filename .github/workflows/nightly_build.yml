@@ -3,7 +3,7 @@ on:
   schedule:
     - cron:  '14 3 * * *'
 env:
-  NODE_VERSION: 14
+  NODE_VERSION: 16
   PYTHON_VERSION: 3.9
 
 jobs: 
