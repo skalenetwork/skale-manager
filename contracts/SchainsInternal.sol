@@ -38,7 +38,7 @@ import "./utils/Random.sol";
  */
 contract SchainsInternal is Permissions, ISchainsInternal {
 
-    using Random for INodes.RandomGenerator;
+    using Random for IRandom.RandomGenerator;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
     // mapping which contain all schains
@@ -929,7 +929,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         nodesInGroup = new uint[](numberOfNodes);
 
         require(nodes.countNodesWithFreeSpace(space) >= nodesInGroup.length, "Not enough nodes to create Schain");
-        INodes.RandomGenerator memory randomGenerator = Random.createFromEntropy(
+        IRandom.RandomGenerator memory randomGenerator = Random.createFromEntropy(
             abi.encodePacked(uint(blockhash(block.number - 1)), schainHash)
         );
         for (uint i = 0; i < numberOfNodes; i++) {

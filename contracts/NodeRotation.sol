@@ -37,7 +37,7 @@ import "./Permissions.sol";
  * @dev This contract handles all node rotation functionality.
  */
 contract NodeRotation is Permissions, INodeRotation {
-    using Random for INodes.RandomGenerator;
+    using Random for IRandom.RandomGenerator;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
     /**
@@ -220,7 +220,7 @@ contract NodeRotation is Permissions, INodeRotation {
         uint8 space = schainsInternal.getSchainsPartOfNode(schainHash);
         schainsInternal.makeSchainNodesInvisible(schainHash);
         require(schainsInternal.isAnyFreeNode(schainHash), "No free Nodes available for rotation");
-        INodes.RandomGenerator memory randomGenerator = Random.createFromEntropy(
+        IRandom.RandomGenerator memory randomGenerator = Random.createFromEntropy(
             abi.encodePacked(uint(blockhash(block.number - 1)), schainHash)
         );
         nodeIndex = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);

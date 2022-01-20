@@ -54,7 +54,7 @@ import "./utils/SegmentTree.sol";
  */
 contract Nodes is Permissions, INodes {
     
-    using Random for INodes.RandomGenerator;
+    using Random for IRandom.RandomGenerator;
     using SafeCastUpgradeable for uint;
     using SegmentTree for SegmentTree.Tree;
 
@@ -459,7 +459,7 @@ contract Nodes is Permissions, INodes {
 
     function getRandomNodeWithFreeSpace(
         uint8 freeSpace,
-        INodes.RandomGenerator memory randomGenerator
+        IRandom.RandomGenerator memory randomGenerator
     )
         external
         view

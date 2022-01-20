@@ -79,7 +79,7 @@ contract SegmentTreeTester is ISegmentTreeTester {
     }
 
     function getRandomElem(uint place) external view override returns (uint) {
-        INodes.RandomGenerator memory randomGenerator = Random.createFromEntropy(
+        IRandom.RandomGenerator memory randomGenerator = Random.createFromEntropy(
             abi.encodePacked(uint(blockhash(block.number - 1)), place)
         );
         return _tree.getRandomNonZeroElementFromPlaceToLast(place, randomGenerator);
