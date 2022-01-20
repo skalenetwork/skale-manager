@@ -9,7 +9,7 @@
  * @date 2016
  */
 
-pragma solidity 0.8.9;
+pragma solidity 0.8.11;
 
 import "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
 
