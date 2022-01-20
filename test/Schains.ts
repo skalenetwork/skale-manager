@@ -2432,7 +2432,9 @@ describe("Schains", () => {
                     break;
                 }
             }
-            await nodes.initExit(rotIndex);
+            if (rotIndex < 8) {
+                await nodes.initExit(rotIndex);
+            }
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 if (rotIndex === 7) {
                     await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
