@@ -94,7 +94,7 @@ describe("nodeRotation", () => {
 
             const numberOfSchains = 64;
             for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
-                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, "schain-" + schainNumber, owner.address, ethers.constants.AddressZero)).wait();
+                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, "schain-" + schainNumber, owner.address, ethers.constants.AddressZero, [])).wait();
                 await skaleDKG.setSuccessfulDKGPublic(stringKeccak256("schain-" + schainNumber));
                 console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
             }
@@ -165,7 +165,7 @@ describe("nodeRotation", () => {
             }
 
             for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
-                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, "schain-" + schainNumber, owner.address, ethers.constants.AddressZero)).wait();
+                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, "schain-" + schainNumber, owner.address, ethers.constants.AddressZero, [])).wait();
                 const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
                     console.log("Nodes in Schain:");
                     const setOfNodes = new Set();
@@ -264,7 +264,7 @@ describe("nodeRotation", () => {
             ++nodeId;
             nodesAmount = nodeId;
             if (nodesAmount >= 16) {
-                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, "schain-" + nodeId, owner.address, ethers.constants.AddressZero)).wait();
+                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, "schain-" + nodeId, owner.address, ethers.constants.AddressZero, [])).wait();
                 await skaleDKG.setSuccessfulDKGPublic(stringKeccak256("schain-" + nodeId));
                 console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
 
