@@ -31,11 +31,6 @@ import "./Precompiled.sol";
 
 library Fp2Operations {
 
-    // struct ISkaleDKG.Fp2Point {
-    //     uint a;
-    //     uint b;
-    // }
-
     uint constant public P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
     function inverseFp2(ISkaleDKG.Fp2Point memory value) internal view returns (ISkaleDKG.Fp2Point memory result) {
@@ -164,11 +159,6 @@ library G1Operations {
 
 library G2Operations {
     using Fp2Operations for ISkaleDKG.Fp2Point;
-
-    // struct ISkaleDKG.G2Point {
-    //     ISkaleDKG.Fp2Point x;
-    //     ISkaleDKG.Fp2Point y;
-    // }
 
     function doubleG2(ISkaleDKG.G2Point memory value)
         internal
