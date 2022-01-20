@@ -29,6 +29,7 @@ import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
 import { fastBeforeEach } from "./tools/mocha";
 import { skipTime, currentTime, nextMonth } from "./tools/time";
+import { schainParametersType, SchainType } from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -252,7 +253,17 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "Bob",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
             const bobHash = stringKeccak256("Bob");
             if (bobHash) {
@@ -309,7 +320,17 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "Bob",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
             const bobHash = stringKeccak256("Bob");
 

@@ -29,7 +29,7 @@ import { deployWallets } from "./tools/deploy/wallets";
 import { fastBeforeEach } from "./tools/mocha";
 import { stringKeccak256 } from "./tools/hashes";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { SchainType } from "./tools/types";
+import { schainParametersType, SchainType } from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -103,12 +103,22 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 5,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"])
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.SMALL,
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                )
             ).should.be.eventually.rejectedWith("Not enough money to create Schain");
         });
 
         it("should not allow everyone to create schains as the foundation", async () => {
-            await schains.addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero)
+            await schains.addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, [])
                 .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
         })
 
@@ -116,7 +126,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 5,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: 6, // wrong type
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                )
             ).should.be.eventually.rejectedWith("Invalid type of schain");
         });
 
@@ -133,7 +153,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 price.toString(),
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 1, 0, "Mainnet"])
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.SMALL,
+                        nonce: 0,
+                        name: "Mainnet", // wrong name
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                )
             ).should.be.eventually.rejectedWith("Schain name is not available");
         });
 
@@ -142,7 +172,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 price.toString(),
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"])
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.SMALL,
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                )
             ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
         });
 
@@ -166,12 +206,34 @@ describe("Schains", () => {
                 await schains.addSchain(
                     owner.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
+                );
 
                 await schains.addSchain(
                     owner.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d3"]));
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.TEST,
+                            nonce: 0,
+                            name: "d3",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
+                );
 
                 await schains.deleteSchain(
                     owner.address,
@@ -203,7 +265,18 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d4"]));
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.TEST,
+                            nonce: 0,
+                            name: "d4",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
+                );
             });
         });
 
@@ -255,7 +328,18 @@ describe("Schains", () => {
                 await schains.addSchain(
                     owner.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
+                );
                 let res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
                 let res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d2"), res1[0]);
                 assert.equal(res, true);
@@ -382,7 +466,7 @@ describe("Schains", () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains.address, owner.address);
+                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains.address, owner.address, []);
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
 
                 await skaleManager.connect(nodeAddress).createNode(
@@ -470,7 +554,7 @@ describe("Schains", () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains.address, owner.address);
+                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains.address, owner.address, []);
                 await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("d2"), {value: 1e20.toString()});
 
                 const verificationVector = [{
@@ -658,7 +742,18 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]));
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
+                );
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -676,7 +771,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"])
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
 
@@ -688,7 +793,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
 
@@ -704,7 +819,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
 
@@ -716,7 +841,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
 
                 await nodes.removeNodeFromInMaintenance(2);
@@ -724,7 +859,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 const sChains = await schainsInternal.getSchains();
@@ -753,7 +898,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
@@ -765,7 +920,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d3",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
@@ -777,7 +942,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d4",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d4"));
@@ -789,7 +964,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d5"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d5",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d5"));
@@ -805,7 +990,26 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: [
+                                {
+                                    name: "one",
+                                    value: "0x01"
+                                },
+                                {
+                                    name: "two",
+                                    value: "0x02"
+                                }
+                            ]
+                        }]
+                    )
                 );
 
                 const sChains = await schainsInternal.getSchains();
@@ -814,18 +1018,30 @@ describe("Schains", () => {
 
                 await schainsInternal.isOwnerAddress(holder.address, schainHash).should.be.eventually.true;
 
+                await schains.getOption(schainHash, "one")
+                    .should.be.eventually.equal("0x01");
+
+                const options = await schains.getOptions(schainHash);
+                options.length.should.be.equal(2);
+                options[0].name.should.be.equal("one");
+                options[0].value.should.be.equal("0x01");
+                options[1].name.should.be.equal("two");
+                options[1].value.should.be.equal("0x02");
+
                 await schains.deleteSchain(
                     holder.address,
                     "d2",
                 );
 
                 await schainsInternal.getSchains().should.be.eventually.empty;
+                await schains.getOption(schainHash, "one")
+                    .should.be.eventually.rejectedWith("The schain does not exist");
             });
 
             it("should allow the foundation to create schain without tokens", async () => {
                 const schainCreator = holder;
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), schainCreator.address);
-                await schains.connect(schainCreator).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
+                await schains.connect(schainCreator).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -836,7 +1052,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", holder.address, ethers.constants.AddressZero);
+                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", holder.address, ethers.constants.AddressZero, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -849,7 +1065,7 @@ describe("Schains", () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, schains.address, owner.address);
+                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, schains.address, owner.address, []);
                 await schainsInternal.getSchainOriginator(schainHash).should.be.eventually.equal(owner.address);
             });
 
@@ -857,7 +1073,7 @@ describe("Schains", () => {
                 const schainName = "d2";
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, owner.address, owner.address);
+                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, owner.address, owner.address, []);
                 await schainsInternal.getSchainOriginator(schainHash)
                     .should.be.rejectedWith("Originator address is not set");
             });
@@ -885,7 +1101,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.LARGE,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 const sChains = await schainsInternal.getSchains();
@@ -898,19 +1124,39 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.LARGE,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d3"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.LARGE,
+                            nonce: 0,
+                            name: "d3",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
 
             it("should assign schain creator on different address and create small schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -921,7 +1167,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create medium schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -932,7 +1178,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create large schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.LARGE, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.LARGE, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -964,7 +1210,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.SMALL,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 const sChains = await schainsInternal.getSchains();
@@ -1003,7 +1259,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: 6,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 const sChains = await schainsInternal.getSchains();
@@ -1042,7 +1308,17 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: 6,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                 );
 
                 const sChains = await schainsInternal.getSchains();
@@ -1080,7 +1356,17 @@ describe("Schains", () => {
                     await schains.addSchain(
                         holder.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 1, 0, "D2"]),
+                        ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.SMALL,
+                            nonce: 0,
+                            name: "D2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                     );
                 });
 
@@ -1089,7 +1375,17 @@ describe("Schains", () => {
                     await schains.addSchain(
                         holder.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 1, 0, "D2"]),
+                        ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.SMALL,
+                            nonce: 0,
+                            name: "D2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
                     ).should.be.eventually.rejectedWith("Schain name is not available");
                 });
 
@@ -1134,7 +1430,17 @@ describe("Schains", () => {
                     await schains.addSchain(
                         holder.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "D2"]),
+                        ethers.utils.defaultAbiCoder.encode(
+                            [schainParametersType],
+                            [{
+                                lifetime: 5,
+                                typeOfSchain: SchainType.TEST,
+                                nonce: 0,
+                                name: "D2",
+                                originator: ethers.constants.AddressZero,
+                                options: []
+                            }]
+                        )
                     );
                 });
 
@@ -1143,7 +1449,17 @@ describe("Schains", () => {
                     await schains.addSchain(
                         holder.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 4, 0, "D2"]),
+                        ethers.utils.defaultAbiCoder.encode(
+                            [schainParametersType],
+                            [{
+                                lifetime: 5,
+                                typeOfSchain: SchainType.TEST,
+                                nonce: 0,
+                                name: "D2",
+                                originator: ethers.constants.AddressZero,
+                                options: []
+                            }]
+                        )
                     ).should.be.eventually.rejectedWith("Schain name is not available");
                 });
 
@@ -1233,7 +1549,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
@@ -1242,7 +1568,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d3",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
@@ -1516,21 +1852,51 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             ).should.be.eventually.rejectedWith("Schain name is not available");
             schainNameAvailable = await schainsInternal.isSchainNameAvailable("d3");
             assert.equal(schainNameAvailable, false);
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d3",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             ).should.be.eventually.rejectedWith("Schain name is not available");
             schainNameAvailable = await schainsInternal.isSchainNameAvailable("d4");
             assert.equal(schainNameAvailable, true);
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d4",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d4"),
@@ -1806,7 +2172,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d1"]),
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.MEDIUM_TEST,
+                        nonce: 0,
+                        name: "d1",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d1"),
@@ -1815,7 +2191,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
@@ -1824,7 +2210,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d3",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
@@ -1833,7 +2229,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d4",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d4"),
@@ -1940,7 +2346,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d1"]),
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.MEDIUM_TEST,
+                        nonce: 0,
+                        name: "d1",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d1"),
@@ -1949,7 +2365,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
@@ -1958,7 +2384,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d3",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
@@ -1967,7 +2403,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "d4",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d4"),
@@ -2227,7 +2673,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 2, 0, "d1"]),
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.MEDIUM,
+                        nonce: 0,
+                        name: "d1",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                )
             );
             await wallets.rechargeSchainWallet(stringKeccak256("d1"), {value: 1e20.toString()});
             await skaleDKG.setSuccessfulDKGPublic(
@@ -2383,7 +2839,17 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: 6,
+                            nonce: 0,
+                            name: "d2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
             );
             await wallets.rechargeSchainWallet(stringKeccak256("d2"), {value: 1e20.toString()});
             await skaleDKG.setSuccessfulDKGPublic(
