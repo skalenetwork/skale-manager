@@ -42,12 +42,6 @@ describe("NodesData", () => {
         nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
-        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
-
-        // contract must be set in contractManager for proper work of allow modifier
-        await contractManager.setContractsAddress("NodeRotation", contractManager.address);
-        await contractManager.setContractsAddress("Schains", contractManager.address);
-        await contractManager.setContractsAddress("SchainsInternal", contractManager.address);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);

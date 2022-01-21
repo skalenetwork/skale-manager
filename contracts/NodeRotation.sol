@@ -108,31 +108,22 @@ contract NodeRotation is Permissions {
         if (schainHash == bytes32(0)) {
             return (true, false);
         }
+        _checkBeforeRotation(schainHash, nodeIndex);
         _startRotation(schainHash, nodeIndex);
         rotateNode(nodeIndex, schainHash, true, false);
         return (schainsInternal.getActiveSchain(nodeIndex) == bytes32(0) ? true : false, true);
     }
 
     /**
-     * @dev Allows SkaleManager contract to freeze all schains on a given node.
+     * @dev Allows Nodes contract to freeze all schains on a given node.
      */
-    function freezeSchains(uint nodeIndex) external allow("SkaleManager") {
+    function freezeSchains(uint nodeIndex) external allow("Nodes") {
         bytes32[] memory schains = SchainsInternal(
             contractManager.getContract("SchainsInternal")
         ).getSchainHashesForNode(nodeIndex);
         for (uint i = 0; i < schains.length; i++) {
             if (schains[i] != bytes32(0)) {
-                require(
-                    ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schains[i]),
-                    "DKG did not finish on Schain"
-                );
-                if (_rotations[schains[i]].freezeUntil < block.timestamp) {
-                    _startWaiting(schains[i], nodeIndex);
-                } else {
-                    if (_rotations[schains[i]].nodeIndex != nodeIndex) {
-                        revert("Occupied by rotation on Schain");
-                    }
-                }
+                _checkBeforeRotation(schains[i], nodeIndex);
             }
         }
     }
@@ -286,5 +277,17 @@ contract NodeRotation is Permissions {
         _rotations[schainHash].previousNodes[newNodeIndex] = nodeIndex;
         delete waitForNewNode[schainHash];
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
+    }
+
+    function _checkBeforeRotation(bytes32 schainHash, uint nodeIndex) private {
+        require(
+            ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash),
+            "DKG did not finish on Schain"
+        );
+        if (_rotations[schainHash].freezeUntil < block.timestamp) {
+            _startWaiting(schainHash, nodeIndex);
+        } else {
+            require(_rotations[schainHash].nodeIndex == nodeIndex, "Occupied by rotation on Schain");
+        }
     }
 }

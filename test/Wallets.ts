@@ -1,4 +1,5 @@
 import { ContractManager,
+        Nodes,
         Schains,
         SchainsInternal,
         SkaleDKGTester,
@@ -23,6 +24,7 @@ import { ContractTransaction, Wallet } from "ethers";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
+import { deployNodes } from "./tools/deploy/nodes";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -50,6 +52,7 @@ describe("Wallets", () => {
     let skaleManager: SkaleManager;
     let skaleDKG: SkaleDKGTester;
     let schainsInternal: SchainsInternal;
+    let nodes: Nodes;
 
     const tolerance = 0.003;
     const validator1Id = 1;
@@ -72,12 +75,15 @@ describe("Wallets", () => {
         skaleManager = await deploySkaleManager(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
+        nodes = await deployNodes(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
         await validatorService.connect(validator1).registerValidator("Validator 1", "", 0, 0);
         await validatorService.connect(validator2).registerValidator("Validator 2", "", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
         const SCHAIN_REMOVAL_ROLE = await skaleManager.SCHAIN_REMOVAL_ROLE();
         await skaleManager.grantRole(SCHAIN_REMOVAL_ROLE, owner.address);
     });
@@ -235,6 +241,7 @@ describe("Wallets", () => {
 
             it("should reimburse gas for node exit", async() => {
                 const balanceBefore = await nodeAddress1.getBalance();
+                await nodes.initExit(0);
                 const response = await skaleManager.connect(nodeAddress1).nodeExit(0);
                 const balance = await nodeAddress1.getBalance();
                 balance.sub(balanceBefore).toNumber().should.not.be.lessThan(0);
