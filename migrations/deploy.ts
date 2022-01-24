@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { Interface } from "ethers/lib/utils";
 import { ethers, upgrades, network, run, artifacts } from "hardhat";
-import { ContractManager, SkaleManager } from "../typechain";
+import { ContractManager, SkaleManager } from "../typechain-types";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from './tools/abi';
 import { verify, verifyProxy } from './tools/verification';

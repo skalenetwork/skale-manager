@@ -1,4 +1,4 @@
-import { ContractManager, SyncManager } from "../typechain";
+import { ContractManager, SyncManager } from "../typechain-types";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";

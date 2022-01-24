@@ -1,7 +1,7 @@
 import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          Nodes,
-         ValidatorService} from "../typechain";
+         ValidatorService} from "../typechain-types";
 import { skipTime } from "./tools/time";
 import { privateKeys } from "./tools/private-keys";
 import chai = require("chai");

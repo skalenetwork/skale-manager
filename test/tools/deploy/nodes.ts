@@ -1,4 +1,4 @@
-import { ContractManager, Nodes } from "../../../typechain";
+import { ContractManager, Nodes } from "../../../typechain-types";
 import { deployBounty } from "./bounty";
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployValidatorService } from "./delegation/validatorService";

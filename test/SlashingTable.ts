@@ -1,4 +1,4 @@
-import { ContractManager, SkaleManager, SlashingTable } from "../typechain";
+import { ContractManager, SkaleManager, SlashingTable } from "../typechain-types";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import chaiAsPromised from "chai-as-promised";

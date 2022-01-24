@@ -1,4 +1,4 @@
-import { ContractManager, Punisher } from "../../../../typechain";
+import { ContractManager, Punisher } from "../../../../typechain-types";
 import { deployFunctionFactory } from "../factory";
 import { deployDelegationController } from "./delegationController";
 import { deployValidatorService } from "./validatorService";

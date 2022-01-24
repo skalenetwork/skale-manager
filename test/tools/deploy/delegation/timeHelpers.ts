@@ -1,5 +1,5 @@
 import { ContractManager,
-    TimeHelpers } from "../../../../typechain";
+    TimeHelpers } from "../../../../typechain-types";
 import { deployWithConstructor, deployWithConstructorFunctionFactory } from "../factory";
 
 const name = "TimeHelpers";

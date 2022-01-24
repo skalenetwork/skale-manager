@@ -13,7 +13,7 @@ import { ConstantsHolder,
          SkaleToken,
          ValidatorService,
          BountyV2,
-         Wallets} from "../typechain";
+         Wallets} from "../typechain-types";
 
 import { privateKeys } from "./tools/private-keys";
 

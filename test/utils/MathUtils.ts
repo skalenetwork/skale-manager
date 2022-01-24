@@ -1,7 +1,7 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "hardhat"
-import { MathUtilsTester } from "../../typechain/MathUtilsTester";
+import { MathUtilsTester } from "../../typechain-types/MathUtilsTester";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();

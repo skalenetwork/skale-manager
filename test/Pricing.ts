@@ -9,7 +9,7 @@ import { ContractManager,
          ValidatorService,
          Schains,
          ConstantsHolder,
-         NodeRotation } from "../typechain";
+         NodeRotation } from "../typechain-types";
 
 import { privateKeys } from "./tools/private-keys";
 

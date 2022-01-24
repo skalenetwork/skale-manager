@@ -1,4 +1,4 @@
-import { ContractManager, FieldOperationsTester } from "../../../../typechain";
+import { ContractManager, FieldOperationsTester } from "../../../../typechain-types";
 import { deployWithLibraryWithConstructor } from "../factory";
 
 const deployFieldOperationsTester: (contractManager: ContractManager) => Promise<FieldOperationsTester>

@@ -2,13 +2,13 @@ import { deployContractManager } from "../test/tools/deploy/contractManager";
 import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
 import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
 import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
-import { ContractManager, Schains, SkaleManager, ValidatorService } from "../typechain";
+import { ContractManager, Schains, SkaleManager, ValidatorService } from "../typechain-types";
 import { privateKeys } from "../test/tools/private-keys";
 import { deploySchains } from "../test/tools/deploy/schains";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { Event, Wallet } from "ethers";
-import { SchainsInternal } from "../typechain/SchainsInternal";
+import { SchainsInternal } from "../typechain-types/SchainsInternal";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 import { SchainType } from "../test/tools/types";
 

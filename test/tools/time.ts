@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { ContractManager } from "../../typechain";
+import { ContractManager } from "../../typechain-types";
 import { deployTimeHelpers } from "./deploy/delegation/timeHelpers";
 
 

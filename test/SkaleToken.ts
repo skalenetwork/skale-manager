@@ -1,7 +1,7 @@
 import { BigNumber } from "ethers";
 import { ContractManager,
          SkaleToken,
-         SkaleTokenInternalTester} from "../typechain";
+         SkaleTokenInternalTester} from "../typechain-types";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";

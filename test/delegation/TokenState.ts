@@ -1,7 +1,7 @@
 import { ContractManager,
          DelegationController,
          SkaleToken,
-         ValidatorService} from "../../typechain";
+         ValidatorService} from "../../typechain-types";
 
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { nextMonth, skipTime } from "../tools/time";

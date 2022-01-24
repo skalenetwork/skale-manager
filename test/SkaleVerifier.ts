@@ -9,7 +9,7 @@ import { ConstantsHolder,
          SkaleDKGTester,
          SkaleManager,
          SkaleVerifier,
-         ValidatorService } from "../typechain";
+         ValidatorService } from "../typechain-types";
 import { privateKeys } from "./tools/private-keys";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";

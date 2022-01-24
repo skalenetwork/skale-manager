@@ -1,4 +1,4 @@
-import { ContractManager, TokenState } from "../../../../typechain";
+import { ContractManager, TokenState } from "../../../../typechain-types";
 import { deployFunctionFactory } from "../factory";
 import { deployDelegationController } from "./delegationController";
 import { deployPunisher } from "./punisher";

@@ -1,4 +1,4 @@
-import { ContractManager, Decryption } from "../../../typechain";
+import { ContractManager, Decryption } from "../../../typechain-types";
 import { deployFunctionFactory, deployWithConstructor } from "./factory";
 
 const deployDecryption: (contractManager: ContractManager) => Promise<Decryption>

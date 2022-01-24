@@ -1,6 +1,6 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { SegmentTreeTester } from "../../typechain/SegmentTreeTester";
+import { SegmentTreeTester } from "../../typechain-types/SegmentTreeTester";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deploySegmentTreeTester } from "../tools/deploy/test/segmentTreeTester";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";

@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { ContractManager, SchainsInternal } from "../../../typechain";
+import { ContractManager, SchainsInternal } from "../../../typechain-types";
 import { deployConstantsHolder } from "./constantsHolder";
 import { defaultDeploy, deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";

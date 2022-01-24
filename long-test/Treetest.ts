@@ -11,7 +11,7 @@ import {
     SkaleManager,
     ValidatorService,
     Wallets
-} from "../typechain";
+} from "../typechain-types";
 import { privateKeys } from "../test/tools/private-keys";
 import { deploySchains } from "../test/tools/deploy/schains";
 import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
@@ -121,7 +121,7 @@ async function getRandomNodeInSchain(schainsInternal: SchainsInternal, name: str
     return node;
 }
 
-async function finishDKG(skaleDKG: SkaleDKG, name: string) {
+async function finishDKG(skaleDKG: SkaleDKGTester, name: string) {
     await skaleDKG.setSuccessfulDKGPublic(stringKeccak256(name));
     console.log("DKG successful finished");
 }
@@ -163,7 +163,7 @@ async function getNumberOfNodesInGroup(schainsInternal: SchainsInternal, name: s
     return (await schainsInternal.getNumberOfNodesInGroup(stringKeccak256(name))).toString();
 }
 
-async function rotateOnDKG(schainsInternal: SchainsInternal, name: string, skaleDKG: SkaleDKG, node: Wallet, skipNode: string = "") {
+async function rotateOnDKG(schainsInternal: SchainsInternal, name: string, skaleDKG: SkaleDKGTester, node: Wallet, skipNode: string = "") {
     let randomNode1 = await getRandomNodeInSchain(schainsInternal, name, []);
     let randomNode2 = await getRandomNodeInSchain(schainsInternal, name, [randomNode1]);
     if (skipNode !== "") {

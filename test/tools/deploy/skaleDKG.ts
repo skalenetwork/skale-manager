@@ -5,7 +5,7 @@ import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 import { deploySlashingTable } from "./slashingTable";
 import { deployNodeRotation } from "./nodeRotation";
-import { ContractManager, SkaleDKG } from "../../../typechain";
+import { ContractManager, SkaleDKG } from "../../../typechain-types";
 
 const libraries = [
     "SkaleDkgAlright",

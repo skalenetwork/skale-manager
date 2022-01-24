@@ -2,7 +2,7 @@ import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 import { deployConstantsHolder } from "./constantsHolder";
-import { ContractManager, NodeRotation } from "../../../typechain";
+import { ContractManager, NodeRotation } from "../../../typechain-types";
 
 const deployNodeRotation: (contractManager: ContractManager) => Promise<NodeRotation>
     = deployFunctionFactory("NodeRotation",

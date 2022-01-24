@@ -1,4 +1,4 @@
-import { ContractManager, Pricing } from "../../../typechain";
+import { ContractManager, Pricing } from "../../../typechain-types";
 import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";

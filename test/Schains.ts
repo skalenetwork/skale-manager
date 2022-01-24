@@ -3,13 +3,13 @@ import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
          ContractManager,
          Nodes,
-         SchainsInternal,
+         SchainsInternalMock,
          Schains,
          SkaleDKGTester,
          SkaleManager,
          ValidatorService,
          NodeRotation,
-         Wallets} from "../typechain";
+         Wallets} from "../typechain-types";
 import { BigNumber, Wallet } from "ethers";
 import { skipTime, currentTime } from "./tools/time";
 import { privateKeys } from "./tools/private-keys";
@@ -45,7 +45,7 @@ describe("Schains", () => {
     let constantsHolder: ConstantsHolder;
     let contractManager: ContractManager;
     let schains: Schains;
-    let schainsInternal: SchainsInternal;
+    let schainsInternal: SchainsInternalMock;
     let nodes: Nodes;
     let validatorService: ValidatorService;
     let skaleDKG: SkaleDKGTester;

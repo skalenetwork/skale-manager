@@ -1,4 +1,4 @@
-import { ContractManager, KeyStorage } from "../../../typechain";
+import { ContractManager, KeyStorage } from "../../../typechain-types";
 import { deployDecryption } from "./decryption";
 import { deployECDH } from "./ecdh";
 import { deployFunctionFactory } from "./factory";

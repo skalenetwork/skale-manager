@@ -9,7 +9,7 @@ import { ContractManager,
          SkaleToken,
          SlashingTable,
          ValidatorService,
-         Wallets} from "../typechain";
+         Wallets} from "../typechain-types";
 
 import { nextMonth, skipTime } from "./tools/time";
 

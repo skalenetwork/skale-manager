@@ -8,7 +8,7 @@ import { deploySkaleToken } from "./skaleToken";
 import { deployNodeRotation } from "./nodeRotation";
 import { deployBounty } from "./bounty";
 import { deployWallets } from "./wallets";
-import { ContractManager, SkaleManager } from "../../../typechain";
+import { ContractManager, SkaleManager } from "../../../typechain-types";
 
 const deploySkaleManager: (contractManager: ContractManager) => Promise<SkaleManager>
     = deployFunctionFactory("SkaleManager",

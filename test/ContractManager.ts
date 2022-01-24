@@ -1,5 +1,5 @@
 import { ConstantsHolder,
-         ContractManager } from "../typechain";
+         ContractManager } from "../typechain-types";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { ethers } from "hardhat";

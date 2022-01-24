@@ -1,7 +1,7 @@
 import { ContractManager,
     DelegationController,
     SkaleToken,
-    ValidatorService} from "../../typechain";
+    ValidatorService} from "../../typechain-types";
 
 
 import * as chai from "chai";

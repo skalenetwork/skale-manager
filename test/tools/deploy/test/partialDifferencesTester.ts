@@ -1,4 +1,4 @@
-import { ContractManager, PartialDifferencesTester } from "../../../../typechain";
+import { ContractManager, PartialDifferencesTester } from "../../../../typechain-types";
 import { deployWithConstructor, deployWithConstructorFunctionFactory } from "../factory";
 
 const deployPartialDifferencesTester: (contractManager: ContractManager) => Promise<PartialDifferencesTester>

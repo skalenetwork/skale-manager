@@ -2,7 +2,7 @@ import { deployContractManager } from "../test/tools/deploy/contractManager";
 import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
 import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
 import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
-import { ContractManager, Schains, SchainsInternal, SkaleManager, ValidatorService } from "../typechain";
+import { ContractManager, Schains, SchainsInternal, SkaleManager, ValidatorService } from "../typechain-types";
 import { privateKeys } from "../test/tools/private-keys";
 import { deploySchains } from "../test/tools/deploy/schains";
 import fs from 'fs';

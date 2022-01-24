@@ -1,6 +1,6 @@
 import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
-         ContractManager } from "../typechain";
+         ContractManager } from "../typechain-types";
 
 import chai = require("chai");
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";

@@ -6,7 +6,7 @@ import {
     DelegationController,
     SkaleToken,
     ValidatorService
-} from "../typechain";
+} from "../typechain-types";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployBounty } from "./tools/deploy/bounty";

@@ -1,4 +1,4 @@
-import { ContractManager, ValidatorService } from "../../../../typechain";
+import { ContractManager, ValidatorService } from "../../../../typechain-types";
 import { deployConstantsHolder } from "../constantsHolder";
 import { deployFunctionFactory } from "../factory";
 import { deployDelegationController } from "./delegationController";

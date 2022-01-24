@@ -1,4 +1,4 @@
-import { ContractManager, ReentrancyTester } from "../../../../typechain";
+import { ContractManager, ReentrancyTester } from "../../../../typechain-types";
 import { deployWithConstructorFunctionFactory } from "../factory";
 import { deploySkaleToken } from "../skaleToken";
 

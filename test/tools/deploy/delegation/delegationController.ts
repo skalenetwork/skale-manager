@@ -1,4 +1,4 @@
-import { ContractManager, DelegationController } from "../../../../typechain";
+import { ContractManager, DelegationController } from "../../../../typechain-types";
 import { deployBounty } from "../bounty";
 import { deployFunctionFactory } from "../factory";
 import { deploySkaleToken } from "../skaleToken";

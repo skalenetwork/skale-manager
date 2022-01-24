@@ -1,6 +1,6 @@
 import { deployFunctionFactory } from "../factory";
 import { ethers } from "hardhat";
-import { ContractManager, TimeHelpersWithDebug } from "../../../../typechain";
+import { ContractManager, TimeHelpersWithDebug } from "../../../../typechain-types";
 
 const deployTimeHelpersWithDebug: (contractManager: ContractManager) => Promise<TimeHelpersWithDebug>
     = deployFunctionFactory("TimeHelpersWithDebug",

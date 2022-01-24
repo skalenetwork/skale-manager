@@ -12,7 +12,7 @@ import { ContractManager,
          SlashingTable,
          ValidatorService,
          SkaleManager,
-         Wallets } from "../typechain";
+         Wallets } from "../typechain-types";
 import { skipTime, currentTime, nextMonth } from "./tools/time";
 import { privateKeys } from "./tools/private-keys";
 import { deployContractManager } from "./tools/deploy/contractManager";

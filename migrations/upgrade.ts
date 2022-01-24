@@ -2,12 +2,12 @@ import { contracts, getContractKeyInAbiFile, getManifestFile, getContractFactory
 import { ethers, network, upgrades, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, SchainsInternal, SkaleManager, SyncManager } from "../typechain";
+import { ContractManager, SchainsInternal, SkaleManager, SyncManager } from "../typechain-types";
 import { getImplementationAddress, hashBytecode } from "@openzeppelin/upgrades-core";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
-import { SafeMock } from "../typechain/SafeMock";
+import { SafeMock } from "../typechain-types/SafeMock";
 import { encodeTransaction } from "./tools/multiSend";
 import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-safe";
 import chalk from "chalk";

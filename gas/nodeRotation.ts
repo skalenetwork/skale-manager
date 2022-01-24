@@ -9,7 +9,7 @@ import {
     SkaleDKGTester,
     SkaleManager,
     ValidatorService
-} from "../typechain";
+} from "../typechain-types";
 import { privateKeys } from "../test/tools/private-keys";
 import { deploySchains } from "../test/tools/deploy/schains";
 import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";

@@ -5,7 +5,7 @@ import { ContractManager,
          SkaleToken,
          ValidatorService,
          DelegationController,
-         ConstantsHolder} from "../typechain";
+         ConstantsHolder} from "../typechain-types";
 import { privateKeys } from "./tools/private-keys";
 import { nextMonth, skipTime } from "./tools/time";
 import { Wallet } from "ethers";

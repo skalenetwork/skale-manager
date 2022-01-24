@@ -5,7 +5,7 @@ import { ContractManager,
         SkaleDKGTester,
         SkaleManager,
         ValidatorService,
-        Wallets } from "../typechain";
+        Wallets } from "../typechain-types";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";

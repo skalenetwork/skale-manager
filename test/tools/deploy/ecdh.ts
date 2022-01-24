@@ -1,5 +1,5 @@
 import { artifacts } from "hardhat";
-import { ContractManager, ECDH } from "../../../typechain";
+import { ContractManager, ECDH } from "../../../typechain-types";
 import { deployFunctionFactory, deployWithConstructor } from "./factory";
 
 const deployECDH: (contractManager: ContractManager) => Promise<ECDH>

@@ -1,4 +1,4 @@
-import { ContractManager, SkaleVerifier } from "../../../typechain";
+import { ContractManager, SkaleVerifier } from "../../../typechain-types";
 import { deployFunctionFactory } from "./factory";
 import { deploySchainsInternal } from "./schainsInternal";
 

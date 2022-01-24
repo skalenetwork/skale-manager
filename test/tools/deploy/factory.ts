@@ -1,6 +1,6 @@
 import { ethers, upgrades } from "hardhat";
 import hre from "hardhat";
-import { ContractManager } from "../../../typechain";
+import { ContractManager } from "../../../typechain-types";
 import { Artifact } from "hardhat/types";
 upgrades.silenceWarnings();
 

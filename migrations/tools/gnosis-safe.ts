@@ -83,7 +83,7 @@ export async function createMultiSendTransaction(ethers: any, safeAddress: strin
         const nonceResponse = await axios.get(`${getSafeTransactionUrl(chainId)}/api/v1/safes/${safeAddress}/`);
         nonce = nonceResponse.data.nonce;
     } catch (e) {
-        if (!e.toString().startsWith("Error: Can't get safe-transaction url")) {
+        if (!(e instanceof Error) || !e.toString().startsWith("Error: Can't get safe-transaction url")) {
             throw e;
         }
     }
@@ -168,17 +168,19 @@ export async function sendSafeTransaction(safe: string, chainId: number, safeTx:
                 parseInt(estimateResponse.data.safeTxGas, 10) + parseInt(estimateResponse.data.baseGas, 10)}`));
         } catch (e) {
             console.log(chalk.red("Failed to estimate gas"));
-            console.log(e.toString());
+            console.log(e);
         }
 
         console.log(chalk.green("Send transaction to gnosis safe"));
         await axios.post(`${getSafeTransactionUrl(chainId)}/api/v1/safes/${safe}/transactions/`, safeTx)
     } catch (e) {
-        if (e.response) {
-            console.log(JSON.stringify(e.response.data, null, 4))
-            console.log(chalk.red(`Request failed with ${e.response.status} code`));
-        } else {
-            console.log(chalk.red("Request failed with unknown reason"));
+        if (axios.isAxiosError(e)) {
+            if (e.response) {
+                console.log(JSON.stringify(e.response.data, null, 4))
+                console.log(chalk.red(`Request failed with ${e.response.status} code`));
+            } else {
+                console.log(chalk.red("Request failed with unknown reason"));
+            }
         }
         throw e;
     }

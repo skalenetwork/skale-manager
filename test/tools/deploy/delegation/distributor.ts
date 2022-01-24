@@ -1,4 +1,4 @@
-import { ContractManager, Distributor } from "../../../../typechain";
+import { ContractManager, Distributor } from "../../../../typechain-types";
 import { deployConstantsHolder } from "../constantsHolder";
 import { deployFunctionFactory } from "../factory";
 import { deploySkaleToken } from "../skaleToken";

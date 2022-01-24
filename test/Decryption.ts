@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { Decryption } from "../typechain";
+import { Decryption } from "../typechain-types";
 import { deployDecryption } from "./tools/deploy/decryption";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { fastBeforeEach } from "./tools/mocha";

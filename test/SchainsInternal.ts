@@ -1,7 +1,7 @@
 import { ContractManager,
          Nodes,
          SchainsInternalMock,
-         ValidatorService } from "../typechain";
+         ValidatorService } from "../typechain-types";
 import { privateKeys } from "./tools/private-keys";
 import { Wallet } from "ethers";
 import chai = require("chai");

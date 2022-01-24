@@ -2,7 +2,7 @@ import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployPartialDifferencesTester } from "../tools/deploy/test/partialDifferencesTester";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { PartialDifferencesTester } from "../../typechain";
+import { PartialDifferencesTester } from "../../typechain-types";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();

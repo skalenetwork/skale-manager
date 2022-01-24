@@ -4,7 +4,7 @@ import { deployWithLibraryFunctionFactory } from "../factory";
 import { deployNodes } from "../nodes";
 import { deploySchainsInternal } from "../schainsInternal";
 import { deploySlashingTable } from "../slashingTable";
-import { ContractManager, SkaleDKGTester } from "../../../../typechain";
+import { ContractManager, SkaleDKGTester } from "../../../../typechain-types";
 
 const libraries = [
     "SkaleDkgAlright",

@@ -9,7 +9,7 @@ import { ConstantsHolder,
     TokenState,
     ValidatorService,
     Nodes,
-    SlashingTable} from "../../typechain";
+    SlashingTable} from "../../typechain-types";
 
 import { currentTime, nextMonth, skipTime, skipTimeToDate } from "../tools/time";
 

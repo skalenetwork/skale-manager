@@ -1,7 +1,7 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import * as elliptic from "elliptic";
-import { ECDH } from "../typechain";
+import { ECDH } from "../typechain-types";
 import "./tools/elliptic-types";
 
 

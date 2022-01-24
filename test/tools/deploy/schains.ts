@@ -4,7 +4,7 @@ import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 import { deploySkaleVerifier } from "./skaleVerifier";
 import { deployNodeRotation } from "./nodeRotation";
-import { ContractManager, Schains } from "../../../typechain";
+import { ContractManager, Schains } from "../../../typechain-types";
 
 const deploySchains: (contractManager: ContractManager) => Promise<Schains>
     = deployFunctionFactory("Schains",
