@@ -23,10 +23,9 @@
 
 pragma solidity 0.8.11;
 
-import "../SkaleDKG.sol";
-import "../ConstantsHolder.sol";
-import "../Wallets.sol";
-import "../Nodes.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 /**
  * @title SkaleDkgComplaint
@@ -61,14 +60,14 @@ library SkaleDkgComplaint {
         bytes32 schainHash,
         uint fromNodeIndex,
         uint toNodeIndex,
-        ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.Channel) storage channels,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
+        IContractManager contractManager,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels,
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => uint) storage startAlrightTimestamp
     )
         external
     {
-        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         require(skaleDKG.isNodeBroadcasted(schainHash, fromNodeIndex), "Node has not broadcasted");
         if (skaleDKG.isNodeBroadcasted(schainHash, toNodeIndex)) {
             _handleComplaintWhenBroadcasted(
@@ -90,12 +89,12 @@ library SkaleDkgComplaint {
         bytes32 schainHash,
         uint fromNodeIndex,
         uint toNodeIndex,
-        ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
+        IContractManager contractManager,
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
     )
         external
     { 
-        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         require(skaleDKG.isNodeBroadcasted(schainHash, fromNodeIndex), "Node has not broadcasted");
         require(skaleDKG.isNodeBroadcasted(schainHash, toNodeIndex), "Accused node has not broadcasted");
         require(!skaleDKG.isAllDataReceived(schainHash, fromNodeIndex), "Node has already sent alright");
@@ -113,13 +112,13 @@ library SkaleDkgComplaint {
         bytes32 schainHash,
         uint fromNodeIndex,
         uint toNodeIndex,
-        ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
+        IContractManager contractManager,
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => uint) storage startAlrightTimestamp
     )
         private
     {
-        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         // missing alright
         if (complaints[schainHash].nodeToComplaint == type(uint).max) {
             if (
@@ -155,20 +154,20 @@ library SkaleDkgComplaint {
     function _handleComplaintWhenNotBroadcasted(
         bytes32 schainHash,
         uint toNodeIndex,
-        ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.Channel) storage channels
+        IContractManager contractManager,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels
     ) 
         private
     {
         if (channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit(contractManager) <= block.timestamp) {
-            SkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainHash, toNodeIndex);
+            ISkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainHash, toNodeIndex);
             return;
         }
         emit ComplaintError("Complaint sent too early");
     }
 
-    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
+    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint) {
+        return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

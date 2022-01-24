@@ -25,21 +25,22 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+
 import "../Permissions.sol";
 import "../ConstantsHolder.sol";
 import "../utils/MathUtils.sol";
 
-import "./ValidatorService.sol";
-import "./DelegationController.sol";
-import "./DelegationPeriodManager.sol";
-import "./TimeHelpers.sol";
 
 /**
  * @title Distributor
  * @dev This contract handles all distribution functions of bounty and fee
  * payments.
  */
-contract Distributor is Permissions, IERC777Recipient {
+contract Distributor is Permissions, IERC777Recipient, IDistributor {
     using MathUtils for uint;
 
     IERC1820Registry private _erc1820;
@@ -54,36 +55,9 @@ contract Distributor is Permissions, IERC777Recipient {
     mapping (uint => uint) private _firstUnwithdrawnMonthForValidator;
 
     /**
-     * @dev Emitted when bounty is withdrawn.
-     */
-    event WithdrawBounty(
-        address holder,
-        uint validatorId,
-        address destination,
-        uint amount
-    );
-
-    /**
-     * @dev Emitted when a validator fee is withdrawn.
-     */
-    event WithdrawFee(
-        uint validatorId,
-        address destination,
-        uint amount
-    );
-
-    /**
-     * @dev Emitted when bounty is distributed.
-     */
-    event BountyWasPaid(
-        uint validatorId,
-        uint amount
-    );
-
-    /**
      * @dev Return and update the amount of earned bounty from a validator.
      */
-    function getAndUpdateEarnedBountyAmount(uint validatorId) external returns (uint earned, uint endMonth) {
+    function getAndUpdateEarnedBountyAmount(uint validatorId) external override returns (uint earned, uint endMonth) {
         return getAndUpdateEarnedBountyAmountOf(msg.sender, validatorId);
     }
 
@@ -97,8 +71,8 @@ contract Distributor is Permissions, IERC777Recipient {
      * 
      * - Bounty must be unlocked.
      */
-    function withdrawBounty(uint validatorId, address to) external {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+    function withdrawBounty(uint validatorId, address to) external override {
+        ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
         require(block.timestamp >= timeHelpers.addMonths(
@@ -133,10 +107,10 @@ contract Distributor is Permissions, IERC777Recipient {
      * 
      * - Fee must be unlocked.
      */
-    function withdrawFee(address to) external {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+    function withdrawFee(address to) external override {
+        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         IERC20 skaleToken = IERC20(contractManager.getContract("SkaleToken"));
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
         require(block.timestamp >= timeHelpers.addMonths(
@@ -169,7 +143,8 @@ contract Distributor is Permissions, IERC777Recipient {
         bytes calldata userData,
         bytes calldata
     )
-        external override
+        external
+        override
         allow("SkaleToken")
     {
         require(to == address(this), "Receiver is incorrect");
@@ -181,8 +156,8 @@ contract Distributor is Permissions, IERC777Recipient {
     /**
      * @dev Return the amount of earned validator fees of `msg.sender`.
      */
-    function getEarnedFeeAmount() external view returns (uint earned, uint endMonth) {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+    function getEarnedFeeAmount() external view override returns (uint earned, uint endMonth) {
+        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         return getEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
     }
 
@@ -196,11 +171,13 @@ contract Distributor is Permissions, IERC777Recipient {
      * @dev Return and update the amount of earned bounties.
      */
     function getAndUpdateEarnedBountyAmountOf(address wallet, uint validatorId)
-        public returns (uint earned, uint endMonth)
+        public
+        override
+        returns (uint earned, uint endMonth)
     {
-        DelegationController delegationController = DelegationController(
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController"));
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
 
         uint currentMonth = timeHelpers.getCurrentMonth();
 
@@ -232,8 +209,8 @@ contract Distributor is Permissions, IERC777Recipient {
     /**
      * @dev Return the amount of earned fees by validator ID.
      */
-    function getEarnedFeeAmountOf(uint validatorId) public view returns (uint earned, uint endMonth) {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+    function getEarnedFeeAmountOf(uint validatorId) public view override returns (uint earned, uint endMonth) {
+        ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
 
         uint currentMonth = timeHelpers.getCurrentMonth();
 
@@ -260,8 +237,8 @@ contract Distributor is Permissions, IERC777Recipient {
      * Emits a {BountyWasPaid} event.
      */
     function _distributeBounty(uint amount, uint validatorId) private {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
+        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
 
         uint currentMonth = timeHelpers.getCurrentMonth();
         uint feeRate = validatorService.getValidator(validatorId).feeRate;

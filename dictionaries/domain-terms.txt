@@ -1,8 +1,9 @@
 agpl
 ecdh
-IERC1820
-IERC20
-IERC777
+iecdh
+ierc1820
+ierc20
+ierc777
 mintable
 keccak256
 precompiled

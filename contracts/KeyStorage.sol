@@ -21,57 +21,51 @@
 
 pragma solidity 0.8.11;
 
-import "./Decryption.sol";
+import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+
 import "./Permissions.sol";
-import "./SchainsInternal.sol";
-import "./thirdparty/ECDH.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
 
-contract KeyStorage is Permissions {
-    using Fp2Operations for Fp2Operations.Fp2Point;
-    using G2Operations for G2Operations.G2Point;
+contract KeyStorage is Permissions, IKeyStorage {
+    using Fp2Operations for ISkaleDKG.Fp2Point;
+    using G2Operations for ISkaleDKG.G2Point;
 
     struct BroadcastedData {
         KeyShare[] secretKeyContribution;
-        G2Operations.G2Point[] verificationVector;
-    }
-
-    struct KeyShare {
-        bytes32[2] publicKey;
-        bytes32 share;
+        ISkaleDKG.G2Point[] verificationVector;
     }
 
     // Unused variable!!
     mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
     // 
     
-    mapping(bytes32 => G2Operations.G2Point) private _publicKeysInProgress;
-    mapping(bytes32 => G2Operations.G2Point) private _schainsPublicKeys;
+    mapping(bytes32 => ISkaleDKG.G2Point) private _publicKeysInProgress;
+    mapping(bytes32 => ISkaleDKG.G2Point) private _schainsPublicKeys;
 
     // Unused variable
-    mapping(bytes32 => G2Operations.G2Point[]) private _schainsNodesPublicKeys;
+    mapping(bytes32 => ISkaleDKG.G2Point[]) private _schainsNodesPublicKeys;
     //
 
-    mapping(bytes32 => G2Operations.G2Point[]) private _previousSchainsPublicKeys;
+    mapping(bytes32 => ISkaleDKG.G2Point[]) private _previousSchainsPublicKeys;
 
-    function deleteKey(bytes32 schainHash) external allow("SkaleDKG") {
+    function deleteKey(bytes32 schainHash) external override allow("SkaleDKG") {
         _previousSchainsPublicKeys[schainHash].push(_schainsPublicKeys[schainHash]);
         delete _schainsPublicKeys[schainHash];
         delete _data[schainHash][0];
         delete _schainsNodesPublicKeys[schainHash];
     }
 
-    function initPublicKeyInProgress(bytes32 schainHash) external allow("SkaleDKG") {
+    function initPublicKeyInProgress(bytes32 schainHash) external override allow("SkaleDKG") {
         _publicKeysInProgress[schainHash] = G2Operations.getG2Zero();
     }
 
-    function adding(bytes32 schainHash, G2Operations.G2Point memory value) external allow("SkaleDKG") {
+    function adding(bytes32 schainHash, ISkaleDKG.G2Point memory value) external override allow("SkaleDKG") {
         require(value.isG2(), "Incorrect g2 point");
         _publicKeysInProgress[schainHash] = value.addG2(_publicKeysInProgress[schainHash]);
     }
 
-    function finalizePublicKey(bytes32 schainHash) external allow("SkaleDKG") {
+    function finalizePublicKey(bytes32 schainHash) external override allow("SkaleDKG") {
         if (!_isSchainsPublicKeyZero(schainHash)) {
             _previousSchainsPublicKeys[schainHash].push(_schainsPublicKeys[schainHash]);
         }
@@ -79,11 +73,11 @@ contract KeyStorage is Permissions {
         delete _publicKeysInProgress[schainHash];
     }
 
-    function getCommonPublicKey(bytes32 schainHash) external view returns (G2Operations.G2Point memory) {
+    function getCommonPublicKey(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point memory) {
         return _schainsPublicKeys[schainHash];
     }
 
-    function getPreviousPublicKey(bytes32 schainHash) external view returns (G2Operations.G2Point memory) {
+    function getPreviousPublicKey(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point memory) {
         uint length = _previousSchainsPublicKeys[schainHash].length;
         if (length == 0) {
             return G2Operations.getG2Zero();
@@ -91,7 +85,7 @@ contract KeyStorage is Permissions {
         return _previousSchainsPublicKeys[schainHash][length - 1];
     }
 
-    function getAllPreviousPublicKeys(bytes32 schainHash) external view returns (G2Operations.G2Point[] memory) {
+    function getAllPreviousPublicKeys(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point[] memory) {
         return _previousSchainsPublicKeys[schainHash];
     }
 

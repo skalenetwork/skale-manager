@@ -23,10 +23,11 @@
 
 pragma solidity 0.8.11;
 
-import "../SkaleDKG.sol";
-import "../ContractManager.sol";
-import "../Wallets.sol";
-import "../KeyStorage.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+
 
 /**
  * @title SkaleDkgAlright
@@ -41,17 +42,17 @@ library SkaleDkgAlright {
     function alright(
         bytes32 schainHash,
         uint fromNodeIndex,
-        ContractManager contractManager,
-        mapping(bytes32 => SkaleDKG.Channel) storage channels,
-        mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
+        IContractManager contractManager,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels,
+        mapping(bytes32 => ISkaleDKG.ProcessDKG) storage dkgProcess,
+        mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => uint) storage lastSuccessfulDKG,
         mapping(bytes32 => uint) storage startAlrightTimestamp
         
     )
         external
     {
-        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
         uint numberOfParticipant = channels[schainHash].n;
         require(numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted, "Still Broadcasting phase");
@@ -71,13 +72,13 @@ library SkaleDkgAlright {
         if (dkgProcess[schainHash].numberOfCompleted == numberOfParticipant) {
             lastSuccessfulDKG[schainHash] = block.timestamp;
             channels[schainHash].active = false;
-            KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
+            IKeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
             emit SuccessfulDKG(schainHash);
         }
     }
 
-    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
+    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint) {
+        return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

@@ -47,14 +47,9 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
     string public constant VALIDATOR_SERVICE = "ValidatorService";
 
     // mapping of actual smart contracts addresses
-    mapping (bytes32 => address) public contracts;
+    mapping (bytes32 => address) public override contracts;
 
-    /**
-     * @dev Emitted when contract is upgraded.
-     */
-    event ContractUpgraded(string contractsName, address contractsAddress);
-
-    function initialize() external initializer {
+    function initialize() external override initializer {
         OwnableUpgradeable.__Ownable_init();
     }
 
@@ -96,35 +91,35 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
      * 
      * - Contract must exist.
      */
-    function getDelegationPeriodManager() external view returns (address) {
+    function getDelegationPeriodManager() external view override returns (address) {
         return getContract(DELEGATION_PERIOD_MANAGER);
     }
 
-    function getBounty() external view returns (address) {
+    function getBounty() external view override returns (address) {
         return getContract(BOUNTY);
     }
 
-    function getValidatorService() external view returns (address) {
+    function getValidatorService() external view override returns (address) {
         return getContract(VALIDATOR_SERVICE);
     }
 
-    function getTimeHelpers() external view returns (address) {
+    function getTimeHelpers() external view override returns (address) {
         return getContract(TIME_HELPERS);
     }
 
-    function getConstantsHolder() external view returns (address) {
+    function getConstantsHolder() external view override returns (address) {
         return getContract(CONSTANTS_HOLDER);
     }
 
-    function getSkaleToken() external view returns (address) {
+    function getSkaleToken() external view override returns (address) {
         return getContract(SKALE_TOKEN);
     }
 
-    function getTokenState() external view returns (address) {
+    function getTokenState() external view override returns (address) {
         return getContract(TOKEN_STATE);
     }
 
-    function getPunisher() external view returns (address) {
+    function getPunisher() external view override returns (address) {
         return getContract(PUNISHER);
     }
 

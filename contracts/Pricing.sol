@@ -22,15 +22,18 @@
 
 pragma solidity 0.8.11;
 
+import "@skalenetwork/skale-manager-interfaces/IPricing.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+
 import "./Permissions.sol";
-import "./SchainsInternal.sol";
-import "./Nodes.sol";
+import "./ConstantsHolder.sol";
 
 /**
  * @title Pricing
  * @dev Contains pricing operations for SKALE network.
  */
-contract Pricing is Permissions {
+contract Pricing is Permissions, IPricing {
 
     uint public constant INITIAL_PRICE = 5 * 10**6;
 
@@ -38,8 +41,8 @@ contract Pricing is Permissions {
     uint public totalNodes;
     uint public lastUpdated;
 
-    function initNodes() external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+    function initNodes() external override {
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         totalNodes = nodes.getNumberOnlineNodes();
     }
 
@@ -50,7 +53,7 @@ contract Pricing is Permissions {
      * 
      * - Cooldown time has exceeded.
      */
-    function adjustPrice() external {
+    function adjustPrice() external override {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         require(
             block.timestamp > lastUpdated + constantsHolder.COOLDOWN_TIME(),
@@ -98,7 +101,7 @@ contract Pricing is Permissions {
     /**
      * @dev Returns the total load percentage.
      */
-    function getTotalLoadPercentage() external view returns (uint) {
+    function getTotalLoadPercentage() external view override returns (uint) {
         return _getTotalLoad() * 100 / _getTotalCapacity();
     }
 
@@ -108,8 +111,8 @@ contract Pricing is Permissions {
         price = INITIAL_PRICE;
     }
 
-    function checkAllNodes() public {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+    function checkAllNodes() public override {
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         uint numberOfActiveNodes = nodes.getNumberOnlineNodes();
 
         require(totalNodes != numberOfActiveNodes, "No changes to node supply");
@@ -117,7 +120,7 @@ contract Pricing is Permissions {
     }
 
     function _getTotalLoad() private view returns (uint) {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
 
         uint load = 0;
         uint numberOfSchains = schainsInternal.numberOfSchains();
@@ -131,7 +134,7 @@ contract Pricing is Permissions {
     }
 
     function _getTotalCapacity() private view returns (uint) {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
         return nodes.getNumberOnlineNodes() * constantsHolder.TOTAL_SPACE_ON_NODE();

@@ -23,23 +23,30 @@ pragma solidity 0.8.11;
 
 import "../utils/MathUtils.sol";
 
+interface IMathUtilsTester {
+    function boundedSub(uint256 a, uint256 b) external returns (uint256);
+    function boundedSubWithoutEvent(uint256 a, uint256 b) external pure returns (uint256);
+    function muchGreater(uint256 a, uint256 b) external pure returns (bool);
+    function approximatelyEqual(uint256 a, uint256 b) external pure returns (bool);
+}
 
-contract MathUtilsTester {
+
+contract MathUtilsTester is IMathUtilsTester {
     using MathUtils for uint;
 
-    function boundedSub(uint256 a, uint256 b) external returns (uint256) {
+    function boundedSub(uint256 a, uint256 b) external override returns (uint256) {
         return a.boundedSub(b);
     }
 
-    function boundedSubWithoutEvent(uint256 a, uint256 b) external pure returns (uint256) {
+    function boundedSubWithoutEvent(uint256 a, uint256 b) external pure override returns (uint256) {
         return a.boundedSubWithoutEvent(b);
     }
 
-    function muchGreater(uint256 a, uint256 b) external pure returns (bool) {
+    function muchGreater(uint256 a, uint256 b) external pure override returns (bool) {
         return a.muchGreater(b);
     }
 
-    function approximatelyEqual(uint256 a, uint256 b) external pure returns (bool) {
+    function approximatelyEqual(uint256 a, uint256 b) external pure override returns (bool) {
         return a.approximatelyEqual(b);
     }
 }

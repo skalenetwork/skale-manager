@@ -22,14 +22,16 @@
 pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegatableToken.sol";
+import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
 
 import "./thirdparty/openzeppelin/ERC777.sol";
 
 import "./Permissions.sol";
-import "./interfaces/delegation/IDelegatableToken.sol";
-import "./interfaces/IMintableToken.sol";
-import "./delegation/Punisher.sol";
-import "./delegation/TokenState.sol";
 
 
 /**
@@ -91,7 +93,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
      * @dev See {IDelegatableToken-getAndUpdateDelegatedAmount}.
      */
     function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
-        return DelegationController(contractManager.getContract("DelegationController"))
+        return IDelegationController(contractManager.getContract("DelegationController"))
             .getAndUpdateDelegatedAmount(wallet);
     }
 
@@ -99,14 +101,14 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
      * @dev See {IDelegatableToken-getAndUpdateSlashedAmount}.
      */
     function getAndUpdateSlashedAmount(address wallet) external override returns (uint) {
-        return Punisher(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
+        return ILocker(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
     }
 
     /**
      * @dev See {IDelegatableToken-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address wallet) public override returns (uint) {
-        return TokenState(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
+        return ILocker(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
     }
 
     // internal

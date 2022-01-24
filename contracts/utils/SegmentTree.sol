@@ -58,7 +58,7 @@ import "./Random.sol";
  * +----+----+----+---+---+----+----+---+---+---+---+---+---+---+---+
  */
 library SegmentTree {
-    using Random for Random.RandomGenerator;   
+    using Random for IRandom.RandomGenerator;
 
     struct Tree {
         uint[] tree;
@@ -204,7 +204,7 @@ library SegmentTree {
     function getRandomNonZeroElementFromPlaceToLast(
         Tree storage self,
         uint place,
-        Random.RandomGenerator memory randomGenerator
+        IRandom.RandomGenerator memory randomGenerator
     )
         external
         view

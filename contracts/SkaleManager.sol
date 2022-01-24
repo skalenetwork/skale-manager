@@ -25,22 +25,26 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 
-import "./delegation/Distributor.sol";
-import "./delegation/ValidatorService.sol";
-import "./interfaces/IMintableToken.sol";
-import "./BountyV2.sol";
-import "./ConstantsHolder.sol";
-import "./NodeRotation.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleManager.sol";
+import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+
 import "./Permissions.sol";
-import "./Schains.sol";
-import "./Wallets.sol";
 
 /**
  * @title SkaleManager
  * @dev Contract contains functions for node registration and exit, bounty
  * management, and monitoring verdicts.
  */
-contract SkaleManager is IERC777Recipient, Permissions {
+contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
 
     IERC1820Registry private _erc1820;
 
@@ -53,23 +57,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
 
-    /**
-     * @dev Emitted when the version was updated
-     */
-    event VersionUpdated(string oldVersion, string newVersion);
-
-    /**
-     * @dev Emitted when bounty is received.
-     */
-    event BountyReceived(
-        uint indexed nodeIndex,
-        address owner,
-        uint averageDowntime,
-        uint averageLatency,
-        uint bounty,
-        uint previousBlockEvent
-    );
-
     function tokensReceived(
         address, // operator
         address from,
@@ -78,12 +65,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
         bytes calldata userData,
         bytes calldata // operator data
     )
-        external override
+        external
+        override
         allow("SkaleToken")
     {
         require(to == address(this), "Receiver is incorrect");
         if (userData.length > 0) {
-            Schains schains = Schains(
+            ISchains schains = ISchains(
                 contractManager.getContract("Schains"));
             schains.addSchain(from, value, userData);
         }
@@ -99,12 +87,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
         string calldata domainName
     )
         external
+        override
     {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         // validators checks inside checkPossibilityCreatingNode
         nodes.checkPossibilityCreatingNode(msg.sender);
 
-        Nodes.NodeCreationParams memory params = Nodes.NodeCreationParams({
+        INodes.NodeCreationParams memory params = INodes.NodeCreationParams({
             name: name,
             ip: ip,
             publicIp: publicIp,
@@ -116,11 +105,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
         nodes.createNode(msg.sender, params);
     }
 
-    function nodeExit(uint nodeIndex) external {
+    function nodeExit(uint nodeIndex) external override {
         uint gasTotal = gasleft();
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
+        INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         uint validatorId = nodes.getValidatorId(nodeIndex);
         bool permitted = (_isOwner() || nodes.isNodeExist(msg.sender, nodeIndex));
         if (!permitted && validatorService.validatorAddressExists(msg.sender)) {
@@ -130,7 +119,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
         (bool completed, bool isSchains) = nodeRotation.exitFromSchain(nodeIndex);
         if (completed) {
-            SchainsInternal(
+            ISchainsInternal(
                 contractManager.getContract("SchainsInternal")
             ).removeNodeFromAllExceptionSchains(nodeIndex);
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
@@ -138,7 +127,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
                 nodeIndex,
                 block.timestamp + (
                     isSchains ?
-                    ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay() :
+                    IConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay() :
                     0
                 )
             );
@@ -147,26 +136,26 @@ contract SkaleManager is IERC777Recipient, Permissions {
         _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
     }
 
-    function deleteSchain(string calldata name) external {
-        Schains schains = Schains(contractManager.getContract("Schains"));
+    function deleteSchain(string calldata name) external override {
+        ISchains schains = ISchains(contractManager.getContract("Schains"));
         // schain owner checks inside deleteSchain
         schains.deleteSchain(msg.sender, name);
     }
 
-    function deleteSchainByRoot(string calldata name) external {
+    function deleteSchainByRoot(string calldata name) external override {
         require(hasRole(SCHAIN_REMOVAL_ROLE, msg.sender), "SCHAIN_REMOVAL_ROLE is required");
-        Schains schains = Schains(contractManager.getContract("Schains"));
+        ISchains schains = ISchains(contractManager.getContract("Schains"));
         schains.deleteSchainByRoot(name);
     }
 
-    function getBounty(uint nodeIndex) external {
+    function getBounty(uint nodeIndex) external override {
         uint gasTotal = gasleft();
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
         require(!nodes.isNodeLeft(nodeIndex), "The node must not be in Left state");
         require(!nodes.incompliant(nodeIndex), "The node is incompliant");
-        BountyV2 bountyContract = BountyV2(contractManager.getContract("Bounty"));
+        IBountyV2 bountyContract = IBountyV2(contractManager.getContract("Bounty"));
 
         uint bounty = bountyContract.calculateBounty(nodeIndex);
 
@@ -187,7 +176,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
     }
 
-    function setVersion(string calldata newVersion) external onlyOwner {
+    function setVersion(string calldata newVersion) external override onlyOwner {
         emit VersionUpdated(version, newVersion);
         version = newVersion;
     }
@@ -200,7 +189,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function _payBounty(uint bounty, uint validatorId) private {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
-        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+        IDistributor distributor = IDistributor(contractManager.getContract("Distributor"));
         
         require(
             IMintableToken(address(skaleToken)).mint(address(distributor), bounty, abi.encode(validatorId), ""),
@@ -210,7 +199,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function _refundGasByValidator(uint validatorId, address payable spender, uint spentGas) private {
         uint gasCostOfRefundGasByValidator = 55723;
-        Wallets(payable(contractManager.getContract("Wallets")))
+        IWallets(payable(contractManager.getContract("Wallets")))
         .refundGasByValidator(validatorId, spender, spentGas + gasCostOfRefundGasByValidator);
     }
 }

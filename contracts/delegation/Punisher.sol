@@ -21,37 +21,22 @@
 
 pragma solidity 0.8.11;
 
-import "../Permissions.sol";
-import "../interfaces/delegation/ILocker.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
-import "./ValidatorService.sol";
-import "./DelegationController.sol";
+import "../Permissions.sol";
 
 /**
  * @title Punisher
  * @dev This contract handles all slashing and forgiving operations.
  */
-contract Punisher is Permissions, ILocker {
+contract Punisher is Permissions, ILocker, IPunisher {
 
     //        holder => tokens
     mapping (address => uint) private _locked;
     bytes32 public constant FORGIVER_ROLE = keccak256("FORGIVER_ROLE");
-
-    /**
-     * @dev Emitted upon slashing condition.
-     */
-    event Slash(
-        uint validatorId,
-        uint amount
-    );
-
-    /**
-     * @dev Emitted upon forgive condition.
-     */
-    event Forgive(
-        address wallet,
-        uint amount
-    );
 
     /**
      * @dev Allows SkaleDKG contract to execute slashing on a validator and
@@ -63,9 +48,9 @@ contract Punisher is Permissions, ILocker {
      * 
      * - Validator must exist.
      */
-    function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        DelegationController delegationController = DelegationController(
+    function slash(uint validatorId, uint amount) external override allow("SkaleDKG") {
+        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController"));
 
         require(validatorService.validatorExists(validatorId), "Validator does not exist");
@@ -84,9 +69,9 @@ contract Punisher is Permissions, ILocker {
      * 
      * - All slashes must have been processed.
      */
-    function forgive(address holder, uint amount) external {
+    function forgive(address holder, uint amount) external override {
         require(hasRole(FORGIVER_ROLE, msg.sender), "FORGIVER_ROLE is required");
-        DelegationController delegationController = DelegationController(
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController"));
 
         require(!delegationController.hasUnprocessedSlashes(holder), "Not all slashes were calculated");
@@ -118,7 +103,7 @@ contract Punisher is Permissions, ILocker {
      * @dev Allows DelegationController contract to execute slashing of
      * delegations.
      */
-    function handleSlash(address holder, uint amount) external allow("DelegationController") {
+    function handleSlash(address holder, uint amount) external override allow("DelegationController") {
         _locked[holder] = _locked[holder] + amount;
     }
 
@@ -132,7 +117,7 @@ contract Punisher is Permissions, ILocker {
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
-        DelegationController delegationController = DelegationController(
+        IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController"));
 
         delegationController.processAllSlashes(wallet);

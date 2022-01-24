@@ -21,18 +21,20 @@
 
 pragma solidity 0.8.11;
 
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
+
 import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
-import "./ContractManager.sol";
 
 
 /**
  * @title Permissions
  * @dev Contract is connected module for Upgradeable approach, knows ContractManager
  */
-contract Permissions is AccessControlUpgradeableLegacy {
+contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
     using AddressUpgradeable for address;
     
-    ContractManager public contractManager;
+    IContractManager public contractManager;
 
     /**
      * @dev Modifier to make a function callable only when caller is the Owner.
@@ -109,7 +111,7 @@ contract Permissions is AccessControlUpgradeableLegacy {
         _;
     }
 
-    function initialize(address contractManagerAddress) public virtual initializer {
+    function initialize(address contractManagerAddress) public virtual override initializer {
         AccessControlUpgradeableLegacy.__AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setContractManager(contractManagerAddress);
@@ -132,6 +134,6 @@ contract Permissions is AccessControlUpgradeableLegacy {
     function _setContractManager(address contractManagerAddress) private {
         require(contractManagerAddress != address(0), "ContractManager address is not set");
         require(contractManagerAddress.isContract(), "Address is not contract");
-        contractManager = ContractManager(contractManagerAddress);
+        contractManager = IContractManager(contractManagerAddress);
     }
 }

@@ -30,8 +30,14 @@ import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "../Permissions.sol";
 import "../delegation/DelegationController.sol";
 
+interface IReentrancyTester {
+    function prepareToReentrancyCheck() external;
+    function prepareToBurningAttack() external;
+    function burningAttack() external;
+}
 
-contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
+
+contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender, IReentrancyTester {
 
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
     bool private _reentrancyCheck = false;
@@ -83,15 +89,15 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
         }
     }
 
-    function prepareToReentrancyCheck() external {
+    function prepareToReentrancyCheck() external override {
         _reentrancyCheck = true;
     }
 
-    function prepareToBurningAttack() external {
+    function prepareToBurningAttack() external override {
         _burningAttack = true;
     }
 
-    function burningAttack() external {
+    function burningAttack() external override {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
 
         _amount = skaleToken.balanceOf(address(this));
