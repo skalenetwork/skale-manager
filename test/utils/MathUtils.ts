@@ -23,7 +23,7 @@ describe("MathUtils", () => {
         await applySnapshot(snapshot);
     });
 
-    describe("in transaction", async () => {
+    describe("in transaction", () => {
         it("should subtract normally if reduced is greater than subtracted", async () => {
             (await mathUtils.callStatic.boundedSub(5, 3)).toNumber().should.be.equal(2);
             (await mathUtils.boundedSubWithoutEvent(5, 3)).toNumber().should.be.equal(2);
@@ -40,7 +40,7 @@ describe("MathUtils", () => {
         });
     });
 
-    describe("in call", async () => {
+    describe("in call", () => {
         it("should subtract normally if reduced is greater than subtracted", async () => {
             (await mathUtils.boundedSubWithoutEvent(5, 3)).toNumber().should.be.equal(2);
         });

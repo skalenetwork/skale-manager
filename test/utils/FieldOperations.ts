@@ -24,7 +24,7 @@ describe("FieldOperations", () => {
         await applySnapshot(snapshot);
     });
 
-    describe("Math test", async () => {
+    describe("Math test", () => {
         it("should addG2 X + -X", async () => {
             const x = {
                 x: {

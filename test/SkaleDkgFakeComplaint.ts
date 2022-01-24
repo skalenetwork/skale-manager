@@ -13,9 +13,8 @@ import { ContractManager,
 
 import { nextMonth, skipTime } from "./tools/time";
 
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
+import { curve, ec } from "elliptic";
+const secp256k1Curve = new ec("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
 import { Wallet } from "ethers";
@@ -550,7 +549,7 @@ describe("SkaleDkgFakeComplaint", () => {
     let schainName = "";
     const delegatedAmount = 1e7;
 
-    let validators: {nodePublicKey: string, nodeAddress: Wallet}[];
+    let validators: {nodePublicKey: curve.base.BasePoint, nodeAddress: Wallet}[];
 
     before(async () => {
         [owner, validator1, validator2] = await ethers.getSigners();
@@ -563,11 +562,11 @@ describe("SkaleDkgFakeComplaint", () => {
 
         validators = [
             {
-                nodePublicKey: ec.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic(),
+                nodePublicKey: secp256k1Curve.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress1
             },
             {
-                nodePublicKey: ec.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic(),
+                nodePublicKey: secp256k1Curve.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress2
             }
         ];
