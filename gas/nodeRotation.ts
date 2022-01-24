@@ -3,6 +3,7 @@ import { deployValidatorService } from "../test/tools/deploy/delegation/validato
 import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
 import {
     ContractManager,
+    Nodes,
     Schains,
     SchainsInternal,
     SkaleDKGTester,
@@ -23,6 +24,7 @@ import { stringKeccak256 } from "../test/tools/hashes";
 import { fastBeforeEach } from "../test/tools/mocha";
 import { SchainType } from "../test/tools/types";
 import { applySnapshot, makeSnapshot } from "../test/tools/snapshot";
+import { deployNodes } from "../test/tools/deploy/nodes";
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {
@@ -48,6 +50,7 @@ describe("nodeRotation", () => {
     let schains: Schains;
     let schainsInternal: SchainsInternal;
     let skaleDKG: SkaleDKGTester;
+    let nodes: Nodes;
 
     before(async () => {
         [owner, validator] = await ethers.getSigners();
@@ -61,9 +64,11 @@ describe("nodeRotation", () => {
             skaleManager = await deploySkaleManager(contractManager);
             schainsInternal = await deploySchainsInternal(contractManager);
             schains = await deploySchains(contractManager);
+            nodes = await deployNodes(contractManager);
             await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
             await validatorService.grantRole(await validatorService.VALIDATOR_MANAGER_ROLE(), owner.address);
+            await nodes.grantRole(await nodes.NODE_MANAGER_ROLE(), owner.address);
             await validatorService.disableWhitelist();
     })
 
@@ -115,6 +120,7 @@ describe("nodeRotation", () => {
             console.log("Rotation for node", rotIndex);
             console.log("Will process", schainHashes.length, "rotations");
             const gas = [];
+            await nodes.initExit(rotIndex);
             for (let i = 0; i < schainHashes.length; i++) {
                 const estimatedGas = await skaleManager.connect(node).estimateGas.nodeExit(rotIndex);
                 console.log("Estimated gas on nodeExit", estimatedGas.toString());
@@ -193,6 +199,7 @@ describe("nodeRotation", () => {
             );
 
             schainHashes = await schainsInternal.getSchainHashesForNode(leavingNode);
+            await nodes.initExit(leavingNode);
         });
 
         for(let test = 1; test <= numberOfSchains; ++test) {
@@ -286,6 +293,7 @@ describe("nodeRotation", () => {
                     console.log("Rotation for node", leavingNode);
                     console.log("Will process", schainHashes.length, "rotations");
                     const gas = [];
+                    await nodes.initExit(leavingNode);
                     for (let i = 0; i < schainHashes.length; i++) {
                         if ((await node.getBalance()).lt(ethers.utils.parseEther("0.1"))) {
                             await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});

@@ -35,6 +35,7 @@ import "./ConstantsHolder.sol";
 import "./utils/Random.sol";
 import "./utils/SegmentTree.sol";
 
+import "./NodeRotation.sol";
 
 
 /**
@@ -243,7 +244,7 @@ contract Nodes is Permissions, INodes {
     }
 
     /**
-     * @dev Allows SkaleManager contract to initiate a node exit procedure.
+     * @dev Allows NODE_MANAGER_ROLE to initiate a node exit procedure.
      * 
      * Returns whether the operation is successful.
      * 
@@ -253,15 +254,12 @@ contract Nodes is Permissions, INodes {
         external
         override
         checkNodeExists(nodeIndex)
-        allow("SkaleManager")
-        returns (bool)
     {
+        require(hasRole(NODE_MANAGER_ROLE, msg.sender), "NODE_MANAGER_ROLE is required");
         require(isNodeActive(nodeIndex), "Node should be Active");
-    
         _setNodeLeaving(nodeIndex);
-
+        NodeRotation(contractManager.getContract("NodeRotation")).freezeSchains(nodeIndex);
         emit ExitInitialized(nodeIndex, block.timestamp);
-        return true;
     }
 
     /**

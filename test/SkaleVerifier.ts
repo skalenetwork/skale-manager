@@ -74,6 +74,8 @@ describe("SkaleVerifier", () => {
         await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
         const validatorIndex = await validatorService.getValidatorId(validator1.address);
         await validatorService.connect(owner).enableValidator(validatorIndex);
         const signature = await getValidatorIdSignature(validatorIndex, nodeAddress);
@@ -370,7 +372,7 @@ describe("SkaleVerifier", () => {
                     domainName: "some.domain.name"
                 }
             );
-
+            await nodes.connect(owner).initExit(0);
             await skaleManager.nodeExit(0);
 
             await keyStorage.adding(

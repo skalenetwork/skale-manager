@@ -99,6 +99,8 @@ describe("SkaleDKG", () => {
 
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
         await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
@@ -1713,6 +1715,7 @@ describe("SkaleDKG", () => {
             assert.equal(comPubKey.y.a.toString() !== "0", true);
             assert.equal(comPubKey.y.b.toString() !== "0", true);
 
+            await nodes.initExit(1);
             await skaleManager.connect(validators[1].nodeAddress).nodeExit(1);
 
             let prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
@@ -1780,6 +1783,7 @@ describe("SkaleDKG", () => {
             assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
 
             await skipTime(43260);
+            await nodes.initExit(2);
             await skaleManager.connect(validators[0].nodeAddress).nodeExit(2);
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));

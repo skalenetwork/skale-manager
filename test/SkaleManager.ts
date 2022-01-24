@@ -219,43 +219,21 @@ describe("SkaleManager", () => {
             });
 
             it("should fail to init exiting of someone else's node", async () => {
+                await nodesContract.initExit(0);
                 await skaleManager.connect(hacker).nodeExit(0)
                     .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should reject if node in maintenance call nodeExit", async () => {
                 await nodesContract.setNodeInMaintenance(0);
-                await skaleManager.connect(nodeAddress).nodeExit(0).should.be.eventually.rejectedWith("Node should be Leaving");
+                await nodesContract.initExit(0).should.be.eventually.rejectedWith("Node should be Active");
+                // await skaleManager.connect(nodeAddress).nodeExit(0).should.be.eventually.rejectedWith("Node should be Leaving");
             });
 
-            it("should initiate exiting", async () => {
+            it("should be Left if there is no schains and node has exited", async () => {
+                await nodesContract.initExit(0);
                 await skaleManager.connect(nodeAddress).nodeExit(0);
-
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
-            });
-
-            it("should remove the node", async () => {
-                const balanceBefore = await skaleToken.balanceOf(validator.address);
-
-                await skaleManager.connect(nodeAddress).nodeExit(0);
-
-                await nodesContract.isNodeLeft(0).should.be.eventually.true;
-
-                const balanceAfter = await skaleToken.balanceOf(validator.address);
-
-                balanceAfter.should.be.equal(balanceBefore);
-            });
-
-            it("should remove the node by root", async () => {
-                const balanceBefore = await skaleToken.balanceOf(validator.address);
-
-                await skaleManager.nodeExit(0);
-
-                await nodesContract.isNodeLeft(0).should.be.eventually.true;
-
-                const balanceAfter = await skaleToken.balanceOf(validator.address);
-
-                balanceBefore.should.be.equal(balanceAfter);
             });
 
             it("should create and remove node from validator address", async () => {
@@ -269,7 +247,7 @@ describe("SkaleManager", () => {
                     "d3", // name
                     "some.domain.name"
                 );
-
+                await nodesContract.initExit(1);
                 await skaleManager.connect(validator).nodeExit(1);
 
                 await nodesContract.isNodeLeft(1).should.be.eventually.true;
@@ -383,73 +361,31 @@ describe("SkaleManager", () => {
             });
 
             it("should fail to initiate exiting of first node from another account", async () => {
+                await nodesContract.connect(hacker).initExit(0)
+                    .should.be.eventually.rejectedWith("NODE_MANAGER_ROLE is required");
                 await skaleManager.connect(hacker).nodeExit(0)
                     .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should fail to initiate exiting of second node from another account", async () => {
+                await nodesContract.connect(hacker).initExit(1)
+                    .should.be.eventually.rejectedWith("NODE_MANAGER_ROLE is required");
                 await skaleManager.connect(hacker).nodeExit(1)
                     .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should initiate exiting of first node", async () => {
+                await nodesContract.initExit(0);
                 await skaleManager.connect(nodeAddress).nodeExit(0);
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
             });
 
             it("should initiate exiting of second node", async () => {
+                await nodesContract.initExit(1);
                 await skaleManager.connect(nodeAddress).nodeExit(1);
 
                 await nodesContract.isNodeLeft(1).should.be.eventually.true;
-            });
-
-            it("should remove the first node", async () => {
-                const balanceBefore = await skaleToken.balanceOf(validator.address);
-
-                await skaleManager.connect(nodeAddress).nodeExit(0);
-
-                await nodesContract.isNodeLeft(0).should.be.eventually.true;
-
-                const balanceAfter = await skaleToken.balanceOf(validator.address);
-
-                balanceBefore.should.be.equal(balanceAfter);
-            });
-
-            it("should remove the second node", async () => {
-                const balanceBefore = await skaleToken.balanceOf(validator.address);
-
-                await skaleManager.connect(nodeAddress).nodeExit(1);
-
-                await nodesContract.isNodeLeft(1).should.be.eventually.true;
-
-                const balanceAfter = await skaleToken.balanceOf(validator.address);
-
-                balanceBefore.should.be.equal(balanceAfter);
-            });
-
-            it("should remove the first node by root", async () => {
-                const balanceBefore = await skaleToken.balanceOf(validator.address);
-
-                await skaleManager.nodeExit(0);
-
-                await nodesContract.isNodeLeft(0).should.be.eventually.true;
-
-                const balanceAfter = await skaleToken.balanceOf(validator.address);
-
-                balanceBefore.should.be.equal(balanceAfter);
-            });
-
-            it("should remove the second node by root", async () => {
-                const balanceBefore = await skaleToken.balanceOf(validator.address);
-
-                await skaleManager.nodeExit(1);
-
-                await nodesContract.isNodeLeft(1).should.be.eventually.true;
-
-                const balanceAfter = await skaleToken.balanceOf(validator.address);
-
-                balanceBefore.should.be.equal(balanceAfter);
             });
         });
 
@@ -614,10 +550,9 @@ describe("SkaleManager", () => {
 
                     it("should delete schain after deleting node", async () => {
                         const nodes = await schainsInternal.getNodesInGroup(d2SchainHash);
+                        await nodesContract.initExit(nodes[0]);
                         await skaleManager.connect(nodeAddress).nodeExit(nodes[0]);
-                        await skaleDKG.setSuccessfulDKGPublic(
-                            d2SchainHash,
-                        );
+                        await skaleDKG.setSuccessfulDKGPublic(d2SchainHash);
                         await skaleManager.connect(developer).deleteSchain("d2");
                     });
                 });
