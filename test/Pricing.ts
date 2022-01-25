@@ -7,7 +7,6 @@ import { ContractManager,
          Pricing,
          SchainsInternal,
          ValidatorService,
-         Schains,
          ConstantsHolder,
          NodeRotation } from "../typechain-types";
 
@@ -41,7 +40,6 @@ describe("Pricing", () => {
     let contractManager: ContractManager;
     let pricing: Pricing;
     let schainsInternal: SchainsInternal;
-    let schains: Schains;
     let nodes: Nodes;
     let validatorService: ValidatorService;
     let constants: ConstantsHolder;
@@ -58,7 +56,7 @@ describe("Pricing", () => {
 
         nodes = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
-        schains = await deploySchains(contractManager);
+        await deploySchains(contractManager);
         pricing = await deployPricing(contractManager);
         validatorService = await deployValidatorService(contractManager);
         constants = await deployConstantsHolder(contractManager);
@@ -75,7 +73,7 @@ describe("Pricing", () => {
         await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
     });
 
-    describe("on initialized contracts", async () => {
+    describe("on initialized contracts", () => {
         fastBeforeEach(async () => {
             await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.constants.AddressZero, 10, 2);
             await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.constants.AddressZero, 10, 4);
@@ -140,7 +138,7 @@ describe("Pricing", () => {
             numberOfNodes.should.be.equal(4);
         });
 
-        describe("on existing nodes and schains", async () => {
+        describe("on existing nodes and schains", () => {
             const bobSchainHash = stringKeccak256("BobSchain");
             const davidSchainHash = stringKeccak256("DavidSchain");
             const jacobSchainHash = stringKeccak256("JacobSchain");
@@ -196,7 +194,7 @@ describe("Pricing", () => {
                     .should.be.eventually.rejectedWith("It's not a time to update a price");
             });
 
-            describe("change price when changing the number of nodes", async () => {
+            describe("change price when changing the number of nodes", () => {
                 let oldPrice: number;
                 let lastUpdated: number;
 

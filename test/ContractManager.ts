@@ -25,7 +25,7 @@ describe("ContractManager", () => {
   });
 
   it("Should add a right contract address (ConstantsHolder) to the register", async () => {
-    const simpleContractName: string = "Constants";
+    const simpleContractName = "Constants";
     await contractManager.connect(user).setContractsAddress(simpleContractName, constantsHolder.address)
       .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
     await contractManager.setContractsAddress(simpleContractName, constantsHolder.address);

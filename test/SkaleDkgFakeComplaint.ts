@@ -633,7 +633,7 @@ describe("SkaleDkgFakeComplaint", () => {
         await applySnapshot(snapshot);
     });
 
-    describe("when 4-node schain is created", async () => {
+    describe("when 4-node schain is created", () => {
         let cleanContracts: number;
         before(async () => {
             cleanContracts = await makeSnapshot();
@@ -660,7 +660,7 @@ describe("SkaleDkgFakeComplaint", () => {
                 let index = 3;
             while (!(nodesInGroup[0].eq(0) && nodesInGroup[1].eq(1) && nodesInGroup[2].eq(2))) {
                 await schains.deleteSchainByRoot(schainName);
-                schainName = "d" + index;
+                schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
@@ -685,7 +685,7 @@ describe("SkaleDkgFakeComplaint", () => {
             await applySnapshot(cleanContracts);
         });
 
-        describe("when correct broadcasts sent", async () => {
+        describe("when correct broadcasts sent", () => {
             const nodesCount = 4;
             it("should not revert after successful complaint", async () => {
                 for (let i = 0; i < nodesCount; ++i) {

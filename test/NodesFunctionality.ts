@@ -7,7 +7,7 @@ import { ContractManager,
          DelegationController,
          ConstantsHolder} from "../typechain-types";
 import { privateKeys } from "./tools/private-keys";
-import { nextMonth, skipTime } from "./tools/time";
+import { nextMonth } from "./tools/time";
 import { Wallet } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
@@ -135,7 +135,7 @@ describe("NodesFunctionality", () => {
         (await nodes.getNodePublicKey(0)).should.be.deep.equal(getPublicKey(nodeAddress));
     });
 
-    describe("when node is created", async () => {
+    describe("when node is created", () => {
         const nodeId = 0;
         fastBeforeEach(async () => {
             await nodes.createNode(
@@ -231,7 +231,7 @@ describe("NodesFunctionality", () => {
         });
     });
 
-    describe("when two nodes are created", async () => {
+    describe("when two nodes are created", () => {
         fastBeforeEach(async () => {
             await nodes.createNode(
                 nodeAddress.address,
@@ -341,12 +341,11 @@ describe("NodesFunctionality", () => {
         });
     });
 
-    describe("when holder has enough tokens", async () => {
+    describe("when holder has enough tokens", () => {
         const validatorId = 1;
         let amount: number;
         let delegationPeriod: number;
         let info: string;
-        const month = 60 * 60 * 24 * 31;
         fastBeforeEach(async () => {
             amount = 100;
             delegationPeriod = 2;

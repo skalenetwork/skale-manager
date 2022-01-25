@@ -4,7 +4,7 @@ import { ContractManager,
          ValidatorService} from "../../typechain-types";
 
 import { deployContractManager } from "../tools/deploy/contractManager";
-import { nextMonth, skipTime } from "../tools/time";
+import { nextMonth } from "../tools/time";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
@@ -31,7 +31,6 @@ describe("DelegationController (token state)", () => {
     let snapshot: number;
 
     let validatorId: number;
-    const month = 60 * 60 * 24 * 31;
 
     before(async () => {
         [owner, holder, validator] = await ethers.getSigners();
@@ -70,7 +69,7 @@ describe("DelegationController (token state)", () => {
             .should.be.eventually.rejectedWith("Delegation does not exist");
     });
 
-    describe("when delegation request is sent", async () => {
+    describe("when delegation request is sent", () => {
         const amount = 100;
         const period = 2;
         const delegationId = 0;
@@ -131,7 +130,7 @@ describe("DelegationController (token state)", () => {
             delegated.toNumber().should.be.equal(0);
         });
 
-        describe("when delegation request is accepted", async () => {
+        describe("when delegation request is accepted", () => {
             let holderDelegatedToValidator: number;
             before(async () => {
                 holderDelegatedToValidator = await makeSnapshot();
@@ -161,7 +160,7 @@ describe("DelegationController (token state)", () => {
                     .should.be.eventually.rejectedWith("Token holders are only able to cancel PROPOSED delegations");
             });
 
-            describe("when 1 month was passed", async () => {
+            describe("when 1 month was passed", () => {
                 let validatorAcceptedDelegation: number;
                 before(async () => {
                     validatorAcceptedDelegation = await makeSnapshot();

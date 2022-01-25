@@ -138,10 +138,9 @@ describe("SkaleManager", () => {
         (await skaleManager.version()).should.be.equal("good");
     });
 
-    describe("when validator has delegated SKALE tokens", async () => {
+    describe("when validator has delegated SKALE tokens", () => {
         const validatorId = 1;
         const day = 60 * 60 * 24;
-        const month = 31 * day;
         const delegatedAmount = 1e7;
 
         fastBeforeEach(async () => {
@@ -205,7 +204,7 @@ describe("SkaleManager", () => {
                 "some.domain.name");
         });
 
-        describe("when node is created", async () => {
+        describe("when node is created", () => {
             fastBeforeEach(async () => {
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
@@ -340,7 +339,7 @@ describe("SkaleManager", () => {
             });
         });
 
-        describe("when two nodes are created", async () => {
+        describe("when two nodes are created", () => {
             fastBeforeEach(async () => {
                 await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
@@ -389,14 +388,9 @@ describe("SkaleManager", () => {
             });
         });
 
-        describe("when 18 nodes are in the system", async () => {
+        describe("when 18 nodes are in the system", () => {
             let d2SchainHash: string
 
-            const verdict = {
-                toNodeIndex: 1,
-                downtime: 0,
-                latency: 50
-            };
             fastBeforeEach(async () => {
                 await skaleToken.transfer(validator.address, "0x3635c9adc5dea00000");
                 for (let i = 0; i < 18; ++i) {
@@ -406,7 +400,7 @@ describe("SkaleManager", () => {
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
                         getPublicKey(nodeAddress), // public key
-                        "d2-" + i, // name
+                        `d2-${i}`, // name
                         "some.domain.name");
                 }
 
@@ -428,9 +422,9 @@ describe("SkaleManager", () => {
                     "some.domain.name").should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
 
-            describe("when developer has SKALE tokens", async () => {
+            describe("when developer has SKALE tokens", () => {
                 fastBeforeEach(async () => {
-                    skaleToken.transfer(developer.address, "0x3635c9adc5dea00000");
+                    await skaleToken.transfer(developer.address, "0x3635c9adc5dea00000");
                 });
 
                 it("should create schain", async () => {
@@ -455,7 +449,7 @@ describe("SkaleManager", () => {
 
                 it("should not create schain if schain admin set too low schain lifetime", async () => {
                     const SECONDS_TO_YEAR = 31622400;
-                    constantsHolder.setMinimalSchainLifetime(SECONDS_TO_YEAR);
+                    await constantsHolder.setMinimalSchainLifetime(SECONDS_TO_YEAR);
 
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
@@ -473,7 +467,7 @@ describe("SkaleManager", () => {
                         )
                     ).should.be.eventually.rejectedWith("Minimal schain lifetime should be satisfied");
 
-                    constantsHolder.setMinimalSchainLifetime(4);
+                    await constantsHolder.setMinimalSchainLifetime(4);
                     await skaleToken.connect(developer).send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
@@ -515,7 +509,7 @@ describe("SkaleManager", () => {
                     ).should.be.eventually.rejectedWith("It is not a time for creating Schain");
                 });
 
-                describe("when schain is created", async () => {
+                describe("when schain is created", () => {
                     fastBeforeEach(async () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
@@ -557,7 +551,7 @@ describe("SkaleManager", () => {
                     });
                 });
 
-                describe("when another schain is created", async () => {
+                describe("when another schain is created", () => {
 
                     fastBeforeEach(async () => {
                         await skaleToken.connect(developer).send(
@@ -593,7 +587,7 @@ describe("SkaleManager", () => {
             });
         });
 
-        describe("when 32 nodes are in the system", async () => {
+        describe("when 32 nodes are in the system", () => {
             let d2SchainHash: string;
             let d3SchainHash: string;
 
@@ -607,7 +601,7 @@ describe("SkaleManager", () => {
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
                         getPublicKey(nodeAddress), // public key
-                        "d2-" + i, // name
+                        `d2-${i}`, // name
                         "some.domain.name");
                 }
 
@@ -615,7 +609,7 @@ describe("SkaleManager", () => {
                 d3SchainHash = ethers.utils.solidityKeccak256(["string"], ["d3"]);
             });
 
-            describe("when developer has SKALE tokens", async () => {
+            describe("when developer has SKALE tokens", () => {
 
                 fastBeforeEach(async () => {
                     await skaleToken.transfer(developer.address, "0x3635C9ADC5DEA000000");
@@ -662,7 +656,7 @@ describe("SkaleManager", () => {
                     schain2[0].should.be.equal("d3");
                 });
 
-                describe("when schains are created", async () => {
+                describe("when schains are created", () => {
 
                     fastBeforeEach(async () => {
                         await skaleToken.connect(developer).send(
@@ -712,7 +706,7 @@ describe("SkaleManager", () => {
                 });
             });
         });
-        describe("when 16 nodes are in the system", async () => {
+        describe("when 16 nodes are in the system", () => {
 
             it("should create 16 nodes & create & delete all types of schain", async () => {
 
@@ -725,7 +719,7 @@ describe("SkaleManager", () => {
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
                         getPublicKey(nodeAddress), // public key
-                        "d2-" + i, // name
+                        `d2-${i}`, // name
                         "some.domain.name");
                 }
 

@@ -15,7 +15,7 @@ describe("Decryption", () => {
         decryption = await deployDecryption(await deployContractManager());
     });
 
-    describe("when decryption contract is activated", async () => {
+    describe("when decryption contract is activated", () => {
         it("should encrypt and decrypt messages with a given key correctly", async () => {
             const secretNumber = 123456789;
             const key = "0x814eda04f881a67553ab65e4a0aeca015591a9aaa3f6bd2246508ce2f42905a6";

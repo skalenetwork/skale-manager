@@ -98,7 +98,7 @@ describe("Schains", () => {
         await constantsHolder.setMSR(0);
     });
 
-    describe("should add schain", async () => {
+    describe("should add schain", () => {
         it("should fail when user does not have enough money", async () => {
             await schains.addSchain(
                 holder.address,
@@ -186,7 +186,7 @@ describe("Schains", () => {
             ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
         });
 
-        describe("when 2 nodes are registered (Ivan test)", async () => {
+        describe("when 2 nodes are registered (Ivan test)", () => {
             it("should create 2 nodes, and play with schains", async () => {
                 const nodesCount = 2;
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -280,7 +280,7 @@ describe("Schains", () => {
             });
         });
 
-        describe("when 2 nodes are registered (Node rotation test)", async () => {
+        describe("when 2 nodes are registered (Node rotation test)", () => {
             it("should create 2 nodes, and play with schains", async () => {
                 const nodesCount = 2;
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -720,7 +720,7 @@ describe("Schains", () => {
             });
         });
 
-        describe("when 4 nodes are registered", async () => {
+        describe("when 4 nodes are registered", () => {
             fastBeforeEach(async () => {
                 const nodesCount = 4;
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -1079,7 +1079,7 @@ describe("Schains", () => {
             });
         });
 
-        describe("when 20 nodes are registered", async () => {
+        describe("when 20 nodes are registered", () => {
             fastBeforeEach(async () => {
                 const nodesCount = 20;
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -1188,7 +1188,7 @@ describe("Schains", () => {
             });
         });
 
-        describe("when nodes are registered", async () => {
+        describe("when nodes are registered", () => {
             fastBeforeEach(async () => {
                 const nodesCount = 16;
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -1229,27 +1229,13 @@ describe("Schains", () => {
 
                 await schainsInternal.isOwnerAddress(holder.address, schainHash).should.be.eventually.true;
 
-                const obtainedSchains = await schainsInternal.schains(schainHash);
-                const schainsArray = Array(8);
-                for (const index of Array.from(Array(8).keys())) {
-                    schainsArray[index] = obtainedSchains[index];
-                }
+                const obtainedSchain = await schainsInternal.schains(schainHash);
 
-                const [obtainedSchainName,
-                       obtainedSchainOwner,
-                       obtainedIndexInOwnerList,
-                       obtainedPart,
-                       obtainedLifetime,
-                       obtainedStartDate,
-                       obtainedBlock,
-                       obtainedDeposit,
-                       obtainedIndex] = schainsArray;
-
-                obtainedSchainName.should.be.equal("d2");
-                obtainedSchainOwner.should.be.equal(holder.address);
-                obtainedPart.should.be.equal(1);
-                obtainedLifetime.should.be.equal(5);
-                obtainedDeposit.should.be.equal(deposit);
+                obtainedSchain.name.should.be.equal("d2");
+                obtainedSchain.owner.should.be.equal(holder.address);
+                obtainedSchain.partOfNode.should.be.equal(1);
+                obtainedSchain.lifetime.should.be.equal(5);
+                obtainedSchain.deposit.should.be.equal(deposit);
             });
 
             it("should add new type of Schain and create Schain", async () => {
@@ -1278,27 +1264,13 @@ describe("Schains", () => {
 
                 await schainsInternal.isOwnerAddress(holder.address, schainHash).should.be.eventually.true;
 
-                const obtainedSchains = await schainsInternal.schains(schainHash);
-                const schainsArray = Array(8);
-                for (const index of Array.from(Array(8).keys())) {
-                    schainsArray[index] = obtainedSchains[index];
-                }
+                const obtainedSchain = await schainsInternal.schains(schainHash);
 
-                const [obtainedSchainName,
-                       obtainedSchainOwner,
-                       obtainedIndexInOwnerList,
-                       obtainedPart,
-                       obtainedLifetime,
-                       obtainedStartDate,
-                       obtainedBlock,
-                       obtainedDeposit,
-                       obtainedIndex] = schainsArray;
-
-                obtainedSchainName.should.be.equal("d2");
-                obtainedSchainOwner.should.be.equal(holder.address);
-                obtainedPart.should.be.equal(8);
-                obtainedLifetime.should.be.equal(5);
-                obtainedDeposit.should.be.equal(deposit);
+                obtainedSchain.name.should.be.equal("d2");
+                obtainedSchain.owner.should.be.equal(holder.address);
+                obtainedSchain.partOfNode.should.be.equal(8);
+                obtainedSchain.lifetime.should.be.equal(5);
+                obtainedSchain.deposit.should.be.equal(deposit);
             });
 
             it("should add another new type of Schain and create Schain", async () => {
@@ -1327,30 +1299,16 @@ describe("Schains", () => {
 
                 await schainsInternal.isOwnerAddress(holder.address, schainHash).should.be.eventually.true;
 
-                const obtainedSchains = await schainsInternal.schains(schainHash);
-                const schainsArray = Array(8);
-                for (const index of Array.from(Array(8).keys())) {
-                    schainsArray[index] = obtainedSchains[index];
-                }
-
-                const [obtainedSchainName,
-                       obtainedSchainOwner,
-                       obtainedIndexInOwnerList,
-                       obtainedPart,
-                       obtainedLifetime,
-                       obtainedStartDate,
-                       obtainedBlock,
-                       obtainedDeposit,
-                       obtainedIndex] = schainsArray;
-
-                obtainedSchainName.should.be.equal("d2");
-                obtainedSchainOwner.should.be.equal(holder.address);
-                obtainedPart.should.be.equal(32);
-                obtainedLifetime.should.be.equal(5);
-                obtainedDeposit.should.be.equal(deposit);
+                const obtainedSchain = await schainsInternal.schains(schainHash);
+                
+                obtainedSchain.name.should.be.equal("d2");
+                obtainedSchain.owner.should.be.equal(holder.address);
+                obtainedSchain.partOfNode.should.be.equal(32);
+                obtainedSchain.lifetime.should.be.equal(5);
+                obtainedSchain.deposit.should.be.equal(deposit);
             });
 
-            describe("when schain is created", async () => {
+            describe("when schain is created", () => {
                 fastBeforeEach(async () => {
                     const deposit = await schains.getSchainPrice(1, 5);
                     await schains.addSchain(
@@ -1423,7 +1381,7 @@ describe("Schains", () => {
 
             });
 
-            describe("when test schain is created", async () => {
+            describe("when test schain is created", () => {
 
                 fastBeforeEach(async () => {
                     const deposit = await schains.getSchainPrice(4, 5);
@@ -1485,7 +1443,7 @@ describe("Schains", () => {
         });
     });
 
-    describe("should calculate schain price", async () => {
+    describe("should calculate schain price", () => {
         it("of tiny schain", async () => {
             const price = await schains.getSchainPrice(1, 5);
             const correctPrice = 3952894150981;
@@ -1526,7 +1484,7 @@ describe("Schains", () => {
         });
     });
 
-    describe("when 4 nodes, 2 schains and 2 additional nodes created", async () => {
+    describe("when 4 nodes, 2 schains and 2 additional nodes created", () => {
         const ACTIVE = 0;
         const LEAVING = 1;
         const LEFT = 2;
@@ -1608,7 +1566,7 @@ describe("Schains", () => {
 
         it("should rotate 2 nodes consistently", async () => {
             const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
-            const res2 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
+            await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             await nodes.initExit(0);
             await skaleManager.connect(nodeAddress).nodeExit(0);
             const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
@@ -1628,7 +1586,7 @@ describe("Schains", () => {
             rotationForActiveSchain.rotationCounter.should.be.equal(0);
 
             const nodeRot = res1[3];
-            const res = await skaleDKG.isBroadcastPossible(
+            await skaleDKG.isBroadcastPossible(
                 stringKeccak256("d3"), nodeRot);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
@@ -2153,7 +2111,7 @@ describe("Schains", () => {
         });
     });
 
-    describe("when 6 nodes, 4 schains and 2 rotations(Kavoon test)", async () => {
+    describe("when 6 nodes, 4 schains and 2 rotations(Kavoon test)", () => {
 
         fastBeforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
@@ -2311,7 +2269,7 @@ describe("Schains", () => {
         });
     });
 
-    describe("when 8 nodes, 4 schains and 2 rotations(Kavoon test)", async () => {
+    describe("when 8 nodes, 4 schains and 2 rotations(Kavoon test)", () => {
 
         fastBeforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
@@ -2521,7 +2479,7 @@ describe("Schains", () => {
             const schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
             await nodes.initExit(rotIndex);
             for (const schainHash of Array.from(schainHashes).reverse()) {
-                const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address);
+                await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address);
                 ((await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)).toString()).should.be.equal("1");
                 await skaleManager.connect(nodeAddress2).nodeExit(rotIndex);
                 await skaleDKG.setSuccessfulDKGPublic(
@@ -2577,7 +2535,7 @@ describe("Schains", () => {
             const schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
             await nodes.initExit(rotIndex);
             for (const schainHash of Array.from(schainHashes).reverse()) {
-                const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address);
+                await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address);
                 ((await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address)).toString()).should.be.equal("1");
                 await skaleManager.connect(nodeAddress3).nodeExit(rotIndex);
                 await skaleDKG.setSuccessfulDKGPublic(
@@ -2593,7 +2551,7 @@ describe("Schains", () => {
         });
     });
 
-    describe("when 17 nodes, 1 schain and remove schain type", async () => {
+    describe("when 17 nodes, 1 schain and remove schain type", () => {
 
         const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
             [
@@ -2656,7 +2614,7 @@ describe("Schains", () => {
             ]
         ];
         const secretKeyContributions: {share: string, publicKey: [string, string]}[] = [];
-        const verificationVectorNew: any = [];
+        const verificationVectorNew: {x: {a: string, b: string}, y: {a: string, b: string}}[] = [];
 
         fastBeforeEach(async () => {
             const deposit = await schains.getSchainPrice(2, 5);
