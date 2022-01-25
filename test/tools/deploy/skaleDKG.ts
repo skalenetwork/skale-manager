@@ -15,15 +15,15 @@ const libraries = [
     "SkaleDkgResponse"
 ]
 
-const deploySkaleDKG: (contractManager: ContractManager) => Promise<SkaleDKG>
-    = deployWithLibraryFunctionFactory("SkaleDKG", libraries,
-                            async (contractManager: ContractManager) => {
-                                await deploySchainsInternal(contractManager);
-                                await deployPunisher(contractManager);
-                                await deployNodes(contractManager);
-                                await deploySlashingTable(contractManager);
-                                await deployNodeRotation(contractManager);
-                                await deployKeyStorage(contractManager);
-                            });
-
-export { deploySkaleDKG };
+export const deploySkaleDKG = deployWithLibraryFunctionFactory(
+    "SkaleDKG",
+    libraries,
+    async (contractManager: ContractManager) => {
+        await deploySchainsInternal(contractManager);
+        await deployPunisher(contractManager);
+        await deployNodes(contractManager);
+        await deploySlashingTable(contractManager);
+        await deployNodeRotation(contractManager);
+        await deployKeyStorage(contractManager);
+    }
+) as (contractManager: ContractManager) => Promise<SkaleDKG>;

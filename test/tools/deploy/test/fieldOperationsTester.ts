@@ -1,10 +1,10 @@
 import { ContractManager, FieldOperationsTester } from "../../../../typechain-types";
 import { deployWithLibraryWithConstructor } from "../factory";
 
-const deployFieldOperationsTester: (contractManager: ContractManager) => Promise<FieldOperationsTester>
-    = deployWithLibraryWithConstructor("FieldOperationsTester", ["Fp2Operations", "G1Operations", "G2Operations"],
-                            async (contractManager: ContractManager) => {
-                                return undefined;
-                            });
-
-export { deployFieldOperationsTester };
+export const deployFieldOperationsTester = deployWithLibraryWithConstructor(
+    "FieldOperationsTester",
+    ["Fp2Operations", "G1Operations", "G2Operations"],
+    async (contractManager: ContractManager) => {
+        return undefined;
+    }
+) as (contractManager: ContractManager) => Promise<FieldOperationsTester>;

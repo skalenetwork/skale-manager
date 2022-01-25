@@ -67,7 +67,7 @@ function deployWithLibraryFunctionFactory(
     libraryNames: string[],
     deployDependencies: (contractManager: ContractManager) => Promise<void>
         = async (contractManager: ContractManager) => undefined
-): any {
+) {
     return async (contractManager: ContractManager) => {
         const libraries = await deployLibraries(libraryNames);
         const contractFactory = await getLinkedContractFactory(contractName, libraries);
@@ -87,7 +87,7 @@ function deployWithLibraryWithConstructor(
     libraryNames: string[],
     deployDependencies: (contractManager: ContractManager) => Promise<void>
         = async (contractManager: ContractManager) => undefined
-): any {
+) {
     return async (contractManager: ContractManager) => {
         const libraries = await deployLibraries(libraryNames);
         const contractFactory = await getLinkedContractFactory(contractName, libraries);
