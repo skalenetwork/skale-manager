@@ -20,7 +20,7 @@ export async function verify(contractName: string, contractAddress: string, cons
                     console.log(chalk.red(`Contract ${contractName} was not verified on etherscan`));
                     console.log(e.toString());
                 } else {
-                    console.log("Unknown exception type: " + e)
+                    console.log("Unknown exception type:", e)
                 }
             }
         }

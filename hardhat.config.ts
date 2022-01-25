@@ -100,6 +100,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN
+  },
+  typechain: {
+    externalArtifacts: ['node_modules/@openzeppelin/upgrades-core/artifacts/*.json']
   }
 };
 

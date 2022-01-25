@@ -2,6 +2,10 @@ import axios from "axios";
 import { TypedDataUtils } from "ethers-eip712";
 import * as ethUtil from 'ethereumjs-util';
 import chalk from "chalk";
+import type { ethers } from "ethers";
+import { HardhatEthersHelpers } from "@nomiclabs/hardhat-ethers/types";
+
+type Ethers = typeof ethers & HardhatEthersHelpers;
 
 enum Network {
     MAINNET = 1,
@@ -38,7 +42,7 @@ function getMultiSendAddress(chainId: number) {
     } else if ([Network.GANACHE, Network.HARDHAT].includes(chainId)) {
         return ZERO_ADDRESS;
     } else {
-        throw Error("Can't get multiSend contract at network with chainId = " + chainId);
+        throw Error(`Can't get multiSend contract at network with chainId = ${chainId}`);
     }
 }
 
@@ -48,7 +52,7 @@ export function getSafeTransactionUrl(chainId: number) {
     } else if (chainId === 4) {
         return URLS.safe_transaction[chainId];
     } else {
-        throw Error("Can't get safe-transaction url at network with chainId = " + chainId);
+        throw Error(`Can't get safe-transaction url at network with chainId = ${chainId}`);
     }
 }
 
@@ -58,7 +62,7 @@ export function getSafeRelayUrl(chainId: number) {
     } else if (chainId === 4) {
         return URLS.safe_relay[chainId];
     } else {
-        throw Error("Can't get safe-relay url at network with chainId = " + chainId);
+        throw Error(`Can't get safe-relay url at network with chainId = ${chainId}`);
     }
 }
 
@@ -72,8 +76,8 @@ function concatTransactions(transactions: string[]) {
     }).join("");
 }
 
-export async function createMultiSendTransaction(ethers: any, safeAddress: string, privateKey: string, transactions: string[]) {
-    const chainId: number = (await ethers.provider.getNetwork()).chainId;
+export async function createMultiSendTransaction(ethers: Ethers, safeAddress: string, privateKey: string, transactions: string[]) {
+    const chainId = (await ethers.provider.getNetwork()).chainId;
     const multiSendAddress = getMultiSendAddress(chainId);
     const multiSendAbi = [{"constant":false,"inputs":[{"internalType":"bytes","name":"transactions","type":"bytes"}],"name":"multiSend","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
     const multiSend = new ethers.Contract(multiSendAddress, new ethers.utils.Interface(multiSendAbi), ethers.provider);
