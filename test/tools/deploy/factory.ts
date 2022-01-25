@@ -26,7 +26,7 @@ async function deployWithConstructor(
 function deployFunctionFactory(
     contractName: string,
     deployDependencies: (contractManager: ContractManager) => Promise<void>
-        = async (contractManager: ContractManager) => undefined,
+        = () => Promise.resolve(undefined),
     deploy
         = async ( contractManager: ContractManager) => {
           return await defaultDeploy(contractName, contractManager);
@@ -49,7 +49,7 @@ function deployFunctionFactory(
 function deployWithConstructorFunctionFactory(
     contractName: string,
     deployDependencies: (contractManager: ContractManager) => Promise<void>
-        = async (contractManager: ContractManager) => undefined,
+        = () => Promise.resolve(undefined),
     deploy
         = async ( contractManager: ContractManager) => {
             return await defaultDeployWithConstructor(contractName, contractManager);
@@ -66,7 +66,7 @@ function deployWithLibraryFunctionFactory(
     contractName: string,
     libraryNames: string[],
     deployDependencies: (contractManager: ContractManager) => Promise<void>
-        = async (contractManager: ContractManager) => undefined
+        = () => Promise.resolve(undefined)
 ) {
     return async (contractManager: ContractManager) => {
         const libraries = await deployLibraries(libraryNames);
@@ -86,7 +86,7 @@ function deployWithLibraryWithConstructor(
     contractName: string,
     libraryNames: string[],
     deployDependencies: (contractManager: ContractManager) => Promise<void>
-        = async (contractManager: ContractManager) => undefined
+        = () => Promise.resolve(undefined)
 ) {
     return async (contractManager: ContractManager) => {
         const libraries = await deployLibraries(libraryNames);
@@ -102,7 +102,7 @@ function deployWithLibraryWithConstructor(
     }
 }
 
-async function getLinkedContractFactory(contractName: string, libraries: any) {
+async function getLinkedContractFactory(contractName: string, libraries: Map<string, string>) {
     const cArtifact = await hre.artifacts.readArtifact(contractName);
     const linkedBytecode = _linkBytecode(cArtifact, libraries);
     const ContractFactory = await ethers.getContractFactory(cArtifact.abi, linkedBytecode);
@@ -110,9 +110,9 @@ async function getLinkedContractFactory(contractName: string, libraries: any) {
 }
 
 async function deployLibraries(libraryNames: string[]) {
-    const libraries: any = {};
+    const libraries = new Map<string, string>();
     for (const libraryName of libraryNames) {
-        libraries[libraryName] = await _deployLibrary(libraryName);
+        libraries.set(libraryName, await _deployLibrary(libraryName));
     }
     return libraries;
 }
@@ -124,11 +124,11 @@ async function _deployLibrary(libraryName: string) {
     return library.address;
 }
 
-function _linkBytecode(artifact: Artifact, libraries: { [x: string]: any }) {
+function _linkBytecode(artifact: Artifact, libraries: Map<string, string>) {
     let bytecode = artifact.bytecode;
     for (const [, fileReferences] of Object.entries(artifact.linkReferences)) {
         for (const [libName, fixups] of Object.entries(fileReferences)) {
-            const addr = libraries[libName];
+            const addr = libraries.get(libName);
             if (addr === undefined) {
                 continue;
             }

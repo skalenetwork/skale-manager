@@ -3,8 +3,5 @@ import { deployWithLibraryWithConstructor } from "../factory";
 
 export const deployFieldOperationsTester = deployWithLibraryWithConstructor(
     "FieldOperationsTester",
-    ["Fp2Operations", "G1Operations", "G2Operations"],
-    async (contractManager: ContractManager) => {
-        return undefined;
-    }
+    ["Fp2Operations", "G1Operations", "G2Operations"]
 ) as (contractManager: ContractManager) => Promise<FieldOperationsTester>;

@@ -3,8 +3,5 @@ import { deployWithLibraryWithConstructor } from "../factory";
 
 export const deploySegmentTreeTester = deployWithLibraryWithConstructor(
     "SegmentTreeTester",
-    ["SegmentTree"],
-    async (contractManager: ContractManager) => {
-        return undefined;
-    }
+    ["SegmentTree"]
 ) as (contractManager: ContractManager) => Promise<SegmentTreeTester>;

@@ -3,10 +3,8 @@ import { deployWithConstructor, deployWithConstructorFunctionFactory } from "../
 
 export const deployPartialDifferencesTester = deployWithConstructorFunctionFactory(
     "PartialDifferencesTester",
-    async (_: ContractManager) => {
-        return undefined;
-    },
-    async (_: ContractManager) => {
+    undefined,
+    async () => {
         return await deployWithConstructor("PartialDifferencesTester");
     }
 ) as (contractManager: ContractManager) => Promise<PartialDifferencesTester>;
