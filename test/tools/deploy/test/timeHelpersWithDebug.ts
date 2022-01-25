@@ -5,7 +5,7 @@ import { ContractManager, TimeHelpersWithDebug } from "../../../../typechain-typ
 export const deployTimeHelpersWithDebug = deployFunctionFactory(
     "TimeHelpersWithDebug",
     undefined,
-    async (contractManager: ContractManager) => {
+    async () => {
         const factory = await ethers.getContractFactory("TimeHelpersWithDebug");
         const instance = await factory.deploy() as TimeHelpersWithDebug;
         await instance.initialize();

@@ -54,7 +54,7 @@ function deployWithConstructorFunctionFactory(
         = async ( contractManager: ContractManager) => {
             return await defaultDeployWithConstructor(contractName, contractManager);
         }
-): any {
+) {
     return deployFunctionFactory(
         contractName,
         deployDependencies,
