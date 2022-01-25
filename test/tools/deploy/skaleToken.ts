@@ -20,5 +20,8 @@ async function deployDependencies(contractManager: ContractManager) {
     await deploySkaleManager(contractManager);
 }
 
-export const deploySkaleToken: (contractManager: ContractManager) => Promise<SkaleToken>
-    = deployFunctionFactory(name, deployDependencies, deploy);
+export const deploySkaleToken = deployFunctionFactory(
+    name,
+    deployDependencies,
+    deploy
+) as (contractManager: ContractManager) => Promise<SkaleToken>;

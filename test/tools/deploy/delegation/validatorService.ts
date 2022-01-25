@@ -10,5 +10,7 @@ async function deployDependencies(contractManager: ContractManager) {
     await deployConstantsHolder(contractManager);
 }
 
-export const deployValidatorService: (contractManager: ContractManager) => Promise<ValidatorService>
-    = deployFunctionFactory(name, deployDependencies);
+export const deployValidatorService = deployFunctionFactory(
+    name,
+    deployDependencies
+) as (contractManager: ContractManager) => Promise<ValidatorService>;

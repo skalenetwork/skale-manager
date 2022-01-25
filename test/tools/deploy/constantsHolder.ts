@@ -3,5 +3,4 @@ import { deployFunctionFactory } from "./factory";
 
 const name = "ConstantsHolder";
 
-export const deployConstantsHolder: (contractManager: ContractManager) => Promise<ConstantsHolder>
-    = deployFunctionFactory(name);
+export const deployConstantsHolder = deployFunctionFactory(name) as (contractManager: ContractManager) => Promise<ConstantsHolder>;

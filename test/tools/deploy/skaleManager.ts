@@ -10,18 +10,17 @@ import { deployBounty } from "./bounty";
 import { deployWallets } from "./wallets";
 import { ContractManager, SkaleManager } from "../../../typechain-types";
 
-const deploySkaleManager: (contractManager: ContractManager) => Promise<SkaleManager>
-    = deployFunctionFactory("SkaleManager",
-                            async (contractManager: ContractManager) => {
-                                await deploySchains(contractManager);
-                                await deployValidatorService(contractManager);
-                                await deployNodes(contractManager);
-                                await deployConstantsHolder(contractManager);
-                                await deploySkaleToken(contractManager);
-                                await deployDistributor(contractManager);
-                                await deployNodeRotation(contractManager);
-                                await deployBounty(contractManager);
-                                await deployWallets(contractManager);
-                            });
-
-export { deploySkaleManager };
+export const deploySkaleManager = deployFunctionFactory(
+    "SkaleManager",
+    async (contractManager: ContractManager) => {
+        await deploySchains(contractManager);
+        await deployValidatorService(contractManager);
+        await deployNodes(contractManager);
+        await deployConstantsHolder(contractManager);
+        await deploySkaleToken(contractManager);
+        await deployDistributor(contractManager);
+        await deployNodeRotation(contractManager);
+        await deployBounty(contractManager);
+        await deployWallets(contractManager);
+    }
+) as (contractManager: ContractManager) => Promise<SkaleManager>;

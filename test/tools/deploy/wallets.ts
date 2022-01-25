@@ -4,13 +4,11 @@ import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 
-const deployWallets:
-    (contractManager: ContractManager) => Promise<Wallets>
-    = deployFunctionFactory("Wallets",
-                            async (contractManager: ContractManager) => {
-                                await deployNodes(contractManager);
-                                await deployValidatorService(contractManager);
-                                await deploySchainsInternal(contractManager);
-                            });
-
-export { deployWallets };
+export const deployWallets = deployFunctionFactory(
+    "Wallets",
+    async (contractManager: ContractManager) => {
+        await deployNodes(contractManager);
+        await deployValidatorService(contractManager);
+        await deploySchainsInternal(contractManager);
+    }
+) as (contractManager: ContractManager) => Promise<Wallets>;

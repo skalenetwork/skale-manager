@@ -3,5 +3,4 @@ import { deployFunctionFactory } from "../factory";
 
 const name = "DelegationPeriodManager";
 
-export const deployDelegationPeriodManager: (contractManager: ContractManager) => Promise<DelegationPeriodManager>
-    = deployFunctionFactory(name);
+export const deployDelegationPeriodManager = deployFunctionFactory(name) as (contractManager: ContractManager) => Promise<DelegationPeriodManager>;

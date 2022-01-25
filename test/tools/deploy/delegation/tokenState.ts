@@ -12,4 +12,7 @@ async function deployDependencies(contractManager: ContractManager) {
     await deployTimeHelpers(contractManager);
 }
 
-export const deployTokenState: (contractManager: ContractManager) => Promise<TokenState> = deployFunctionFactory(name, deployDependencies);
+export const deployTokenState = deployFunctionFactory(
+    name,
+    deployDependencies
+) as (contractManager: ContractManager) => Promise<TokenState>;

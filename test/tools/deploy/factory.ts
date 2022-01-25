@@ -26,10 +26,12 @@ async function deployWithConstructor(
 function deployFunctionFactory(
     contractName: string,
     deployDependencies: (contractManager: ContractManager) => Promise<void>
-      = async (contractManager: ContractManager) => undefined,
-    deploy = async ( contractManager: ContractManager) => {
+        = async (contractManager: ContractManager) => undefined,
+    deploy
+        = async ( contractManager: ContractManager) => {
           return await defaultDeploy(contractName, contractManager);
-      }): any {
+        }
+) {
 
     return async (contractManager: ContractManager) => {
             const contractFactory = await ethers.getContractFactory(contractName);
