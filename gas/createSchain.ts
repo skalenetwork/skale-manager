@@ -2,7 +2,7 @@ import { deployContractManager } from "../test/tools/deploy/contractManager";
 import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
 import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
 import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
-import { ContractManager, Schains, SchainsInternal, SkaleManager, ValidatorService } from "../typechain-types";
+import { ContractManager, Schains, SkaleManager, ValidatorService } from "../typechain-types";
 import { privateKeys } from "../test/tools/private-keys";
 import { deploySchains } from "../test/tools/deploy/schains";
 import fs from 'fs';
@@ -12,12 +12,14 @@ import { Event, Wallet } from "ethers";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 import { fastBeforeEach } from "../test/tools/mocha";
 import { SchainType } from "../test/tools/types";
+import { TypedEvent } from "../typechain-types/common";
+import { SchainNodesEvent } from "../typechain-types/ISchains";
 
-function findEvent(events: Event[] | undefined, eventName: string) {
+function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
     if (events) {
         const target = events.find((event) => event.event === eventName);
         if (target) {
-            return target;
+            return target as TargetEvent;
         } else {
             throw new Error("Event was not emitted");
         }
@@ -35,7 +37,6 @@ describe("createSchains", () => {
     let validatorService: ValidatorService;
     let skaleManager: SkaleManager;
     let schains: Schains;
-    let schainsInternal: SchainsInternal;
 
     fastBeforeEach(async () => {
         [owner, validator] = await ethers.getSigners();
@@ -46,7 +47,7 @@ describe("createSchains", () => {
         validatorService = await deployValidatorService(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
+        await deploySchainsInternal(contractManager);
     });
 
     it("gas based on nodes amount", async () => {
@@ -68,13 +69,13 @@ describe("createSchains", () => {
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
                 getPublicKey(nodeAddress),
-                "d2-" + nodeId, // name)
+                `d2-${nodeId}`, // name)
                 "some.domain.name");
 
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
-                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, "schain-" + nodeId, owner.address, ethers.constants.AddressZero, [])).wait();
-                const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
+                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${nodeId}`, owner.address, ethers.constants.AddressZero, [])).wait();
+                const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
                 console.log("Nodes in Schain:");
                 const setOfNodes = new Set();
                 for (const nodeOfSchain of nodeInGroup) {

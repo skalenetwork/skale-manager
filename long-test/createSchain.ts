@@ -8,15 +8,16 @@ import { deploySchains } from "../test/tools/deploy/schains";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { Event, Wallet } from "ethers";
-import { SchainsInternal } from "../typechain-types/SchainsInternal";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 import { SchainType } from "../test/tools/types";
+import { SchainNodesEvent } from "../typechain-types/ISchains";
+import { TypedEvent } from "../typechain-types/common";
 
-function findEvent(events: Event[] | undefined, eventName: string) {
+function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
     if (events) {
         const target = events.find((event) => event.event === eventName);
         if (target) {
-            return target;
+            return target as TargetEvent;
         } else {
             throw new Error("Event was not emitted");
         }
@@ -34,7 +35,6 @@ describe("Schain creation test", () => {
     let validatorService: ValidatorService;
     let skaleManager: SkaleManager;
     let schains: Schains;
-    let schainsInternal: SchainsInternal;
 
     beforeEach(async () => {
         [owner, validator] = await ethers.getSigners();
@@ -45,7 +45,7 @@ describe("Schain creation test", () => {
         validatorService = await deployValidatorService(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
+        await deploySchainsInternal(contractManager);
     });
 
     it("create and delete medium schains", async () => {
@@ -64,7 +64,7 @@ describe("Schain creation test", () => {
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
                 getPublicKey(nodeAddress), // public key
-                "d2-" + nodeId, // name)
+                `d2-${nodeId}`, // name)
                 "some.domain.name"
             );
         }
@@ -72,8 +72,8 @@ describe("Schain creation test", () => {
             const type = SchainType.MEDIUM;
             console.log(type);
             for (let try1 = 0; try1 < 32; try1++) {
-                const result = await (await schains.addSchainByFoundation(0, type, 0, "schain-" + tries + try1, owner.address, ethers.constants.AddressZero, [])).wait();
-                const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
+                const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}${try1}`, owner.address, ethers.constants.AddressZero, [])).wait();
+                const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
                 const setOfNodes = new Set();
                 for (const nodeOfSchain of nodeInGroup) {
                     if (!setOfNodes.has(nodeOfSchain.toNumber())) {
@@ -84,12 +84,12 @@ describe("Schain creation test", () => {
                     }
                     console.log(nodeOfSchain.toNumber());
                 }
-                console.log("create schain-" + tries + try1, result.gasUsed.toNumber(), "gu");
+                console.log(`create schain-${tries}${try1}`, result.gasUsed.toNumber(), "gu");
             }
 
             for (let try2 = 0; try2 < 32; try2++) {
-                const resDel = await (await skaleManager.deleteSchain("schain-" + tries + try2)).wait();
-                console.log("delete schain-" + tries + try2, resDel.gasUsed.toNumber(), "gu");
+                const resDel = await (await skaleManager.deleteSchain(`schain-${tries}${try2}`)).wait();
+                console.log(`delete schain-${tries}${try2}`, resDel.gasUsed.toNumber(), "gu");
             }
         }
     });
@@ -110,15 +110,15 @@ describe("Schain creation test", () => {
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
                 getPublicKey(nodeAddress), // public key
-                "d2-" + nodeId, // name)
+                `d2-${nodeId}`, // name)
                 "some.domain.name"
             );
         }
         for(let tries = 0; tries < 200; tries++) {
             const type = Math.floor(Math.random() * 2) + 1;
             console.log(type);
-            const result = await (await schains.addSchainByFoundation(0, type, 0, "schain-" + tries, owner.address, ethers.constants.AddressZero, [])).wait();
-            const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
+            const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}`, owner.address, ethers.constants.AddressZero, [])).wait();
+            const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
             const setOfNodes = new Set();
             for (const nodeOfSchain of nodeInGroup) {
                 if (!setOfNodes.has(nodeOfSchain.toNumber())) {
@@ -130,9 +130,9 @@ describe("Schain creation test", () => {
                 console.log(nodeOfSchain.toNumber());
             }
 
-            console.log("create schain-" + tries, result.gasUsed.toNumber(), "gu");
-            const resDel = await (await skaleManager.deleteSchain("schain-" + tries)).wait();
-            console.log("delete schain-" + tries, resDel.gasUsed.toNumber(), "gu");
+            console.log(`create schain-${tries}`, result.gasUsed.toNumber(), "gu");
+            const resDel = await (await skaleManager.deleteSchain(`schain-${tries}`)).wait();
+            console.log(`delete schain-${tries}`, resDel.gasUsed.toNumber(), "gu");
         }
     });
 });
