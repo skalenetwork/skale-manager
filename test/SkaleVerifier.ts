@@ -410,7 +410,9 @@ describe("SkaleVerifier", () => {
 
             const rotDelay = await constantsHolder.rotationDelay();
 
-            await skipTime(rotDelay.toNumber());
+            const tenSecDelta = 10;
+
+            await skipTime(rotDelay.toNumber() - tenSecDelta);
 
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
@@ -423,9 +425,7 @@ describe("SkaleVerifier", () => {
             );
             assert(res.should.be.true);
 
-            const oneHour = 60 * 60;
-
-            await skipTime(oneHour);
+            await skipTime(tenSecDelta);
 
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
