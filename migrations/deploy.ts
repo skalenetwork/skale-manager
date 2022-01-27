@@ -53,7 +53,7 @@ export async function getContractFactory(contract: string) {
     }
 
     const libraries = await deployLibraries(libraryNames);
-    const libraryArtifacts: {[key: string]: any} = {};
+    const libraryArtifacts: {[key: string]: unknown} = {};
     for (const [libraryName, libraryAddress] of libraries.entries()) {
         const { bytecode } = await artifacts.readArtifact(libraryName);
         libraryArtifacts[libraryName] = {"address": libraryAddress, "bytecodeHash": hashBytecode(bytecode)};
@@ -169,7 +169,7 @@ async function main() {
 
     console.log("Store ABIs");
 
-    const outputObject: {[k: string]: any} = {};
+    const outputObject: {[k: string]: unknown} = {};
     for (const artifact of contractArtifacts) {
         const contractKey = getContractKeyInAbiFile(artifact.contract);
         outputObject[contractKey + "_address"] = artifact.address;

@@ -34,6 +34,56 @@ const URLS = {
     }
 }
 
+interface SafeInfoResponse{
+    address: string,
+    nonce: number,
+    threshold: number,
+    owners:	string[],
+    masterCopy:	string,
+    modules: string[],
+    fallbackHandler: string,
+    guard: string,
+    version: string
+}
+
+interface SafeMultisigEstimateTx{
+    safe: string,
+    to:	string,
+    value: number,
+    data?: string
+    operation: number
+    gasToken?: string
+}
+
+interface SafeMultisigEstimateTxResponseV2 {
+    safeTxGas: string,
+    baseGas: string,
+    dataGas: string,
+    operationalGas: string,
+    gasPrice: string,
+    lastUsedNonce: number,
+    gasToken: string,
+    refundReceiver: string
+}
+
+interface SafeMultisigTransaction {
+    safe: string,
+    to: string,
+    value: number,
+    data?: string,
+    operation: number,
+    gasToken?: string,
+    safeTxGas: number,
+    baseGas: number,
+    gasPrice: number,
+    refundReceiver?: string,
+    nonce: number,
+    contractTransactionHash: string,
+    sender:	string,
+    signature?:	string,
+    origin?: string
+}
+
 function getMultiSendAddress(chainId: number) {
     if (chainId === Network.MAINNET) {
         return ADDRESSES.multiSend[chainId];
@@ -84,7 +134,7 @@ export async function createMultiSendTransaction(ethers: Ethers, safeAddress: st
 
     let nonce = 0;
     try {
-        const nonceResponse = await axios.get(`${getSafeTransactionUrl(chainId)}/api/v1/safes/${safeAddress}/`);
+        const nonceResponse = await axios.get<SafeInfoResponse>(`${getSafeTransactionUrl(chainId)}/api/v1/safes/${safeAddress}/`);
         nonce = nonceResponse.data.nonce;
     } catch (e) {
         if (!(e instanceof Error) || !e.toString().startsWith("Error: Can't get safe-transaction url")) {
@@ -93,6 +143,7 @@ export async function createMultiSendTransaction(ethers: Ethers, safeAddress: st
     }
 
     const tx = {
+        "safe": safeAddress,
         "to": multiSend.address,
         "value": 0, // Value in wei
         "data": multiSend.interface.encodeFunctionData("multiSend", [ concatTransactions(transactions) ]),
@@ -140,7 +191,7 @@ export async function createMultiSendTransaction(ethers: Ethers, safeAddress: st
     const { r, s, v } = ethUtil.ecsign(ethUtil.toBuffer(digestHex), privateKeyBuffer);
     const signature = ethUtil.toRpcSig(v, r, s).toString();
 
-    const txToSend = {
+    const txToSend: SafeMultisigTransaction = {
         ...tx,
         "contractTransactionHash": digestHex,  // Contract transaction hash calculated from all the field
         // Owner of the Safe proposing the transaction. Must match one of the signatures
@@ -152,19 +203,13 @@ export async function createMultiSendTransaction(ethers: Ethers, safeAddress: st
     return txToSend;
 }
 
-export async function sendSafeTransaction(safe: string, chainId: number, safeTx: any) {
+export async function sendSafeTransaction(safe: string, chainId: number, safeTx: SafeMultisigTransaction) {
     try {
         console.log("Estimate gas");
-        const estimateRequest = (({
-            to,
-            value,
-            data,
-            operation,
-            gasToken
-        }) => ({ to, value, data, operation, gasToken }))(safeTx);
+        const estimateRequest: SafeMultisigEstimateTx = safeTx;
 
         try {
-            const estimateResponse = await axios.post(
+            const estimateResponse = await axios.post<SafeMultisigEstimateTxResponseV2>(
                 `${getSafeRelayUrl(chainId)}/api/v2/safes/${safe}/transactions/estimate/`,
                 estimateRequest
             );
@@ -176,7 +221,7 @@ export async function sendSafeTransaction(safe: string, chainId: number, safeTx:
         }
 
         console.log(chalk.green("Send transaction to gnosis safe"));
-        await axios.post(`${getSafeTransactionUrl(chainId)}/api/v1/safes/${safe}/transactions/`, safeTx)
+        await axios.post(`${getSafeTransactionUrl(chainId)}/api/v1/safes/${safe}/multisig-transactions/`, safeTx)
     } catch (e) {
         if (axios.isAxiosError(e)) {
             if (e.response) {
