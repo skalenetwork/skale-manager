@@ -22,7 +22,8 @@
     "@typescript-eslint/no-unused-vars": ["error"]
   },
   "ignorePatterns": [
-    "typechain-types/**",
-    "docs/**"
+    "coverage/**",
+    "docs/**",
+    "typechain-types/**"
   ]
 }

@@ -1,7 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ECDH } from "../typechain-types";
-import "./tools/elliptic-types";
 import { ec } from "elliptic";
 
 const secp256k1Curve = new ec("secp256k1");
