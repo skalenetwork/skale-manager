@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 
 export async function makeSnapshot() {
-    return parseInt(await ethers.provider.send("evm_snapshot", []), 16);
+    return parseInt(await ethers.provider.send("evm_snapshot", []) as string, 16);
 }
 
 export async function applySnapshot(snapshot: number) {

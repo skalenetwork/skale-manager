@@ -1,8 +1,8 @@
 import { task, HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-web3";
+import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
-import "hardhat-typechain";
+import '@typechain/hardhat'
 import "solidity-coverage";
 import * as dotenv from "dotenv"
 import { utils, Wallet } from "ethers";
@@ -22,33 +22,17 @@ task("erc1820", "Deploy ERC1820 contract", async (_, { ethers }) => {
 });
 
 
-task("accounts", "Prints the list of accounts", async (_, { web3 }) => {
-  const accounts = await web3.eth.getAccounts();
+task("accounts", "Prints the list of accounts", async (_, { ethers }) => {
+  const accounts = await ethers.getSigners();
 
    for (const account of accounts) {
-    console.log(account);
+    console.log(account.address);
   }
 });
 
 function getAccounts() {
   const accounts: HardhatNetworkAccountUserConfig[] = [];
-  const defaultBalance = utils.parseEther("1000000").toString();
-
-  [
-    process.env.PRIVATE_KEY_1,
-    process.env.PRIVATE_KEY_2,
-    process.env.PRIVATE_KEY_3,
-    process.env.PRIVATE_KEY_4,
-    process.env.PRIVATE_KEY_5,
-    process.env.PRIVATE_KEY_6
-  ].forEach( (key) => {
-    if (key) {
-      accounts.push({
-        privateKey: key,
-        balance: defaultBalance
-      });
-    }
-  });
+  const defaultBalance = utils.parseEther("2000000").toString();
 
   const n = 10;
   for (let i = 0; i < n; ++i) {
@@ -88,16 +72,20 @@ function getGasPrice(gasPrice: string | undefined) {
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   solidity: {
-    version: '0.6.10',
-    settings: {
-      optimizer:{
-        enabled: true,
-        runs: 200
+    compilers: [
+      {
+        version: '0.8.11',
+        settings: {
+          optimizer:{
+            enabled: true,
+            runs: 200
+          }
+        }
       }
-    }
+    ]
   },
   mocha: {
-    timeout: 1000000
+    timeout: 2000000
   },
   networks: {
     hardhat: {
@@ -111,7 +99,10 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    apiKey: "QSW5NZN9RCYXSZWVB32DMUN83UZ5EJUREI"
+    apiKey: process.env.ETHERSCAN
+  },
+  typechain: {
+    externalArtifacts: ['node_modules/@openzeppelin/upgrades-core/artifacts/*.json']
   }
 };
 

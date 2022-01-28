@@ -1,8 +1,6 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { web3, ethers } from "hardhat"
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { SegmentTreeTester } from "../../typechain/SegmentTreeTester";
+import { SegmentTreeTester } from "../../typechain-types/SegmentTreeTester";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deploySegmentTreeTester } from "../tools/deploy/test/segmentTreeTester";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
@@ -27,7 +25,7 @@ describe("SegmentTree", () => {
         await applySnapshot(snapshot);
     });
 
-    describe("initialization", async () => {
+    describe("initialization", () => {
         it("Should check last right leaf of segment tree", async () => {
             await segmentTree.addElemInPlaces(128, 150);
             await segmentTree.initTree();
@@ -42,7 +40,7 @@ describe("SegmentTree", () => {
             }
         });
 
-        it("Should check other elems", async () => {
+        it("Should check other elements", async () => {
             await segmentTree.addElemInPlaces(128, 150);
             await segmentTree.initTree();
             for(let j = 1; j <= 253; j++) {
@@ -56,7 +54,7 @@ describe("SegmentTree", () => {
             }
         });
 
-        it("should check elems after adding to last", async () => {
+        it("should check elements after adding to last", async () => {
             await segmentTree.addElemInPlaces(128, 150);
             await segmentTree.initTree();
             await segmentTree.addToLast(10);
@@ -79,7 +77,7 @@ describe("SegmentTree", () => {
             await segmentTree.getElem(100000000000).should.be.eventually.rejectedWith("Incorrect index");
         });
 
-        it("should initialize if elems not only at last place", async () => {
+        it("should initialize if elements not only at last place", async () => {
             await segmentTree.addElemInPlaces(128, 150);
             await segmentTree.addElemInPlaces(64, 50);
             await segmentTree.addElemInPlaces(7, 34);
@@ -97,7 +95,7 @@ describe("SegmentTree", () => {
         });
     });
 
-    describe("when initialized", async () => {
+    describe("when initialized", () => {
 
         before(async () => {
             cleanContracts = await makeSnapshot();
@@ -109,7 +107,7 @@ describe("SegmentTree", () => {
             await applySnapshot(cleanContracts);
         });
 
-        describe("move elements", async () => {
+        describe("move elements", () => {
 
             it("should add elem to some place", async () => {
                 await segmentTree.addToPlace(53, 12);
@@ -212,7 +210,7 @@ describe("SegmentTree", () => {
             });
         });
 
-        describe("calculating sum", async () => {
+        describe("calculating sum", () => {
 
             it("should calculate correct sum", async () => {
                 (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
@@ -296,7 +294,7 @@ describe("SegmentTree", () => {
             });
         });
 
-        describe("random elem", async () => {
+        describe("random elem", () => {
 
             it("should return last place", async () => {
                 (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
@@ -375,7 +373,7 @@ describe("SegmentTree", () => {
                 (await segmentTree.getRandomElem(schainPlace)).toNumber().should.be.equal(0);
             });
 
-            it("random stress simulating large schains test moving elems", async () => {
+            it("random stress simulating large schains test moving elements", async () => {
                 const schainPlace = 32; // 1/4 of node
                 await segmentTree.removeFromPlace(128, 100); // make 50 nodes
                 for(let i = 0; i < 200; i++) { // 200 times we could repeat removing

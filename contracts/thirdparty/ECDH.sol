@@ -9,8 +9,9 @@
  * @date 2016
  */
 
-pragma solidity 0.6.10;
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+pragma solidity 0.8.11;
+
+import "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
 
 
 /**
@@ -18,15 +19,14 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
  * @dev This contract performs Elliptic-curve Diffie-Hellman key exchange to
  * support the DKG process.
  */
-contract ECDH {
-    using SafeMath for uint256;
+contract ECDH is IECDH {
 
     uint256 constant private _GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
     uint256 constant private _GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
     uint256 constant private _N  = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
     uint256 constant private _A  = 0;
 
-    function publicKey(uint256 privKey) external pure returns (uint256 qx, uint256 qy) {
+    function publicKey(uint256 privKey) external pure override returns (uint256 qx, uint256 qy) {
         uint256 x;
         uint256 y;
         uint256 z;
@@ -48,6 +48,7 @@ contract ECDH {
     )
         external
         pure
+        override
         returns (uint256 qx, uint256 qy)
     {
         uint256 x;
@@ -72,6 +73,7 @@ contract ECDH {
     )
         public
         pure
+        override
         returns (uint256 x3, uint256 z3)
     {
         (x3, z3) = (addmod(mulmod(z2, x1, _N), mulmod(x2, z1, _N), _N), mulmod(z1, z2, _N));
@@ -85,9 +87,10 @@ contract ECDH {
     )
         public
         pure
+        override
         returns (uint256 x3, uint256 z3)
     {
-        (x3, z3) = (addmod(mulmod(z2, x1, _N), mulmod(_N.sub(x2), z1, _N), _N), mulmod(z1, z2, _N));
+        (x3, z3) = (addmod(mulmod(z2, x1, _N), mulmod(_N - x2, z1, _N), _N), mulmod(z1, z2, _N));
     }
 
     function jMul(
@@ -98,6 +101,7 @@ contract ECDH {
     )
         public
         pure
+        override
         returns (uint256 x3, uint256 z3)
     {
         (x3, z3) = (mulmod(x1, x2, _N), mulmod(z1, z2, _N));
@@ -111,12 +115,13 @@ contract ECDH {
     )
         public
         pure
+        override
         returns (uint256 x3, uint256 z3)
     {
         (x3, z3) = (mulmod(x1, z2, _N), mulmod(z1, x2, _N));
     }
 
-    function inverse(uint256 a) public pure returns (uint256 invA) {
+    function inverse(uint256 a) public pure override returns (uint256 invA) {
         require(a > 0 && a < _N, "Input is incorrect");
         uint256 t = 0;
         uint256 newT = 1;
@@ -124,8 +129,8 @@ contract ECDH {
         uint256 newR = a;
         uint256 q;
         while (newR != 0) {
-            q = r.div(newR);
-            (t, newT) = (newT, addmod(t, (_N.sub(mulmod(q, newT, _N))), _N));
+            q = r / newR;
+            (t, newT) = (newT, addmod(t, (_N - mulmod(q, newT, _N)), _N));
             (r, newR) = (newR, r % newR);
         }
         return t;
@@ -141,6 +146,7 @@ contract ECDH {
     )
         public
         pure
+        override
         returns (uint256 x3, uint256 y3, uint256 z3)
     {
         uint256 ln;
@@ -192,6 +198,7 @@ contract ECDH {
     )
         public
         pure
+        override
         returns (uint256 x3, uint256 y3, uint256 z3)
     {
         (x3, y3, z3) = ecAdd(
@@ -212,6 +219,7 @@ contract ECDH {
     )
         public
         pure
+        override
         returns (uint256 x3, uint256 y3, uint256 z3)
     {
         uint256 remaining = d;
@@ -237,7 +245,7 @@ contract ECDH {
                     pz
                 );
             }
-            remaining = remaining.div(2);
+            remaining = remaining / 2;
             (px, py, pz) = ecDouble(px, py, pz);
         }
 

@@ -1,25 +1,17 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import * as elliptic from "elliptic";
-import { ECDH } from "../typechain";
-import "./tools/elliptic-types";
+import { ECDH } from "../typechain-types";
+import { ec } from "elliptic";
 
-import { gasMultiplier } from "./tools/command_line";
-import { skipTime } from "./tools/time";
-
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
+const secp256k1Curve = new ec("secp256k1");
 
 import { BigNumber } from "ethers";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { deployECDH } from "./tools/deploy/ecdh";
 import { deployContractManager } from "./tools/deploy/contractManager";
-import { solidity } from "ethereum-waffle";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 const n = BigNumber.from("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F");
 const gx = BigNumber.from("0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798");
@@ -27,15 +19,9 @@ const gy = BigNumber.from("0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C4
 const n2 = BigNumber.from("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141");
 
 describe("ECDH", () => {
-    let owner: SignerWithAddress;
-    let validator: SignerWithAddress;
-    let developer: SignerWithAddress;
-    let hacker: SignerWithAddress;
-
     let ecdh: ECDH;
 
-    beforeEach(async () => {
-        [owner, validator, developer, hacker] = await ethers.getSigners();
+    fastBeforeEach(async () => {
 
         const contractManager = await deployContractManager();
 
@@ -202,7 +188,7 @@ describe("ECDH", () => {
 
     it("Inverse of 0", async () => {
         const d = 0;
-        const result = await ecdh.inverse(d).should.be.eventually.rejectedWith("Input is incorrect");
+        await ecdh.inverse(d).should.be.eventually.rejectedWith("Input is incorrect");
     });
 
     it("Inverse of 1", async () => {
@@ -340,12 +326,11 @@ describe("ECDH", () => {
     });
 
     it("Should create a valid public key", async () => {
-        const key = ec.genKeyPair();
+        const key = secp256k1Curve.genKeyPair();
         const priv = key.getPrivate();
         const d = BigNumber.from("0x" + priv.toString(16));
-        const pub = key.getPublic();
-        const pubX = BigNumber.from("0x" + key.getPublic().x.toString(16));
-        const pubY = BigNumber.from("0x" + key.getPublic().y.toString(16));
+        const pubX = BigNumber.from("0x" + key.getPublic().getX().toString(16));
+        const pubY = BigNumber.from("0x" + key.getPublic().getY().toString(16));
         const result = await ecdh.publicKey(d);
         const pubXCalc = result[0];
         const pubYCalc = result[1];
@@ -354,14 +339,14 @@ describe("ECDH", () => {
     });
 
     it("Key derived in both directions should be the same", async () => {
-        const key1 = ec.genKeyPair();
-        const key2 = ec.genKeyPair();
+        const key1 = secp256k1Curve.genKeyPair();
+        const key2 = secp256k1Curve.genKeyPair();
         const d1 = BigNumber.from("0x" + key1.getPrivate().toString(16));
         const d2 = BigNumber.from("0x" + key2.getPrivate().toString(16));
-        const pub1X = BigNumber.from("0x" + key1.getPublic().x.toString(16));
-        const pub1Y = BigNumber.from("0x" + key1.getPublic().y.toString(16));
-        const pub2X = BigNumber.from("0x" + key2.getPublic().x.toString(16));
-        const pub2Y = BigNumber.from("0x" + key2.getPublic().y.toString(16));
+        const pub1X = BigNumber.from("0x" + key1.getPublic().getX().toString(16));
+        const pub1Y = BigNumber.from("0x" + key1.getPublic().getY().toString(16));
+        const pub2X = BigNumber.from("0x" + key2.getPublic().getX().toString(16));
+        const pub2Y = BigNumber.from("0x" + key2.getPublic().getY().toString(16));
         const result = await ecdh.deriveKey(d1, pub2X, pub2Y);
         const k12x = result[0];
         const k12y = result[1];
@@ -377,28 +362,22 @@ describe("ECDH", () => {
 
     it("Should follow associative property", async () => {
 
-        const key1 = ec.genKeyPair();
-        const key2 = ec.genKeyPair();
+        const key1 = secp256k1Curve.genKeyPair();
+        const key2 = secp256k1Curve.genKeyPair();
         const d1 = BigNumber.from("0x" + key1.getPrivate().toString(16));
         const d2 = BigNumber.from("0x" + key2.getPrivate().toString(16));
-        let pub1X;
-        let pub1Y;
-        let pub2X;
-        let pub2Y;
-        let pub12X;
-        let pub12Y;
         let add12X;
         let add12Y;
         const result = await ecdh.publicKey(d1);
-        pub1X = result.qx;
-        pub1Y = result.qy;
+        const pub1X = result.qx;
+        const pub1Y = result.qy;
         const result1 = await ecdh.publicKey(d2);
-        pub2X = result1.qx;
-        pub2Y = result1.qy;
+        const pub2X = result1.qx;
+        const pub2Y = result1.qy;
         const d12 = (d1.add(d2)).mod(n2);
         const result2 = await ecdh.publicKey(d12);
-        pub12X = result2.qx;
-        pub12Y = result2.qy;
+        const pub12X = result2.qx;
+        const pub12Y = result2.qy;
         const result3 = await ecdh.ecAdd(pub1X, pub1Y, 1, pub2X, pub2Y, 1);
         add12X = result3.x3;
         add12Y = result3.y3;

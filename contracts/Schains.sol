@@ -19,20 +19,19 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.11;
 
 import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
+import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
 import "./Permissions.sol";
-import "./SchainsInternal.sol";
 import "./ConstantsHolder.sol";
-import "./KeyStorage.sol";
-import "./SkaleVerifier.sol";
 import "./utils/FieldOperations.sol";
-import "./NodeRotation.sol";
-import "./interfaces/ISkaleDKG.sol";
-import "./Wallets.sol";
 
 
 /**
@@ -41,68 +40,29 @@ import "./Wallets.sol";
  * deletion, and rotation.
  */
 contract Schains is Permissions, ISchains {
+    using AddressUpgradeable for address;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.Bytes32Set;
 
     struct SchainParameters {
         uint lifetime;
         uint8 typeOfSchain;
         uint16 nonce;
         string name;
+        address originator;
+        SchainOption[] options;
     }
+
+    //    schainHash => Set of options hashes
+    mapping (bytes32 => EnumerableSetUpgradeable.Bytes32Set) private _optionsIndex;
+    //    schainHash => optionHash => schain option
+    mapping (bytes32 => mapping (bytes32 => SchainOption)) private _options;
 
     bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
-    /**
-     * @dev Emitted when an schain is created.
-     */
-    event SchainCreated(
-        string name,
-        address owner,
-        uint partOfNode,
-        uint lifetime,
-        uint numberOfNodes,
-        uint deposit,
-        uint16 nonce,
-        bytes32 schainHash,
-        uint time,
-        uint gasSpend
-    );
-
-    /**
-     * @dev Emitted when an schain is deleted.
-     */
-    event SchainDeleted(
-        address owner,
-        string name,
-        bytes32 indexed schainHash
-    );
-
-    /**
-     * @dev Emitted when a node in an schain is rotated.
-     */
-    event NodeRotated(
-        bytes32 schainHash,
-        uint oldNode,
-        uint newNode
-    );
-
-    /**
-     * @dev Emitted when a node is added to an schain.
-     */
-    event NodeAdded(
-        bytes32 schainHash,
-        uint newNode
-    );
-
-    /**
-     * @dev Emitted when a group of nodes is created for an schain.
-     */
-    event SchainNodes(
-        string name,
-        bytes32 schainHash,
-        uint[] nodesInGroup,
-        uint time,
-        uint gasSpend
-    );
+    modifier schainExists(ISchainsInternal schainsInternal, bytes32 schainHash) {
+        require(schainsInternal.isSchainExist(schainHash), "The schain does not exist");
+        _;
+    }
 
     /**
      * @dev Allows SkaleManager contract to create an Schain.
@@ -113,13 +73,14 @@ contract Schains is Permissions, ISchains {
      * 
      * - Schain type is valid.
      * - There is sufficient deposit to create type of schain.
+     * - If from is a smart contract originator must be specified
      */
-    function addSchain(address from, uint deposit, bytes calldata data) external allow("SkaleManager") {
-        SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
+    function addSchain(address from, uint deposit, bytes calldata data) external override allow("SkaleManager") {
+        SchainParameters memory schainParameters = abi.decode(data, (SchainParameters));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
         uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
-        require(now >= schainCreationTimeStamp, "It is not a time for creating Schain");
+        require(block.timestamp >= schainCreationTimeStamp, "It is not a time for creating Schain");
         require(
             schainParameters.lifetime >= minSchainLifetime,
             "Minimal schain lifetime should be satisfied"
@@ -127,7 +88,6 @@ contract Schains is Permissions, ISchains {
         require(
             getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit,
             "Not enough money to create Schain");
-
         _addSchain(from, deposit, schainParameters);
     }
 
@@ -140,16 +100,20 @@ contract Schains is Permissions, ISchains {
      * 
      * - sender is granted with SCHAIN_CREATOR_ROLE
      * - Schain type is valid.
+     * - If schain owner is a smart contract schain originator must be specified
      */
     function addSchainByFoundation(
         uint lifetime,
         uint8 typeOfSchain,
         uint16 nonce,
         string calldata name,
-        address schainOwner
+        address schainOwner,
+        address schainOriginator,
+        SchainOption[] calldata options
     )
         external
         payable
+        override
     {
         require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schain");
 
@@ -157,7 +121,9 @@ contract Schains is Permissions, ISchains {
             lifetime: lifetime,
             typeOfSchain: typeOfSchain,
             nonce: nonce,
-            name: name
+            name: name,
+            originator: schainOriginator,
+            options: options
         });
 
         address _schainOwner;
@@ -169,7 +135,7 @@ contract Schains is Permissions, ISchains {
 
         _addSchain(_schainOwner, 0, schainParameters);
         bytes32 schainHash = keccak256(abi.encodePacked(name));
-        Wallets(payable(contractManager.getContract("Wallets"))).rechargeSchainWallet{value: msg.value}(schainHash);
+        IWallets(payable(contractManager.getContract("Wallets"))).rechargeSchainWallet{value: msg.value}(schainHash);
     }
 
     /**
@@ -182,8 +148,8 @@ contract Schains is Permissions, ISchains {
      * 
      * - Executed by schain owner.
      */
-    function deleteSchain(address from, string calldata name) external allow("SkaleManager") {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+    function deleteSchain(address from, string calldata name) external override allow("SkaleManager") {
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         require(
             schainsInternal.isOwnerAddress(from, schainHash),
@@ -203,8 +169,8 @@ contract Schains is Permissions, ISchains {
      * 
      * - Schain exists.
      */
-    function deleteSchainByRoot(string calldata name) external allow("SkaleManager") {
-        _deleteSchain(name, SchainsInternal(contractManager.getContract("SchainsInternal")));
+    function deleteSchainByRoot(string calldata name) external override allow("SkaleManager") {
+        _deleteSchain(name, ISchainsInternal(contractManager.getContract("SchainsInternal")));
     }
 
     /**
@@ -219,12 +185,12 @@ contract Schains is Permissions, ISchains {
      * - DKG failure got stuck because there were no free nodes to rotate in.
      * - A free node must be released in the network.
      */
-    function restartSchainCreation(string calldata name) external allow("SkaleManager") {
-        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
+    function restartSchainCreation(string calldata name) external override allow("SkaleManager") {
+        INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         require(!skaleDKG.isLastDKGSuccessful(schainHash), "DKG success");
-        SchainsInternal schainsInternal = SchainsInternal(
+        ISchainsInternal schainsInternal = ISchainsInternal(
             contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainHash), "No free Nodes for new group formation");
         uint newNodeIndex = nodeRotation.selectNodeToGroup(schainHash);
@@ -232,15 +198,6 @@ contract Schains is Permissions, ISchains {
         emit NodeAdded(schainHash, newNodeIndex);
     }
 
-    /**
-     * @dev addSpace - return occupied space to Node
-     * nodeIndex - index of Node at common array of Nodes
-     * partOfNode - divisor of given type of Schain
-     */
-    function addSpace(uint nodeIndex, uint8 partOfNode) external allowTwo("Schains", "NodeRotation") {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        nodes.addSpaceToNode(nodeIndex, partOfNode);
-    }
 
     /**
      * @dev Checks whether schain group signature is valid.
@@ -259,14 +216,27 @@ contract Schains is Permissions, ISchains {
         override
         returns (bool)
     {
-        SkaleVerifier skaleVerifier = SkaleVerifier(contractManager.getContract("SkaleVerifier"));
-        G2Operations.G2Point memory publicKey = KeyStorage(
-            contractManager.getContract("KeyStorage")
-        ).getCommonPublicKey(
-            keccak256(abi.encodePacked(schainName))
-        );
+        ISkaleVerifier skaleVerifier = ISkaleVerifier(contractManager.getContract("SkaleVerifier"));
+        ISkaleDKG.G2Point memory publicKey = G2Operations.getG2Zero();
+        bytes32 schainHash = keccak256(abi.encodePacked(schainName));
+        if (
+            INodeRotation(contractManager.getContract("NodeRotation")).isRotationInProgress(schainHash) &&
+            ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash)
+        ) {
+            publicKey = IKeyStorage(
+                contractManager.getContract("KeyStorage")
+            ).getPreviousPublicKey(
+                schainHash
+            );
+        } else {
+            publicKey = IKeyStorage(
+                contractManager.getContract("KeyStorage")
+            ).getCommonPublicKey(
+                schainHash
+            );
+        }
         return skaleVerifier.verify(
-            Fp2Operations.Fp2Point({
+            ISkaleDKG.Fp2Point({
                 a: signatureA,
                 b: signatureB
             }),
@@ -276,6 +246,21 @@ contract Schains is Permissions, ISchains {
         );
     }
 
+    function getOption(bytes32 schainHash, string calldata optionName) external view override returns (bytes memory) {
+        bytes32 optionHash = keccak256(abi.encodePacked(optionName));
+        ISchainsInternal schainsInternal = ISchainsInternal(
+            contractManager.getContract("SchainsInternal"));
+        return _getOption(schainHash, optionHash, schainsInternal);
+    }
+
+    function getOptions(bytes32 schainHash) external view override returns (SchainOption[] memory) {
+        SchainOption[] memory options = new SchainOption[](_optionsIndex[schainHash].length());
+        for (uint i = 0; i < options.length; ++i) {
+            options[i] = _options[schainHash][_optionsIndex[schainHash].at(i)];
+        }
+        return options;
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
     }
@@ -283,9 +268,9 @@ contract Schains is Permissions, ISchains {
     /**
      * @dev Returns the current price in SKL tokens for given Schain type and lifetime.
      */
-    function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
+    function getSchainPrice(uint typeOfSchain, uint lifetime) public view override returns (uint) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         uint nodeDeposit = constantsHolder.NODE_DEPOSIT();
         uint numberOfNodes;
         uint8 divisor;
@@ -293,13 +278,13 @@ contract Schains is Permissions, ISchains {
         if (divisor == 0) {
             return 1e18;
         } else {
-            uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
+            uint up = nodeDeposit * numberOfNodes * lifetime * 2;
             uint down = uint(
                 uint(constantsHolder.SMALL_DIVISOR())
-                    .mul(uint(constantsHolder.SECONDS_TO_YEAR()))
-                    .div(divisor)
+                * uint(constantsHolder.SECONDS_TO_YEAR())
+                / divisor
             );
-            return up.div(down);
+            return up / down;
         }
     }
 
@@ -314,32 +299,23 @@ contract Schains is Permissions, ISchains {
     function _initializeSchainInSchainsInternal(
         string memory name,
         address from,
+        address originator,
         uint deposit,
         uint lifetime,
-        SchainsInternal schainsInternal
+        ISchainsInternal schainsInternal,
+        SchainOption[] memory options
     )
         private
     {
         require(schainsInternal.isSchainNameAvailable(name), "Schain name is not available");
 
-        // initialize Schain
-        schainsInternal.initializeSchain(name, from, lifetime, deposit);
-        schainsInternal.setSchainIndex(keccak256(abi.encodePacked(name)), from);
-    }
+        bytes32 schainHash = keccak256(abi.encodePacked(name));
+        for (uint i = 0; i < options.length; ++i) {
+            _setOption(schainHash, options[i]);
+        }
 
-    /**
-     * @dev Converts data from bytes to normal schain parameters of lifetime,
-     * type, nonce, and name.
-     */
-    function _fallbackSchainParametersDataConverter(bytes memory data)
-        private
-        pure
-        returns (SchainParameters memory schainParameters)
-    {
-        (schainParameters.lifetime,
-        schainParameters.typeOfSchain,
-        schainParameters.nonce,
-        schainParameters.name) = abi.decode(data, (uint, uint8, uint16, string));
+        // initialize Schain
+        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit);
     }
 
     /**
@@ -352,7 +328,7 @@ contract Schains is Permissions, ISchains {
         bytes32 schainHash,
         uint numberOfNodes,
         uint8 partOfNode,
-        SchainsInternal schainsInternal
+        ISchainsInternal schainsInternal
     )
         private
     {
@@ -362,9 +338,7 @@ contract Schains is Permissions, ISchains {
         emit SchainNodes(
             schainName,
             schainHash,
-            nodesInGroup,
-            block.timestamp,
-            gasleft());
+            nodesInGroup);
     }
 
     /**
@@ -377,15 +351,24 @@ contract Schains is Permissions, ISchains {
      * - Schain type must be valid.
      */
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
+
+        require(!schainParameters.originator.isContract(), "Originator address must be not a contract");
+        if (from.isContract()) {
+            require(schainParameters.originator != address(0), "Originator address is not provided");
+        } else {
+            schainParameters.originator = address(0);
+        }
 
         //initialize Schain
         _initializeSchainInSchainsInternal(
             schainParameters.name,
             from,
+            schainParameters.originator,
             deposit,
             schainParameters.lifetime,
-            schainsInternal
+            schainsInternal,
+            schainParameters.options
         );
 
         // create a group for Schain
@@ -409,42 +392,77 @@ contract Schains is Permissions, ISchains {
             numberOfNodes,
             deposit,
             schainParameters.nonce,
-            keccak256(abi.encodePacked(schainParameters.name)),
-            block.timestamp,
-            gasleft());
+            keccak256(abi.encodePacked(schainParameters.name)));
     }
 
-    function _deleteSchain(string calldata name, SchainsInternal schainsInternal) private {
-        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
+    function _deleteSchain(string calldata name, ISchainsInternal schainsInternal) private {
+        INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
 
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         require(schainsInternal.isSchainExist(schainHash), "Schain does not exist");
 
+        _deleteOptions(schainHash, schainsInternal);
+
         uint[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
-        uint8 partOfNode = schainsInternal.getSchainsPartOfNode(schainHash);
         for (uint i = 0; i < nodesInGroup.length; i++) {
-            uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
-                nodesInGroup[i],
-                schainHash
-            );
             if (schainsInternal.checkHoleForSchain(schainHash, i)) {
                 continue;
             }
             require(
-                schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
-                "Some Node does not contain given Schain");
+                schainsInternal.checkSchainOnNode(nodesInGroup[i], schainHash),
+                "Some Node does not contain given Schain"
+            );
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainHash);
             schainsInternal.removeNodeFromExceptions(schainHash, nodesInGroup[i]);
-            this.addSpace(nodesInGroup[i], partOfNode);
         }
+        schainsInternal.removeAllNodesFromSchainExceptions(schainHash);
         schainsInternal.deleteGroup(schainHash);
         address from = schainsInternal.getSchainOwner(schainHash);
-        schainsInternal.removeSchain(schainHash, from);
         schainsInternal.removeHolesForSchain(schainHash);
         nodeRotation.removeRotation(schainHash);
-        Wallets(
+        schainsInternal.removeSchain(schainHash, from);
+        IWallets(
             payable(contractManager.getContract("Wallets"))
         ).withdrawFundsFromSchainWallet(payable(from), schainHash);
         emit SchainDeleted(from, name, schainHash);
+    }
+
+    function _setOption(
+        bytes32 schainHash,
+        SchainOption memory option
+    )
+        private
+    {
+        bytes32 optionHash = keccak256(abi.encodePacked(option.name));
+        _options[schainHash][optionHash] = option;
+        require(_optionsIndex[schainHash].add(optionHash), "The option has been set already");
+    }
+
+    function _deleteOptions(
+        bytes32 schainHash,
+        ISchainsInternal schainsInternal
+    )
+        private
+        schainExists(schainsInternal, schainHash)
+    {
+        while (_optionsIndex[schainHash].length() > 0) {
+            bytes32 optionHash = _optionsIndex[schainHash].at(0);
+            delete _options[schainHash][optionHash];
+            require(_optionsIndex[schainHash].remove(optionHash), "Removing error");
+        }
+    }
+
+    function _getOption(
+        bytes32 schainHash,
+        bytes32 optionHash,
+        ISchainsInternal schainsInternal
+    )
+        private
+        view
+        schainExists(schainsInternal, schainHash)
+        returns (bytes memory)
+    {
+        require(_optionsIndex[schainHash].contains(optionHash), "Option is not set");
+        return _options[schainHash][optionHash].value;
     }
 }

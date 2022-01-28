@@ -19,22 +19,28 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract SafeMock is OwnableUpgradeSafe {
-    constructor() public {
-        OwnableUpgradeSafe.__Ownable_init();
+interface ISafeMock {
+    function transferProxyAdminOwnership(OwnableUpgradeable proxyAdmin, address newOwner) external;
+    function destroy() external;
+    function multiSend(bytes memory transactions) external;
+}
+
+contract SafeMock is OwnableUpgradeable, ISafeMock {
+    constructor() initializer {
+        OwnableUpgradeable.__Ownable_init();
         multiSend(""); // this is needed to remove slither warning
     }
 
-    function transferProxyAdminOwnership(OwnableUpgradeSafe proxyAdmin, address newOwner) external onlyOwner {
+    function transferProxyAdminOwnership(OwnableUpgradeable proxyAdmin, address newOwner) external override onlyOwner {
         proxyAdmin.transferOwnership(newOwner);
     }
 
-    function destroy() external onlyOwner {
-        selfdestruct(msg.sender);
+    function destroy() external override onlyOwner {
+        selfdestruct(payable(msg.sender));
     }
 
     /// @dev Sends multiple transactions and reverts all if one fails.
@@ -47,6 +53,7 @@ contract SafeMock is OwnableUpgradeSafe {
     ///                     see abi.encodePacked for more information on packed encoding
     function multiSend(bytes memory transactions)
         public
+        override
     {
         // solhint-disable-next-line no-inline-assembly
         assembly {

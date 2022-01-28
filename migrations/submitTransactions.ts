@@ -20,7 +20,7 @@ async function main() {
     if (!privateKey.startsWith("0x")) {
         privateKey = "0x" + privateKey;
     }
-    const safeTransactions: string[] = JSON.parse(await fs.readFile(process.env.TRANSACTIONS, "utf-8"));
+    const safeTransactions = JSON.parse(await fs.readFile(process.env.TRANSACTIONS, "utf-8")) as string[];
 
     const safeTx = await createMultiSendTransaction(ethers, safe, privateKey, safeTransactions);
     const chainId = (await ethers.provider.getNetwork()).chainId;

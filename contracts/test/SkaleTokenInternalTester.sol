@@ -19,19 +19,23 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.11;
 
 import "../SkaleToken.sol";
 
+interface ISkaleTokenInterfaceTester {
+    function getMsgData() external view returns (bytes memory);
+}
 
-contract SkaleTokenInternalTester is SkaleToken {
 
-    constructor(address contractManagerAddress, address[] memory defOps) public
+contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
+
+    constructor(address contractManagerAddress, address[] memory defOps)
     SkaleToken(contractManagerAddress, defOps)
     // solhint-disable-next-line no-empty-blocks
     { }
 
-    function getMsgData() external view returns (bytes memory) {
+    function getMsgData() external view override returns (bytes memory) {
         return _msgData();
     }
 }

@@ -1,11 +1,9 @@
 import { ContractManager,
     DelegationController,
     SkaleToken,
-    ValidatorService} from "../../typechain";
+    ValidatorService} from "../../typechain-types";
 
-import { skipTime } from "../tools/time";
 
-import { BigNumber } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
@@ -14,35 +12,14 @@ import { deployValidatorService } from "../tools/deploy/delegation/validatorServ
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { deploySkaleManager } from "../tools/deploy/skaleManager";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
-import { solidity } from "ethereum-waffle";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+import { getValidatorIdSignature } from "../tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
-    } else {
-        return "";
-    }
-}
-
 
 describe("ValidatorService", () => {
     let owner: SignerWithAddress;
@@ -110,7 +87,7 @@ describe("ValidatorService", () => {
         await validatorService.connect(owner).disableWhitelist();
     });
 
-    describe("when validator registered", async () => {
+    describe("when validator registered", () => {
         let cleanContracts: number;
         before(async () => {
             cleanContracts = await makeSnapshot();
@@ -222,7 +199,7 @@ describe("ValidatorService", () => {
                 .should.be.eventually.rejectedWith("Address already registered");
         });
 
-        describe("when validator requests for a new address", async () => {
+        describe("when validator requests for a new address", () => {
             let validatorLinkedNode: number;
             before(async () => {
                 validatorLinkedNode = await makeSnapshot();
@@ -267,7 +244,7 @@ describe("ValidatorService", () => {
         it("should allow only VALIDATOR_MANAGER_ROLE to enable validator", async () => {
             await validatorService.connect(holder).enableValidator(1)
                 .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
-            const skaleManager = await deploySkaleManager(contractManager);
+            await deploySkaleManager(contractManager);
             const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
             await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, holder.address);
             await validatorService.connect(holder).enableValidator(1);
@@ -277,7 +254,7 @@ describe("ValidatorService", () => {
             await validatorService.enableValidator(1);
             await validatorService.connect(holder).disableValidator(1)
                 .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
-            const skaleManager = await deploySkaleManager(contractManager);
+            await deploySkaleManager(contractManager);
             const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
             await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, holder.address);
             await validatorService.connect(holder).disableValidator(1);
@@ -310,12 +287,11 @@ describe("ValidatorService", () => {
             assert.deepEqual(whitelist, trustedList);
         });
 
-        describe("when holder has enough tokens", async () => {
+        describe("when holder has enough tokens", () => {
             let validatorId: number;
             let amount: number;
             let delegationPeriod: number;
             let info: string;
-            const month = 60 * 60 * 24 * 31;
             let validatorLinkedNode: number;
             before(async () => {
                 validatorLinkedNode = await makeSnapshot();

@@ -19,28 +19,32 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
 
-import "../interfaces/IMintableToken.sol";
 import "../Permissions.sol";
 
+interface ISkaleManagerMock {
+    function payBounty(uint validatorId, uint amount) external;
+}
 
-contract SkaleManagerMock is Permissions, IERC777Recipient {
+
+contract SkaleManagerMock is Permissions, IERC777Recipient, ISkaleManagerMock {
 
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    constructor (address contractManagerAddress) public {
+    constructor (address contractManagerAddress) {
         Permissions.initialize(contractManagerAddress);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function payBounty(uint validatorId, uint amount) external {
+    function payBounty(uint validatorId, uint amount) external override {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         require(IMintableToken(address(skaleToken)).mint(address(this), amount, "", ""), "Token was not minted");
         require(

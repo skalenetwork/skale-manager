@@ -1,13 +1,10 @@
-import { ContractManager, Decryption } from "../../../typechain";
+import { ContractManager, Decryption } from "../../../typechain-types";
 import { deployFunctionFactory, deployWithConstructor } from "./factory";
 
-const deployDecryption: (contractManager: ContractManager) => Promise<Decryption>
-    = deployFunctionFactory("Decryption",
-                            async (_: ContractManager) => {
-                                return undefined;
-                            },
-                            async (_: ContractManager) => {
-                                return await deployWithConstructor("Decryption");
-                            });
-
-export { deployDecryption };
+export const deployDecryption = deployFunctionFactory(
+    "Decryption",
+    () => Promise.resolve(undefined),
+    async () => {
+        return await deployWithConstructor("Decryption");
+    }
+) as (contractManager: ContractManager) => Promise<Decryption>;

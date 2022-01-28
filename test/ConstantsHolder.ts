@@ -1,19 +1,15 @@
-import { BigNumber } from "ethers";
 import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
-         ContractManager } from "../typechain";
-import { skipTime } from "./tools/time";
+         ContractManager } from "../typechain-types";
 
 import chai = require("chai");
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { solidity } from "ethereum-waffle";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
 describe("ConstantsHolder", () => {
   let owner: SignerWithAddress;
@@ -90,11 +86,11 @@ describe("ConstantsHolder", () => {
   });
 
   it("should Set latency", async () => {
-    const miliSec = 100;
-    await constantsHolder.connect(user).setLatency(miliSec)
+    const latency = 100;
+    await constantsHolder.connect(user).setLatency(latency)
       .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
-    await constantsHolder.setLatency(miliSec);
-    (await constantsHolder.allowableLatency()).should.be.equal(miliSec);
+    await constantsHolder.setLatency(latency);
+    (await constantsHolder.allowableLatency()).should.be.equal(latency);
   });
 
   it("should Set checkTime", async () => {
@@ -182,12 +178,12 @@ describe("ConstantsHolder", () => {
     (await constantsHolder.minimalSchainLifetime()).should.be.equal(lifetime);
   });
 
-  it("should set complaint timelimit", async () => {
-    const timelimit = 3600;
-    await constantsHolder.connect(user).setComplaintTimelimit(timelimit)
+  it("should set complaint timeLimit", async () => {
+    const timeLimit = 3600;
+    await constantsHolder.connect(user).setComplaintTimeLimit(timeLimit)
       .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
-    await constantsHolder.setComplaintTimelimit(timelimit);
-    (await constantsHolder.complaintTimelimit()).should.be.equal(timelimit);
+    await constantsHolder.setComplaintTimeLimit(timeLimit);
+    (await constantsHolder.complaintTimeLimit()).should.be.equal(timeLimit);
   });
 
 });

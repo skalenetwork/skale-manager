@@ -1,3 +1,3 @@
 module.exports = {
-    skipFiles: ['Migrations.sol', 'thirdparty/', 'interfaces/', 'test/', 'ERC777/']
+    skipFiles: ['thirdparty/', 'interfaces/', 'test/']
 };

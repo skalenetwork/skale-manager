@@ -1,4 +1,4 @@
-enum State {
+export enum State {
     PROPOSED,
     ACCEPTED,
     CANCELED,
@@ -8,7 +8,7 @@ enum State {
     COMPLETED,
 }
 
-enum SchainType {
+export enum SchainType {
     SMALL = 1,
     MEDIUM,
     LARGE,
@@ -16,4 +16,4 @@ enum SchainType {
     MEDIUM_TEST
 }
 
-export { State, SchainType };
+export const schainParametersType = "tuple(uint lifetime, uint8 typeOfSchain, uint16 nonce, string name, address originator, tuple(string name, bytes value)[] options)"

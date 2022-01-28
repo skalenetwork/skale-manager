@@ -17,7 +17,7 @@ export function encodeTransaction(operation: 0 | 1, to: string, value: BigNumber
     } else if (operation === 1) {
         _operation = "01";
     } else {
-        throw Error(`Operation ${operation} is not a correct value`);
+        throw Error(`Operation has an incorrect value`);
     }
 
     let _to = to;

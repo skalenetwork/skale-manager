@@ -20,37 +20,31 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
 
 /**
  * @title Random
  * @dev The library for generating of pseudo random numbers
  */
 library Random {
-    using SafeMath for uint;
-
-    struct RandomGenerator {
-        uint seed;
-    }
 
     /**
      * @dev Create an instance of RandomGenerator
      */
-    function create(uint seed) internal pure returns (RandomGenerator memory) {
-        return RandomGenerator({seed: seed});
+    function create(uint seed) internal pure returns (IRandom.RandomGenerator memory) {
+        return IRandom.RandomGenerator({seed: seed});
     }
 
-    function createFromEntropy(bytes memory entropy) internal pure returns (RandomGenerator memory) {
+    function createFromEntropy(bytes memory entropy) internal pure returns (IRandom.RandomGenerator memory) {
         return create(uint(keccak256(entropy)));
     }
 
     /**
      * @dev Generates random value
      */
-    function random(RandomGenerator memory self) internal pure returns (uint) {
+    function random(IRandom.RandomGenerator memory self) internal pure returns (uint) {
         self.seed = uint(sha256(abi.encodePacked(self.seed)));
         return self.seed;
     }
@@ -58,25 +52,17 @@ library Random {
     /**
      * @dev Generates random value in range [0, max)
      */
-    function random(RandomGenerator memory self, uint max) internal pure returns (uint) {
+    function random(IRandom.RandomGenerator memory self, uint max) internal pure returns (uint) {
         assert(max > 0);
-        uint maxRand = uint(-1).sub(uint(-1).mod(max));
-        if (uint(-1).sub(maxRand) == max.sub(1)) {
-            return random(self).mod(max);
+        uint maxRand = type(uint).max - type(uint).max % max;
+        if (type(uint).max - maxRand == max - 1) {
+            return random(self) % max;
         } else {
             uint rand = random(self);
             while (rand >= maxRand) {
                 rand = random(self);
             }
-            return rand.mod(max);
+            return rand % max;
         }
-    }
-
-    /**
-     * @dev Generates random value in range [min, max)
-     */
-    function random(RandomGenerator memory self, uint min, uint max) internal pure returns (uint) {
-        assert(min < max);
-        return min.add(random(self, max.sub(min)));
     }
 }

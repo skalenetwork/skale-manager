@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers";
+import { Wallet } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
@@ -7,13 +7,9 @@ import { ContractManager,
          Pricing,
          SchainsInternal,
          ValidatorService,
-         Schains,
          ConstantsHolder,
-         NodeRotation } from "../typechain";
+         NodeRotation } from "../typechain-types";
 
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -26,65 +22,41 @@ import { deploySchains } from "./tools/deploy/schains";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers, web3 } from "hardhat";
-import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
+import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
-
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
-    const hash = web3.utils.soliditySha3(validatorId.toString());
-    if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
-    } else {
-        return "";
-    }
-}
-
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
-    }
-}
 
 describe("Pricing", () => {
     let owner: SignerWithAddress;
     let holder: SignerWithAddress;
     let validator: SignerWithAddress;
-    let nodeAddress: SignerWithAddress;
+    let nodeAddress: Wallet;
 
     let contractManager: ContractManager;
     let pricing: Pricing;
     let schainsInternal: SchainsInternal;
-    let schains: Schains;
     let nodes: Nodes;
     let validatorService: ValidatorService;
     let constants: ConstantsHolder;
     let nodeRotation: NodeRotation;
 
-    beforeEach(async () => {
-        [owner, holder, validator, nodeAddress] = await ethers.getSigners();
+    fastBeforeEach(async () => {
+        [owner, holder, validator] = await ethers.getSigners();
+
+        nodeAddress = new Wallet(String(privateKeys[3])).connect(ethers.provider);
+
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
         nodes = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
-        schains = await deploySchains(contractManager);
+        await deploySchains(contractManager);
         pricing = await deployPricing(contractManager);
         validatorService = await deployValidatorService(contractManager);
         constants = await deployConstantsHolder(contractManager);
@@ -97,14 +69,15 @@ describe("Pricing", () => {
         const validatorIndex = await validatorService.getValidatorId(validator.address);
         const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
     });
 
-    describe("on initialized contracts", async () => {
-        beforeEach(async () => {
-            await schainsInternal.initializeSchain("BobSchain", holder.address, 10, 2);
-            await schainsInternal.initializeSchain("DavidSchain", holder.address, 10, 4);
-            await schainsInternal.initializeSchain("JacobSchain", holder.address, 10, 8);
-            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+    describe("on initialized contracts", () => {
+        fastBeforeEach(async () => {
+            await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.constants.AddressZero, 10, 2);
+            await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.constants.AddressZero, 10, 4);
+            await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.constants.AddressZero, 10, 8);
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -112,9 +85,9 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis1",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             await nodes.createNode(
@@ -124,9 +97,9 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             await nodes.createNode(
@@ -136,9 +109,9 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000005",
                     publicIp: "0x7f000005",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis3",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             await nodes.createNode(
@@ -148,9 +121,9 @@ describe("Pricing", () => {
                     nonce: 0,
                     ip: "0x7f000007",
                     publicIp: "0x7f000007",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                    publicKey: getPublicKey(nodeAddress),
                     name: "elvis4",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
         });
@@ -165,17 +138,12 @@ describe("Pricing", () => {
             numberOfNodes.should.be.equal(4);
         });
 
-        describe("on existing nodes and schains", async () => {
-            const bobSchainHash = stringValue(web3.utils.soliditySha3("BobSchain"));
-            const davidSchainHash = stringValue(web3.utils.soliditySha3("DavidSchain"));
-            const jacobSchainHash = stringValue(web3.utils.soliditySha3("JacobSchain"));
+        describe("on existing nodes and schains", () => {
+            const bobSchainHash = stringKeccak256("BobSchain");
+            const davidSchainHash = stringKeccak256("DavidSchain");
+            const jacobSchainHash = stringKeccak256("JacobSchain");
 
-            const johnNodeHash = stringValue(web3.utils.soliditySha3("John"));
-            const michaelNodeHash = stringValue(web3.utils.soliditySha3("Michael"));
-            const danielNodeHash = stringValue(web3.utils.soliditySha3("Daniel"));
-            const stevenNodeHash = stringValue(web3.utils.soliditySha3("Steven"));
-
-            beforeEach(async () => {
+            fastBeforeEach(async () => {
 
                 await schainsInternal.createGroupForSchain(bobSchainHash, 1, 32);
                 await schainsInternal.createGroupForSchain(davidSchainHash, 1, 32);
@@ -188,8 +156,8 @@ describe("Pricing", () => {
                 let sumNode = 0;
                 for (let i = 0; i < numberOfNodes; i++) {
                     if (await nodes.isNodeActive(i)) {
-                        const getSchainHashsForNode = await schainsInternal.getSchainHashsForNode(i);
-                        for (const schain of getSchainHashsForNode) {
+                        const getSchainHashesForNode = await schainsInternal.getSchainHashesForNode(i);
+                        for (const schain of getSchainHashesForNode) {
                             const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                             const isNodeLeft = await nodes.isNodeLeft(i);
                             if (partOfNode !== 0  && !isNodeLeft) {
@@ -215,7 +183,7 @@ describe("Pricing", () => {
 
             it("should not change price when no any new nodes have been added", async () => {
                 await pricing.initNodes();
-                await skipTime(ethers, 61);
+                await skipTime(61);
                 await pricing.adjustPrice()
                     .should.be.eventually.rejectedWith("No changes to node supply");
             });
@@ -226,11 +194,11 @@ describe("Pricing", () => {
                     .should.be.eventually.rejectedWith("It's not a time to update a price");
             });
 
-            describe("change price when changing the number of nodes", async () => {
+            describe("change price when changing the number of nodes", () => {
                 let oldPrice: number;
                 let lastUpdated: number;
 
-                beforeEach(async () => {
+                fastBeforeEach(async () => {
                     await pricing.initNodes();
                     oldPrice = (await pricing.price()).toNumber();
                     lastUpdated = (await pricing.lastUpdated()).toNumber()
@@ -251,7 +219,6 @@ describe("Pricing", () => {
                 }
 
                 it("should change price when new active node has been added", async () => {
-                    const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress.address,
                         {
@@ -259,12 +226,12 @@ describe("Pricing", () => {
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                            publicKey: getPublicKey(nodeAddress),
                             name: "vadim",
-                            domainName: "somedomain.name"
+                            domainName: "some.domain.name"
                         });
                     const MINUTES_PASSED = 2;
-                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();
@@ -281,10 +248,10 @@ describe("Pricing", () => {
                     let numberOfSchains = 0;
                     for (let i = 0; i < (await nodes.getNumberOfNodes()).toNumber(); i++) {
                         if (await nodes.isNodeActive(i)) {
-                            const getSchainHashsForNode = await schainsInternal.getSchainHashsForNode(i);
+                            const getSchainHashesForNode = await schainsInternal.getSchainHashesForNode(i);
                             let totalPartOfNode = 0;
                             numberOfSchains = 0;
-                            for (const schain of getSchainHashsForNode) {
+                            for (const schain of getSchainHashesForNode) {
                                 const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                                 ++numberOfSchains;
                                 totalPartOfNode += partOfNode;
@@ -303,7 +270,7 @@ describe("Pricing", () => {
                     await nodes.completeExit(nodeToExit);
 
                     const MINUTES_PASSED = 2;
-                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();
@@ -315,7 +282,6 @@ describe("Pricing", () => {
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
-                    const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress.address,
                         {
@@ -323,13 +289,13 @@ describe("Pricing", () => {
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                            publicKey: getPublicKey(nodeAddress),
                             name: "vadim",
-                            domainName: "somedomain.name"
+                            domainName: "some.domain.name"
                         });
 
                     const MINUTES_PASSED = 30;
-                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();

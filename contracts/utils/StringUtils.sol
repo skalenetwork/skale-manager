@@ -19,19 +19,16 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+pragma solidity 0.8.11;
 
 
 library StringUtils {
-    using SafeMath for uint;
 
     function strConcat(string memory a, string memory b) internal pure returns (string memory) {
         bytes memory _ba = bytes(a);
         bytes memory _bb = bytes(b);
 
-        string memory ab = new string(_ba.length.add(_bb.length));
+        string memory ab = new string(_ba.length + _bb.length);
         bytes memory strBytes = bytes(ab);
         uint k = 0;
         uint i = 0;

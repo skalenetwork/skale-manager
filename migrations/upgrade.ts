@@ -1,24 +1,23 @@
-import { contracts, getContractKeyInAbiFile, getManifestFile } from "./deploy";
+import { contracts, getContractKeyInAbiFile, getManifestFile, getContractFactory } from "./deploy";
 import { ethers, network, upgrades, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, Nodes, SchainsInternal, SkaleManager, Wallets } from "../typechain";
+import { ContractManager, Permissions, SchainsInternal, SkaleManager, SyncManager } from "../typechain-types";
+import { ProxyAdmin } from "../typechain-types/ProxyAdmin";
 import { getImplementationAddress, hashBytecode } from "@openzeppelin/upgrades-core";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
-import { SafeMock } from "../typechain/SafeMock";
+import { SafeMock } from "../typechain-types/SafeMock";
 import { encodeTransaction } from "./tools/multiSend";
 import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-safe";
 import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
 import { getVersion } from "./tools/version";
-import util from 'util';
-import { exec as execSync } from 'child_process';
-const exec = util.promisify(execSync);
+import { SkaleABIFile, SkaleManifestData } from "./tools/types";
 
 export async function getContractFactoryAndUpdateManifest(contract: string) {
-    const manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8"));
+    const manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8")) as SkaleManifestData;
     const { linkReferences } = await artifacts.readArtifact(contract);
     if (!Object.keys(linkReferences).length)
         return await ethers.getContractFactory(contract);
@@ -43,16 +42,16 @@ export async function getContractFactoryAndUpdateManifest(contract: string) {
         }
     }
     const libraries = await deployLibraries(librariesToUpgrade);
-    for (const libraryName of Object.keys(libraries)) {
+    for (const [libraryName, libraryAddress] of libraries.entries()) {
         const { bytecode } = await artifacts.readArtifact(libraryName);
-        manifest.libraries[libraryName] = {"address": libraries[libraryName], "bytecodeHash": hashBytecode(bytecode)};
+        manifest.libraries[libraryName] = {"address": libraryAddress, "bytecodeHash": hashBytecode(bytecode)};
     }
     Object.assign(libraries, oldLibraries);
     await fs.writeFile(await getManifestFile(), JSON.stringify(manifest, null, 4));
     return await getLinkedContractFactory(contract, libraries);
 }
 
-type DeploymentAction = (safeTransactions: string[], abi: any, contractManager: ContractManager) => Promise<void>;
+type DeploymentAction = (safeTransactions: string[], abi: SkaleABIFile, contractManager: ContractManager) => Promise<void>;
 
 export async function upgrade(
     targetVersion: string,
@@ -66,15 +65,15 @@ export async function upgrade(
     }
 
     const abiFilename = process.env.ABI;
-    const abi = JSON.parse(await fs.readFile(abiFilename, "utf-8"));
+    const abi = JSON.parse(await fs.readFile(abiFilename, "utf-8")) as SkaleABIFile;
 
-    const proxyAdmin = await getManifestAdmin(hre);
+    const proxyAdmin = await getManifestAdmin(hre) as ProxyAdmin;
     const contractManagerName = "ContractManager";
     const contractManagerFactory = await ethers.getContractFactory(contractManagerName);
-    const contractManager = (contractManagerFactory.attach(abi[getContractKeyInAbiFile(contractManagerName) + "_address"])) as ContractManager;
+    const contractManager = (contractManagerFactory.attach(abi[getContractKeyInAbiFile(contractManagerName) + "_address"] as string)) as ContractManager;
     const skaleManagerName = "SkaleManager";
     const skaleManager = ((await ethers.getContractFactory(skaleManagerName)).attach(
-        abi[getContractKeyInAbiFile(skaleManagerName) + "_address"]
+        abi[getContractKeyInAbiFile(skaleManagerName) + "_address"] as string
     )) as SkaleManager;
 
     let deployedVersion = "";
@@ -82,7 +81,7 @@ export async function upgrade(
         deployedVersion = await skaleManager.version();
     } catch {
         console.log("Can't read deployed version");
-    };
+    }
     const version = await getVersion();
     if (deployedVersion) {
         if (deployedVersion !== targetVersion) {
@@ -115,15 +114,15 @@ export async function upgrade(
         await (await contractManager.transferOwnership(safe)).wait();
         for (const contractName of
             ["SkaleToken"].concat(contractNamesToUpgrade
-                .filter(name => !['ContractManager', 'TimeHelpers', 'Decryption', 'ECDH', 'Wallets'].includes(name)))) {
+                .filter(name => !['ContractManager', 'TimeHelpers', 'Decryption', 'ECDH', 'SyncManager'].includes(name)))) {
                     const contractFactory = await getContractFactoryAndUpdateManifest(contractName);
                     let _contract = contractName;
                     if (contractName === "BountyV2") {
                         if (!abi[getContractKeyInAbiFile(contractName) + "_address"])
                         _contract = "Bounty";
                     }
-                    const contractAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
-                    const contract = contractFactory.attach(contractAddress);
+                    const contractAddress = abi[getContractKeyInAbiFile(_contract) + "_address"] as string;
+                    const contract = contractFactory.attach(contractAddress) as Permissions;
                     console.log(chalk.blue(`Grant access to ${contractName}`));
                     await (await contract.grantRole(await contract.DEFAULT_ADMIN_ROLE(), safe)).wait();
         }
@@ -133,7 +132,7 @@ export async function upgrade(
     await deployNewContracts(safeTransactions, abi, contractManager);
 
     // deploy new implementations
-    const contractsToUpgrade: {proxyAddress: string, implementationAddress: string, name: string, abi: any}[] = [];
+    const contractsToUpgrade: {proxyAddress: string, implementationAddress: string, name: string, abi: []}[] = [];
     for (const contract of contractNamesToUpgrade) {
         const contractFactory = await getContractFactoryAndUpdateManifest(contract);
         let _contract = contract;
@@ -141,10 +140,17 @@ export async function upgrade(
             if (!abi[getContractKeyInAbiFile(contract) + "_address"])
             _contract = "Bounty";
         }
-        const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
+        const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"] as string;
 
         console.log(`Prepare upgrade of ${contract}`);
-        const newImplementationAddress = await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+        const newImplementationAddress = await upgrades.prepareUpgrade(
+            proxyAddress,
+            contractFactory,
+            {
+                unsafeAllowLinkedLibraries: true,
+                unsafeAllowRenames: true
+            }
+        );
         const currentImplementationAddress = await getImplementationAddress(network.provider, proxyAddress);
         if (newImplementationAddress !== currentImplementationAddress)
         {
@@ -226,50 +232,51 @@ export async function upgrade(
 
 async function main() {
     await upgrade(
-        "1.8.1",
+        "1.8.2",
         ["ContractManager"].concat(contracts),
-        async (safeTransactions, abi, contractManager) => undefined,
         async (safeTransactions, abi, contractManager) => {
-            const communityPoolName = "CommunityPool";
+            const safe = await contractManager.owner();
+            const [ deployer ] = await ethers.getSigners();
 
-            let communityPoolAddress = process.env.COMMUNITY_POOL_ADDRESS;
-            const chainId = (await ethers.provider.getNetwork()).chainId;
-
-            if (!communityPoolAddress && chainId === 1) {
-                // Get address from https://github.com/skalenetwork/skale-network/blob/master/releases/mainnet/IMA/1.0.0-stable.1/contracts.json
-                communityPoolAddress = "0x588801cA36558310D91234aFC2511502282b1621";
-            }
-
-            if (communityPoolAddress) {
-                if (await ethers.provider.getCode(communityPoolAddress) === "0x") {
-                    console.log(chalk.red("No community pool contract found"));
-                    process.exit(1);
-                }
-                console.log(chalk.yellow("Will check community pool address"));
-                let communityPoolAdded = false;
-                try {
-                    const communityPoolAddressFromContractManager = await contractManager.getContract(communityPoolName);
-                    if (communityPoolAddressFromContractManager === communityPoolAddress) {
-                        communityPoolAdded = true;
-                    } else {
-                        console.log(chalk.yellow("Incorrect community pool address was found"));
-                        console.log(chalk.yellow("Current community pool address " + communityPoolAddressFromContractManager));
-                        console.log(chalk.yellow("New community pool address     " + communityPoolAddress));
-                    }
-                } catch (e) {
-                    console.log(chalk.yellow("Looks like no address was found in community pool"));
-                    console.log(e);
-                }
-                if (!communityPoolAdded) {
-                    console.log(chalk.yellow("Prepare transaction to set community pool"));
-                    safeTransactions.push(encodeTransaction(
-                        0,
-                        contractManager.address,
-                        0,
-                        contractManager.interface.encodeFunctionData("setContractsAddress", [communityPoolName, communityPoolAddress])
-                    ));
-                }
-            }
+            const syncManagerName = "SyncManager";
+            const syncManagerFactory = await getContractFactory(syncManagerName);
+            console.log("Deploy", syncManagerName);
+            const syncManager = (await upgrades.deployProxy(syncManagerFactory, [contractManager.address])) as SyncManager;
+            await syncManager.deployTransaction.wait();
+            await (await syncManager.grantRole(await syncManager.DEFAULT_ADMIN_ROLE(), safe)).wait();
+            await (await syncManager.revokeRole(await syncManager.DEFAULT_ADMIN_ROLE(), deployer.address)).wait();
+            console.log(chalk.yellowBright("Prepare transaction to register", syncManagerName));
+            console.log("Register", syncManagerName, "as", syncManagerName, "=>", syncManager.address);
+            safeTransactions.push(encodeTransaction(
+                0,
+                contractManager.address,
+                0,
+                contractManager.interface.encodeFunctionData("setContractsAddress", [syncManagerName, syncManager.address]),
+            ));
+            await verifyProxy(syncManagerName, syncManager.address, []);
+            abi[getContractKeyInAbiFile(syncManagerName) + "_abi"] = getAbi(syncManager.interface);
+            abi[getContractKeyInAbiFile(syncManagerName) + "_address"] = syncManager.address;
+        },
+        async (safeTransactions, abi, contractManager) => {
+            const schainsInternal = (await ethers.getContractFactory("SchainsInternal"))
+                .attach(await contractManager.getContract("SchainsInternal")) as SchainsInternal;
+            const GENERATION_MANAGER_ROLE = ethers.utils.solidityKeccak256(["string"], ["GENERATION_MANAGER_ROLE"])
+            safeTransactions.push(encodeTransaction(
+                0,
+                schainsInternal.address,
+                0,
+                schainsInternal.interface.encodeFunctionData("grantRole", [
+                    GENERATION_MANAGER_ROLE,
+                    await contractManager.owner()
+                ])
+            ));
+            console.log(chalk.yellowBright("Prepare transaction to switch generation"));
+            safeTransactions.push(encodeTransaction(
+                0,
+                schainsInternal.address,
+                0,
+                schainsInternal.interface.encodeFunctionData("newGeneration"),
+            ));
         }
     );
 }

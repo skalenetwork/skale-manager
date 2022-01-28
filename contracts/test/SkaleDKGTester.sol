@@ -19,16 +19,19 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.11;
 
 import "../SkaleDKG.sol";
 
-contract SkaleDKGTester is SkaleDKG {
-    function setSuccessfulDKGPublic(bytes32 schainHash) external {
-        lastSuccessfulDKG[schainHash] = now;
+interface ISkaleDKGTester {
+    function setSuccessfulDKGPublic(bytes32 schainHash) external;
+}
+
+contract SkaleDKGTester is SkaleDKG, ISkaleDKGTester {
+    function setSuccessfulDKGPublic(bytes32 schainHash) external override {
+        lastSuccessfulDKG[schainHash] = block.timestamp;
         channels[schainHash].active = false;
-        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
+        IKeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
         emit SuccessfulDKG(schainHash);
     }
 }

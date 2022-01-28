@@ -20,10 +20,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.11;
+
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
 
 import "../Permissions.sol";
-import "../ConstantsHolder.sol";
 
 /**
  * @title Delegation Period Manager
@@ -31,19 +32,11 @@ import "../ConstantsHolder.sol";
  * a specified period (months), and different durations can have different
  * returns or `stakeMultiplier`. Currently, only delegation periods can be added.
  */
-contract DelegationPeriodManager is Permissions {
+contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
 
     mapping (uint => uint) public stakeMultipliers;
 
     bytes32 public constant DELEGATION_PERIOD_SETTER_ROLE = keccak256("DELEGATION_PERIOD_SETTER_ROLE");
-
-    /**
-     * @dev Emitted when a new delegation period is specified.
-     */
-    event DelegationPeriodWasSet(
-        uint length,
-        uint stakeMultiplier
-    );
 
     /**
      * @dev Allows the Owner to create a new available delegation period and
@@ -51,7 +44,7 @@ contract DelegationPeriodManager is Permissions {
      * 
      * Emits a {DelegationPeriodWasSet} event.
      */
-    function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external {
+    function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external override {
         require(hasRole(DELEGATION_PERIOD_SETTER_ROLE, msg.sender), "DELEGATION_PERIOD_SETTER_ROLE is required");
         require(stakeMultipliers[monthsCount] == 0, "Delegation period is already set");
         stakeMultipliers[monthsCount] = stakeMultiplier;
@@ -62,7 +55,7 @@ contract DelegationPeriodManager is Permissions {
     /**
      * @dev Checks whether given delegation period is allowed.
      */
-    function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
+    function isDelegationPeriodAllowed(uint monthsCount) external view override returns (bool) {
         return stakeMultipliers[monthsCount] != 0;
     }
 

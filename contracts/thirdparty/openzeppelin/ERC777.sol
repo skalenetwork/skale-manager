@@ -1,13 +1,17 @@
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier: MIT
 
-import "@openzeppelin/contracts/GSN/Context.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
+pragma solidity ^0.8.0;
+
+// cSpell:words adoc
+
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
-// import "@openzeppelin/contracts/math/SafeMath.sol"; Removed by SKALE
-// import "@openzeppelin/contracts/utils/Address.sol"; Removed by SKALE
-import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 
 /* Added by SKALE */
 import "../../Permissions.sol";
@@ -69,14 +73,14 @@ contract ERC777 is Context, IERC777, IERC20 {
      * @dev `defaultOperators` may be an empty array.
      */
     constructor(
-        string memory name,
-        string memory symbol,
-        address[] memory defaultOperators
-    ) public {
-        _name = name;
-        _symbol = symbol;
+        string memory tokenName,
+        string memory tokenSymbol,
+        address[] memory tokenDefaultOperators
+    ) {
+        _name = tokenName;
+        _symbol = tokenSymbol;
 
-        _defaultOperatorsArray = defaultOperators;
+        _defaultOperatorsArray = tokenDefaultOperators;
         for (uint256 i = 0; i < _defaultOperatorsArray.length; i++) {
             _defaultOperators[_defaultOperatorsArray[i]] = true;
         }
@@ -115,7 +119,7 @@ contract ERC777 is Context, IERC777, IERC20 {
      *
      * This implementation always returns `1`.
      */
-    function granularity() public view override returns (uint256) {
+    function granularity() public pure override returns (uint256) {
         return 1;
     }
 
@@ -388,7 +392,7 @@ contract ERC777 is Context, IERC777, IERC20 {
 
         address operator = _msgSender();
 
-        /* Chaged by SKALE: we swapped these lines to prevent delegation of burning tokens */
+        /* Changed by SKALE: we swapped these lines to prevent delegation of burning tokens */
 
         _callTokensToSend(operator, from, address(0), amount, data, operatorData);
 
@@ -453,7 +457,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory userData,
         bytes memory operatorData
     )
-        /* Chaged by SKALE from private */ internal /* End of changed by SKALE */
+        /* Changed by SKALE from private */ internal /* End of changed by SKALE */
         /* Added by SKALE */ virtual /* End of added by SKALE */
     {
         address implementer = _ERC1820_REGISTRY.getInterfaceImplementer(from, _TOKENS_SENDER_INTERFACE_HASH);
@@ -482,7 +486,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory operatorData,
         bool requireReceptionAck
     )
-        /* Chaged by SKALE from private */ internal /* End of changed by SKALE */
+        /* Changed by SKALE from private */ internal /* End of changed by SKALE */
         /* Added by SKALE */ virtual /* End of added by SKALE */
     {
         address implementer = _ERC1820_REGISTRY.getInterfaceImplementer(to, _TOKENS_RECIPIENT_INTERFACE_HASH);
