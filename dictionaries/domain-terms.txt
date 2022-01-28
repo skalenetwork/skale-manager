@@ -4,6 +4,7 @@ iecdh
 ierc1820
 ierc20
 ierc777
+licence
 mintable
 keccak256
 precompiled

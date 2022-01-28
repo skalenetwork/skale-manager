@@ -1,7 +1,7 @@
 import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          Nodes,
-         ValidatorService} from "../typechain";
+         ValidatorService} from "../typechain-types";
 import { skipTime } from "./tools/time";
 import { privateKeys } from "./tools/private-keys";
 import chai = require("chai");
@@ -88,7 +88,7 @@ describe("NodesData", () => {
         (await nodes.getNumberOfNodes()).should.be.equal(1);
     });
 
-    describe("when a node is added", async () => {
+    describe("when a node is added", () => {
         fastBeforeEach(async () => {
             await nodes.createNode(
                 nodeAddress.address,
@@ -339,7 +339,7 @@ describe("NodesData", () => {
             assert.equal(numberOfActiveNodesAfter.toNumber(), numberOfActiveNodes.toNumber()-1);
         });
 
-        describe("when node is registered", async () => {
+        describe("when node is registered", () => {
             fastBeforeEach(async () => {
                 await nodes.createNode(
                     nodeAddress.address,
@@ -385,7 +385,7 @@ describe("NodesData", () => {
 
     });
 
-    describe("when two nodes are added", async () => {
+    describe("when two nodes are added", () => {
         fastBeforeEach(async () => {
             await nodes.createNode(
                 nodeAddress.address,
@@ -411,7 +411,7 @@ describe("NodesData", () => {
                 });
         });
 
-        describe("when nodes are registered", async () => {
+        describe("when nodes are registered", () => {
             fastBeforeEach(async () => {
                 await nodes.createNode(
                     nodeAddress.address,

@@ -28,6 +28,7 @@ solcover
 solcoverjs
 solhint
 solidity-docgen
+structs
 ticklabel
 typechain
 xlabel

@@ -6,12 +6,11 @@ import {
     Nodes,
     Schains,
     SchainsInternal,
-    SkaleDKG,
     SkaleDKGTester,
     SkaleManager,
     ValidatorService,
     Wallets
-} from "../typechain";
+} from "../typechain-types";
 import { privateKeys } from "../test/tools/private-keys";
 import { deploySchains } from "../test/tools/deploy/schains";
 import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
@@ -21,7 +20,7 @@ import { deployWallets } from "../test/tools/deploy/wallets";
 import { skipTime } from "../test/tools/time";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { ethers } from "hardhat";
-import { BigNumberish, BytesLike, Event, Signer, Wallet } from "ethers";
+import { BigNumberish, BytesLike, Signer, Wallet } from "ethers";
 import { assert } from "chai";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 import { stringKeccak256 } from "../test/tools/hashes";
@@ -35,7 +34,7 @@ async function createNode(skaleManager: SkaleManager, node: Wallet, nodeId: numb
         "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
         "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
         getPublicKey(node), // public key
-        "d2-" + nodeId, // name)
+        `d2-${nodeId}`, // name)
         "some.domain.name"
     );
     console.log("Node", nodeId, "created")
@@ -53,13 +52,6 @@ async function getIndexInSpaceMap(nodes: Nodes, nodeId: number) {
 
 async function getSpaceToNodes(nodes: Nodes, space: number, index: number) {
     return (await nodes.spaceToNodes(space.toString(), index.toString())).toString();
-}
-
-async function checkNodeSpace(nodes: Nodes, nodeId: number) {
-    const freeSpace = await getFreeSpaceOfNode(nodes, nodeId);
-    const index = await getIndexInSpaceMap(nodes, nodeId);
-    const posNode = await getSpaceToNodes(nodes, freeSpace, parseInt(index, 10));
-    assert(posNode.toString() === nodeId.toString(), "Not equal node ID");
 }
 
 async function checkSpaceToNodes(nodes: Nodes, space: number, length: number) {
@@ -121,7 +113,7 @@ async function getRandomNodeInSchain(schainsInternal: SchainsInternal, name: str
     return node;
 }
 
-async function finishDKG(skaleDKG: SkaleDKG, name: string) {
+async function finishDKG(skaleDKG: SkaleDKGTester, name: string) {
     await skaleDKG.setSuccessfulDKGPublic(stringKeccak256(name));
     console.log("DKG successful finished");
 }
@@ -163,7 +155,7 @@ async function getNumberOfNodesInGroup(schainsInternal: SchainsInternal, name: s
     return (await schainsInternal.getNumberOfNodesInGroup(stringKeccak256(name))).toString();
 }
 
-async function rotateOnDKG(schainsInternal: SchainsInternal, name: string, skaleDKG: SkaleDKG, node: Wallet, skipNode: string = "") {
+async function rotateOnDKG(schainsInternal: SchainsInternal, name: string, skaleDKG: SkaleDKGTester, node: Wallet, skipNode = "") {
     let randomNode1 = await getRandomNodeInSchain(schainsInternal, name, []);
     let randomNode2 = await getRandomNodeInSchain(schainsInternal, name, [randomNode1]);
     if (skipNode !== "") {
@@ -275,18 +267,18 @@ describe("Tree test", () => {
         it("Strange test", async () => {
             let nodesAmount = 15;
             for (let i = 0; i < 10; i++) {
-                const name = "A" + i;
+                const name = `A${i}`;
                 const nodeIndex = 2 + 3 * i;
                 for (let nodeId = nodesAmount; nodeId < nodesAmount + 3; ++nodeId) {
                     await createNode(skaleManager, node, nodeId);
                 }
                 nodesAmount += 3;
                 for (let i2 = 0; i2 < 3; i2++) {
-                    await createSchain(schains, SchainType.SMALL, name + i2, owner);
-                    console.log(await getNodesInSchain(schainsInternal, name + i2));
+                    await createSchain(schains, SchainType.SMALL, `${name}${i2}`, owner);
+                    console.log(await getNodesInSchain(schainsInternal, `${name}${i2}`));
                     // await nodeExit(skaleManager, nodes, node, (nodeIndex + i2).toString()); - revert
                     await setNodeInMaintenance(nodes, node, (nodeIndex + i2).toString());
-                    await deleteSchain(skaleManager, name + i2, owner);
+                    await deleteSchain(skaleManager, `${name}${i2}`, owner);
                     await removeNodeFromInMaintenance(nodes, node, (nodeIndex + i2).toString());
                     await nodeExit(skaleManager, nodes, node, (nodeIndex + i2).toString());
                 }

@@ -1,7 +1,7 @@
 import { ContractManager,
          Nodes,
          SchainsInternalMock,
-         ValidatorService } from "../typechain";
+         ValidatorService } from "../typechain-types";
 import { privateKeys } from "./tools/private-keys";
 import { Wallet } from "ethers";
 import chai = require("chai");
@@ -48,7 +48,7 @@ describe("SchainsInternal", () => {
         await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
         await contractManager.setContractsAddress("SkaleManager", nodes.address);
 
-        validatorService.connect(holder).registerValidator("D2", "D2 is even", 0, 0);
+        await validatorService.connect(holder).registerValidator("D2", "D2 is even", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         const validatorIndex = await validatorService.getValidatorId(holder.address);
@@ -106,7 +106,7 @@ describe("SchainsInternal", () => {
             .should.be.eventually.rejectedWith("The schain does not exist");
     })
 
-    describe("on existing schain", async () => {
+    describe("on existing schain", () => {
         const schainNameHash = stringKeccak256("TestSchain");
 
         fastBeforeEach(async () => {
@@ -151,10 +151,10 @@ describe("SchainsInternal", () => {
             schain.deposit.should.be.equal(13);
         });
 
-        describe("on registered schain", async () => {
+        describe("on registered schain", () => {
             const nodeIndex = 0;
             const numberOfNewSchains = 5
-            const newSchainNames = [...Array(numberOfNewSchains).keys()].map((index) => "newSchain" + index);
+            const newSchainNames = [...Array(numberOfNewSchains).keys()].map((index) => `newSchain${index}`);
             const newSchainHashes = newSchainNames.map((schainName) => stringKeccak256(schainName));
 
             fastBeforeEach(async () => {

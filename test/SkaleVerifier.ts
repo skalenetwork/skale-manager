@@ -5,11 +5,10 @@ import { ConstantsHolder,
          KeyStorage,
          Nodes,
          Schains,
-         SchainsInternal,
          SkaleDKGTester,
          SkaleManager,
          SkaleVerifier,
-         ValidatorService } from "../typechain";
+         ValidatorService } from "../typechain-types";
 import { privateKeys } from "./tools/private-keys";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -28,7 +27,7 @@ import { Wallet } from "ethers";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
 import { fastBeforeEach } from "./tools/mocha";
-import { skipTime, currentTime, nextMonth } from "./tools/time";
+import { skipTime } from "./tools/time";
 import { schainParametersType, SchainType } from "./tools/types";
 
 chai.should();
@@ -37,8 +36,6 @@ chai.use(chaiAsPromised);
 describe("SkaleVerifier", () => {
     let validator1: SignerWithAddress;
     let owner: SignerWithAddress;
-    let developer: SignerWithAddress;
-    let hacker: SignerWithAddress;
     let nodeAddress: Wallet;
 
     let constantsHolder: ConstantsHolder;
@@ -48,12 +45,11 @@ describe("SkaleVerifier", () => {
     let validatorService: ValidatorService;
     let nodes: Nodes;
     let keyStorage: KeyStorage;
-    let schainsInternal: SchainsInternal;
     let skaleManager: SkaleManager;
     let skaleDKG: SkaleDKGTester;
 
     fastBeforeEach(async () => {
-        [validator1, owner, developer, hacker] = await ethers.getSigners();
+        [validator1, owner] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[0])).connect(ethers.provider);
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
@@ -66,7 +62,7 @@ describe("SkaleVerifier", () => {
         schains = await deploySchains(contractManager);
         skaleVerifier = await deploySkaleVerifier(contractManager);
         keyStorage = await deployKeyStorage(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
+        await deploySchainsInternal(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
@@ -82,7 +78,7 @@ describe("SkaleVerifier", () => {
         await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, signature);
     });
 
-    describe("when skaleVerifier contract is activated", async () => {
+    describe("when skaleVerifier contract is activated", () => {
 
         it("should verify valid signatures with valid data", async () => {
             const isVerified = await skaleVerifier.verify(
@@ -414,7 +410,9 @@ describe("SkaleVerifier", () => {
 
             const rotDelay = await constantsHolder.rotationDelay();
 
-            skipTime(rotDelay.toNumber());
+            const tenSecDelta = 10;
+
+            await skipTime(rotDelay.toNumber() - tenSecDelta);
 
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
@@ -427,9 +425,7 @@ describe("SkaleVerifier", () => {
             );
             assert(res.should.be.true);
 
-            const oneHour = 60 * 60;
-
-            skipTime(oneHour);
+            await skipTime(tenSecDelta);
 
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",

@@ -6,7 +6,7 @@ import {
     DelegationController,
     SkaleToken,
     ValidatorService
-} from "../typechain";
+} from "../typechain-types";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployBounty } from "./tools/deploy/bounty";
@@ -22,7 +22,7 @@ import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegat
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { BigNumber, Event } from "ethers";
+import { BigNumber } from "ethers";
 import { deployPunisher } from "./tools/deploy/delegation/punisher";
 import { fastBeforeEach } from "./tools/mocha";
 
@@ -53,7 +53,6 @@ describe("Bounty", () => {
 
     const ten18 = BigNumber.from(10).pow(18);
     const day = 60 * 60 * 24;
-    const month = 31 * day;
 
     fastBeforeEach(async () => {
         chai.use(chaiAlmost(2));
@@ -87,7 +86,7 @@ describe("Bounty", () => {
         await bountyContract.disableBountyReduction();
     });
 
-    describe("when validator is registered and has active delegations", async () => {
+    describe("when validator is registered and has active delegations", () => {
         let skaleToken: SkaleToken;
         let delegationController: DelegationController;
         let validatorService: ValidatorService;
@@ -118,7 +117,7 @@ describe("Bounty", () => {
             return bounty;
         }
 
-        describe("when second validator is registered and has active delegations", async () => {
+        describe("when second validator is registered and has active delegations", () => {
             const validator2Id = 2;
             const validator2Amount = 0.5e6;
             fastBeforeEach(async () => {

@@ -2,20 +2,22 @@ import { contracts, getContractKeyInAbiFile, getManifestFile, getContractFactory
 import { ethers, network, upgrades, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, SchainsInternal, SkaleManager, SyncManager } from "../typechain";
+import { ContractManager, Permissions, SchainsInternal, SkaleManager, SyncManager } from "../typechain-types";
+import { ProxyAdmin } from "../typechain-types/ProxyAdmin";
 import { getImplementationAddress, hashBytecode } from "@openzeppelin/upgrades-core";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
-import { SafeMock } from "../typechain/SafeMock";
+import { SafeMock } from "../typechain-types/SafeMock";
 import { encodeTransaction } from "./tools/multiSend";
 import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-safe";
 import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
 import { getVersion } from "./tools/version";
+import { SkaleABIFile, SkaleManifestData } from "./tools/types";
 
 export async function getContractFactoryAndUpdateManifest(contract: string) {
-    const manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8"));
+    const manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8")) as SkaleManifestData;
     const { linkReferences } = await artifacts.readArtifact(contract);
     if (!Object.keys(linkReferences).length)
         return await ethers.getContractFactory(contract);
@@ -40,16 +42,16 @@ export async function getContractFactoryAndUpdateManifest(contract: string) {
         }
     }
     const libraries = await deployLibraries(librariesToUpgrade);
-    for (const libraryName of Object.keys(libraries)) {
+    for (const [libraryName, libraryAddress] of libraries.entries()) {
         const { bytecode } = await artifacts.readArtifact(libraryName);
-        manifest.libraries[libraryName] = {"address": libraries[libraryName], "bytecodeHash": hashBytecode(bytecode)};
+        manifest.libraries[libraryName] = {"address": libraryAddress, "bytecodeHash": hashBytecode(bytecode)};
     }
     Object.assign(libraries, oldLibraries);
     await fs.writeFile(await getManifestFile(), JSON.stringify(manifest, null, 4));
     return await getLinkedContractFactory(contract, libraries);
 }
 
-type DeploymentAction = (safeTransactions: string[], abi: any, contractManager: ContractManager) => Promise<void>;
+type DeploymentAction = (safeTransactions: string[], abi: SkaleABIFile, contractManager: ContractManager) => Promise<void>;
 
 export async function upgrade(
     targetVersion: string,
@@ -63,15 +65,15 @@ export async function upgrade(
     }
 
     const abiFilename = process.env.ABI;
-    const abi = JSON.parse(await fs.readFile(abiFilename, "utf-8"));
+    const abi = JSON.parse(await fs.readFile(abiFilename, "utf-8")) as SkaleABIFile;
 
-    const proxyAdmin = await getManifestAdmin(hre);
+    const proxyAdmin = await getManifestAdmin(hre) as ProxyAdmin;
     const contractManagerName = "ContractManager";
     const contractManagerFactory = await ethers.getContractFactory(contractManagerName);
-    const contractManager = (contractManagerFactory.attach(abi[getContractKeyInAbiFile(contractManagerName) + "_address"])) as ContractManager;
+    const contractManager = (contractManagerFactory.attach(abi[getContractKeyInAbiFile(contractManagerName) + "_address"] as string)) as ContractManager;
     const skaleManagerName = "SkaleManager";
     const skaleManager = ((await ethers.getContractFactory(skaleManagerName)).attach(
-        abi[getContractKeyInAbiFile(skaleManagerName) + "_address"]
+        abi[getContractKeyInAbiFile(skaleManagerName) + "_address"] as string
     )) as SkaleManager;
 
     let deployedVersion = "";
@@ -79,7 +81,7 @@ export async function upgrade(
         deployedVersion = await skaleManager.version();
     } catch {
         console.log("Can't read deployed version");
-    };
+    }
     const version = await getVersion();
     if (deployedVersion) {
         if (deployedVersion !== targetVersion) {
@@ -119,8 +121,8 @@ export async function upgrade(
                         if (!abi[getContractKeyInAbiFile(contractName) + "_address"])
                         _contract = "Bounty";
                     }
-                    const contractAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
-                    const contract = contractFactory.attach(contractAddress);
+                    const contractAddress = abi[getContractKeyInAbiFile(_contract) + "_address"] as string;
+                    const contract = contractFactory.attach(contractAddress) as Permissions;
                     console.log(chalk.blue(`Grant access to ${contractName}`));
                     await (await contract.grantRole(await contract.DEFAULT_ADMIN_ROLE(), safe)).wait();
         }
@@ -130,7 +132,7 @@ export async function upgrade(
     await deployNewContracts(safeTransactions, abi, contractManager);
 
     // deploy new implementations
-    const contractsToUpgrade: {proxyAddress: string, implementationAddress: string, name: string, abi: any}[] = [];
+    const contractsToUpgrade: {proxyAddress: string, implementationAddress: string, name: string, abi: []}[] = [];
     for (const contract of contractNamesToUpgrade) {
         const contractFactory = await getContractFactoryAndUpdateManifest(contract);
         let _contract = contract;
@@ -138,7 +140,7 @@ export async function upgrade(
             if (!abi[getContractKeyInAbiFile(contract) + "_address"])
             _contract = "Bounty";
         }
-        const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
+        const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"] as string;
 
         console.log(`Prepare upgrade of ${contract}`);
         const newImplementationAddress = await upgrades.prepareUpgrade(

@@ -1,11 +1,10 @@
 import { ContractManager,
         Nodes,
         Schains,
-        SchainsInternal,
         SkaleDKGTester,
         SkaleManager,
         ValidatorService,
-        Wallets } from "../typechain";
+        Wallets } from "../typechain-types";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
@@ -15,7 +14,6 @@ import { deployValidatorService } from "./tools/deploy/delegation/validatorServi
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { SchainType } from "./tools/types";
 import chaiAlmost from "chai-almost";
 import { ethers } from "hardhat";
@@ -51,7 +49,6 @@ describe("Wallets", () => {
     let schains: Schains;
     let skaleManager: SkaleManager;
     let skaleDKG: SkaleDKGTester;
-    let schainsInternal: SchainsInternal;
     let nodes: Nodes;
 
     const tolerance = 0.003;
@@ -73,7 +70,6 @@ describe("Wallets", () => {
         validatorService = await deployValidatorService(contractManager);
         schains = await deploySchains(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         nodes = await deployNodes(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
@@ -131,7 +127,7 @@ describe("Wallets", () => {
         await wallets.withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Validator address does not exist");
     });
 
-    describe("when nodes and schains have been created", async() => {
+    describe("when nodes and schains have been created", () => {
         const schain1Name = "schain-1";
         const schain2Name = "schain-2";
         const schain1Id = stringKeccak256(schain1Name);
@@ -209,7 +205,7 @@ describe("Wallets", () => {
             (await wallets.getSchainBalance(schain1Id)).should.be.equal(amount);
         });
 
-        describe("when validators and schains wallets are recharged", async () => {
+        describe("when validators and schains wallets are recharged", () => {
             const initialBalance = ethers.utils.parseEther("1");
 
             let snapshotWithNodesAndSchains: number;

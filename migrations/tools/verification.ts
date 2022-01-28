@@ -12,12 +12,16 @@ export async function verify(contractName: string, contractAddress: string, cons
                 });
                 break;
             } catch (e) {
-                if (e.toString().includes("Contract source code already verified")) {
-                    console.log(chalk.grey(`${contractName} is already verified`));
-                    return;
+                if (e instanceof Error) {
+                    if (e.toString().includes("Contract source code already verified")) {
+                        console.log(chalk.grey(`${contractName} is already verified`));
+                        return;
+                    }
+                    console.log(chalk.red(`Contract ${contractName} was not verified on etherscan`));
+                    console.log(e.toString());
+                } else {
+                    console.log("Unknown exception type:", e)
                 }
-                console.log(chalk.red(`Contract ${contractName} was not verified on etherscan`));
-                console.log(e.toString());
             }
         }
     }

@@ -1,7 +1,7 @@
 import { ContractManager,
     DelegationController,
     SkaleToken,
-    ValidatorService} from "../../typechain";
+    ValidatorService} from "../../typechain-types";
 
 import { currentTime, nextMonth, skipTime } from "../tools/time";
 
@@ -62,7 +62,7 @@ describe("DelegationController", () => {
         await applySnapshot(snapshot);
     });
 
-    describe("when arguments for delegation initialized", async () => {
+    describe("when arguments for delegation initialized", () => {
         let validatorId: number;
         let amount: number;
         let delegationPeriod: number;
@@ -152,7 +152,7 @@ describe("DelegationController", () => {
             await delegationController.connect(holder1).delegate(validatorId, amount, delegationPeriod, info);
         });
 
-        describe("when delegation request was created", async () => {
+        describe("when delegation request was created", () => {
             let validatorEnabled: number;
             before(async () => {
                 validatorEnabled = await makeSnapshot();
@@ -214,7 +214,7 @@ describe("DelegationController", () => {
             });
 
             it("should reject accepting request if validator tried to accept request not assigned to him", async () => {
-                validatorService.connect(validator2).registerValidator(
+                await validatorService.connect(validator2).registerValidator(
                     "ValidatorName",
                     "Really good validator",
                     500,
@@ -247,7 +247,7 @@ describe("DelegationController", () => {
                 (await delegationController.getState(delegationId)).should.be.equal(State.PROPOSED);
             });
 
-            describe("when delegation is accepted", async () => {
+            describe("when delegation is accepted", () => {
                 let holder1DelegatedToValidator: number;
                 before(async () => {
                     delegationId = 0;

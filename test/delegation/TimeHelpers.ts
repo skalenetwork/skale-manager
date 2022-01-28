@@ -1,11 +1,10 @@
-import { TimeHelpers, ContractManager } from "../../typechain";
+import { TimeHelpers, ContractManager } from "../../typechain-types";
 import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 import { currentTime } from "../tools/time";
-import { ethers } from "hardhat";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();

@@ -1,9 +1,12 @@
-import { Contract } from 'ethers';
 import { lstatSync, promises as fs } from 'fs';
 
 interface SizeStatistics {
     name: string;
     size: number;
+}
+
+interface Artifact {
+    deployedBytecode: string
 }
 
 const CODE_SIZE_LIMIT = 24 * 1024 ;
@@ -16,8 +19,8 @@ async function getByteCodesSizes(directory: string) {
             sizes = sizes.concat(await getByteCodesSizes(fullPath));
         } else {
             if (entry.endsWith(".json") && !entry.endsWith(".dbg.json")) {
-                const artifact = JSON.parse(await fs.readFile(fullPath, "utf-8"));
-                let deployedBytecode: string = artifact.deployedBytecode;
+                const artifact = JSON.parse(await fs.readFile(fullPath, "utf-8")) as Artifact;
+                let deployedBytecode = artifact.deployedBytecode;
                 if (deployedBytecode.startsWith("0x")) {
                     deployedBytecode = deployedBytecode.substr(2);
                 }

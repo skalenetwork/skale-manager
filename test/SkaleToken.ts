@@ -1,7 +1,7 @@
 import { BigNumber } from "ethers";
 import { ContractManager,
          SkaleToken,
-         SkaleTokenInternalTester} from "../typechain";
+         SkaleTokenInternalTester} from "../typechain-types";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
@@ -28,7 +28,7 @@ describe("SkaleToken", () => {
   let skaleToken: SkaleToken;
   let contractManager: ContractManager;
 
-  const TOKEN_CAP: number = 7000000000;
+  const TOKEN_CAP = 7000000000;
   const TOTAL_SUPPLY = 5000000000;
 
   fastBeforeEach(async () => {

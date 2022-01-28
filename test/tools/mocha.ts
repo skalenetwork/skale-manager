@@ -6,7 +6,7 @@ export function fastBeforeEach(fn: Mocha.AsyncFunc) {
 
     before(async function (this: Mocha.Context) {
         initialState = await makeSnapshot();
-        return await fn.apply(this);
+        await fn.apply(this);
     });
 
     beforeEach(async () => {

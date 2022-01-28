@@ -1,4 +1,4 @@
-import { ContractManager, SkaleManager, SlashingTable } from "../typechain";
+import { ContractManager, SlashingTable } from "../typechain-types";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import chaiAsPromised from "chai-as-promised";
@@ -17,14 +17,13 @@ describe("SlashingTable", () => {
     let hacker: SignerWithAddress;
 
     let contractManager: ContractManager;
-    let skaleManager: SkaleManager;
     let slashingTable: SlashingTable;
 
     fastBeforeEach(async () => {
         [owner, admin, hacker] = await ethers.getSigners();
 
         contractManager = await deployContractManager();
-        skaleManager = await deploySkaleManager(contractManager);
+        await deploySkaleManager(contractManager);
         slashingTable = await deploySlashingTable(contractManager);
 
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();

@@ -9,9 +9,9 @@ import { ConstantsHolder,
     TokenState,
     ValidatorService,
     Nodes,
-    SlashingTable} from "../../typechain";
+    SlashingTable} from "../../typechain-types";
 
-import { currentTime, nextMonth, skipTime, skipTimeToDate } from "../tools/time";
+import { currentTime, nextMonth, skipTimeToDate } from "../tools/time";
 
 import { BigNumber, Wallet } from "ethers";
 import * as chai from "chai";
@@ -234,7 +234,7 @@ describe("Delegation", () => {
             .should.be.eventually.rejectedWith("Limit of validators is reached");
     });
 
-    describe("when holders have tokens and validator is registered", async () => {
+    describe("when holders have tokens and validator is registered", () => {
         let validatorId: number;
         fastBeforeEach(async () => {
             validatorId = 1;
@@ -249,14 +249,13 @@ describe("Delegation", () => {
         });
 
         for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
-            it("should check " + delegationPeriod + " month" + (delegationPeriod > 1 ? "s" : "")
-                + " delegation period availability", async () => {
+            it(`should check ${delegationPeriod} month${delegationPeriod > 1 ? "s" : ""} delegation period availability`, async () => {
                 await delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod)
                     .should.be.eventually.equal(allowedDelegationPeriods.includes(delegationPeriod));
             });
 
             if (allowedDelegationPeriods.includes(delegationPeriod)) {
-                describe("when delegation period is " + delegationPeriod + " months", async () => {
+                describe(`when delegation period is ${delegationPeriod} months`, () => {
                     let requestId: number;
 
                     it("should send request for delegation", async () => {
@@ -272,7 +271,7 @@ describe("Delegation", () => {
                         assert.equal("D2 is even", delegation.info);
                     });
 
-                    describe("when delegation request is sent", async () => {
+                    describe("when delegation request is sent", () => {
 
                         fastBeforeEach(async () => {
                             await delegationController.connect(holder1).delegate(
@@ -319,7 +318,7 @@ describe("Delegation", () => {
                             balance.should.be.deep.equal(correctBalance);
                         });
 
-                        describe("when delegation request is accepted", async () => {
+                        describe("when delegation request is accepted", () => {
                             fastBeforeEach(async () => {
                                 await delegationController.connect(validator).acceptPendingDelegation(requestId);
                             });
@@ -362,8 +361,7 @@ describe("Delegation", () => {
                     });
                 });
             } else {
-                it("should not allow to send delegation request for " + delegationPeriod +
-                    " month" + (delegationPeriod > 1 ? "s" : "" ), async () => {
+                it(`should not allow to send delegation request for ${delegationPeriod} month${delegationPeriod > 1 ? "s" : "" }`, async () => {
                     await delegationController.connect(holder1).delegate(validatorId, defaultAmount.toString(), delegationPeriod,
                         "D2 is even")
                         .should.be.eventually.rejectedWith("This delegation period is not allowed");
@@ -446,7 +444,7 @@ describe("Delegation", () => {
             const slashingTable: SlashingTable = await deploySlashingTable(contractManager);
             const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
             await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
-            slashingTable.setPenalty("FailedDKG", ethers.utils.parseEther("10000"));
+            await slashingTable.setPenalty("FailedDKG", ethers.utils.parseEther("10000"));
 
             await constantsHolder.setLaunchTimestamp((await currentTime()) - 4 * month);
 
@@ -550,15 +548,15 @@ describe("Delegation", () => {
             }
         });
 
-        describe("when 3 holders delegated", async () => {
+        describe("when 3 holders delegated", () => {
             const delegatedAmount1 = 2e6;
             const delegatedAmount2 = 3e6;
             const delegatedAmount3 = 5e6;
             fastBeforeEach(async () => {
-                delegationController.connect(holder1).delegate(validatorId, delegatedAmount1, 12, "D2 is even");
-                delegationController.connect(holder2).delegate(validatorId, delegatedAmount2, 6,
+                await delegationController.connect(holder1).delegate(validatorId, delegatedAmount1, 12, "D2 is even");
+                await delegationController.connect(holder2).delegate(validatorId, delegatedAmount2, 6,
                     "D2 is even more even");
-                delegationController.connect(holder3).delegate(validatorId, delegatedAmount3, 2, "D2 is the evenest");
+                await delegationController.connect(holder3).delegate(validatorId, delegatedAmount3, 2, "D2 is the evenest");
 
                 await delegationController.connect(validator).acceptPendingDelegation(0);
                 await delegationController.connect(validator).acceptPendingDelegation(1);
@@ -627,7 +625,7 @@ describe("Delegation", () => {
                 balance.should.be.equal(BigNumber.from(defaultAmount.toString()).add(28).toString());
             });
 
-            describe("Slashing", async () => {
+            describe("Slashing", () => {
 
                 it("should slash validator and lock delegators fund in proportion of delegation share", async () => {
                     // do 5 separate slashes to check aggregation
@@ -694,7 +692,7 @@ describe("Delegation", () => {
                 });
 
                 it("should allow only FORGIVER_ROLE to return slashed tokens", async() => {
-                    const skaleManager = await deploySkaleManager(contractManager);
+                    await deploySkaleManager(contractManager);
 
                     await punisher.slash(validatorId, 10);
                     await delegationController.processAllSlashes(holder3.address);
@@ -710,7 +708,7 @@ describe("Delegation", () => {
                     // slash everything
                     await punisher.slash(validatorId, delegatedAmount1 + delegatedAmount2 + delegatedAmount3);
 
-                    delegationController.connect(holder1).delegate(validatorId, 1e7, 2, "D2 is the evenest");
+                    await delegationController.connect(holder1).delegate(validatorId, 1e7, 2, "D2 is the evenest");
                     const delegationId = 3;
                     await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 

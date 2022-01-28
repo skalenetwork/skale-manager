@@ -9,13 +9,12 @@ import { ContractManager,
          SkaleToken,
          SlashingTable,
          ValidatorService,
-         Wallets} from "../typechain";
+         Wallets} from "../typechain-types";
 
 import { nextMonth, skipTime } from "./tools/time";
 
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
+import { curve, ec } from "elliptic";
+const secp256k1Curve = new ec("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
 import { Wallet } from "ethers";
@@ -550,7 +549,7 @@ describe("SkaleDkgFakeComplaint", () => {
     let schainName = "";
     const delegatedAmount = 1e7;
 
-    let validators: {nodePublicKey: string, nodeAddress: Wallet}[];
+    let validators: {nodePublicKey: curve.base.BasePoint, nodeAddress: Wallet}[];
 
     before(async () => {
         [owner, validator1, validator2] = await ethers.getSigners();
@@ -563,11 +562,11 @@ describe("SkaleDkgFakeComplaint", () => {
 
         validators = [
             {
-                nodePublicKey: ec.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic(),
+                nodePublicKey: secp256k1Curve.keyFromPrivate(nodeAddress1.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress1
             },
             {
-                nodePublicKey: ec.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic(),
+                nodePublicKey: secp256k1Curve.keyFromPrivate(nodeAddress2.privateKey.slice(2)).getPublic(),
                 nodeAddress: nodeAddress2
             }
         ];
@@ -634,7 +633,7 @@ describe("SkaleDkgFakeComplaint", () => {
         await applySnapshot(snapshot);
     });
 
-    describe("when 4-node schain is created", async () => {
+    describe("when 4-node schain is created", () => {
         let cleanContracts: number;
         before(async () => {
             cleanContracts = await makeSnapshot();
@@ -661,7 +660,7 @@ describe("SkaleDkgFakeComplaint", () => {
                 let index = 3;
             while (!(nodesInGroup[0].eq(0) && nodesInGroup[1].eq(1) && nodesInGroup[2].eq(2))) {
                 await schains.deleteSchainByRoot(schainName);
-                schainName = "d" + index;
+                schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
@@ -686,7 +685,7 @@ describe("SkaleDkgFakeComplaint", () => {
             await applySnapshot(cleanContracts);
         });
 
-        describe("when correct broadcasts sent", async () => {
+        describe("when correct broadcasts sent", () => {
             const nodesCount = 4;
             it("should not revert after successful complaint", async () => {
                 for (let i = 0; i < nodesCount; ++i) {

@@ -1,7 +1,7 @@
 import { ContractManager,
     DelegationController,
     SkaleToken,
-    ValidatorService} from "../../typechain";
+    ValidatorService} from "../../typechain-types";
 
 
 import * as chai from "chai";
@@ -87,7 +87,7 @@ describe("ValidatorService", () => {
         await validatorService.connect(owner).disableWhitelist();
     });
 
-    describe("when validator registered", async () => {
+    describe("when validator registered", () => {
         let cleanContracts: number;
         before(async () => {
             cleanContracts = await makeSnapshot();
@@ -199,7 +199,7 @@ describe("ValidatorService", () => {
                 .should.be.eventually.rejectedWith("Address already registered");
         });
 
-        describe("when validator requests for a new address", async () => {
+        describe("when validator requests for a new address", () => {
             let validatorLinkedNode: number;
             before(async () => {
                 validatorLinkedNode = await makeSnapshot();
@@ -244,7 +244,7 @@ describe("ValidatorService", () => {
         it("should allow only VALIDATOR_MANAGER_ROLE to enable validator", async () => {
             await validatorService.connect(holder).enableValidator(1)
                 .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
-            const skaleManager = await deploySkaleManager(contractManager);
+            await deploySkaleManager(contractManager);
             const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
             await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, holder.address);
             await validatorService.connect(holder).enableValidator(1);
@@ -254,7 +254,7 @@ describe("ValidatorService", () => {
             await validatorService.enableValidator(1);
             await validatorService.connect(holder).disableValidator(1)
                 .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
-            const skaleManager = await deploySkaleManager(contractManager);
+            await deploySkaleManager(contractManager);
             const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
             await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, holder.address);
             await validatorService.connect(holder).disableValidator(1);
@@ -287,12 +287,11 @@ describe("ValidatorService", () => {
             assert.deepEqual(whitelist, trustedList);
         });
 
-        describe("when holder has enough tokens", async () => {
+        describe("when holder has enough tokens", () => {
             let validatorId: number;
             let amount: number;
             let delegationPeriod: number;
             let info: string;
-            const month = 60 * 60 * 24 * 31;
             let validatorLinkedNode: number;
             before(async () => {
                 validatorLinkedNode = await makeSnapshot();

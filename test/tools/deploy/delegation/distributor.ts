@@ -1,4 +1,4 @@
-import { ContractManager, Distributor } from "../../../../typechain";
+import { ContractManager, Distributor } from "../../../../typechain-types";
 import { deployConstantsHolder } from "../constantsHolder";
 import { deployFunctionFactory } from "../factory";
 import { deploySkaleToken } from "../skaleToken";
@@ -18,7 +18,7 @@ async function deployDependencies(contractManager: ContractManager) {
     await deploySkaleToken(contractManager);
 }
 
-export const deployDistributor: (contractManager: ContractManager) => Promise<Distributor>
-    = deployFunctionFactory(
-        name,
-        deployDependencies);
+export const deployDistributor = deployFunctionFactory(
+    name,
+    deployDependencies
+) as (contractManager: ContractManager) => Promise<Distributor>;

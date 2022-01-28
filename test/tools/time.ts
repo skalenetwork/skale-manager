@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { ContractManager } from "../../typechain";
+import { ContractManager } from "../../typechain-types";
 import { deployTimeHelpers } from "./deploy/delegation/timeHelpers";
 
 
@@ -31,7 +31,7 @@ export async function isLeapYear() {
     return now.getFullYear() % 4 === 0;
 }
 
-export async function nextMonth(contractManager: ContractManager, monthsAmount:number = 1) {
+export async function nextMonth(contractManager: ContractManager, monthsAmount = 1) {
     const timeHelpers = await deployTimeHelpers(contractManager);
     const currentEpoch = await timeHelpers.getCurrentMonth();
     await skipTime((await timeHelpers.monthToTimestamp(currentEpoch.add(monthsAmount))).toNumber() - await currentTime())

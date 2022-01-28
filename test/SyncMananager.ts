@@ -1,4 +1,4 @@
-import { ContractManager, SyncManager } from "../typechain";
+import { ContractManager, SyncManager } from "../typechain-types";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
@@ -6,7 +6,6 @@ import { deploySyncManager } from "./tools/deploy/syncManager";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
-import { Event } from "@ethersproject/contracts";
 import { fastBeforeEach } from "./tools/mocha";
 
 chai.should();
@@ -57,28 +56,20 @@ describe("SyncManager", () => {
     });
 
     it("should add and remove IP address range", async () => {
-        let receipt: any;
-        let event: any;
         const rangeName = "range";
         const newStartIP = "0x00000001";
         const newEndIP = "0x00000002";
-        receipt = await (await syncManager.addIPRange(rangeName, newStartIP, newEndIP)).wait();
-        event = receipt.events?.find((value: Event, index: number, obj: Event[]) => value.event === "IPRangeAdded");
+        await syncManager.addIPRange(rangeName, newStartIP, newEndIP)
+            .should.emit(syncManager, "IPRangeAdded")
+            .withArgs(rangeName, newStartIP, newEndIP);
         {
             const { startIP, endIP } = await syncManager.getIPRangeByName(rangeName);
             expect(startIP).to.be.equal(newStartIP);
             expect(endIP).to.be.equal(newEndIP);
         }
-        {
-            const {name, startIP, endIP}  = event.args;
-            expect(name).to.be.equal(rangeName);
-            expect(startIP).to.be.equal(newStartIP);
-            expect(endIP).to.be.equal(newEndIP);
-        }
-
-        receipt = await (await syncManager.removeIPRange(rangeName)).wait();
-        event = receipt.events?.find((value: Event, index: number, obj: Event[]) => value.event === "IPRangeRemoved");
-        expect(event?.args?.name).to.be.equal(rangeName);
+        await syncManager.removeIPRange(rangeName)
+            .should.emit(syncManager, "IPRangeRemoved")
+            .withArgs(rangeName);
         {
             const { startIP, endIP } = await syncManager.getIPRangeByName(rangeName);
             expect(startIP).to.be.equal("0x00000000");
