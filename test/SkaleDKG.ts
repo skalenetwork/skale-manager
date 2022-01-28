@@ -1838,7 +1838,8 @@ describe("SkaleDKG", () => {
                         i,
                         verificationVectorNew,
                         secretKeyContributions
-                    )
+                    ),
+                    "Broadcast"
                 );
                 broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
                     stringKeccak256("New16NodeSchain"),
@@ -1867,7 +1868,8 @@ describe("SkaleDKG", () => {
                     await skaleDKG.connect(validators[index].nodeAddress).alright(
                         stringKeccak256("New16NodeSchain"),
                         i
-                    )
+                    ),
+                    "Alright"
                 );
                 
                 alrightPoss = await skaleDKG.connect(validators[index].nodeAddress).isAlrightPossible(
