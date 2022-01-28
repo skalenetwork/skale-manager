@@ -78,7 +78,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
 
     uint public constant BOUNTY_LOCKUP_MONTHS = 2;
 
-    uint public constant ALRIGHT_DELTA = 130000;
+    uint public constant ALRIGHT_DELTA = 134161;
     uint public constant BROADCAST_DELTA = 177490;
     uint public constant COMPLAINT_BAD_DATA_DELTA = 80995;
     uint public constant PRE_RESPONSE_DELTA = 100061;
