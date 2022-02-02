@@ -47,7 +47,7 @@
     "@skalenetwork/skale-manager-interfaces": "^1.0.0-develop.0",
     "@typechain/hardhat": "^4.0.0",
     "axios": "^0.25.0",
-    "dotenv": "^14.3.2",
+    "dotenv": "^15.0.0",
     "ethereumjs-util": "^7.1.3",
     "ethers": "^5.5.3",
     "ethers-eip712": "^0.2.0",
