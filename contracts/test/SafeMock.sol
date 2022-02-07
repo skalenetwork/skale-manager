@@ -30,6 +30,9 @@ interface ISafeMock {
 }
 
 contract SafeMock is OwnableUpgradeable, ISafeMock {
+
+    bool public constant IS_SAFE_MOCK = true;
+
     constructor() initializer {
         OwnableUpgradeable.__Ownable_init();
         multiSend(""); // this is needed to remove slither warning

@@ -126,6 +126,16 @@ export async function upgrade(
                     console.log(chalk.blue(`Grant access to ${contractName}`));
                     await (await contract.grantRole(await contract.DEFAULT_ADMIN_ROLE(), safe)).wait();
         }
+    } else {
+        try {
+            const safeMockFactory = await ethers.getContractFactory("SafeMock");
+            const checkSafeMock = (safeMockFactory.attach(safe)) as SafeMock;
+            if (await checkSafeMock.IS_SAFE_MOCK()) {
+                safeMock = checkSafeMock;
+            }
+        } catch (e) {
+            console.log(chalk.yellow("Owner is not SafeMock"));
+        }
     }
 
     // Deploy new contracts
@@ -200,7 +210,7 @@ export async function upgrade(
         privateKey = ethers.Wallet.createRandom().privateKey;
     }
 
-    const safeTx = await createMultiSendTransaction(ethers, safe, privateKey, safeTransactions);
+    const safeTx = await createMultiSendTransaction(ethers, safe, privateKey, safeTransactions, safeMock !== undefined);
     if (!safeMock) {
         const chainId = (await ethers.provider.getNetwork()).chainId;
         await sendSafeTransaction(safe, chainId, safeTx);
@@ -217,7 +227,7 @@ export async function upgrade(
             await (await safeMock.transferProxyAdminOwnership(contractManager.address, deployer.address)).wait();
             await (await safeMock.transferProxyAdminOwnership(proxyAdmin.address, deployer.address)).wait();
             if (await proxyAdmin.owner() === deployer.address) {
-                await (await safeMock.destroy()).wait();
+                await (await safeMock.destroy({gasLimit: 1000000})).wait();
             } else {
                 console.log(chalk.blue("Something went wrong with ownership transfer"));
                 process.exit(1);
