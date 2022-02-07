@@ -66,6 +66,8 @@ contract NodeRotation is Permissions, INodeRotation {
 
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
 
+    mapping (uint => mapping (bytes32 => uint)) public indexInLeavingHostory;
+
     /**
      * @dev Emitted when rotation delay skipped.
      */
@@ -148,6 +150,9 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     function isRotationInProgress(bytes32 schainHash) external view override returns (bool) {
+        bool foundNewNode = _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
+            _rotations[schainHash].nodeIndex;
+        // return foundNewNode ?  : _rotations[schainHash].freezeUntil >= block.timestamp;
         return _rotations[schainHash].freezeUntil >= block.timestamp && !waitForNewNode[schainHash];
     }
 
