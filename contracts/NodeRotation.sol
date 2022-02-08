@@ -229,7 +229,7 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     function isNewNodeFound(bytes32 schainHash) public view override returns (bool) {
-        return _rotations[schainHash].newNodeIndexes.contains(_rotations[schainHash].nodeIndex) && 
+        return _rotations[schainHash].newNodeIndexes.contains(_rotations[schainHash].newNodeIndex) && 
             _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
             _rotations[schainHash].nodeIndex;
     }
