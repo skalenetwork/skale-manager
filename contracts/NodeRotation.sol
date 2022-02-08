@@ -149,8 +149,7 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     function isRotationInProgress(bytes32 schainHash) external view override returns (bool) {
-        bool foundNewNode = _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
-            _rotations[schainHash].nodeIndex;
+        bool foundNewNode = isNewNodeFound(schainHash);
         return foundNewNode ?
             leavingHistory[_rotations[schainHash].nodeIndex][
                 _rotations[schainHash].indexInLeavingHistory[_rotations[schainHash].nodeIndex]
@@ -166,6 +165,12 @@ contract NodeRotation is Permissions, INodeRotation {
     function getPreviousNode(bytes32 schainHash, uint256 nodeIndex) external view override returns (uint256) {
         require(_rotations[schainHash].newNodeIndexes.contains(nodeIndex), "No previous node");
         return _rotations[schainHash].previousNodes[nodeIndex];
+    }
+
+    function isNewNodeFound(bytes32 schainHash) external view returns (bool) {
+        return _rotations[schainHash].newNodeIndexes.contains(_rotations[schainHash].nodeIndex) && 
+            _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
+            _rotations[schainHash].nodeIndex;
     }
 
     function initialize(address newContractsAddress) public override initializer {

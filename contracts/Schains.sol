@@ -220,6 +220,7 @@ contract Schains is Permissions, ISchains {
         ISkaleDKG.G2Point memory publicKey = G2Operations.getG2Zero();
         bytes32 schainHash = keccak256(abi.encodePacked(schainName));
         if (
+            INodeRotation(contractManager.getContract("NodeRotation")).isNewNodeFound(schainHash) &&
             INodeRotation(contractManager.getContract("NodeRotation")).isRotationInProgress(schainHash) &&
             ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash)
         ) {
