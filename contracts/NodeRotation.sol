@@ -56,6 +56,7 @@ contract NodeRotation is Permissions, INodeRotation {
         //    schainHash =>        nodeIndex => nodeIndex
         mapping (uint256 => uint256) previousNodes;
         EnumerableSetUpgradeable.UintSet newNodeIndexes;
+        mapping (uint256 => uint256) indexInLeavingHistory;
     }
 
     mapping (bytes32 => RotationWithPreviousNodes) private _rotations;
@@ -65,8 +66,6 @@ contract NodeRotation is Permissions, INodeRotation {
     mapping (bytes32 => bool) public waitForNewNode;
 
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
-
-    mapping (uint => mapping (bytes32 => uint)) public indexInLeavingHostory;
 
     /**
      * @dev Emitted when rotation delay skipped.
@@ -152,8 +151,11 @@ contract NodeRotation is Permissions, INodeRotation {
     function isRotationInProgress(bytes32 schainHash) external view override returns (bool) {
         bool foundNewNode = _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
             _rotations[schainHash].nodeIndex;
-        // return foundNewNode ?  : _rotations[schainHash].freezeUntil >= block.timestamp;
-        return _rotations[schainHash].freezeUntil >= block.timestamp && !waitForNewNode[schainHash];
+        return foundNewNode ?
+            leavingHistory[_rotations[schainHash].nodeIndex][
+                _rotations[schainHash].indexInLeavingHistory[_rotations[schainHash].nodeIndex]
+            ].finishedRotation >= block.timestamp :
+            _rotations[schainHash].freezeUntil >= block.timestamp;
     }
 
     /**
@@ -264,6 +266,7 @@ contract NodeRotation is Permissions, INodeRotation {
         _rotations[schainHash].newNodeIndex = newNodeIndex;
         _rotations[schainHash].rotationCounter++;
         _rotations[schainHash].previousNodes[newNodeIndex] = nodeIndex;
+        _rotations[schainHash].indexInLeavingHistory[nodeIndex] = leavingHistory[nodeIndex].length - 1;
         delete waitForNewNode[schainHash];
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
     }
