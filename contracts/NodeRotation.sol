@@ -167,12 +167,6 @@ contract NodeRotation is Permissions, INodeRotation {
         return _rotations[schainHash].previousNodes[nodeIndex];
     }
 
-    function isNewNodeFound(bytes32 schainHash) external view returns (bool) {
-        return _rotations[schainHash].newNodeIndexes.contains(_rotations[schainHash].nodeIndex) && 
-            _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
-            _rotations[schainHash].nodeIndex;
-    }
-
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
     }
@@ -232,6 +226,12 @@ contract NodeRotation is Permissions, INodeRotation {
         schainsInternal.addSchainForNode(nodeIndex, schainHash);
         schainsInternal.setException(schainHash, nodeIndex);
         schainsInternal.setNodeInGroup(schainHash, nodeIndex);
+    }
+
+    function isNewNodeFound(bytes32 schainHash) public view override returns (bool) {
+        return _rotations[schainHash].newNodeIndexes.contains(_rotations[schainHash].nodeIndex) && 
+            _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
+            _rotations[schainHash].nodeIndex;
     }
 
 

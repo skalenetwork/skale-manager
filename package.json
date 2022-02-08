@@ -28,7 +28,7 @@
   "scripts": {
     "compile": "npx hardhat clean && npx hardhat compile",
     "docs": "scripts/prepare-docs.sh",
-    "fullCheck": "yarn lint && yarn tsc && yarn eslint && yarn cspell && yarn slither",
+    "fullCheck": "yarn lint && yarn tsc && yarn eslint && yarn slither",
     "hooks": "git config core.hooksPath .githooks || true",
     "no-hooks": "git config core.hooksPath .git/hooks",
     "lint": "npx solhint \"contracts/**/*.sol\"",
@@ -44,7 +44,7 @@
     "@openzeppelin/contracts": "^4.4.2",
     "@openzeppelin/contracts-upgradeable": "^4.4.2",
     "@openzeppelin/hardhat-upgrades": "^1.13.0",
-    "@skalenetwork/skale-manager-interfaces": "^1.0.0-develop.0",
+    "@skalenetwork/skale-manager-interfaces": "1.0.0-skale-4955-fix-isnodeinprogress-interfaces.0",
     "@typechain/hardhat": "^4.0.0",
     "axios": "^0.25.0",
     "dotenv": "^14.3.2",
