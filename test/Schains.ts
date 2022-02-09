@@ -2550,7 +2550,7 @@ describe("Schains", () => {
             await schainsInternal.getSchainHashesForNode(rotIndex).should.be.eventually.empty;
         });
 
-        it.only("should check rotation in progress", async () => {
+        it("should check rotation in progress", async () => {
             const rotIndex = 7;
             const schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
             await nodes.initExit(rotIndex);
