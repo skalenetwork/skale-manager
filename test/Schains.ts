@@ -2550,7 +2550,7 @@ describe("Schains", () => {
             await schainsInternal.getSchainHashesForNode(rotIndex).should.be.eventually.empty;
         });
 
-        it("should check rotation in progress", async () => {
+        it.only("should check rotation in progress", async () => {
             const rotIndex = 7;
             const schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
             await nodes.initExit(rotIndex);
@@ -2597,29 +2597,32 @@ describe("Schains", () => {
                 (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
             }
 
-            while (!(await nodes.isNodeLeft(rotIndex))) {
-                await skaleManager.connect(nodeAddress3).nodeExit(rotIndex);
-            }
+            if (!(await nodes.isNodeLeft(rotIndex))) {
 
-            for (const schainHash of Array.from(schainHashes).reverse()) {
-                if (schainHash != schainHashes[schainHashes.length - 1]) {
-                    await skaleDKG.setSuccessfulDKGPublic(
-                        schainHash,
-                    );
+                while (!(await nodes.isNodeLeft(rotIndex))) {
+                    await skaleManager.connect(nodeAddress3).nodeExit(rotIndex);
                 }
-            }
 
-            for (const schainHash of Array.from(schainHashes).reverse()) {
-                if (schainHash != schainHashes[schainHashes.length - 1]) {
-                    (await nodeRotation.isRotationInProgress(schainHash)).should.be.true;
-                    (await nodeRotation.isNewNodeFound(schainHash)).should.be.true;
+                for (const schainHash of Array.from(schainHashes).reverse()) {
+                    if (schainHash != schainHashes[schainHashes.length - 1]) {
+                        await skaleDKG.setSuccessfulDKGPublic(
+                            schainHash,
+                        );
+                    }
                 }
-            }
 
-            await skipTime(rotDelay.toNumber() + 1);
+                for (const schainHash of Array.from(schainHashes).reverse()) {
+                    if (schainHash != schainHashes[schainHashes.length - 1]) {
+                        (await nodeRotation.isRotationInProgress(schainHash)).should.be.true;
+                        (await nodeRotation.isNewNodeFound(schainHash)).should.be.true;
+                    }
+                }
 
-            for (const schainHash of Array.from(schainHashes).reverse()) {
-                (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
+                await skipTime(rotDelay.toNumber() + 1);
+
+                for (const schainHash of Array.from(schainHashes).reverse()) {
+                    (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
+                }
             }
 
         });
