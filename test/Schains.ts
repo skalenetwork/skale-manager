@@ -2549,6 +2549,100 @@ describe("Schains", () => {
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
             await schainsInternal.getSchainHashesForNode(rotIndex).should.be.eventually.empty;
         });
+
+        it("should check rotation in progress", async () => {
+            let rotIndex = 0;
+            let schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
+
+            for(const index of Array.from(Array(6).keys())) {
+                const res = await schainsInternal.getSchainHashesForNode(index);
+                if (res.length >= 3) {
+                    rotIndex = index;
+                    schainHashes = res;
+                    break;
+                }
+            }
+
+            let senderAddress = nodeAddress;
+            if (rotIndex === 6) {
+                senderAddress = nodeAddress2;
+            } else if (rotIndex === 7) {
+                senderAddress = nodeAddress3;
+            }
+
+            await nodes.initExit(rotIndex);
+            for (const schainHash of Array.from(schainHashes).reverse()) {
+                (await nodeRotation.isRotationInProgress(schainHash)).should.be.true;
+                (await nodeRotation.isNewNodeFound(schainHash)).should.be.false;
+            }
+
+            const rotDelay = await constantsHolder.rotationDelay();
+            const tenSecDelta = 10;
+
+            await skipTime(rotDelay.toNumber() - tenSecDelta);
+
+            for (const schainHash of Array.from(schainHashes).reverse()) {
+                (await nodeRotation.isRotationInProgress(schainHash)).should.be.true;
+                (await nodeRotation.isNewNodeFound(schainHash)).should.be.false;
+            }
+
+            await skipTime(tenSecDelta + 1);
+
+            for (const schainHash of Array.from(schainHashes).reverse()) {
+                (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
+            }
+
+            await skaleManager.connect(senderAddress).nodeExit(rotIndex);
+            await skaleDKG.setSuccessfulDKGPublic(
+                schainHashes[schainHashes.length - 1],
+            );
+
+
+            for (const schainHash of Array.from(schainHashes).reverse()) {
+                if (schainHash == schainHashes[schainHashes.length - 1]) {
+                    (await nodeRotation.isRotationInProgress(schainHash)).should.be.true;
+                    (await nodeRotation.isNewNodeFound(schainHash)).should.be.true;    
+                } else {
+                    (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
+                    (await nodeRotation.isNewNodeFound(schainHash)).should.be.false;
+                }
+            }
+
+            await skipTime(rotDelay.toNumber() + 1);
+
+            for (const schainHash of Array.from(schainHashes).reverse()) {
+                (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
+            }
+
+            if (!(await nodes.isNodeLeft(rotIndex))) {
+
+                while (!(await nodes.isNodeLeft(rotIndex))) {
+                    await skaleManager.connect(senderAddress).nodeExit(rotIndex);
+                }
+
+                for (const schainHash of Array.from(schainHashes).reverse()) {
+                    if (schainHash != schainHashes[schainHashes.length - 1]) {
+                        await skaleDKG.setSuccessfulDKGPublic(
+                            schainHash,
+                        );
+                    }
+                }
+
+                for (const schainHash of Array.from(schainHashes).reverse()) {
+                    if (schainHash != schainHashes[schainHashes.length - 1]) {
+                        (await nodeRotation.isRotationInProgress(schainHash)).should.be.true;
+                        (await nodeRotation.isNewNodeFound(schainHash)).should.be.true;
+                    }
+                }
+
+                await skipTime(rotDelay.toNumber() + 1);
+
+                for (const schainHash of Array.from(schainHashes).reverse()) {
+                    (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
+                }
+            }
+
+        });
     });
 
     describe("when 17 nodes, 1 schain and remove schain type", () => {
