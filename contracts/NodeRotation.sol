@@ -56,6 +56,7 @@ contract NodeRotation is Permissions, INodeRotation {
         //    schainHash =>        nodeIndex => nodeIndex
         mapping (uint256 => uint256) previousNodes;
         EnumerableSetUpgradeable.UintSet newNodeIndexes;
+        mapping (uint256 => uint256) indexInLeavingHistory;
     }
 
     mapping (bytes32 => RotationWithPreviousNodes) private _rotations;
@@ -148,7 +149,12 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     function isRotationInProgress(bytes32 schainHash) external view override returns (bool) {
-        return _rotations[schainHash].freezeUntil >= block.timestamp && !waitForNewNode[schainHash];
+        bool foundNewNode = isNewNodeFound(schainHash);
+        return foundNewNode ?
+            leavingHistory[_rotations[schainHash].nodeIndex][
+                _rotations[schainHash].indexInLeavingHistory[_rotations[schainHash].nodeIndex]
+            ].finishedRotation >= block.timestamp :
+            _rotations[schainHash].freezeUntil >= block.timestamp;
     }
 
     /**
@@ -222,6 +228,12 @@ contract NodeRotation is Permissions, INodeRotation {
         schainsInternal.setNodeInGroup(schainHash, nodeIndex);
     }
 
+    function isNewNodeFound(bytes32 schainHash) public view override returns (bool) {
+        return _rotations[schainHash].newNodeIndexes.contains(_rotations[schainHash].newNodeIndex) && 
+            _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
+            _rotations[schainHash].nodeIndex;
+    }
+
 
     /**
      * @dev Initiates rotation of a node from an schain.
@@ -259,6 +271,7 @@ contract NodeRotation is Permissions, INodeRotation {
         _rotations[schainHash].newNodeIndex = newNodeIndex;
         _rotations[schainHash].rotationCounter++;
         _rotations[schainHash].previousNodes[newNodeIndex] = nodeIndex;
+        _rotations[schainHash].indexInLeavingHistory[nodeIndex] = leavingHistory[nodeIndex].length - 1;
         delete waitForNewNode[schainHash];
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
     }
