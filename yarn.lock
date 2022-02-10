@@ -1090,10 +1090,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/skale-manager-interfaces@^1.0.0-develop.0":
-  version "1.0.0-develop.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-develop.0.tgz#aa0c022dbfcf5797ad34a36bda4f106a2fc1270f"
-  integrity sha512-06F+OZdhEjLMOj0UAvgGayj/iDlRU07QMhLdKLndHlo8EJgvZt/0+/YySGFGOTfbpikymaLjQvj10blgqlsRgA==
+"@skalenetwork/skale-manager-interfaces@1.0.0-develop.1":
+  version "1.0.0-develop.1"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-develop.1.tgz#8a2d06872dcdc235c041448efc454c0d5f1e55cf"
+  integrity sha512-ZOSWEqvz76Ez5cuWE8n9+j/tnTVQg+t7vaZar/XME0hxnM1YwNFqy34nqjEC/SMhFXg/WnxdOVX9JWWXVZRlkQ==
 
 "@solidity-parser/parser@^0.13.2":
   version "0.13.2"
@@ -8746,12 +8746,12 @@ solidity-ast@^0.4.15:
   resolved "https://registry.yarnpkg.com/solidity-ast/-/solidity-ast-0.4.29.tgz#faa06b93467501cf7069436c8a9255dd0a9a195c"
   integrity sha512-sp4+lbgZPQJLBNFWoLiRb/NXZOhqAEPK9AIOh5htKOTx72w5j9Bu5eQl0jcUc5wiyCqsgpFWLCGfgu3edkSWog==
 
-solidity-coverage@^0.7.18:
-  version "0.7.18"
-  resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.7.18.tgz#3dac9e0bf97aadf028d989dacdc3159c7879d9c0"
-  integrity sha512-H1UhB9QqLISJPgttaulnStUyOaJm0wZXvBGWUN9+HH3dl2hYjSmo3RBBFRm7U+dBNpPysS835XFGe+hG4ZhMrA==
+solidity-coverage@^0.7.19:
+  version "0.7.19"
+  resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.7.19.tgz#0d2247c8efc6a6b3e79b94df866125fb8f17aada"
+  integrity sha512-TjVhKG0+KjlxFk8ECRI6/QVmjfsUr4Cupmlmg7OShbLDLLeCDcl1WSL290+0gZXcB0Zw9ZMsRcIVGYHYk2GQWA==
   dependencies:
-    "@solidity-parser/parser" "^0.13.2"
+    "@solidity-parser/parser" "^0.14.0"
     "@truffle/provider" "^0.2.24"
     chalk "^2.4.2"
     death "^1.1.0"
