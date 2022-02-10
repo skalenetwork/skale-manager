@@ -2551,8 +2551,25 @@ describe("Schains", () => {
         });
 
         it("should check rotation in progress", async () => {
-            const rotIndex = 7;
-            const schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
+            let rotIndex = 0;
+            let schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
+
+            for(const index of Array.from(Array(6).keys())) {
+                const res = await schainsInternal.getSchainHashesForNode(index);
+                if (res.length >= 3) {
+                    rotIndex = index;
+                    schainHashes = res;
+                    break;
+                }
+            }
+
+            let senderAddress = nodeAddress;
+            if (rotIndex === 6) {
+                senderAddress = nodeAddress2;
+            } else if (rotIndex === 7) {
+                senderAddress = nodeAddress3;
+            }
+
             await nodes.initExit(rotIndex);
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 (await nodeRotation.isRotationInProgress(schainHash)).should.be.true;
@@ -2575,7 +2592,7 @@ describe("Schains", () => {
                 (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
             }
 
-            await skaleManager.connect(nodeAddress3).nodeExit(rotIndex);
+            await skaleManager.connect(senderAddress).nodeExit(rotIndex);
             await skaleDKG.setSuccessfulDKGPublic(
                 schainHashes[schainHashes.length - 1],
             );
@@ -2600,7 +2617,7 @@ describe("Schains", () => {
             if (!(await nodes.isNodeLeft(rotIndex))) {
 
                 while (!(await nodes.isNodeLeft(rotIndex))) {
-                    await skaleManager.connect(nodeAddress3).nodeExit(rotIndex);
+                    await skaleManager.connect(senderAddress).nodeExit(rotIndex);
                 }
 
                 for (const schainHash of Array.from(schainHashes).reverse()) {
