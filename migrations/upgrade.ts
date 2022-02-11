@@ -32,8 +32,8 @@ async function main() {
         "1.8.2",
         getDeployedVersion,
         setNewVersion,
-        ["ContractManager"].concat(contracts),
         ["SkaleManager"],
+        ["ContractManager"].concat(contracts),
         async (safeTransactions: string[], abi: SkaleABIFile, contractManager: ContractManager) => {
             const safe = await contractManager.owner();
             const [ deployer ] = await ethers.getSigners();

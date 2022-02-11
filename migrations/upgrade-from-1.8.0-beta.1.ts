@@ -8,8 +8,8 @@ async function main() {
         "1.8.0-beta.1",
         getDeployedVersion,
         setNewVersion,
-        ["ContractManager"].concat(contracts),
         ["SkaleManager"],
+        ["ContractManager"].concat(contracts),
         () => Promise.resolve(undefined),
         () => Promise.resolve(undefined)
     );
