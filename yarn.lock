@@ -1090,10 +1090,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/skale-manager-interfaces@1.0.0-skale-4955-fix-isnodeinprogress-interfaces.0":
-  version "1.0.0-skale-4955-fix-isnodeinprogress-interfaces.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-skale-4955-fix-isnodeinprogress-interfaces.0.tgz#0e498ac5fc4136934b2afa2e3bd31ff187508137"
-  integrity sha512-ZYFJiCEUdMHrY9GOD0GCaFw9cZdWgcVC/yjyBZ9AAn01pf+Rm1NiETv8HL/psh25cmk35Lb6uxlimsS9fuRlFw==
+"@skalenetwork/skale-manager-interfaces@1.0.0-develop.1":
+  version "1.0.0-develop.1"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-develop.1.tgz#8a2d06872dcdc235c041448efc454c0d5f1e55cf"
+  integrity sha512-ZOSWEqvz76Ez5cuWE8n9+j/tnTVQg+t7vaZar/XME0hxnM1YwNFqy34nqjEC/SMhFXg/WnxdOVX9JWWXVZRlkQ==
 
 "@solidity-parser/parser@^0.13.2":
   version "0.13.2"
@@ -1288,10 +1288,10 @@
     "@types/node" "*"
     form-data "^3.0.0"
 
-"@types/node@*", "@types/node@^17.0.13":
-  version "17.0.13"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.13.tgz#5ed7ed7c662948335fcad6c412bb42d99ea754e3"
-  integrity sha512-Y86MAxASe25hNzlDbsviXl8jQHb0RDvKt4c40ZJQ1Don0AAL0STLZSs4N+6gLEO55pedy7r2cLwS+ZDxPm/2Bw==
+"@types/node@*", "@types/node@^17.0.18":
+  version "17.0.18"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.18.tgz#3b4fed5cfb58010e3a2be4b6e74615e4847f1074"
+  integrity sha512-eKj4f/BsN/qcculZiRSujogjvp5O/k4lOW5m35NopjZM/QwLOR075a8pJW5hD+Rtdm2DaCVPENS6KtSQnUD6BA==
 
 "@types/node@^12.12.6":
   version "12.20.42"
