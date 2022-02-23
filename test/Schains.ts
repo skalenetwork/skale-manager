@@ -167,6 +167,25 @@ describe("Schains", () => {
             ).should.be.eventually.rejectedWith("Schain name is not available");
         });
 
+        it("should fail when schain name is None", async () => {
+            const price = await schains.getSchainPrice(1, 5);
+            await schains.addSchain(
+                holder.address,
+                price.toString(),
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.SMALL,
+                        nonce: 0,
+                        name: "", // wrong name
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                )
+            ).should.be.eventually.rejectedWith("Schain name is not available");
+        });
+
         it("should fail when nodes count is too low", async () => {
             const price = await schains.getSchainPrice(1, 5);
             await schains.addSchain(
