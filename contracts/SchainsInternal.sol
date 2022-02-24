@@ -549,7 +549,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         return schains[schainHash].owner == address(0) &&
             !usedSchainNames[schainHash] &&
-            keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked("Mainnet"));
+            keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked("Mainnet")) &&
+            bytes(name).length > 0;
     }
 
     /**
