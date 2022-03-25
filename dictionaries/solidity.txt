@@ -1,4 +1,5 @@
 blockhash
+chainid
 delegatecall
 gasleft
 mload
