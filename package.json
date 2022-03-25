@@ -50,7 +50,6 @@
     "dotenv": "^14.3.2",
     "ethereumjs-util": "^7.1.4",
     "ethers": "^5.5.3",
-    "ethers-eip712": "^0.2.0",
     "hardhat": "^2.8.3"
   },
   "devDependencies": {
