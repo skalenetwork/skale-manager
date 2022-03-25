@@ -184,8 +184,6 @@ export async function createMultiSendTransaction(ethers: Ethers, safeAddress: st
         tx.nonce
     );
 
-    console.log(digestHex); //deb
-
     const privateKeyBuffer = ethUtil.toBuffer(privateKey);
     const { r, s, v } = ethUtil.ecsign(ethUtil.toBuffer(digestHex), privateKeyBuffer);
     const signature = ethUtil.toRpcSig(v, r, s).toString();
@@ -198,9 +196,6 @@ export async function createMultiSendTransaction(ethers: Ethers, safeAddress: st
         "signature": signature,  // One or more ethereum ECDSA signatures of the `contractTransactionHash` as an hex string
         "origin": "Upgrade skale-manager"  // Give more information about the transaction, e.g. "My Custom Safe app"
     }
-
-    console.log(JSON.stringify(txToSend, null, 4));
-    process.exit(0);
 
     return txToSend;
 }
