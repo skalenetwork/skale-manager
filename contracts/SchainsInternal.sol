@@ -82,6 +82,9 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
     uint public currentGeneration;
 
+    mapping (uint => bool) public chainIds;
+
+
     bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
     bytes32 public constant GENERATION_MANAGER_ROLE = keccak256("GENERATION_MANAGER_ROLE");
@@ -114,7 +117,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         address from,
         address originator,
         uint lifetime,
-        uint deposit
+        uint deposit,
+        uint chainId
     )
         external
         override
@@ -133,7 +137,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             deposit: deposit,
             index: numberOfSchains,
             generation: currentGeneration,
-            originator: originator
+            originator: originator,
+            chainId: chainId
         });
         isSchainActive[schainHash] = true;
         numberOfSchains++;
@@ -551,6 +556,13 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             !usedSchainNames[schainHash] &&
             keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked("Mainnet")) &&
             bytes(name).length > 0;
+    }
+
+    /**
+     * @dev Checks whether chain Id is available.
+     */
+    function isChainIdAvailable(uint chainId) external view override returns (bool) {
+        return !chainIds[chainId];
     }
 
     /**

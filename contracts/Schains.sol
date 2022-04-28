@@ -50,6 +50,7 @@ contract Schains is Permissions, ISchains {
         string name;
         address originator;
         SchainOption[] options;
+        uint chainId;
     }
 
     //    schainHash => Set of options hashes
@@ -109,7 +110,8 @@ contract Schains is Permissions, ISchains {
         string calldata name,
         address schainOwner,
         address schainOriginator,
-        SchainOption[] calldata options
+        SchainOption[] calldata options,
+        uint chainId
     )
         external
         payable
@@ -123,7 +125,8 @@ contract Schains is Permissions, ISchains {
             nonce: nonce,
             name: name,
             originator: schainOriginator,
-            options: options
+            options: options,
+            chainId: chainId
         });
 
         address _schainOwner;
@@ -304,11 +307,13 @@ contract Schains is Permissions, ISchains {
         uint deposit,
         uint lifetime,
         ISchainsInternal schainsInternal,
-        SchainOption[] memory options
+        SchainOption[] memory options,
+        uint chainId
     )
         private
     {
         require(schainsInternal.isSchainNameAvailable(name), "Schain name is not available");
+        require(schainsInternal.isChainIdAvailable(chainId), "Chain id is not available");
 
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         for (uint i = 0; i < options.length; ++i) {
@@ -316,7 +321,7 @@ contract Schains is Permissions, ISchains {
         }
 
         // initialize Schain
-        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit);
+        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit, chainId);
     }
 
     /**
@@ -369,7 +374,8 @@ contract Schains is Permissions, ISchains {
             deposit,
             schainParameters.lifetime,
             schainsInternal,
-            schainParameters.options
+            schainParameters.options,
+            schainParameters.chainId
         );
 
         // create a group for Schain
