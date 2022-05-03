@@ -1,8 +1,8 @@
-import { contracts, getContractKeyInAbiFile, getManifestFile, getContractFactory } from "./deploy";
+import { contracts, getContractKeyInAbiFile, getManifestFile } from "./deploy";
 import { ethers, network, upgrades, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, Permissions, SchainsInternal, SkaleManager, SyncManager } from "../typechain-types";
+import { ContractManager, Permissions, SkaleManager } from "../typechain-types";
 import { ProxyAdmin } from "../typechain-types/ProxyAdmin";
 import { getImplementationAddress, hashBytecode } from "@openzeppelin/upgrades-core";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
@@ -12,7 +12,7 @@ import { SafeMock } from "../typechain-types/SafeMock";
 import { encodeTransaction } from "./tools/multiSend";
 import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-safe";
 import chalk from "chalk";
-import { verify, verifyProxy } from "./tools/verification";
+import { verify } from "./tools/verification";
 import { getVersion } from "./tools/version";
 import { SkaleABIFile, SkaleManifestData } from "./tools/types";
 
@@ -242,51 +242,15 @@ export async function upgrade(
 
 async function main() {
     await upgrade(
-        "1.8.2",
+        "1.9.0",
         ["ContractManager"].concat(contracts),
-        async (safeTransactions, abi, contractManager) => {
-            const safe = await contractManager.owner();
-            const [ deployer ] = await ethers.getSigners();
-
-            const syncManagerName = "SyncManager";
-            const syncManagerFactory = await getContractFactory(syncManagerName);
-            console.log("Deploy", syncManagerName);
-            const syncManager = (await upgrades.deployProxy(syncManagerFactory, [contractManager.address])) as SyncManager;
-            await syncManager.deployTransaction.wait();
-            await (await syncManager.grantRole(await syncManager.DEFAULT_ADMIN_ROLE(), safe)).wait();
-            await (await syncManager.revokeRole(await syncManager.DEFAULT_ADMIN_ROLE(), deployer.address)).wait();
-            console.log(chalk.yellowBright("Prepare transaction to register", syncManagerName));
-            console.log("Register", syncManagerName, "as", syncManagerName, "=>", syncManager.address);
-            safeTransactions.push(encodeTransaction(
-                0,
-                contractManager.address,
-                0,
-                contractManager.interface.encodeFunctionData("setContractsAddress", [syncManagerName, syncManager.address]),
-            ));
-            await verifyProxy(syncManagerName, syncManager.address, []);
-            abi[getContractKeyInAbiFile(syncManagerName) + "_abi"] = getAbi(syncManager.interface);
-            abi[getContractKeyInAbiFile(syncManagerName) + "_address"] = syncManager.address;
+        // async (safeTransactions, abi, contractManager) => {
+        async () => {
+            // deploy new contracts
         },
-        async (safeTransactions, abi, contractManager) => {
-            const schainsInternal = (await ethers.getContractFactory("SchainsInternal"))
-                .attach(await contractManager.getContract("SchainsInternal")) as SchainsInternal;
-            const GENERATION_MANAGER_ROLE = ethers.utils.solidityKeccak256(["string"], ["GENERATION_MANAGER_ROLE"])
-            safeTransactions.push(encodeTransaction(
-                0,
-                schainsInternal.address,
-                0,
-                schainsInternal.interface.encodeFunctionData("grantRole", [
-                    GENERATION_MANAGER_ROLE,
-                    await contractManager.owner()
-                ])
-            ));
-            console.log(chalk.yellowBright("Prepare transaction to switch generation"));
-            safeTransactions.push(encodeTransaction(
-                0,
-                schainsInternal.address,
-                0,
-                schainsInternal.interface.encodeFunctionData("newGeneration"),
-            ));
+        // async (safeTransactions, abi, contractManager) => {
+        async () => {
+            // initialize
         }
     );
 }
