@@ -19,14 +19,13 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.11;
 
-import "../interfaces/delegation/ILocker.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+
 import "../Permissions.sol";
-
-import "./DelegationController.sol";
-import "./TimeHelpers.sol";
 
 
 /**
@@ -45,11 +44,11 @@ import "./TimeHelpers.sol";
  * - Tokens that are neither transferable nor delegatable
  * `getAndUpdateForbiddenForDelegationAmount`. This lock enforces slashing.
  */
-contract TokenState is Permissions, ILocker {
+contract TokenState is Permissions, ILocker, ITokenState {
 
     string[] private _lockers;
 
-    DelegationController private _delegationController;
+    IDelegationController private _delegationController;
 
     bytes32 public constant LOCKER_MANAGER_ROLE = keccak256("LOCKER_MANAGER_ROLE");
 
@@ -59,33 +58,19 @@ contract TokenState is Permissions, ILocker {
     }
 
     /**
-     * @dev Emitted when a contract is added to the locker.
-     */
-    event LockerWasAdded(
-        string locker
-    );
-
-    /**
-     * @dev Emitted when a contract is removed from the locker.
-     */
-    event LockerWasRemoved(
-        string locker
-    );
-
-    /**
      *  @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address holder) external override returns (uint) {
         if (address(_delegationController) == address(0)) {
             _delegationController =
-                DelegationController(contractManager.getContract("DelegationController"));
+                IDelegationController(contractManager.getContract("DelegationController"));
         }
         uint locked = 0;
         if (_delegationController.getDelegationsByHolderLength(holder) > 0) {
             // the holder ever delegated
             for (uint i = 0; i < _lockers.length; ++i) {
                 ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
-                locked = locked.add(locker.getAndUpdateLockedAmount(holder));
+                locked = locked + locker.getAndUpdateLockedAmount(holder);
             }
         }
         return locked;
@@ -98,7 +83,7 @@ contract TokenState is Permissions, ILocker {
         uint forbidden = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
             ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
-            forbidden = forbidden.add(locker.getAndUpdateForbiddenForDelegationAmount(holder));
+            forbidden = forbidden + locker.getAndUpdateForbiddenForDelegationAmount(holder);
         }
         return forbidden;
     }
@@ -108,7 +93,7 @@ contract TokenState is Permissions, ILocker {
      * 
      * Emits a {LockerWasRemoved} event.
      */
-    function removeLocker(string calldata locker) external onlyLockerManager {
+    function removeLocker(string calldata locker) external override onlyLockerManager {
         uint index;
         bytes32 hash = keccak256(abi.encodePacked(locker));
         for (index = 0; index < _lockers.length; ++index) {
@@ -117,10 +102,10 @@ contract TokenState is Permissions, ILocker {
             }
         }
         if (index < _lockers.length) {
-            if (index < _lockers.length.sub(1)) {
-                _lockers[index] = _lockers[_lockers.length.sub(1)];
+            if (index < _lockers.length - 1) {
+                _lockers[index] = _lockers[_lockers.length - 1];
             }
-            delete _lockers[_lockers.length.sub(1)];
+            delete _lockers[_lockers.length - 1];
             _lockers.pop();
             emit LockerWasRemoved(locker);
         }
@@ -138,7 +123,7 @@ contract TokenState is Permissions, ILocker {
      * 
      * Emits a {LockerWasAdded} event.
      */
-    function addLocker(string memory locker) public onlyLockerManager {
+    function addLocker(string memory locker) public override onlyLockerManager {
         _lockers.push(locker);
         emit LockerWasAdded(locker);
     }

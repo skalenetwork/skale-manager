@@ -19,23 +19,23 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 import "./utils/StringUtils.sol";
-
+import "./thirdparty/openzeppelin/InitializableWithGap.sol";
 
 /**
  * @title ContractManager
  * @dev Contract contains the actual current mapping from contract IDs
  * (in the form of human-readable strings) to addresses.
  */
-contract ContractManager is OwnableUpgradeSafe, IContractManager {
+contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractManager {
     using StringUtils for string;
-    using Address for address;
+    using AddressUpgradeable for address;
 
     string public constant BOUNTY = "Bounty";
     string public constant CONSTANTS_HOLDER = "ConstantsHolder";
@@ -47,15 +47,10 @@ contract ContractManager is OwnableUpgradeSafe, IContractManager {
     string public constant VALIDATOR_SERVICE = "ValidatorService";
 
     // mapping of actual smart contracts addresses
-    mapping (bytes32 => address) public contracts;
+    mapping (bytes32 => address) public override contracts;
 
-    /**
-     * @dev Emitted when contract is upgraded.
-     */
-    event ContractUpgraded(string contractsName, address contractsAddress);
-
-    function initialize() external initializer {
-        OwnableUpgradeSafe.__Ownable_init();
+    function initialize() external override initializer {
+        OwnableUpgradeable.__Ownable_init();
     }
 
     /**
@@ -96,35 +91,35 @@ contract ContractManager is OwnableUpgradeSafe, IContractManager {
      * 
      * - Contract must exist.
      */
-    function getDelegationPeriodManager() external view returns (address) {
+    function getDelegationPeriodManager() external view override returns (address) {
         return getContract(DELEGATION_PERIOD_MANAGER);
     }
 
-    function getBounty() external view returns (address) {
+    function getBounty() external view override returns (address) {
         return getContract(BOUNTY);
     }
 
-    function getValidatorService() external view returns (address) {
+    function getValidatorService() external view override returns (address) {
         return getContract(VALIDATOR_SERVICE);
     }
 
-    function getTimeHelpers() external view returns (address) {
+    function getTimeHelpers() external view override returns (address) {
         return getContract(TIME_HELPERS);
     }
 
-    function getConstantsHolder() external view returns (address) {
+    function getConstantsHolder() external view override returns (address) {
         return getContract(CONSTANTS_HOLDER);
     }
 
-    function getSkaleToken() external view returns (address) {
+    function getSkaleToken() external view override returns (address) {
         return getContract(SKALE_TOKEN);
     }
 
-    function getTokenState() external view returns (address) {
+    function getTokenState() external view override returns (address) {
         return getContract(TOKEN_STATE);
     }
 
-    function getPunisher() external view returns (address) {
+    function getPunisher() external view override returns (address) {
         return getContract(PUNISHER);
     }
 

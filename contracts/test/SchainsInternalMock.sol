@@ -19,23 +19,28 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.11;
 
 import "../SchainsInternal.sol";
 
-contract SchainsInternalMock is SchainsInternal {
+interface ISchainsInternalMock {
+    function removePlaceOfSchainOnNode(bytes32 schainHash, uint nodeIndex) external;
+    function removeNodeToLocked(uint nodeIndex) external;
+    function removeSchainToExceptionNode(bytes32 schainHash) external;
+}
 
-    function removePlaceOfSchainOnNode(bytes32 schainHash, uint nodeIndex) external {
+contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
+
+    function removePlaceOfSchainOnNode(bytes32 schainHash, uint nodeIndex) external override {
         delete placeOfSchainOnNode[schainHash][nodeIndex];
     }
 
-    function removeNodeToLocked(uint nodeIndex) external {
+    function removeNodeToLocked(uint nodeIndex) external override {
         mapping(uint => bytes32[]) storage nodeToLocked = _getNodeToLockedSchains();
         delete nodeToLocked[nodeIndex];
     }
 
-    function removeSchainToExceptionNode(bytes32 schainHash) external {
+    function removeSchainToExceptionNode(bytes32 schainHash) external override {
         mapping(bytes32 => uint[]) storage schainToException = _getSchainToExceptionNodes();
         delete schainToException[schainHash];
     }

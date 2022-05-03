@@ -19,23 +19,22 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/access/AccessControl.sol";
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
 
-import "./ContractManager.sol";
+import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
 
 
 /**
  * @title Permissions
  * @dev Contract is connected module for Upgradeable approach, knows ContractManager
  */
-contract Permissions is AccessControlUpgradeSafe {
-    using SafeMath for uint;
-    using Address for address;
+contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
+    using AddressUpgradeable for address;
     
-    ContractManager public contractManager;
+    IContractManager public contractManager;
 
     /**
      * @dev Modifier to make a function callable only when caller is the Owner.
@@ -112,8 +111,8 @@ contract Permissions is AccessControlUpgradeSafe {
         _;
     }
 
-    function initialize(address contractManagerAddress) public virtual initializer {
-        AccessControlUpgradeSafe.__AccessControl_init();
+    function initialize(address contractManagerAddress) public virtual override initializer {
+        AccessControlUpgradeableLegacy.__AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setContractManager(contractManagerAddress);
     }
@@ -125,7 +124,7 @@ contract Permissions is AccessControlUpgradeSafe {
     function _isAdmin(address account) internal view returns (bool) {
         address skaleManagerAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleManager")));
         if (skaleManagerAddress != address(0)) {
-            AccessControlUpgradeSafe skaleManager = AccessControlUpgradeSafe(skaleManagerAddress);
+            AccessControlUpgradeableLegacy skaleManager = AccessControlUpgradeableLegacy(skaleManagerAddress);
             return skaleManager.hasRole(keccak256("ADMIN_ROLE"), account) || _isOwner();
         } else {
             return _isOwner();
@@ -135,6 +134,6 @@ contract Permissions is AccessControlUpgradeSafe {
     function _setContractManager(address contractManagerAddress) private {
         require(contractManagerAddress != address(0), "ContractManager address is not set");
         require(contractManagerAddress.isContract(), "Address is not contract");
-        contractManager = ContractManager(contractManagerAddress);
+        contractManager = IContractManager(contractManagerAddress);
     }
 }

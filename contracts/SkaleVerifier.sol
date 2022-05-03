@@ -19,11 +19,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.11;
+
+import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
 
 import "./Permissions.sol";
-import "./SchainsInternal.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
 
@@ -31,9 +31,9 @@ import "./utils/FieldOperations.sol";
  * @title SkaleVerifier
  * @dev Contains verify function to perform BLS signature verification.
  */
-contract SkaleVerifier is Permissions {  
-    using Fp2Operations for Fp2Operations.Fp2Point;
-
+contract SkaleVerifier is Permissions, ISkaleVerifier {  
+    using Fp2Operations for ISkaleDKG.Fp2Point;
+    using G2Operations for ISkaleDKG.G2Point;
 
     /**
     * @dev Verifies a BLS signature.
@@ -46,15 +46,16 @@ contract SkaleVerifier is Permissions {
     * - Public Key in G2.
     */
     function verify(
-        Fp2Operations.Fp2Point calldata signature,
+        ISkaleDKG.Fp2Point calldata signature,
         bytes32 hash,
         uint counter,
         uint hashA,
         uint hashB,
-        G2Operations.G2Point calldata publicKey
+        ISkaleDKG.G2Point calldata publicKey
     )
         external
         view
+        override
         returns (bool)
     {
         require(G1Operations.checkRange(signature), "Signature is not valid");
@@ -73,7 +74,7 @@ contract SkaleVerifier is Permissions {
         require(G1Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
         require(G1Operations.isG1Point(hashA, hashB), "Hash not in G1");
 
-        G2Operations.G2Point memory g2 = G2Operations.getG2Generator();
+        ISkaleDKG.G2Point memory g2 = G2Operations.getG2Generator();
         require(
             G2Operations.isG2(publicKey),
             "Public Key not in G2"
@@ -105,14 +106,14 @@ contract SkaleVerifier is Permissions {
             return false;
         }
         uint xCoord = uint(hash) % Fp2Operations.P;
-        xCoord = (xCoord.add(counter)) % Fp2Operations.P;
+        xCoord = (xCoord + counter) % Fp2Operations.P;
 
         uint ySquared = addmod(
             mulmod(mulmod(xCoord, xCoord, Fp2Operations.P), xCoord, Fp2Operations.P),
             3,
             Fp2Operations.P
         );
-        if (hashB < Fp2Operations.P.div(2) || mulmod(hashB, hashB, Fp2Operations.P) != ySquared || xCoord != hashA) {
+        if (hashB < Fp2Operations.P / 2 || mulmod(hashB, hashB, Fp2Operations.P) != ySquared || xCoord != hashA) {
             return false;
         }
 

@@ -1,11 +1,10 @@
-import { ContractManager, SkaleVerifier } from "../../../typechain";
+import { ContractManager, SkaleVerifier } from "../../../typechain-types";
 import { deployFunctionFactory } from "./factory";
 import { deploySchainsInternal } from "./schainsInternal";
 
-const deploySkaleVerifier: (contractManager: ContractManager) => Promise<SkaleVerifier>
-    = deployFunctionFactory("SkaleVerifier",
-                            async (contractManager: ContractManager) => {
-                                await deploySchainsInternal(contractManager);
-                            });
-
-export { deploySkaleVerifier };
+export const deploySkaleVerifier = deployFunctionFactory(
+    "SkaleVerifier",
+    async (contractManager: ContractManager) => {
+        await deploySchainsInternal(contractManager);
+    }
+) as (contractManager: ContractManager) => Promise<SkaleVerifier>;

@@ -1,8 +1,5 @@
-import { ContractManager, NodesMock } from "../../../../typechain";
-import { deployFunctionFactory } from "../factory";
+import { ContractManager, NodesMock } from "../../../../typechain-types";
+import { deployWithConstructorFunctionFactory } from "../factory";
 
-export const deployNodesMock: (contractManager: ContractManager) => Promise<NodesMock>
-    = deployFunctionFactory("NodesMock",
-                            async (contractManager: ContractManager) => {
-                                return undefined;
-                            });
+export const deployNodesMock 
+    = deployWithConstructorFunctionFactory("NodesMock") as (contractManager: ContractManager) => Promise<NodesMock>;

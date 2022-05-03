@@ -5,5 +5,9 @@ updates:
   schedule:
     interval: "weekly"
     day: "saturday"
-  allow:
-    - dependency-type: "production"
+
+- package-ecosystem: "pip"
+  directory: "/scripts/"
+  schedule:
+    interval: "weekly"
+    day: "saturday"

@@ -12,16 +12,9 @@ import { ContractManager,
          SlashingTable,
          ValidatorService,
          SkaleManager,
-         ConstantsHolder,
-         Wallets } from "../typechain";
-
-import { skipTime, currentTime } from "./tools/time";
-
-import * as elliptic from "elliptic";
-const EC = elliptic.ec;
-const ec = new EC("secp256k1");
+         Wallets } from "../typechain-types";
+import { skipTime, currentTime, nextMonth } from "./tools/time";
 import { privateKeys } from "./tools/private-keys";
-
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
@@ -34,35 +27,47 @@ import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployWallets } from "./tools/deploy/wallets";
-import { ethers, web3 } from "hardhat";
-import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert, expect } from "chai";
-import chaiAlmost from "chai-almost";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
+import { BytesLike, ContractTransaction, Wallet } from "ethers";
+import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
+import { stringKeccak256 } from "./tools/hashes";
+import { schainParametersType, SchainType } from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(solidity);
 
-function stringValue(value: string | null) {
-    if (value) {
-        return value;
-    } else {
-        return "";
+const weiTolerance = ethers.utils.parseEther("0.002").toNumber();
+
+async function reimbursed(transaction: ContractTransaction, operation?: string) {
+    const receipt = await transaction.wait();
+    const sender = transaction.from;
+    const balanceBefore = await ethers.provider.getBalance(sender, receipt.blockNumber - 1);
+    const balanceAfter = await ethers.provider.getBalance(sender, receipt.blockNumber);
+    if (balanceAfter.lt(balanceBefore)) {
+        const shortageEth = balanceBefore.sub(balanceAfter);
+        const shortageGas = shortageEth.div(receipt.effectiveGasPrice);
+
+        console.log("Reimbursement failed.")
+        console.log(`${shortageGas.toString()} gas units was not reimbursed`);
+        if (operation !== undefined) {
+            console.log(`During ${operation}`);
+        }
+
     }
-}
-
-async function getBalance(address: string) {
-    return parseFloat(web3.utils.fromWei(await web3.eth.getBalance(address)));
+    balanceAfter.should.be.least(balanceBefore);
+    balanceAfter.should.be.closeTo(balanceBefore, weiTolerance);
 }
 
 describe("SkaleDKG", () => {
     let owner: SignerWithAddress;
     let validator1: SignerWithAddress;
     let validator2: SignerWithAddress;
+    let nodeAddress1: Wallet;
+    let nodeAddress2: Wallet;
 
     let contractManager: ContractManager;
     let keyStorage: KeyStorage
@@ -76,14 +81,28 @@ describe("SkaleDKG", () => {
     let nodes: Nodes;
     let nodeRotation: NodeRotation;
     let skaleManager: SkaleManager;
-    let constantsHolder: ConstantsHolder;
     let wallets: Wallets;
 
     const failedDkgPenalty = 5;
-    let snapshot: any;
+    let snapshot: number;
+    let validators: {nodeAddress: Wallet}[];
     before(async() => {
-        chai.use(chaiAlmost(0.002));
         [owner, validator1, validator2] = await ethers.getSigners();
+
+        nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
+        nodeAddress2 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
+
+        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+
+        validators = [
+            {
+                nodeAddress: nodeAddress1
+            },
+            {
+                nodeAddress: nodeAddress2
+            }
+        ];
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
@@ -97,13 +116,12 @@ describe("SkaleDKG", () => {
         delegationController = await deployDelegationController(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
-        constantsHolder = await deployConstantsHolder(contractManager);
         wallets = await deployWallets(contractManager);
 
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
-        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
-        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
         await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
@@ -117,18 +135,8 @@ describe("SkaleDKG", () => {
         await applySnapshot(snapshot);
     });
 
-    describe("when 2 nodes are created", async () => {
-        let validatorsAccount: SignerWithAddress[];
-        const validatorsPrivateKey = [
-            privateKeys[1],
-            privateKeys[2],
-        ];
-        const pubKey1 = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
-        const pubKey2 = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
-        const validatorsPublicKey: [string, string][] = [
-            ["0x" + pubKey1.x.toString('hex'), "0x" + pubKey1.y.toString('hex')],
-            ["0x" + pubKey2.x.toString('hex'), "0x" + pubKey2.y.toString('hex')]
-        ];
+    describe("when 2 nodes are created", () => {
+        let validatorsPublicKey: [BytesLike, BytesLike][];
 
         const secretNumbers = [
             "94073351970851123256998281197810571804991376897451597421391551220528953509967",
@@ -232,7 +240,7 @@ describe("SkaleDKG", () => {
             ]
         ];
 
-        const verificationVectorMult = [
+        const verificationVectorMultiplication = [
             [
                 {
                     x: {
@@ -312,7 +320,8 @@ describe("SkaleDKG", () => {
         let cleanContracts: number;
         before(async () => {
             cleanContracts = await makeSnapshot();
-            validatorsAccount = [validator1, validator2];
+
+            validatorsPublicKey = [getPublicKey(nodeAddress1), getPublicKey(nodeAddress2)];
 
             await validatorService.connect(validator1).registerValidator("Validator1", "D2 is even", 0, 0);
             const validator1Id = await validatorService.getValidatorId(validator1.address);
@@ -326,14 +335,17 @@ describe("SkaleDKG", () => {
             await delegationController.connect(validator2).delegate(validator2Id, delegatedAmount, 2, "D2 is even more even");
             await delegationController.connect(validator1).acceptPendingDelegation(0);
             await delegationController.connect(validator2).acceptPendingDelegation(1);
+            const signature1 = await getValidatorIdSignature(validator1Id, nodeAddress1);
+            await validatorService.connect(validator1).linkNodeAddress(nodeAddress1.address, signature1);
+            const signature2 = await getValidatorIdSignature(validator2Id, nodeAddress2);
+            await validatorService.connect(validator2).linkNodeAddress(nodeAddress2.address, signature2);
 
-            await skipTime(ethers, 60 * 60 * 24 * 31);
+            await nextMonth(contractManager);
 
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const pubKey = ec.keyFromPrivate(String(privateKeys[index + 1]).slice(2)).getPublic();
-                await nodes.createNode(validatorsAccount[index].address,
+                await nodes.createNode(validators[index].nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -341,14 +353,9 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[index],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
-            await schainsInternal.addSchainType(1, 16);
-            await schainsInternal.addSchainType(4, 16);
-            await schainsInternal.addSchainType(128, 16);
-            await schainsInternal.addSchainType(0, 2);
-            await schainsInternal.addSchainType(32, 4);
         });
 
         after(async () => {
@@ -361,10 +368,20 @@ describe("SkaleDKG", () => {
             const res = await (await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]))).wait();
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ))).wait();
 
-            assert((await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")))).should.be.true);
-            (await skaleDKG.getChannelStartedBlock(stringValue(web3.utils.soliditySha3("d2")))).should.be.equal(res.blockNumber);
+            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
+            (await skaleDKG.getChannelStartedBlock(stringKeccak256("d2"))).should.be.equal(res.blockNumber);
         });
 
         it("should create schain and reopen a DKG channel", async () => {
@@ -373,9 +390,19 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
-            assert((await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")))).should.be.true);
+            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
         });
 
         it("should create & delete schain and open & close a DKG channel", async () => {
@@ -384,16 +411,26 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
-            assert((await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")))).should.be.true);
+            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
 
 
             await schains.deleteSchainByRoot("d2");
-            assert((await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")))).should.be.false);
+            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.false);
         });
 
-        describe("when 2-node schain is created", async () => {
+        describe("when 2-node schain is created", () => {
             let twoNodesAreCreated: number;
             let twoSchainAreCreated: number;
             before(async () => {
@@ -403,22 +440,42 @@ describe("SkaleDKG", () => {
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                    ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
-                let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
+                let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
                 schainName = "d2";
-                await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
+                await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 let index = 3;
                 while (nodesInGroup[0].eq(1)) {
                     await schains.deleteSchainByRoot(schainName);
-                    schainName = "d" + index;
+                    schainName = `d${index}`;
                     index++;
                     await schains.addSchain(
                         validator1.address,
                         deposit,
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
-                    nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
-                    await wallets.rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
+                        ethers.utils.defaultAbiCoder.encode(
+                            [schainParametersType],
+                            [{
+                                lifetime: 5,
+                                typeOfSchain: SchainType.TEST,
+                                nonce: 0,
+                                name: schainName,
+                                originator: ethers.constants.AddressZero,
+                                options: []
+                            }]
+                        ));
+                    nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
+                    await wallets.rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 }
             });
 
@@ -428,34 +485,35 @@ describe("SkaleDKG", () => {
 
             it("should broadcast data from 1 node", async () => {
                 let isBroadcasted = await skaleDKG.isNodeBroadcasted(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     0
                 );
                 assert(isBroadcasted.should.be.false);
-                await expect(skaleDKG.connect(validatorsAccount[0]).broadcast(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+
+                await expect(skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
                     0,
                     verificationVectors[indexes[0]],
                     encryptedSecretKeyContributions[indexes[0]]
                 )).to.emit(skaleDKG, "BroadcastAndKeyShare");
 
                 isBroadcasted = await skaleDKG.isNodeBroadcasted(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     0
                 );
                 assert(isBroadcasted.should.be.true);
             });
 
             it("should broadcast data from 1 node & check", async () => {
-                await expect(skaleDKG.connect(validatorsAccount[0]).broadcast(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await expect(skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
                     0,
                     verificationVectors[indexes[0]],
                     encryptedSecretKeyContributions[indexes[0]]
                 )).to.emit(skaleDKG, "BroadcastAndKeyShare");
 
-                const res = await skaleDKG.connect(validatorsAccount[0]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                const res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     0
                 );
                 assert(res.should.be.false);
@@ -463,27 +521,27 @@ describe("SkaleDKG", () => {
 
             it("should broadcast data from 2 node", async () => {
                 let isBroadcasted = await skaleDKG.isNodeBroadcasted(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     1
                 );
                 assert(isBroadcasted.should.be.false);
-                await expect(skaleDKG.connect(validatorsAccount[1]).broadcast(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await expect(skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
                     1,
                     verificationVectors[indexes[1]],
                     encryptedSecretKeyContributions[indexes[1]]
                 )).to.emit(skaleDKG, "BroadcastAndKeyShare");
 
                 isBroadcasted = await skaleDKG.isNodeBroadcasted(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                    stringKeccak256(schainName),
                     1
                 );
                 assert(isBroadcasted.should.be.true);
             });
 
             it("should rejected broadcast data from 2 node with incorrect sender", async () => {
-                await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
                     1,
                     verificationVectors[indexes[1]],
                     encryptedSecretKeyContributions[indexes[1]]
@@ -491,397 +549,353 @@ describe("SkaleDKG", () => {
             });
 
             it("should rejected early complaint after missing broadcast", async () => {
-                let res = await skaleDKG.connect(validatorsAccount[0]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                let res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     0
                 );
                 assert(res.should.be.true);
-                const result = await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
                     0,
                     verificationVectors[indexes[0]],
                     encryptedSecretKeyContributions[indexes[0]]
                 );
-                res = await skaleDKG.connect(validatorsAccount[0]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     0
                 );
                 assert(res.should.be.false);
-                res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     1
                 );
                 assert(res.should.be.true);
-                await skipTime(ethers, 1700);
-                const resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await skipTime(1700);
+                const resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
+                    stringKeccak256(schainName),
                     0,
                     1,
                 );
-                assert(resCompl.should.be.false);
-                const balanceBefore = await getBalance(validatorsAccount[0].address);
-                await expect(skaleDKG.connect(validatorsAccount[0]).complaint(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                assert(resComplaint.should.be.false);
+                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                    stringKeccak256(schainName),
                     0,
                     1
-                )).to.emit(skaleDKG, "ComplaintError")
-                    .withArgs("Complaint sent too early");
-                const balance = await getBalance(validatorsAccount[0].address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
+                );
+                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Complaint sent too early");
+                await reimbursed(complaint);
             });
 
             it("should send complaint after missing broadcast", async () => {
-                let res = await skaleDKG.connect(validatorsAccount[0]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                let res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     0
                 );
                 assert(res.should.be.true);
-                const result = await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
                     0,
                     verificationVectors[indexes[0]],
                     encryptedSecretKeyContributions[indexes[0]]
                 );
-                res = await skaleDKG.connect(validatorsAccount[0]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     0
                 );
                 assert(res.should.be.false);
-                res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     1
                 );
                 assert(res.should.be.true);
-                await skipTime(ethers, 1800);
-                let resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await skipTime(1800);
+                let resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
+                    stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(resCompl.should.be.true);
-                const balanceBefore = await getBalance(validatorsAccount[0].address);
-                await skaleDKG.connect(validatorsAccount[0]).complaint(
-                    stringValue(web3.utils.soliditySha3(schainName)),
-                    0,
-                    1
+                assert(resComplaint.should.be.true);
+                await reimbursed(
+                    await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                        stringKeccak256(schainName),
+                        0,
+                        1
+                    )
                 );
-                const balance = await getBalance(validatorsAccount[0].address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
-                res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     1
                 );
                 assert(res.should.be.false);
-                resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
+                    stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(resCompl.should.be.false);
-                res = await skaleDKG.connect(validatorsAccount[1]).isChannelOpened(
-                    stringValue(web3.utils.soliditySha3(schainName))
+                assert(resComplaint.should.be.false);
+                const resO = await skaleDKG.isChannelOpened(
+                    stringKeccak256(schainName)
                 );
-                assert(res.should.be.false);
+                assert(resO.should.be.false);
             });
 
             it("should send complaint after missing alright", async () => {
-                let res = await skaleDKG.connect(validatorsAccount[0]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                let res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     0
                 );
                 assert(res.should.be.true);
-                await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
                     0,
                     verificationVectors[indexes[0]],
                     encryptedSecretKeyContributions[indexes[0]]
                 );
-                res = await skaleDKG.connect(validatorsAccount[0]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     0
                 );
                 assert(res.should.be.false);
-                res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     1
                 );
                 assert(res.should.be.true);
-                await skaleDKG.connect(validatorsAccount[1]).broadcast(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
                     1,
                     verificationVectors[indexes[1]],
                     encryptedSecretKeyContributions[indexes[1]]
                 );
-                res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
+                    stringKeccak256(schainName),
                     1
                 );
                 assert(res.should.be.false);
-
-                let resAlr = await skaleDKG.connect(validatorsAccount[0]).isAlrightPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[0].nodeAddress).isAlrightPossible(
+                    stringKeccak256(schainName),
                     0
                 );
-                assert(resAlr.should.be.true);
+                assert(res.should.be.true);
 
-                let balanceBefore = await getBalance(validatorsAccount[0].address);
-
-                const result = await skaleDKG.connect(validatorsAccount[0]).alright(
-                    stringValue(web3.utils.soliditySha3(schainName)),
-                    0
+                await reimbursed(
+                    await skaleDKG.connect(validators[0].nodeAddress).alright(
+                        stringKeccak256(schainName),
+                        0
+                    )
                 );
 
-                let balance = await getBalance(validatorsAccount[0].address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
-
-
-                resAlr = await skaleDKG.connect(validatorsAccount[0]).isAlrightPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[0].nodeAddress).isAlrightPossible(
+                    stringKeccak256(schainName),
                     0
                 );
-                assert(resAlr.should.be.false);
-                resAlr = await skaleDKG.connect(validatorsAccount[1]).isAlrightPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                assert(res.should.be.false);
+                res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
+                    stringKeccak256(schainName),
                     1
                 );
-                assert(resAlr.should.be.true);
-                let resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                assert(res.should.be.true);
+                res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
+                    stringKeccak256(schainName),
                     0,
                     1,
                 );
-                assert(resCompl.should.be.false);
+                assert(res.should.be.false);
 
-                balanceBefore = await getBalance(validatorsAccount[0].address);
-                await expect(skaleDKG.connect(validatorsAccount[0]).complaint(
-                    stringValue(web3.utils.soliditySha3(schainName)),
-                    0,
-                    1
-                )).to.emit(skaleDKG, "ComplaintError")
-                    .withArgs("Has already sent alright");
-                balance = await getBalance(validatorsAccount[0].address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
-
-                await skipTime(ethers, 1800);
-                resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                    stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(resCompl.should.be.true);
+                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Has already sent alright");
+                await reimbursed(complaint);
 
-                balanceBefore = await getBalance(validatorsAccount[0].address);
-                await skaleDKG.connect(validatorsAccount[0]).complaint(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await skipTime(1800);
+                res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
+                    stringKeccak256(schainName),
                     0,
                     1
                 );
-                balance = await getBalance(validatorsAccount[0].address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
+                assert(res.should.be.true);
 
-                res = await skaleDKG.connect(validatorsAccount[1]).isAlrightPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                await reimbursed(
+                    await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                        stringKeccak256(schainName),
+                        0,
+                        1
+                    )
+                );
+
+                res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
+                    stringKeccak256(schainName),
                     1
                 );
                 assert(res.should.be.false);
-                resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
+                res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
+                    stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(resCompl.should.be.false);
-                res = await skaleDKG.connect(validatorsAccount[1]).isChannelOpened(
-                    stringValue(web3.utils.soliditySha3(schainName))
-                );
                 assert(res.should.be.false);
+                const resO = await skaleDKG.isChannelOpened(
+                    stringKeccak256(schainName)
+                );
+                assert(resO.should.be.false);
             });
 
-            describe("should not front run complaint with missing broadcast", async () => {
-                let resResp: any;
+            describe("should not front run complaint with missing broadcast", () => {
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
-                    await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         0,
                         verificationVectors[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
-                    await skipTime(ethers, 1800);
+                    await skipTime(1800);
 
-                    const res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
+                        stringKeccak256(schainName),
                         1
                     );
                     assert(res.should.be.false);
                     // Simulate front-running complaint
-                    await skaleDKG.connect(validatorsAccount[1]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         1,
                         verificationVectors[indexes[1]],
                         encryptedSecretKeyContributions[indexes[1]]
                     ).should.be.rejectedWith("Incorrect time for broadcast");
-                    resResp = await (await skaleDKG.connect(validatorsAccount[0]).complaint(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                        stringKeccak256(schainName),
                         0,
                         1
-                    )).wait();
-
-
+                    ).should.emit(skaleDKG, "BadGuy")
+                        .withArgs(1);
                 });
 
                 after(async () => {
                     await applySnapshot(twoSchainAreCreated);
                 });
-
-                it("bad guy should not be complainer (index 0)", async () => {
-                    if (resResp.events) {
-                        assert.equal(resResp.events[0].event, "BadGuy");
-                        assert.equal(resResp.events[0].args?.nodeIndex.toString(), "1");
-                    }
-                });
             });
 
-            describe("should not front run complaint with missing alright", async () => {
-                let resResp: any;
+            describe("should not front run complaint with missing alright", () => {
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
-                    await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         0,
                         verificationVectors[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
-                    await skaleDKG.connect(validatorsAccount[1]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         1,
                         verificationVectors[indexes[1]],
                         encryptedSecretKeyContributions[indexes[1]]
                     );
-                    await skaleDKG.connect(validatorsAccount[0]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).alright(
+                        stringKeccak256(schainName),
                         0
                     );
-                    await skipTime(ethers, 1800);
+                    await skipTime(1800);
 
-                    const res = await skaleDKG.connect(validatorsAccount[1]).isAlrightPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
+                        stringKeccak256(schainName),
                         1
                     );
                     assert(res.should.be.false);
                     // Simulate front-running complaint
-                    await skaleDKG.connect(validatorsAccount[1]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).alright(
+                        stringKeccak256(schainName),
                         1
                     ).should.be.rejectedWith("Incorrect time for alright");
-                    resResp = await (await skaleDKG.connect(validatorsAccount[0]).complaint(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                        stringKeccak256(schainName),
                         0,
                         1
-                    )).wait();
-
-
+                    ).should.emit(skaleDKG, "BadGuy")
+                        .withArgs(1);
                 });
 
                 after(async () => {
                     await applySnapshot(twoSchainAreCreated);
                 });
-
-                it("bad guy should not be complainer (index 0)", async () => {
-                    if (resResp.events) {
-                        assert.equal(resResp.events[0].event, "BadGuy");
-                        assert.equal(resResp.events[0].args?.nodeIndex.toString(), "1");
-                    }
-                });
             });
 
-            describe("should not front run complaint with missing response", async () => {
-                let resResp: any;
+            describe("should not front run complaint with missing response", () => {
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
-                    await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         0,
                         verificationVectors[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
-                    await skaleDKG.connect(validatorsAccount[1]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         1,
                         verificationVectors[indexes[1]],
                         encryptedSecretKeyContributions[indexes[1]]
                     );
-                    await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                        stringKeccak256(schainName),
                         1,
                         0
                     );
-                    await skaleDKG.connect(validatorsAccount[0]).preResponse(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                        stringKeccak256(schainName),
                         0,
                         verificationVectors[indexes[0]],
-                        verificationVectorMult[indexes[0]],
+                        verificationVectorMultiplication[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
-                    await skipTime(ethers, 1800);
+                    await skipTime(1800);
 
-                    const res = await skaleDKG.connect(validatorsAccount[0]).isResponsePossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[0].nodeAddress).isResponsePossible(
+                        stringKeccak256(schainName),
                         0
                     );
                     assert(res.should.be.false);
                     // Simulate front-running complaint
-                    await skaleDKG.connect(validatorsAccount[0]).response(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).response(
+                        stringKeccak256(schainName),
                         0,
                         secretNumbers[indexes[0]],
                         multipliedShares[indexes[0]]
                     ).should.be.rejectedWith("Incorrect time for response");
-                    resResp = await (await skaleDKG.connect(validatorsAccount[1]).complaint(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).complaint(
+                        stringKeccak256(schainName),
                         1,
                         0
-                    )).wait();
-
+                    ).should.emit(skaleDKG, "BadGuy")
+                        .withArgs(0);
 
                 });
 
                 after(async () => {
                     await applySnapshot(twoSchainAreCreated);
                 });
-
-                it("bad guy should not be complainer (index 0)", async () => {
-                    if (resResp.events) {
-                        assert.equal(resResp.events[0].event, "BadGuy");
-                        assert.equal(resResp.events[0].args?.nodeIndex.toString(), "0");
-                    }
-                });
             });
 
 
-            describe("after sending complaint after missing broadcast", async () => {
+            describe("after sending complaint after missing broadcast", () => {
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
-                    await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         0,
                         verificationVectors[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
-                    await skipTime(ethers, 1800);
-                    const balanceBefore = await getBalance(validatorsAccount[0].address);
-                    await skaleDKG.connect(validatorsAccount[0]).complaint(
-                        stringValue(web3.utils.soliditySha3(schainName)),
-                        0,
-                        1
+                    await skipTime(1800);
+                    await reimbursed(
+                        await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                            stringKeccak256(schainName),
+                            0,
+                            1
+                        )
                     );
-                    const balance = await getBalance(validatorsAccount[0].address);
-                    balance.should.not.be.lessThan(balanceBefore);
-                    balance.should.be.almost(balanceBefore);
                 });
 
                 after(async () => {
@@ -889,23 +903,23 @@ describe("SkaleDKG", () => {
                 });
 
                 it("channel should be closed", async () => {
-                    const res = await skaleDKG.connect(validatorsAccount[1]).isChannelOpened(
-                        stringValue(web3.utils.soliditySha3(schainName))
+                    const res = await skaleDKG.isChannelOpened(
+                        stringKeccak256(schainName)
                     );
                     assert(res.should.be.false);
                 });
 
                 it("should be impossible send broadcast", async () => {
-                    const res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
+                        stringKeccak256(schainName),
                         1
                     );
                     assert(res.should.be.false);
                 });
 
                 it("should be impossible send complaint", async () => {
-                    const res = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
+                        stringKeccak256(schainName),
                         0,
                         1
                     );
@@ -913,8 +927,8 @@ describe("SkaleDKG", () => {
                 });
 
                 it("should be impossible send another complaint", async () => {
-                    const res = await skaleDKG.connect(validatorsAccount[1]).isComplaintPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
+                        stringKeccak256(schainName),
                         1,
                         0
                     );
@@ -922,50 +936,50 @@ describe("SkaleDKG", () => {
                 });
 
                 it("should be impossible send preResponse", async () => {
-                    const res = await skaleDKG.connect(validatorsAccount[0]).isPreResponsePossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[0].nodeAddress).isPreResponsePossible(
+                        stringKeccak256(schainName),
                         0
                     );
                     assert(res.should.be.false);
                 });
 
                 it("should be impossible send another preResponse", async () => {
-                    const res = await skaleDKG.connect(validatorsAccount[1]).isPreResponsePossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[1].nodeAddress).isPreResponsePossible(
+                        stringKeccak256(schainName),
                         1
                     );
                     assert(res.should.be.false);
                 });
 
                 it("should be impossible send response", async () => {
-                    const res = await skaleDKG.connect(validatorsAccount[0]).isResponsePossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[0].nodeAddress).isResponsePossible(
+                        stringKeccak256(schainName),
                         0
                     );
                     assert(res.should.be.false);
                 });
 
                 it("should be impossible send another response", async () => {
-                    const res = await skaleDKG.connect(validatorsAccount[1]).isResponsePossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[1].nodeAddress).isResponsePossible(
+                        stringKeccak256(schainName),
                         1
                     );
                     assert(res.should.be.false);
                 });
             });
 
-            describe("when correct broadcasts sent", async () => {
+            describe("when correct broadcasts sent", () => {
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
-                    await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         0,
                         verificationVectors[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
 
-                    await skaleDKG.connect(validatorsAccount[1]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         1,
                         verificationVectors[indexes[1]],
                         encryptedSecretKeyContributions[indexes[1]]
@@ -976,78 +990,69 @@ describe("SkaleDKG", () => {
                     await applySnapshot(twoSchainAreCreated);
                 });
                 it("should send alright from 1 node", async () => {
-                    await expect(skaleDKG.connect(validatorsAccount[0]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await expect(skaleDKG.connect(validators[0].nodeAddress).alright(
+                        stringKeccak256(schainName),
                         0
-                    )).to.emit(skaleDKG, "AllDataReceived")
-                        .withArgs(stringValue(web3.utils.soliditySha3(schainName)), 0);
-                    assert.equal(await skaleDKG.isAllDataReceived(stringValue(web3.utils.soliditySha3(schainName)), 0), true);
+                    )).to.emit(skaleDKG, "AllDataReceived").withArgs(stringKeccak256(schainName), 0);
+                    assert.equal(await skaleDKG.isAllDataReceived(stringKeccak256(schainName), 0), true);
                 });
 
                 it("should send alright from 1 node", async () => {
-                    await expect(skaleDKG.connect(validatorsAccount[0]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await expect(skaleDKG.connect(validators[0].nodeAddress).alright(
+                        stringKeccak256(schainName),
                         0
-                    )).to.emit(skaleDKG, "AllDataReceived")
-                        .withArgs(stringValue(web3.utils.soliditySha3(schainName)), 0);
+                    )).to.emit(skaleDKG, "AllDataReceived").withArgs(stringKeccak256(schainName), 0);
 
-                    const res = await skaleDKG.connect(validatorsAccount[0]).isAlrightPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[0].nodeAddress).isAlrightPossible(
+                        stringKeccak256(schainName),
                         0
                     );
                     assert(res.should.be.false);
                 });
 
                 it("should send alright from 2 node", async () => {
-                    await expect(skaleDKG.connect(validatorsAccount[1]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await expect(skaleDKG.connect(validators[1].nodeAddress).alright(
+                        stringKeccak256(schainName),
                         1
-                    )).to.emit(skaleDKG, "AllDataReceived")
-                        .withArgs(stringValue(web3.utils.soliditySha3(schainName)), 1);
+                    )).to.emit(skaleDKG, "AllDataReceived").withArgs(stringKeccak256(schainName), 1);
                 });
 
                 it("should not send alright from 2 node with incorrect sender", async () => {
-                    await skaleDKG.connect(validatorsAccount[0]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).alright(
+                        stringKeccak256(schainName),
                         1
                     ).should.be.eventually.rejectedWith("Node does not exist for message sender");
                 });
 
                 it("should catch successful DKG event", async () => {
-                    await skaleDKG.connect(validatorsAccount[0]).alright(stringValue(web3.utils.soliditySha3(schainName)), 0);
-                    await expect(skaleDKG.connect(validatorsAccount[1]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).alright(stringKeccak256(schainName), 0);
+                    await expect(skaleDKG.connect(validators[1].nodeAddress).alright(
+                        stringKeccak256(schainName),
                         1
-                    )).to.emit(skaleDKG, "SuccessfulDKG")
-                        .withArgs(stringValue(web3.utils.soliditySha3(schainName)));
+                    )).to.emit(skaleDKG, "SuccessfulDKG").withArgs(stringKeccak256(schainName));
                 });
 
                 it("should complaint and be slashed", async () => {
-                    const balanceBefore = await getBalance(validatorsAccount[1].address);
-                    await expect(skaleDKG.connect(validatorsAccount[1]).complaint(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
+                        stringKeccak256(schainName),
                         1,
                         0
-                    )).to.emit(skaleDKG, "BadGuy")
-                        .withArgs(1);
-                    const balance = await getBalance(validatorsAccount[1].address);
-                    balance.should.not.be.lessThan(balanceBefore);
-                    balance.should.be.almost(balanceBefore);
+                    );
+                    await expect(complaint).to.emit(skaleDKG, "BadGuy").withArgs(1);
+                    await reimbursed(complaint);
                 });
 
-                describe("when 2 node sent incorrect complaint", async () => {
+                describe("when 2 node sent incorrect complaint", () => {
                     let correctBroadcastIsSent: number;
                     before(async () => {
                         correctBroadcastIsSent = await makeSnapshot();
-                        const balanceBefore = await getBalance(validatorsAccount[1].address);
-                        await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
-                            stringValue(web3.utils.soliditySha3(schainName)),
-                            1,
-                            0
+                        await reimbursed(
+                            await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                                stringKeccak256(schainName),
+                                1,
+                                0
+                            )
                         );
-                        const balance = await getBalance(validatorsAccount[1].address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
                     });
 
                     after(async () => {
@@ -1055,139 +1060,130 @@ describe("SkaleDKG", () => {
                     });
 
                     it("should check is possible to send complaint", async () => {
-                        const res = await skaleDKG.connect(validatorsAccount[1]).isComplaintPossible(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        const res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
+                            stringKeccak256(schainName),
                             1,
                             0
                         );
                         assert(res.should.be.false);
-                        await expect(skaleDKG.connect(validatorsAccount[1]).complaint(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await expect(skaleDKG.connect(validators[1].nodeAddress).complaint(
+                            stringKeccak256(schainName),
                             1,
                             0
-                        )).to.emit(skaleDKG, "ComplaintError")
-                            .withArgs("The same complaint rejected");
+                        )).to.emit(skaleDKG, "ComplaintError").withArgs("The same complaint rejected");
                     });
 
                     it("should send complaint after missing preResponse", async () => {
-                        await skipTime(ethers, 1800);
-                        const res = await skaleDKG.connect(validatorsAccount[1]).isComplaintPossible(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await skipTime(1800);
+                        const res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
+                            stringKeccak256(schainName),
                             1,
                             0
                         );
                         assert(res.should.be.true);
-                        const balanceBefore = await getBalance(validatorsAccount[1].address);
-                        await expect(skaleDKG.connect(validatorsAccount[1]).complaint(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
+                            stringKeccak256(schainName),
                             1,
                             0
-                        )).to.emit(skaleDKG, "BadGuy")
-                            .withArgs(0);
-                        const balance = await getBalance(validatorsAccount[1].address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
+                        );
+                        await expect(complaint).to.emit(skaleDKG, "BadGuy").withArgs(0);
+                        await reimbursed(complaint);
                     });
 
                     it("should send complaint after missing response", async () => {
-                        let res = await skaleDKG.connect(validatorsAccount[1]).isComplaintPossible(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        let res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
+                            stringKeccak256(schainName),
                             1,
                             0
                         );
                         assert(res.should.be.false);
-                        await skaleDKG.connect(validatorsAccount[0]).preResponse(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                            stringKeccak256(schainName),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             encryptedSecretKeyContributions[indexes[0]]
                         );
-                        res = await skaleDKG.connect(validatorsAccount[1]).isComplaintPossible(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
+                            stringKeccak256(schainName),
                             1,
                             0
                         );
                         assert(res.should.be.false);
-                        await skipTime(ethers, 1800);
-                        res = await skaleDKG.connect(validatorsAccount[1]).isComplaintPossible(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await skipTime(1800);
+                        res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
+                            stringKeccak256(schainName),
                             1,
                             0
                         );
                         assert(res.should.be.true);
-                        const balanceBefore = await getBalance(validatorsAccount[1].address);
-                        await expect(skaleDKG.connect(validatorsAccount[1]).complaint(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
+                            stringKeccak256(schainName),
                             1,
                             0
-                        )).to.emit(skaleDKG, "BadGuy")
-                            .withArgs(0);
-                        const balance = await getBalance(validatorsAccount[1].address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
+                        );
+                        await expect(complaint).to.emit(skaleDKG, "BadGuy").withArgs(0);
+                        await reimbursed(complaint);
                     });
 
                     it("should send correct response", async () => {
-                        let res = await skaleDKG.connect(validatorsAccount[0]).isResponsePossible(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        let res = await skaleDKG.connect(validators[0].nodeAddress).isResponsePossible(
+                            stringKeccak256(schainName),
                             0
                         );
                         assert(res.should.be.false);
 
-                        res = await skaleDKG.connect(validatorsAccount[0]).isPreResponsePossible(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        res = await skaleDKG.connect(validators[0].nodeAddress).isPreResponsePossible(
+                            stringKeccak256(schainName),
                             0
                         );
                         assert(res.should.be.true);
 
-                        await skaleDKG.connect(validatorsAccount[0]).response(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await skaleDKG.connect(validators[0].nodeAddress).response(
+                            stringKeccak256(schainName),
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[0]]
                         ).should.be.eventually.rejectedWith("Have not submitted pre-response data");
 
-                        await skaleDKG.connect(validatorsAccount[0]).preResponse(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                            stringKeccak256(schainName),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             badEncryptedSecretKeyContributions[indexes[0]]
                         ).should.be.eventually.rejectedWith("Broadcasted Data is not correct");
 
-                        await skaleDKG.connect(validatorsAccount[0]).preResponse(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                            stringKeccak256(schainName),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             encryptedSecretKeyContributions[indexes[0]]
                         );
 
-                        res = await skaleDKG.connect(validatorsAccount[0]).isResponsePossible(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        res = await skaleDKG.connect(validators[0].nodeAddress).isResponsePossible(
+                            stringKeccak256(schainName),
                             0
                         );
                         assert(res.should.be.true);
 
-                        res = await skaleDKG.connect(validatorsAccount[0]).isPreResponsePossible(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        res = await skaleDKG.connect(validators[0].nodeAddress).isPreResponsePossible(
+                            stringKeccak256(schainName),
                             0
                         );
                         assert(res.should.be.false);
 
-                        const balanceBefore = await getBalance(validatorsAccount[0].address);
-
-                        await expect(skaleDKG.connect(validatorsAccount[0]).response(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        const response = await skaleDKG.connect(validators[0].nodeAddress).response(
+                            stringKeccak256(schainName),
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[0]]
-                        )).to.emit(skaleDKG, "BadGuy")
-                            .withArgs(1);
+                        );
 
-                        const balance = await getBalance(validatorsAccount[0].address);
-                        balance.should.not.be.lessThan(balanceBefore);
+                        await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(1);
+
+                        await reimbursed(response);
 
                         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator2.address)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -1198,37 +1194,36 @@ describe("SkaleDKG", () => {
                     });
 
                     it("should send incorrect response with bad multiplied share", async() => {
-                        await skaleDKG.connect(validatorsAccount[0]).preResponse(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                            stringKeccak256(schainName),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             encryptedSecretKeyContributions[indexes[0]]
                         );
-                        await expect(skaleDKG.connect(validatorsAccount[0]).response(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await expect(skaleDKG.connect(validators[0].nodeAddress).response(
+                            stringKeccak256(schainName),
                             0,
                             secretNumbers[indexes[0]],
                             badMultipliedShares[indexes[0]]
-                        )).to.emit(skaleDKG, "BadGuy")
-                            .withArgs(0);
+                        )).to.emit(skaleDKG, "BadGuy").withArgs(0);
                     });
                 });
             });
 
-            describe("when 1 node sent bad data", async () => {
+            describe("when 1 node sent bad data", () => {
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
-                    await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         0,
                         verificationVectors[indexes[0]],
                         // the last symbol is spoiled in parameter below
                         badEncryptedSecretKeyContributions[indexes[0]]
                     );
 
-                    await skaleDKG.connect(validatorsAccount[1]).broadcast(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
                         1,
                         verificationVectors[indexes[1]],
                         encryptedSecretKeyContributions[indexes[1]]
@@ -1240,79 +1235,74 @@ describe("SkaleDKG", () => {
                 });
 
                 it("should send complaint from 2 node", async () => {
-                    const balanceBefore = await getBalance(validatorsAccount[1].address);
-                    await expect(skaleDKG.connect(validatorsAccount[1]).complaintBadData(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const complaintBadData = await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                        stringKeccak256(schainName),
                         1,
                         0
-                    )).to.emit(skaleDKG, "ComplaintSent")
-                        .withArgs(stringValue(web3.utils.soliditySha3(schainName)), 1, 0);
-                    const balance = await getBalance(validatorsAccount[1].address);
-                    balance.should.not.be.lessThan(balanceBefore);
-                    balance.should.be.almost(balanceBefore);
-                    const res = await skaleDKG.getComplaintData(stringValue(web3.utils.soliditySha3(schainName)));
+                    );
+                    await expect(complaintBadData).to.emit(skaleDKG, "ComplaintSent").withArgs(stringKeccak256(schainName), 1, 0);
+                    await reimbursed(complaintBadData);
+                    const res = await skaleDKG.getComplaintData(stringKeccak256(schainName));
                     assert.equal(res[0].toString(), "1");
                     assert.equal(res[1].toString(), "0");
                 });
 
                 it("should not send alright after complaint from 2 node", async () => {
-                    const result = await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                        stringKeccak256(schainName),
                         1,
                         0
                     );
-                    const res = await skaleDKG.connect(validatorsAccount[1]).isAlrightPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
+                        stringKeccak256(schainName),
                         1
                     );
                     assert(res.should.be.false);
-                    await skaleDKG.connect(validatorsAccount[1]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).alright(
+                        stringKeccak256(schainName),
                         1
                     ).should.be.eventually.rejectedWith("Node has already sent complaint");
                 });
 
                 it("should not send 2 complaints from 1 node", async () => {
-                    await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                        stringKeccak256(schainName),
                         1,
                         0
                     );
-                    const resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    const resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
+                        stringKeccak256(schainName),
                         0,
                         1
                     );
-                    assert(resCompl.should.be.false);
-                    await expect(skaleDKG.connect(validatorsAccount[0]).complaintBadData(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    assert(resComplaint.should.be.false);
+                    await expect(skaleDKG.connect(validators[0].nodeAddress).complaintBadData(
+                        stringKeccak256(schainName),
                         0,
                         1
-                    )).to.emit(skaleDKG, "ComplaintError")
-                        .withArgs("First complaint has already been processed");
+                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint has already been processed");
                 });
 
                 it("should not send 2 complaints from 2 node", async () => {
-                    await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                        stringKeccak256(schainName),
                         1,
                         0,
                     );
-                    await expect(skaleDKG.connect(validatorsAccount[1]).complaintBadData(
-                        stringValue(web3.utils.soliditySha3(schainName)),
+                    await expect(skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                        stringKeccak256(schainName),
                         1,
                         0,
-                    )).to.emit(skaleDKG, "ComplaintError")
-                        .withArgs("First complaint has already been processed");
+                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint has already been processed");
                 });
 
-                describe("when complaint successfully sent", async () => {
+                describe("when complaint successfully sent", () => {
 
                     let nodeSentBadData: number;
                     before(async () => {
                         nodeSentBadData = await makeSnapshot();
-                        const result = await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                            stringKeccak256(schainName),
                             1,
                             0
                         );
@@ -1323,7 +1313,7 @@ describe("SkaleDKG", () => {
                     });
 
                     it("accused node should send correct response", async () => {
-                        await nodes.createNode(validatorsAccount[0].address,
+                        await nodes.createNode(validators[0].nodeAddress.address,
                             {
                                 port: 8545,
                                 nonce: 0,
@@ -1331,35 +1321,30 @@ describe("SkaleDKG", () => {
                                 publicIp: "0x7f000002",
                                 publicKey: validatorsPublicKey[0],
                                 name: "d202",
-                                domainName: "somedomain.name"
+                                domainName: "some.domain.name"
                         });
 
-                        let balanceBefore = await getBalance(validatorsAccount[0].address);
-                        await skaleDKG.connect(validatorsAccount[0]).preResponse(
-                            stringValue(web3.utils.soliditySha3(schainName)),
-                            0,
-                            verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
-                            badEncryptedSecretKeyContributions[indexes[0]]
+                        await reimbursed(
+                            await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                                stringKeccak256(schainName),
+                                0,
+                                verificationVectors[indexes[0]],
+                                verificationVectorMultiplication[indexes[0]],
+                                badEncryptedSecretKeyContributions[indexes[0]]
+                            )
                         );
-                        let balance = await getBalance(validatorsAccount[0].address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
 
-                        balanceBefore = await getBalance(validatorsAccount[0].address);
-                        await expect(skaleDKG.connect(validatorsAccount[0]).response(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        const response = await skaleDKG.connect(validators[0].nodeAddress).response(
+                            stringKeccak256(schainName),
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[0]]
-                        )).to.emit(skaleDKG, "BadGuy")
-                            .withArgs(0);
-                        balance = await getBalance(validatorsAccount[0].address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
+                        );
+                        await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
+                        await reimbursed(response);
 
                         const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
-                        assert.equal(await currentTime(web3), leavingTimeOfNode);
+                        assert.equal(await currentTime(), leavingTimeOfNode);
 
                         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -1370,29 +1355,24 @@ describe("SkaleDKG", () => {
                     });
 
                     it("accused node should send incorrect response", async () => {
-                        let balanceBefore = await getBalance(validatorsAccount[0].address);
-                        await skaleDKG.connect(validatorsAccount[0]).preResponse(
-                            stringValue(web3.utils.soliditySha3(schainName)),
-                            0,
-                            verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
-                            badEncryptedSecretKeyContributions[indexes[0]]
+                        await reimbursed(
+                            await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                                stringKeccak256(schainName),
+                                0,
+                                verificationVectors[indexes[0]],
+                                verificationVectorMultiplication[indexes[0]],
+                                badEncryptedSecretKeyContributions[indexes[0]]
+                            )
                         );
-                        let balance = await getBalance(validatorsAccount[0].address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
-
-                        balanceBefore = await getBalance(validatorsAccount[0].address);
-                        await expect(skaleDKG.connect(validatorsAccount[0]).response(
-                            stringValue(web3.utils.soliditySha3(schainName)),
+                        
+                        const response = await skaleDKG.connect(validators[0].nodeAddress).response(
+                            stringKeccak256(schainName),
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[1]]
-                        )).to.emit(skaleDKG, "BadGuy")
-                            .withArgs(0);
-                        balance = await getBalance(validatorsAccount[0].address);
-                        balance.should.not.be.lessThan(balanceBefore);
-                        balance.should.be.almost(balanceBefore);
+                        );
+                        await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
+                        await reimbursed(response);
 
                         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -1411,26 +1391,46 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
-            let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
+            let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
             let index = 3;
             while (nodesInGroup[0].eq(1)) {
                 await schains.deleteSchainByRoot(schainName);
-                schainName = "d" + index;
+                schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
-                nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
+                    ethers.utils.defaultAbiCoder.encode(
+                            [schainParametersType],
+                            [{
+                                lifetime: 5,
+                                typeOfSchain: SchainType.TEST,
+                                nonce: 0,
+                                name: schainName,
+                                originator: ethers.constants.AddressZero,
+                                options: []
+                            }]
+                        ));
+                nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
             }
 
-            let rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            let rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "0");
 
-            await nodes.createNode(validatorsAccount[0].address,
+            await nodes.createNode(validators[0].nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -1438,150 +1438,132 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f000003",
                     publicKey: validatorsPublicKey[0],
                     name: "d203",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
-            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
-            let balanceBefore = await getBalance(validatorsAccount[0].address);
-            await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
-                0,
-                verificationVectors[indexes[0]],
-                // the last symbol is spoiled in parameter below
-                badEncryptedSecretKeyContributions[indexes[0]]
+            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
+            await reimbursed(
+                await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
+                    0,
+                    verificationVectors[indexes[0]],
+                    // the last symbol is spoiled in parameter below
+                    badEncryptedSecretKeyContributions[indexes[0]]
+                ),
+                "Broadcast 1"
             );
-            let balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
-
-            balanceBefore = await getBalance(validatorsAccount[1].address);
-            await skaleDKG.connect(validatorsAccount[1]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
-                1,
-                verificationVectors[indexes[1]],
-                encryptedSecretKeyContributions[indexes[1]]
+            
+            await reimbursed(
+                await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
+                    1,
+                    verificationVectors[indexes[1]],
+                    encryptedSecretKeyContributions[indexes[1]]
+                ),
+                "Broadcast 2"
             );
-            balance = await getBalance(validatorsAccount[1].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
-
-            balanceBefore = await getBalance(validatorsAccount[1].address);
-            const resCompl = await (await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            
+            const complaintBadData = await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                stringKeccak256(schainName),
                 1,
                 0
-            )).wait();
-            balance = await getBalance(validatorsAccount[1].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            );
+            const resComplaint = await complaintBadData.wait();
+            await reimbursed(complaintBadData, "Complaint bad data");
 
             assert(
-                await skaleDKG.getComplaintStartedTime(stringValue(web3.utils.soliditySha3(schainName))),
-                (await web3.eth.getBlock(resCompl.blockNumber)).timestamp.toString()
+                await skaleDKG.getComplaintStartedTime(stringKeccak256(schainName)),
+                (await ethers.provider.getBlock(resComplaint.blockNumber)).timestamp.toString()
             );
 
-            balanceBefore = await getBalance(validatorsAccount[0].address);
-            await skaleDKG.connect(validatorsAccount[0]).preResponse(
-                stringValue(web3.utils.soliditySha3(schainName)),
-                0,
-                verificationVectors[indexes[0]],
-                verificationVectorMult[indexes[0]],
-                badEncryptedSecretKeyContributions[indexes[0]]
+            await reimbursed(
+                await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                    stringKeccak256(schainName),
+                    0,
+                    verificationVectors[indexes[0]],
+                    verificationVectorMultiplication[indexes[0]],
+                    badEncryptedSecretKeyContributions[indexes[0]]
+                ),
+                "Pre response"
             );
-            balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
-
-            balanceBefore = await getBalance(validatorsAccount[0].address);
-            const result = await (await skaleDKG.connect(validatorsAccount[0]).response(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            
+            const responseTx = await skaleDKG.connect(validators[0].nodeAddress).response(
+                stringKeccak256(schainName),
                 0,
                 secretNumbers[indexes[0]],
                 multipliedShares[indexes[1]]
-            )).wait();
-            balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            );
+            await reimbursed(responseTx, "Response");
 
-            if (result.events) {
-                assert.equal(result.events[0].event, "BadGuy");
-                assert.equal(result.events[0].args?.nodeIndex.toString(), "0");
+            await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(0);
+            await responseTx.should.emit(skaleDKG, "NewGuy").withArgs(2);
+            await responseTx.should.emit(skaleDKG, "FailedDKG").withArgs(stringKeccak256(schainName));
 
-                assert.equal(result.events[2].event, "ChannelOpened");
-                assert.equal(result.events[2].args?.schainHash, stringValue(web3.utils.soliditySha3(schainName)));
-            } else {
-                assert(false, "No events were emitted");
-            }
+            const blockNumber = (await responseTx.wait()).blockNumber;
+            const timestamp = (await ethers.provider.getBlock(blockNumber)).timestamp;
 
-            const blockNumber = result.blockNumber;
-            const timestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
+            assert.equal((await skaleDKG.getNumberOfBroadcasted(stringKeccak256(schainName))).toString(), "0");
+            assert.equal((await skaleDKG.getChannelStartedTime(stringKeccak256(schainName))).toString(), timestamp.toString());
 
-            assert.equal((await skaleDKG.getNumberOfBroadcasted(stringValue(web3.utils.soliditySha3(schainName)))).toString(), "0");
-            assert.equal((await skaleDKG.getChannelStartedTime(stringValue(web3.utils.soliditySha3(schainName)))).toString(), timestamp.toString());
-
-            rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
 
-            balanceBefore = await getBalance(validatorsAccount[0].address);
-            await expect(skaleDKG.connect(validatorsAccount[0]).complaint(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                stringKeccak256(schainName),
                 2,
                 0
-            )).to.emit(skaleDKG, "ComplaintError")
-                .withArgs("Node is not in this group");
-            balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            );
+            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Node is not in this group");
+            await reimbursed(complaint, "Complaint");
 
-            let res = await skaleDKG.connect(validatorsAccount[0]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
-                    2
-                );
-
+            let res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
+                stringKeccak256(schainName),
+                2
+            );
             assert.equal(res, true);
 
-            await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                stringKeccak256(schainName),
                 2,
                 verificationVectors[indexes[0]],
                 // the last symbol is spoiled in parameter below
                 badEncryptedSecretKeyContributions[indexes[0]]
             );
 
-            res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3(schainName)),
-                    1
-                );
+            res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
+                stringKeccak256(schainName),
+                1
+            );
             assert.equal(res, true);
 
-            await skaleDKG.connect(validatorsAccount[1]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                stringKeccak256(schainName),
                 1,
                 verificationVectors[indexes[1]],
                 encryptedSecretKeyContributions[indexes[1]]
             );
 
-            res = await skaleDKG.connect(validatorsAccount[0]).isAlrightPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
-                        2,
-                    );
+            res = await skaleDKG.connect(validators[0].nodeAddress).isAlrightPossible(
+                stringKeccak256(schainName),
+                2,
+            );
             assert.equal(res, true);
 
-            await skaleDKG.connect(validatorsAccount[0]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
-                        2
-                    );
+            await skaleDKG.connect(validators[0].nodeAddress).alright(
+                stringKeccak256(schainName),
+                2
+            );
 
-            res = await skaleDKG.connect(validatorsAccount[1]).isAlrightPossible(
-                        stringValue(web3.utils.soliditySha3(schainName)),
-                        1
-                    );
+            res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
+                stringKeccak256(schainName),
+                1
+            );
             assert.equal(res, true);
 
-            await skaleDKG.connect(validatorsAccount[1]).alright(
-                        stringValue(web3.utils.soliditySha3(schainName)),
-                        1
-                    );
+            await skaleDKG.connect(validators[1].nodeAddress).alright(
+                stringKeccak256(schainName),
+                1
+            );
         });
 
         it("should process nodeExit 2 times correctly", async () => {
@@ -1590,26 +1572,46 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d2",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
-            let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
+            let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
             let index = 3;
             while (nodesInGroup[0].eq(1)) {
                 await schains.deleteSchainByRoot(schainName);
-                schainName = "d" + index;
+                schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
-                nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
+                    ethers.utils.defaultAbiCoder.encode(
+                            [schainParametersType],
+                            [{
+                                lifetime: 5,
+                                typeOfSchain: SchainType.TEST,
+                                nonce: 0,
+                                name: schainName,
+                                originator: ethers.constants.AddressZero,
+                                options: []
+                            }]
+                        ));
+                nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
             }
 
-            let rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            let rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "0");
 
-            await nodes.createNode(validatorsAccount[0].address,
+            await nodes.createNode(validators[0].nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -1617,67 +1619,68 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f000003",
                     publicKey: validatorsPublicKey[0],
                     name: "d203",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
-            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
-            await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
+            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                stringKeccak256(schainName),
                 0,
                 verificationVectors[indexes[0]],
                 // the last symbol is spoiled in parameter below
                 encryptedSecretKeyContributions[indexes[0]]
             );
 
-            const res = await(await skaleDKG.connect(validatorsAccount[1]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            const res = await (await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                stringKeccak256(schainName),
                 1,
                 verificationVectors[indexes[1]],
                 encryptedSecretKeyContributions[indexes[1]]
             )).wait();
             assert(
-                await skaleDKG.getAlrightStartedTime(stringValue(web3.utils.soliditySha3(schainName))),
-                (await web3.eth.getBlock(res.blockNumber)).timestamp.toString()
+                await skaleDKG.getAlrightStartedTime(stringKeccak256(schainName)),
+                (await ethers.provider.getBlock(res.blockNumber)).timestamp.toString()
             );
-            let numOfCompl = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
-            assert(numOfCompl, "0");
+            let numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
+            assert(numOfCompleted, "0");
 
-            await skaleDKG.connect(validatorsAccount[0]).alright(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).alright(
+                stringKeccak256(schainName),
                 0
             );
 
-            numOfCompl = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
-            assert(numOfCompl, "1");
+            numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
+            assert(numOfCompleted, "1");
 
-            const resSuccess = await (await skaleDKG.connect(validatorsAccount[1]).alright(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            const resSuccess = await (await skaleDKG.connect(validators[1].nodeAddress).alright(
+                stringKeccak256(schainName),
                 1
             )).wait();
 
-            numOfCompl = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
-            assert(numOfCompl, "2");
+            numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
+            assert(numOfCompleted, "2");
 
             assert(
-                await skaleDKG.getTimeOfLastSuccessfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
-                (await web3.eth.getBlock(resSuccess.blockNumber)).timestamp.toString()
+                await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName)),
+                (await ethers.provider.getBlock(resSuccess.blockNumber)).timestamp.toString()
             );
 
-            const comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3(schainName)));
+            const comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256(schainName));
             assert.equal(comPubKey.x.a.toString() !== "0", true);
             assert.equal(comPubKey.x.b.toString() !== "0", true);
             assert.equal(comPubKey.y.a.toString() !== "0", true);
             assert.equal(comPubKey.y.b.toString() !== "0", true);
 
-            await skaleManager.connect(validatorsAccount[1]).nodeExit(1);
+            await nodes.initExit(1);
+            await skaleManager.connect(validators[1].nodeAddress).nodeExit(1);
 
-            let prevPubKey = await keyStorage.getPreviousPublicKey(stringValue(web3.utils.soliditySha3(schainName)));
+            let prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
             assert(prevPubKey.x.a, "0");
             assert(prevPubKey.x.b, "0");
             assert(prevPubKey.y.a, "0");
             assert(prevPubKey.y.b, "0");
 
-            await nodes.createNode(validatorsAccount[0].address,
+            await nodes.createNode(validators[0].nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -1685,88 +1688,89 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f000004",
                     publicKey: validatorsPublicKey[0],
                     name: "d204",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 }
             );
 
-            rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
 
-            await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                stringKeccak256(schainName),
                 0,
                 verificationVectors[indexes[0]],
                 // the last symbol is spoiled in parameter below
                 encryptedSecretKeyContributions[indexes[0]]
             );
 
-            await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                stringKeccak256(schainName),
                 2,
                 verificationVectors[indexes[0]],
                 encryptedSecretKeyContributions[indexes[0]],
             );
 
-            await skaleDKG.connect(validatorsAccount[0]).alright(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).alright(
+                stringKeccak256(schainName),
                 0
             );
 
             assert(
-                await skaleDKG.getTimeOfLastSuccessfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
-                (await web3.eth.getBlock(resSuccess.blockNumber)).timestamp.toString()
+                await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName)),
+                (await ethers.provider.getBlock(resSuccess.blockNumber)).timestamp.toString()
             );
 
-            await skaleDKG.connect(validatorsAccount[0]).alright(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).alright(
+                stringKeccak256(schainName),
                 2
             );
 
-            prevPubKey = await keyStorage.getPreviousPublicKey(stringValue(web3.utils.soliditySha3(schainName)));
+            prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
             assert.equal(prevPubKey.x.a.toString() === comPubKey.x.a.toString(), true);
             assert.equal(prevPubKey.x.b.toString() === comPubKey.x.b.toString(), true);
             assert.equal(prevPubKey.y.a.toString() === comPubKey.y.a.toString(), true);
             assert.equal(prevPubKey.y.b.toString() === comPubKey.y.b.toString(), true);
 
-            let allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringValue(web3.utils.soliditySha3(schainName)));
+            let allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringKeccak256(schainName));
             assert.equal(allPrevPubKeys.length === 1, true);
             assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
             assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
             assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
             assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
 
-            await skipTime(ethers, 43260);
-            await skaleManager.connect(validatorsAccount[0]).nodeExit(2);
+            await skipTime(43260);
+            await nodes.initExit(2);
+            await skaleManager.connect(validators[0].nodeAddress).nodeExit(2);
 
-            rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "2");
 
-            await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                stringKeccak256(schainName),
                 0,
                 verificationVectors[indexes[0]],
                 // the last symbol is spoiled in parameter below
                 encryptedSecretKeyContributions[indexes[0]]
             );
 
-            await skaleDKG.connect(validatorsAccount[0]).broadcast(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                stringKeccak256(schainName),
                 3,
                 verificationVectors[indexes[0]],
                 encryptedSecretKeyContributions[indexes[0]]
             );
 
-            await skaleDKG.connect(validatorsAccount[0]).alright(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).alright(
+                stringKeccak256(schainName),
                 0
             );
 
-            await skaleDKG.connect(validatorsAccount[0]).alright(
-                stringValue(web3.utils.soliditySha3(schainName)),
+            await skaleDKG.connect(validators[0].nodeAddress).alright(
+                stringKeccak256(schainName),
                 3
             );
 
-            allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringValue(web3.utils.soliditySha3(schainName)));
+            allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringKeccak256(schainName));
             assert.equal(allPrevPubKeys.length === 2, true);
             assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
             assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
@@ -1778,7 +1782,7 @@ describe("SkaleDKG", () => {
 
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validatorsAccount[0].address,
+                await nodes.createNode(validators[0].nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -1786,7 +1790,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -1795,7 +1799,17 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.LARGE,
+                        nonce: 0,
+                        name: "New16NodeSchain",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -1807,36 +1821,35 @@ describe("SkaleDKG", () => {
                 verificationVectorNew[i] = verificationVectors[i % 2][0];
             }
 
-            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain")), {value: 1e20.toString()});
+            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
             for (let i = 0; i < 16; i++) {
                 let index = 0;
                 if (i === 1) {
                     index = 1;
                 }
-                let broadPoss = await skaleDKG.connect(validatorsAccount[index]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                let broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                    stringKeccak256("New16NodeSchain"),
                     i
                 );
                 assert.equal(broadPoss, true);
-                const balanceBefore = await getBalance(validatorsAccount[index].address);
-                await skaleDKG.connect(validatorsAccount[index]).broadcast(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-                    i,
-                    verificationVectorNew,
-                    secretKeyContributions
+                await reimbursed(
+                    await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                        stringKeccak256("New16NodeSchain"),
+                        i,
+                        verificationVectorNew,
+                        secretKeyContributions
+                    ),
+                    "Broadcast"
                 );
-                const balance = await getBalance(validatorsAccount[index].address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
-                broadPoss = await skaleDKG.connect(validatorsAccount[index]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                    stringKeccak256("New16NodeSchain"),
                     i
                 );
                 assert.equal(broadPoss, false);
             }
             let comPubKey;
             for (let i = 0; i < 16; i++) {
-                comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
+                comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
                 assert(comPubKey.x.a, "0");
                 assert(comPubKey.x.b, "0");
                 assert(comPubKey.y.a, "0");
@@ -1845,35 +1858,34 @@ describe("SkaleDKG", () => {
                 if (i === 1) {
                     index = 1;
                 }
-                let alrightPoss = await skaleDKG.connect(validatorsAccount[index]).isAlrightPossible(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                let alrightPoss = await skaleDKG.connect(validators[index].nodeAddress).isAlrightPossible(
+                    stringKeccak256("New16NodeSchain"),
                     i
                 );
                 assert.equal(alrightPoss, true);
 
-                const balanceBefore = await getBalance(validatorsAccount[index].address);
-                await skaleDKG.connect(validatorsAccount[index]).alright(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-                    i
+                await reimbursed(
+                    await skaleDKG.connect(validators[index].nodeAddress).alright(
+                        stringKeccak256("New16NodeSchain"),
+                        i
+                    ),
+                    "Alright"
                 );
-                const balance = await getBalance(validatorsAccount[index].address);
-                balance.should.not.be.lessThan(balanceBefore);
-                balance.should.be.almost(balanceBefore);
-
-                alrightPoss = await skaleDKG.connect(validatorsAccount[index]).isAlrightPossible(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                
+                alrightPoss = await skaleDKG.connect(validators[index].nodeAddress).isAlrightPossible(
+                    stringKeccak256("New16NodeSchain"),
                     i
                 );
                 assert.equal(alrightPoss, false);
             }
 
-            comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
+            comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
             assert.equal(comPubKey.x.a.toString() !== "0", true);
             assert.equal(comPubKey.x.b.toString() !== "0", true);
             assert.equal(comPubKey.y.a.toString() !== "0", true);
             assert.equal(comPubKey.y.b.toString() !== "0", true);
 
-            const prevPubKey = await keyStorage.getPreviousPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
+            const prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256("New16NodeSchain"));
             assert(prevPubKey.x.a, "0");
             assert(prevPubKey.x.b, "0");
             assert(prevPubKey.y.a, "0");
@@ -1885,7 +1897,7 @@ describe("SkaleDKG", () => {
 
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validatorsAccount[0].address,
+                await nodes.createNode(validators[0].nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -1893,7 +1905,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -1902,9 +1914,19 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.LARGE,
+                        nonce: 0,
+                        name: "New16NodeSchain",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
-            await nodes.createNode(validatorsAccount[0].address,
+            await nodes.createNode(validators[0].nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -1912,7 +1934,7 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f0000ff",
                     publicKey: validatorsPublicKey[0],
                     name: "d2ff",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             const secretKeyContributions = [];
@@ -1925,7 +1947,7 @@ describe("SkaleDKG", () => {
                 verificationVectorNew[i] = verificationVectors[i % 2][0];
             }
 
-            const verificationVectorMultNew = [
+            const verificationVectorMultiplicationNew = [
                 {
                     x: {
                         a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
@@ -2038,7 +2060,7 @@ describe("SkaleDKG", () => {
                 }
             ];
 
-            const badVerificationVectorMultNew = [
+            const badVerificationVectorMultiplicationNew = [
                 {
                     x: {
                         a: "10154228958897272268223398244445374804407241158746898754006080773714557731510",
@@ -2151,94 +2173,86 @@ describe("SkaleDKG", () => {
                 }
             ];
 
-            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain")), {value: 1e20.toString()});
+            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
             for (let i = 0; i < 16; i++) {
                 let index = 0;
                 if (i === 1) {
                     index = 1;
                 }
-                const broadPoss = await skaleDKG.connect(validatorsAccount[index]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                    stringKeccak256("New16NodeSchain"),
                     i
                 );
                 assert.equal(broadPoss, true);
-                await skaleDKG.connect(validatorsAccount[index]).broadcast(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                    stringKeccak256("New16NodeSchain"),
                     i,
                     verificationVectorNew,
                     secretKeyContributions
                 );
             }
-            const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
-            const accusedNode = nodesInGroup[14].toString();
+            const nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("New16NodeSchain"));
+            const accusedNode = nodesInGroup[14];
             const complaintNode = nodesInGroup[0].toString();
             const someNode = nodesInGroup[7].toString();
             let indexToSend = 0;
             if (complaintNode === "1") {
                 indexToSend = 1;
             }
-            await skaleDKG.connect(validatorsAccount[indexToSend]).complaintBadData(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+            await skaleDKG.connect(validators[indexToSend].nodeAddress).complaintBadData(
+                stringKeccak256("New16NodeSchain"),
                 complaintNode,
                 accusedNode
             );
-            const balanceBefore = await getBalance(validatorsAccount[indexToSend].address);
-            await expect(skaleDKG.connect(validatorsAccount[indexToSend]).complaint(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+            const complaint = await skaleDKG.connect(validators[indexToSend].nodeAddress).complaint(
+                stringKeccak256("New16NodeSchain"),
                 complaintNode,
                 someNode
-            )).to.emit(skaleDKG, "ComplaintError")
-                .withArgs("One complaint is already sent");
-            const balance = await getBalance(validatorsAccount[indexToSend].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            );
+            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("One complaint is already sent");
+            await reimbursed(complaint);
 
-            if (accusedNode === "1") {
+            if (accusedNode.eq(1)) {
                 indexToSend = 1;
             } else {
                 indexToSend = 0;
             }
-            await skaleDKG.connect(validatorsAccount[indexToSend]).preResponse(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+            await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
+                stringKeccak256("New16NodeSchain"),
                 accusedNode,
                 verificationVectorNew,
-                verificationVectorMult[indexes[indexToSend]],
+                verificationVectorMultiplication[indexes[indexToSend]],
                 secretKeyContributions
             ).should.be.eventually.rejectedWith("Incorrect length of multiplied verification vector");
-            await skaleDKG.connect(validatorsAccount[indexToSend]).preResponse(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+            await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
+                stringKeccak256("New16NodeSchain"),
                 accusedNode,
                 verificationVectorNew,
-                badVerificationVectorMultNew,
+                badVerificationVectorMultiplicationNew,
                 secretKeyContributions
             ).should.be.eventually.rejectedWith("Multiplied verification vector is incorrect");
-            const resPreResp = await (await skaleDKG.connect(validatorsAccount[indexToSend]).preResponse(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+            const resPreResp = await (await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
+                stringKeccak256("New16NodeSchain"),
                 accusedNode,
                 verificationVectorNew,
-                verificationVectorMultNew,
+                verificationVectorMultiplicationNew,
                 secretKeyContributions
             )).wait();
-            const resResp = await (await skaleDKG.connect(validatorsAccount[indexToSend]).response(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+            const responseTx = await skaleDKG.connect(validators[indexToSend].nodeAddress).response(
+                stringKeccak256("New16NodeSchain"),
                 accusedNode,
                 secretNumbers[indexes[indexToSend]],
                 multipliedShares[indexes[indexToSend]]
-            )).wait();
-            if (resResp.events) {
-                assert.equal(resResp.events[0].event, "BadGuy");
-                assert.equal(resResp.events[0].args?.nodeIndex.toString(), accusedNode);
-            } else {
-                assert(false, "No events were emitted");
-            }
-            assert.isAtMost(resResp.gasUsed.toNumber() + resPreResp.gasUsed.toNumber(), 10000000);
+            );
+            await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(accusedNode);
+            assert.isAtMost((await responseTx.wait()).gasUsed.toNumber() + resPreResp.gasUsed.toNumber(), 10000000);
         });
 
         it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
 
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validatorsAccount[0].address,
+                await nodes.createNode(validators[0].nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -2246,7 +2260,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -2255,7 +2269,17 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.LARGE,
+                        nonce: 0,
+                        name: "New16NodeSchain",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -2267,19 +2291,19 @@ describe("SkaleDKG", () => {
                 verificationVectorNew[i] = verificationVectors[i % 2][0];
             }
 
-            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain")), {value: 1e20.toString()});
+            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
             for (let i = 0; i < 15; i++) {
                 let index = 0;
                 if (i === 1) {
                     index = 1;
                 }
-                const broadPoss = await skaleDKG.connect(validatorsAccount[index]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                    stringKeccak256("New16NodeSchain"),
                     i
                 );
                 assert.equal(broadPoss, true);
-                await skaleDKG.connect(validatorsAccount[index]).broadcast(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                    stringKeccak256("New16NodeSchain"),
                     i,
                     verificationVectorNew,
                     secretKeyContributions
@@ -2287,28 +2311,22 @@ describe("SkaleDKG", () => {
             }
             const accusedNode = "15";
             const complaintNode = "7";
-            await skipTime(ethers, 1800);
+            await skipTime(1800);
 
-            let balanceBefore = await getBalance(validatorsAccount[0].address);
-            await skaleDKG.connect(validatorsAccount[0]).complaint(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-                complaintNode,
-                accusedNode
+            await reimbursed(
+                await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                    stringKeccak256("New16NodeSchain"),
+                    complaintNode,
+                    accusedNode
+                )
             );
-            let balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
-
-            balanceBefore = await getBalance(validatorsAccount[0].address);
-            await expect(skaleDKG.connect(validatorsAccount[0]).complaint(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+            
+            const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                stringKeccak256("New16NodeSchain"),
                 8,
                 accusedNode
-            )).to.emit(skaleDKG, "ComplaintError")
-                .withArgs("Group is not created");
-            balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            );
+            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
             await skaleManager.connect(validator1).deleteSchain("New16NodeSchain");
         });
 
@@ -2316,7 +2334,7 @@ describe("SkaleDKG", () => {
 
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validatorsAccount[0].address,
+                await nodes.createNode(validators[0].nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -2324,7 +2342,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -2333,7 +2351,17 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.LARGE,
+                        nonce: 0,
+                        name: "New16NodeSchain",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -2345,19 +2373,19 @@ describe("SkaleDKG", () => {
                 verificationVectorNew[i] = verificationVectors[i % 2][0];
             }
 
-            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain")), {value: 1e20.toString()});
+            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
             for (let i = 0; i < 15; i++) {
                 let index = 0;
                 if (i === 1) {
                     index = 1;
                 }
-                const broadPoss = await skaleDKG.connect(validatorsAccount[index]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                    stringKeccak256("New16NodeSchain"),
                     i
                 );
                 assert.equal(broadPoss, true);
-                await skaleDKG.connect(validatorsAccount[index]).broadcast(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                    stringKeccak256("New16NodeSchain"),
                     i,
                     verificationVectorNew,
                     secretKeyContributions
@@ -2365,29 +2393,26 @@ describe("SkaleDKG", () => {
             }
             const accusedNode = "15";
             const complaintNode = "7";
-            await skipTime(ethers, 1800);
-            let balanceBefore = await getBalance(validatorsAccount[0].address);
-            const res = await skaleDKG.connect(validatorsAccount[0]).complaint(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-                complaintNode,
-                accusedNode
+            await skipTime(1800);
+            await reimbursed(
+                await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                    stringKeccak256("New16NodeSchain"),
+                    complaintNode,
+                    accusedNode
+                )
             );
-            let balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            const space = await nodes.spaceOfNodes(accusedNode);
+            space.freeSpace.should.be.equal(128);
 
-            balanceBefore = await getBalance(validatorsAccount[0].address);
-            await expect(skaleDKG.connect(validatorsAccount[0]).complaint(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+            const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                stringKeccak256("New16NodeSchain"),
                 8,
                 accusedNode
-            )).to.emit(skaleDKG, "ComplaintError")
-                .withArgs("Group is not created");
-            balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
+            );
+            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
+            await reimbursed(complaint);
 
-            await nodes.createNode(validatorsAccount[0].address,
+            await nodes.createNode(validators[0].nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -2395,7 +2420,7 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f0000ff",
                     publicKey: validatorsPublicKey[0],
                     name: "d2ff",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 }
             );
             await schains.restartSchainCreation("New16NodeSchain");
@@ -2408,8 +2433,8 @@ describe("SkaleDKG", () => {
                 if (i === 1) {
                     index = 1;
                 }
-                const broadTx = await skaleDKG.connect(validatorsAccount[index]).broadcast(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                    stringKeccak256("New16NodeSchain"),
                     i,
                     verificationVectorNew,
                     secretKeyContributions
@@ -2420,7 +2445,7 @@ describe("SkaleDKG", () => {
                 if (i.toString() === accusedNode) {
                     continue;
                 }
-                comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
+                comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
                 assert(comPubKey.x.a, "0");
                 assert(comPubKey.x.b, "0");
                 assert(comPubKey.y.a, "0");
@@ -2429,13 +2454,13 @@ describe("SkaleDKG", () => {
                 if (i === 1) {
                     index = 1;
                 }
-                await skaleDKG.connect(validatorsAccount[index]).alright(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                await skaleDKG.connect(validators[index].nodeAddress).alright(
+                    stringKeccak256("New16NodeSchain"),
                     i
                 );
             }
 
-            comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
+            comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
             assert.equal(comPubKey.x.a.toString() !== "0", true);
             assert.equal(comPubKey.x.b.toString() !== "0", true);
             assert.equal(comPubKey.y.a.toString() !== "0", true);
@@ -2446,7 +2471,7 @@ describe("SkaleDKG", () => {
 
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validatorsAccount[0].address,
+                await nodes.createNode(validators[0].nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -2454,7 +2479,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -2463,7 +2488,17 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "New16NodeSchain"]));
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.SMALL,
+                        nonce: 0,
+                        name: "New16NodeSchain",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                ));
 
             const secretKeyContributions = [];
             for (let i = 0; i < 16; i++) {
@@ -2475,19 +2510,19 @@ describe("SkaleDKG", () => {
                 verificationVectorNew[i] = verificationVectors[i % 2][0];
             }
 
-            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain")), {value: 1e20.toString()});
+            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
             for (let i = 0; i < 15; i++) {
                 let index = 0;
                 if (i === 1) {
                     index = 1;
                 }
-                const broadPoss = await skaleDKG.connect(validatorsAccount[index]).isBroadcastPossible(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                    stringKeccak256("New16NodeSchain"),
                     i
                 );
                 assert.equal(broadPoss, true);
-                await skaleDKG.connect(validatorsAccount[index]).broadcast(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                    stringKeccak256("New16NodeSchain"),
                     i,
                     verificationVectorNew,
                     secretKeyContributions
@@ -2495,28 +2530,23 @@ describe("SkaleDKG", () => {
             }
             const accusedNode = "15";
             const complaintNode = "7";
-            await skipTime(ethers, 1800);
-            let balanceBefore = await getBalance(validatorsAccount[0].address);
-            const resC = await skaleDKG.connect(validatorsAccount[0]).complaint(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-                complaintNode,
-                accusedNode
+            await skipTime(1800);
+            await reimbursed(
+                await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                    stringKeccak256("New16NodeSchain"),
+                    complaintNode,
+                    accusedNode
+                )
             );
-            let balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
-
-            balanceBefore = await getBalance(validatorsAccount[0].address);
-            await expect(skaleDKG.connect(validatorsAccount[0]).complaint(
-                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+            
+            const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                stringKeccak256("New16NodeSchain"),
                 8,
                 accusedNode
-            )).to.emit(skaleDKG, "ComplaintError")
-                .withArgs("Group is not created");
-            balance = await getBalance(validatorsAccount[0].address);
-            balance.should.not.be.lessThan(balanceBefore);
-            balance.should.be.almost(balanceBefore);
-            // await nodes.createNode(validatorsAccount[0].address,
+            );
+            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
+            await reimbursed(complaint);
+            // await nodes.createNode(validators[0].nodeAddress.address,
             //     {
             //         port: 8545,
             //         nonce: 0,
@@ -2524,17 +2554,27 @@ describe("SkaleDKG", () => {
             //         publicIp: "0x7f0000ff",
             //         publicKey: validatorsPublicKey[0],
             //         name: "d2ff",
-            //         domainName: "somedomain.name"
+            //         domainName: "some.domain.name"
             //     }
             // );
 
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "New16NodeSchain1"])
+                ethers.utils.defaultAbiCoder.encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.SMALL,
+                        nonce: 0,
+                        name: "New16NodeSchain1",
+                        originator: ethers.constants.AddressZero,
+                        options: []
+                    }]
+                )
             );
 
-            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain1")), {value: 1e20.toString()});
+            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain1"), {value: 1e20.toString()});
 
             for (let i = 0; i < 16; i++) {
                 // if (i.toString() === accusedNode) {
@@ -2544,8 +2584,8 @@ describe("SkaleDKG", () => {
                 if (i === 1) {
                     index = 1;
                 }
-                const broadTx = await skaleDKG.connect(validatorsAccount[index]).broadcast(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain1")),
+                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                    stringKeccak256("New16NodeSchain1"),
                     i,
                     verificationVectorNew,
                     secretKeyContributions
@@ -2556,7 +2596,7 @@ describe("SkaleDKG", () => {
                 // if (i.toString() === accusedNode) {
                 //     continue;
                 // }
-                comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain1")));
+                comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain1"));
                 assert(comPubKey.x.a, "0");
                 assert(comPubKey.x.b, "0");
                 assert(comPubKey.y.a, "0");
@@ -2565,13 +2605,13 @@ describe("SkaleDKG", () => {
                 if (i === 1) {
                     index = 1;
                 }
-                await skaleDKG.connect(validatorsAccount[index]).alright(
-                    stringValue(web3.utils.soliditySha3("New16NodeSchain1")),
+                await skaleDKG.connect(validators[index].nodeAddress).alright(
+                    stringKeccak256("New16NodeSchain1"),
                     i
                 );
             }
 
-            comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain1")));
+            comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain1"));
             assert.equal(comPubKey.x.a.toString() !== "0", true);
             assert.equal(comPubKey.x.b.toString() !== "0", true);
             assert.equal(comPubKey.y.a.toString() !== "0", true);

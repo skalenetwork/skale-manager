@@ -4,7 +4,7 @@ import { deployWithLibraryFunctionFactory } from "../factory";
 import { deployNodes } from "../nodes";
 import { deploySchainsInternal } from "../schainsInternal";
 import { deploySlashingTable } from "../slashingTable";
-import { ContractManager, SkaleDKGTester } from "../../../../typechain";
+import { ContractManager, SkaleDKGTester } from "../../../../typechain-types";
 
 const libraries = [
     "SkaleDkgAlright",
@@ -14,14 +14,14 @@ const libraries = [
     "SkaleDkgResponse"
 ]
 
-const deploySkaleDKGTester: (contractManager: ContractManager) => Promise<SkaleDKGTester>
-    = deployWithLibraryFunctionFactory("SkaleDKGTester", libraries,
-                            async (contractManager: ContractManager) => {
-                                await deploySchainsInternal(contractManager);
-                                await deployPunisher(contractManager);
-                                await deployNodes(contractManager);
-                                await deploySlashingTable(contractManager);
-                                await deployKeyStorage(contractManager);
-                            });
-
-export { deploySkaleDKGTester };
+export const deploySkaleDKGTester = deployWithLibraryFunctionFactory(
+    "SkaleDKGTester",
+    libraries,
+    async (contractManager: ContractManager) => {
+        await deploySchainsInternal(contractManager);
+        await deployPunisher(contractManager);
+        await deployNodes(contractManager);
+        await deploySlashingTable(contractManager);
+        await deployKeyStorage(contractManager);
+    }
+) as (contractManager: ContractManager) => Promise<SkaleDKGTester>;

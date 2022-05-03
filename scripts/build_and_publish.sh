@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# cSpell:words xargs
+
 set -e
 
 : "${VERSION?Need to set VERSION}"

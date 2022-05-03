@@ -5,8 +5,8 @@ async function main() {
     await upgrade(
         "1.8.0-beta.1",
         ["ContractManager"].concat(contracts),
-        async (safeTransactions, abi, contractManager) => undefined,
-        async (safeTransactions, abi) => undefined
+        () => Promise.resolve(undefined),
+        () => Promise.resolve(undefined)
     );
 }
 
