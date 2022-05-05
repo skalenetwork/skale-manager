@@ -100,6 +100,8 @@ describe("Bounty", () => {
             const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
             await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
 
+            await skipTimeToDate(1, 11);
+
             await skaleToken.mint(validator.address, ten18.mul(validatorAmount).toString(), "0x", "0x");
             await validatorService.connect(validator).registerValidator("Validator", "", 150, 1e6 + 1);
             await validatorService.enableValidator(validatorId);
@@ -124,6 +126,8 @@ describe("Bounty", () => {
                 const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
                 const DELEGATION_PERIOD_SETTER_ROLE = await delegationPeriodManager.DELEGATION_PERIOD_SETTER_ROLE();
                 await delegationPeriodManager.grantRole(DELEGATION_PERIOD_SETTER_ROLE, owner.address);
+
+                await skipTimeToDate(1, 11);
 
                 await skaleToken.mint(validator2.address, ten18.mul(validator2Amount).toString(), "0x", "0x");
                 await validatorService.connect(validator2).registerValidator("Validator", "", 150, 1e6 + 1);
