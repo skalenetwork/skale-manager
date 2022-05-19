@@ -45,7 +45,7 @@
     "@openzeppelin/contracts-upgradeable": "^4.4.2",
     "@openzeppelin/hardhat-upgrades": "^1.13.0",
     "@skalenetwork/skale-manager-interfaces": "1.0.0-develop.1",
-    "@skalenetwork/upgrade-tools": "^0.0.1-custom.10",
+    "@skalenetwork/upgrade-tools": "^0.0.1-develop.2",
     "@typechain/hardhat": "^4.0.0",
     "axios": "^0.25.0",
     "dotenv": "^16.0.0",
