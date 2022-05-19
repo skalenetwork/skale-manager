@@ -48,10 +48,9 @@
     "@skalenetwork/upgrade-tools": "^0.0.1-custom.10",
     "@typechain/hardhat": "^4.0.0",
     "axios": "^0.25.0",
-    "dotenv": "^14.3.2",
+    "dotenv": "^16.0.0",
     "ethereumjs-util": "^7.1.4",
     "ethers": "^5.5.3",
-    "ethers-eip712": "^0.2.0",
     "hardhat": "^2.8.3"
   },
   "devDependencies": {

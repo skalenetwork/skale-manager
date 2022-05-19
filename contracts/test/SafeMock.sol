@@ -24,14 +24,35 @@ pragma solidity 0.8.11;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 interface ISafeMock {
+    enum Operation {Call, DelegateCall}
+
     function transferProxyAdminOwnership(OwnableUpgradeable proxyAdmin, address newOwner) external;
     function destroy() external;
     function multiSend(bytes memory transactions) external;
+    function getTransactionHash(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Operation operation,
+        uint256 safeTxGas,
+        uint256 baseGas,
+        uint256 gasPrice,
+        address gasToken,
+        address refundReceiver,
+        uint256 _nonce
+    ) external view returns (bytes32);
 }
 
 contract SafeMock is OwnableUpgradeable, ISafeMock {
 
     bool public constant IS_SAFE_MOCK = true;
+    bytes32 public constant SAFE_TX_TYPE_HASH = keccak256(
+        "SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,"
+        "address gasToken,address refundReceiver,uint256 nonce)"
+    );
+    bytes32 public constant DOMAIN_SEPARATOR_TYPE_HASH = keccak256(
+        "EIP712Domain(uint256 chainId,address verifyingContract)"
+    );
 
     constructor() initializer {
         OwnableUpgradeable.__Ownable_init();
@@ -89,5 +110,93 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
                 i := add(i, add(0x55, dataLength))
             }
         }
+    }
+
+    /// @dev Returns hash to be signed by owners.
+    /// @param to Destination address.
+    /// @param value Ether value.
+    /// @param data Data payload.
+    /// @param operation Operation type.
+    /// @param safeTxGas Fas that should be used for the safe transaction.
+    /// @param baseGas Gas costs for data used to trigger the safe transaction.
+    /// @param gasPrice Maximum gas price that should be used for this transaction.
+    /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
+    /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
+    /// @param _nonce Transaction nonce.
+    /// @return Transaction hash.
+    function getTransactionHash(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Operation operation,
+        uint256 safeTxGas,
+        uint256 baseGas,
+        uint256 gasPrice,
+        address gasToken,
+        address refundReceiver,
+        uint256 _nonce
+    ) public view override returns (bytes32) {
+        return keccak256(
+            _encodeTransactionData(
+                to,
+                value,
+                data,
+                operation,
+                safeTxGas,
+                baseGas,
+                gasPrice,
+                gasToken,
+                refundReceiver,
+                _nonce
+            )
+        );
+    }
+
+    /// @dev Returns the bytes that are hashed to be signed by owners.
+    /// @param to Destination address.
+    /// @param value Ether value.
+    /// @param data Data payload.
+    /// @param operation Operation type.
+    /// @param safeTxGas Gas that should be used for the safe transaction.
+    /// @param baseGas Gas costs for that are independent of the transaction execution
+    ///                (e.g. base transaction fee, signature check, payment of the refund)
+    /// @param gasPrice Maximum gas price that should be used for this transaction.
+    /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
+    /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
+    /// @param _nonce Transaction nonce.
+    /// @return Transaction hash bytes.
+    function _encodeTransactionData(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Operation operation,
+        uint256 safeTxGas,
+        uint256 baseGas,
+        uint256 gasPrice,
+        address gasToken,
+        address refundReceiver,
+        uint256 _nonce
+    ) private view returns (bytes memory) {
+        bytes32 safeTxHash =
+            keccak256(
+                abi.encode(
+                    SAFE_TX_TYPE_HASH,
+                    to,
+                    value,
+                    keccak256(data),
+                    operation,
+                    safeTxGas,
+                    baseGas,
+                    gasPrice,
+                    gasToken,
+                    refundReceiver,
+                    _nonce
+                )
+            );
+        return abi.encodePacked(bytes1(0x19), bytes1(0x01), _domainSeparator(), safeTxHash);
+    }
+
+    function _domainSeparator() private view returns (bytes32) {
+        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPE_HASH, block.chainid, this));
     }
 }
