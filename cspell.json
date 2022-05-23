@@ -17,7 +17,8 @@
         "**/*.egg-info/**",
         "**/dist/**",
         "**/coverage.json",
-        "**/*.hbs"
+        "**/*.hbs",
+        ".openzeppelin/**"
     ],
     "dictionaries": ["domain-terms", "libraries", "names", "skale-terms", "solidity"],
     "dictionaryDefinitions": [

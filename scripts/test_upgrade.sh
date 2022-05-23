@@ -2,6 +2,16 @@
 
 set -e
 
+if [ -z $GITHUB_WORKSPACE ]
+then
+    GITHUB_WORKSPACE="$(dirname "$(dirname "$(realpath "$0")")")"
+fi
+
+if [ -z $GITHUB_REPOSITORY ]
+then
+    GITHUB_REPOSITORY="skalenetwork/skale-manager"
+fi
+
 export NVM_DIR=~/.nvm;
 source $NVM_DIR/nvm.sh;
 

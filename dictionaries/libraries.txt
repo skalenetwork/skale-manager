@@ -24,6 +24,7 @@ nbformat
 nomiclabs
 pygments
 pyplot
+realpath
 solcover
 solcoverjs
 solhint
