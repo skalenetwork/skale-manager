@@ -18,7 +18,8 @@
         "**/dist/**",
         "**/coverage.json",
         "**/*.hbs",
-        ".openzeppelin/**"
+        ".openzeppelin/**",
+        ".github/**"
     ],
     "dictionaries": ["domain-terms", "libraries", "names", "skale-terms", "solidity"],
     "dictionaryDefinitions": [
