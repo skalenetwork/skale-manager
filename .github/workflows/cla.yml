@@ -1,4 +1,4 @@
-name: "CLA Assistant"
+name: "cla"
 on:
   issue_comment:
     types: [created]
@@ -6,19 +6,33 @@ on:
     types: [opened, closed, synchronize]
 
 jobs:
-  CLAssistant:
+  cla:
     runs-on: ubuntu-latest
     steps:
-      - name: 'CLA Assistant'
+      - name: "Get Team Members"
+        id: team
+        # github-script, v6.1.0
+        uses: actions/github-script@7a5c598405937d486b0331594b5da2b14db670da
+        with:
+          github-token: ${{ secrets.ORG_TOKEN }}
+          result-encoding: string
+          script: |
+            const members = await github.paginate(
+              github.rest.orgs.listMembers,
+              { org: "skalenetwork" },
+            );
+            return members.map(m => m.login).join(",");
+
+      - name: "CLA Assistant"
         if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
         # Beta Release, v2.1.3-beta
         uses: cla-assistant/github-action@ba066dbae3769e2ce93ec8cfc4fdc51b9db628ba
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PERSONAL_ACCESS_TOKEN : ${{ secrets.ORG_TOKEN }}
         with:
           path-to-signatures: 'signatures/version1/cla.json'
           path-to-document: 'https://skale.network/cla.txt'
           remote-organization-name: 'skalenetwork'
           remote-repository-name: cla-sigs
-          allowlist: DimaStebaev,payvint,yavrsky,cstrangedk,olehnikolaiev,sergiy-skalelabs,dmitry-tk,gannakulikova,kladkogex,PolinaKiporenko,alexgex,bot*
+          allowlist: '${{ steps.team.outputs.result }},*[bot]'
