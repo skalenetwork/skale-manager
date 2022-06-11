@@ -40,6 +40,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
     using Random for IRandom.RandomGenerator;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
@@ -81,6 +82,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     EnumerableSetUpgradeable.UintSet private _keysOfSchainTypes;
 
     uint public currentGeneration;
+
+    mapping (bytes32 => EnumerableSetUpgradeable.AddressSet) private _nodeAddressInSchain;
 
     bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
@@ -270,6 +273,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         removeSchainForNode(nodeIndex, placeOfSchainOnNode[schainHash][nodeIndex] - 1);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
         INodes nodes = INodes(contractManager.getContract("Nodes"));
+        _nodeAddressInSchain[schainHash].remove(nodes.getNodeAddress(nodeIndex));
         nodes.addSpaceToNode(nodeIndex, schains[schainHash].partOfNode);
     }
 
@@ -683,13 +687,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         schainExists(schainHash)
         returns (bool)
     {
-        INodes nodes = INodes(contractManager.getContract("Nodes"));
-        for (uint i = 0; i < schainsGroups[schainHash].length; i++) {
-            if (nodes.getNodeAddress(schainsGroups[schainHash][i]) == sender) {
-                return true;
-            }
-        }
-        return false;
+        return _nodeAddressInSchain[schainHash].contains(sender);
     }
 
     /**
@@ -936,6 +934,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         for (uint i = 0; i < numberOfNodes; i++) {
             uint node = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
             nodesInGroup[i] = node;
+            _nodeAddressInSchain[schainHash].add(nodes.getNodeAddress(node));
             _setException(schainHash, node);
             addSchainForNode(node, schainHash);
             nodes.makeNodeInvisible(node);
