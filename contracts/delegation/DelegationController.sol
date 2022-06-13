@@ -24,16 +24,16 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
-import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import "../interfaces/delegation/IDelegationController.sol";
+import "../interfaces/delegation/IDelegationPeriodManager.sol";
+import "../interfaces/delegation/IPunisher.sol";
+import "../interfaces/delegation/ITokenState.sol";
+import "../interfaces/delegation/IValidatorService.sol";
+import "../interfaces/delegation/ILocker.sol";
+import "../interfaces/delegation/ITimeHelpers.sol";
+import "../interfaces/IBountyV2.sol";
+import "../interfaces/INodes.sol";
+import "../interfaces/IConstantsHolder.sol";
 
 import "../Permissions.sol";
 import "../utils/FractionUtils.sol";

@@ -25,10 +25,10 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import "../interfaces/delegation/IDistributor.sol";
+import "../interfaces/delegation/IValidatorService.sol";
+import "../interfaces/delegation/IDelegationController.sol";
+import "../interfaces/delegation/ITimeHelpers.sol";
 
 import "../Permissions.sol";
 import "../ConstantsHolder.sol";

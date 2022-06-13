@@ -22,11 +22,11 @@
 pragma solidity 0.8.11; 
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "./interfaces/ISkaleDKG.sol";
+import "./interfaces/INodeRotation.sol";
+import "./interfaces/IConstantsHolder.sol";
+import "./interfaces/INodes.sol";
+import "./interfaces/ISchainsInternal.sol";
 
 import "./utils/Random.sol";
 import "./Permissions.sol";
@@ -223,7 +223,7 @@ contract NodeRotation is Permissions, INodeRotation {
         nodeIndex = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
         require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");
         schainsInternal.makeSchainNodesVisible(schainHash);
-        schainsInternal.addSchainForNode(nodeIndex, schainHash);
+        schainsInternal.addSchainForNode(nodes, nodeIndex, schainHash);
         schainsInternal.setException(schainHash, nodeIndex);
         schainsInternal.setNodeInGroup(schainHash, nodeIndex);
     }

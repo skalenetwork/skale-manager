@@ -23,8 +23,8 @@
 
 pragma solidity 0.8.11;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import "../interfaces/ISkaleDKG.sol";
+import "../interfaces/IContractManager.sol";
 
 import "../utils/FieldOperations.sol";
 

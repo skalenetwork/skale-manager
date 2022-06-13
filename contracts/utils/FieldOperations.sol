@@ -24,7 +24,7 @@
 
 pragma solidity 0.8.11;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "../interfaces/ISkaleDKG.sol";
 
 import "./Precompiled.sol";
 

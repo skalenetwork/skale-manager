@@ -21,15 +21,15 @@
 
 pragma solidity 0.8.11;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
-import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
-import "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
+import "./interfaces/ISkaleDKG.sol";
+import "./interfaces/ISlashingTable.sol";
+import "./interfaces/ISchains.sol";
+import "./interfaces/ISchainsInternal.sol";
+import "./interfaces/INodeRotation.sol";
+import "./interfaces/IKeyStorage.sol";
+import "./interfaces/IWallets.sol";
+import "./interfaces/delegation/IPunisher.sol";
+import "./interfaces/thirdparty/IECDH.sol";
 
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";

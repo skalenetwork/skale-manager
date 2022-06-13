@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.11;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
+import "./interfaces/ISkaleVerifier.sol";
 
 import "./Permissions.sol";
 import "./utils/Precompiled.sol";

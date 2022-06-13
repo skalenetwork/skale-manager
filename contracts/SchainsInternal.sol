@@ -23,9 +23,9 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import "./interfaces/ISchainsInternal.sol";
+import "./interfaces/ISkaleDKG.sol";
+import "./interfaces/INodes.sol";
 
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
@@ -273,7 +273,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         removeSchainForNode(nodeIndex, placeOfSchainOnNode[schainHash][nodeIndex] - 1);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
         INodes nodes = INodes(contractManager.getContract("Nodes"));
-        _nodeAddressInSchain[schainHash].remove(nodes.getNodeAddress(nodeIndex));
+        require(_nodeAddressInSchain[schainHash].remove(nodes.getNodeAddress(nodeIndex)), "Incorrect node address");
         nodes.addSpaceToNode(nodeIndex, schains[schainHash].partOfNode);
     }
 
@@ -824,6 +824,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * - Schain must exist
      */
     function addSchainForNode(
+        INodes nodes,
         uint nodeIndex,
         bytes32 schainHash
     )
@@ -841,6 +842,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             placeOfSchainOnNode[schainHash][nodeIndex] = lastHoleOfNode + 1;
             holesForNodes[nodeIndex].pop();
         }
+        require(_nodeAddressInSchain[schainHash].add(nodes.getNodeAddress(nodeIndex)), "Node address already exist");
     }
 
     /**
@@ -934,9 +936,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         for (uint i = 0; i < numberOfNodes; i++) {
             uint node = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
             nodesInGroup[i] = node;
-            _nodeAddressInSchain[schainHash].add(nodes.getNodeAddress(node));
             _setException(schainHash, node);
-            addSchainForNode(node, schainHash);
+            addSchainForNode(nodes, node, schainHash);
             nodes.makeNodeInvisible(node);
             require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
         }

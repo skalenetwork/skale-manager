@@ -23,10 +23,10 @@
 
 pragma solidity 0.8.11;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
-import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import "../interfaces/ISkaleDKG.sol";
+import "../interfaces/IKeyStorage.sol";
+import "../interfaces/IContractManager.sol";
+import "../interfaces/IConstantsHolder.sol";
 
 import "../utils/FieldOperations.sol";
 

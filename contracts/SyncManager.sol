@@ -22,7 +22,7 @@
 pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
-import "@skalenetwork/skale-manager-interfaces/ISyncManager.sol";
+import "./interfaces/ISyncManager.sol";
 import "./Permissions.sol";
 
 /**

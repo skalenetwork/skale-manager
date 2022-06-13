@@ -22,7 +22,7 @@
 
 pragma solidity 0.8.11;
 
-import "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
+import "./interfaces/ISlashingTable.sol";
 
 import "./Permissions.sol";
 

@@ -21,8 +21,8 @@
 
 pragma solidity 0.8.11;
 
-import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
-import "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
+import "./interfaces/IContractManager.sol";
+import "./interfaces/IPermissions.sol";
 
 import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
 

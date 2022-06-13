@@ -25,17 +25,17 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleManager.sol";
-import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
-import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import "./interfaces/ISkaleManager.sol";
+import "./interfaces/IMintableToken.sol";
+import "./interfaces/delegation/IDistributor.sol";
+import "./interfaces/delegation/IValidatorService.sol";
+import "./interfaces/IBountyV2.sol";
+import "./interfaces/IConstantsHolder.sol";
+import "./interfaces/INodeRotation.sol";
+import "./interfaces/INodes.sol";
+import "./interfaces/ISchains.sol";
+import "./interfaces/ISchainsInternal.sol";
+import "./interfaces/IWallets.sol";
 
 import "./Permissions.sol";
 

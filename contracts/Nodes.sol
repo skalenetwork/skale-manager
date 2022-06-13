@@ -25,10 +25,10 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import "./interfaces/INodes.sol";
+import "./interfaces/delegation/IDelegationController.sol";
+import "./interfaces/delegation/IValidatorService.sol";
+import "./interfaces/IBountyV2.sol";
 
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";

@@ -21,13 +21,13 @@
 
 pragma solidity 0.8.11;
 
-import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
-import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
-import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import "./interfaces/ISchains.sol";
+import "./interfaces/ISkaleVerifier.sol";
+import "./interfaces/ISkaleDKG.sol";
+import "./interfaces/ISchainsInternal.sol";
+import "./interfaces/IKeyStorage.sol";
+import "./interfaces/INodeRotation.sol";
+import "./interfaces/IWallets.sol";
 
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
