@@ -3,7 +3,7 @@ import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          DelegationController,
          Nodes,
-         SchainsInternal,
+         SchainsInternalMock,
          Schains,
          SkaleDKG,
          SkaleToken,
@@ -22,7 +22,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
@@ -47,7 +47,7 @@ describe("SkaleDkgFakeComplaint", () => {
     let nodeAddress2: Wallet;
 
     let contractManager: ContractManager;
-    let schainsInternal: SchainsInternal;
+    let schainsInternal: SchainsInternalMock;
     let schains: Schains;
     let skaleDKG: SkaleDKG;
     let skaleToken: SkaleToken;
@@ -574,7 +574,7 @@ describe("SkaleDkgFakeComplaint", () => {
         contractManager = await deployContractManager();
 
         nodes = await deployNodes(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
+        schainsInternal = await deploySchainsInternalMock(contractManager);
         schains = await deploySchains(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
@@ -582,6 +582,8 @@ describe("SkaleDkgFakeComplaint", () => {
         slashingTable = await deploySlashingTable(contractManager);
         delegationController = await deployDelegationController(contractManager);
         wallets = await deployWallets(contractManager);
+
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
 
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
         await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
