@@ -6,7 +6,7 @@ import { ConstantsHolder,
          DelegationPeriodManager,
          Distributor,
          Nodes,
-         SchainsInternal,
+         SchainsInternalMock,
          Schains,
          SkaleDKGTester,
          SkaleManager,
@@ -25,7 +25,7 @@ import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegat
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
@@ -56,7 +56,7 @@ describe("SkaleManager", () => {
     let nodesContract: Nodes;
     let skaleManager: SkaleManager;
     let skaleToken: SkaleToken;
-    let schainsInternal: SchainsInternal;
+    let schainsInternal: SchainsInternalMock;
     let schains: Schains;
     let validatorService: ValidatorService;
     let delegationController: DelegationController;
@@ -80,7 +80,7 @@ describe("SkaleManager", () => {
         skaleToken = await deploySkaleToken(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
         nodesContract = await deployNodes(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
+        schainsInternal = await deploySchainsInternalMock(contractManager);
         schains = await deploySchains(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -89,6 +89,7 @@ describe("SkaleManager", () => {
         distributor = await deployDistributor(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
         bountyContract = await deployBounty(contractManager);
         wallets = await deployWallets(contractManager);
 

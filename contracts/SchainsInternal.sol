@@ -273,7 +273,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         removeSchainForNode(nodeIndex, placeOfSchainOnNode[schainHash][nodeIndex] - 1);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
         INodes nodes = INodes(contractManager.getContract("Nodes"));
-        require(_nodeAddressInSchain[schainHash].remove(nodes.getNodeAddress(nodeIndex)), "Incorrect node address");
+        require(_removeAddressFromSchain(schainHash, nodes.getNodeAddress(nodeIndex)), "Incorrect node address");
         nodes.addSpaceToNode(nodeIndex, schains[schainHash].partOfNode);
     }
 
@@ -842,7 +842,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             placeOfSchainOnNode[schainHash][nodeIndex] = lastHoleOfNode + 1;
             holesForNodes[nodeIndex].pop();
         }
-        require(_nodeAddressInSchain[schainHash].add(nodes.getNodeAddress(nodeIndex)), "Node address already exist");
+        require(_addAddressToSchain(schainHash, nodes.getNodeAddress(nodeIndex)), "Node address already exist");
     }
 
     /**
@@ -911,6 +911,14 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      */
     function isSchainExist(bytes32 schainHash) public view override returns (bool) {
         return bytes(schains[schainHash].name).length != 0;
+    }
+
+    function _addAddressToSchain(bytes32 schainHash, address nodeAddress) internal virtual returns (bool) {
+        return _nodeAddressInSchain[schainHash].add(nodeAddress);
+    }
+
+    function _removeAddressFromSchain(bytes32 schainHash, address nodeAddress) internal virtual returns (bool) {
+        return _nodeAddressInSchain[schainHash].remove(nodeAddress);
     }
 
     function _getNodeToLockedSchains() internal view returns (mapping(uint => bytes32[]) storage) {

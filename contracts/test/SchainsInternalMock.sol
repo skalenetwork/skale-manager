@@ -44,4 +44,12 @@ contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
         mapping(bytes32 => uint[]) storage schainToException = _getSchainToExceptionNodes();
         delete schainToException[schainHash];
     }
+
+    function _addAddressToSchain(bytes32, address) internal override returns (bool) {
+        return true;
+    }
+
+    function _removeAddressFromSchain(bytes32, address) internal override returns (bool) {
+        return true;
+    }
 }
