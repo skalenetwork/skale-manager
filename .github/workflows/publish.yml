@@ -34,16 +34,9 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: 16
-        registry-url: 'https://registry.npmjs.org'
 
     - name: Install project
       run: yarn install
-
-    - name: Publish interfaces npm package
-      env:
-        BRANCH: ${{ env.BRANCH }}
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      run: ./interfaces/publish_package.sh
     
     - name: Build and publish container
       run: |

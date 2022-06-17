@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.11;
 
-import "./interfaces/IDecryption.sol";
+import "@skalenetwork/skale-manager-interfaces/IDecryption.sol";
 
 /**
  * @title Decryption

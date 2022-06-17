@@ -22,9 +22,9 @@
 
 pragma solidity 0.8.11;
 
-import "./interfaces/IPricing.sol";
-import "./interfaces/ISchainsInternal.sol";
-import "./interfaces/INodes.sol";
+import "@skalenetwork/skale-manager-interfaces/IPricing.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";

@@ -21,10 +21,10 @@
 
 pragma solidity 0.8.11;
 
-import "./interfaces/IBountyV2.sol";
-import "./interfaces/delegation/IDelegationController.sol";
-import "./interfaces/delegation/ITimeHelpers.sol";
-import "./interfaces/INodes.sol";
+import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";

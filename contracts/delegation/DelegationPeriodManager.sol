@@ -22,7 +22,7 @@
 
 pragma solidity 0.8.11;
 
-import "../interfaces/delegation/IDelegationPeriodManager.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
 
 import "../Permissions.sol";
 

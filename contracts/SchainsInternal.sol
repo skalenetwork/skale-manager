@@ -23,9 +23,9 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
-import "./interfaces/ISchainsInternal.sol";
-import "./interfaces/ISkaleDKG.sol";
-import "./interfaces/INodes.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";

@@ -23,9 +23,9 @@
 
 pragma solidity 0.8.11;
 
-import "./interfaces/IWallets.sol";
-import "./interfaces/ISchainsInternal.sol";
-import "./interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
 
 import "./Permissions.sol";
 

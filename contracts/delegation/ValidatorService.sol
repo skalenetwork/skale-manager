@@ -25,8 +25,8 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
-import "../interfaces/delegation/IValidatorService.sol";
-import "../interfaces/delegation/IDelegationController.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
 import "../Permissions.sol";
 

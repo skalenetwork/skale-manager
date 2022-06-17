@@ -23,7 +23,7 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "./interfaces/IContractManager.sol";
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 import "./utils/StringUtils.sol";
 import "./thirdparty/openzeppelin/InitializableWithGap.sol";

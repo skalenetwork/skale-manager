@@ -11,7 +11,7 @@
 
 pragma solidity 0.8.11;
 
-import "../interfaces/thirdparty/IECDH.sol";
+import "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
 
 
 /**

@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import "../../interfaces/thirdparty/openzeppelin/IAccessControlUpgradeableLegacy.sol";
+import "@skalenetwork/skale-manager-interfaces/thirdparty/openzeppelin/IAccessControlUpgradeableLegacy.sol";
 import "./InitializableWithGap.sol";
 
 /**

@@ -23,9 +23,9 @@
 
 pragma solidity 0.8.11;
 
-import "../interfaces/ISkaleDKG.sol";
-import "../interfaces/IConstantsHolder.sol";
-import "../interfaces/IContractManager.sol";
+import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 /**
  * @title SkaleDkgComplaint

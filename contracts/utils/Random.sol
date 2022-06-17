@@ -22,7 +22,7 @@
 
 pragma solidity 0.8.11;
 
-import "../interfaces/utils/IRandom.sol";
+import "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
 
 /**
  * @title Random
