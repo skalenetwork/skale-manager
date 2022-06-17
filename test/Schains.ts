@@ -1268,7 +1268,7 @@ describe("Schains", () => {
                 expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), holder.address)).be.false;
             });
 
-            it.only("should not add the same address", async () => {
+            it("should not add the same address", async () => {
                 const deposit = await schains.getSchainPrice(5, 5);
                 await schains.addSchain(
                     holder.address,
