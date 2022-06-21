@@ -1069,7 +1069,7 @@ describe("Schains", () => {
                 await schainsInternal.isOwnerAddress(schainCreator.address, schainHash).should.be.eventually.true;
             });
 
-            it.only("should allow delete schain if schain owner is multisig wallet", async () => {
+            it("should allow delete schain if schain owner is multisig wallet", async () => {
                 const schainName = "d2";
                 const amountInWei = 100;
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
