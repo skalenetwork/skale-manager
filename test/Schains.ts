@@ -1069,6 +1069,20 @@ describe("Schains", () => {
                 await schainsInternal.isOwnerAddress(schainCreator.address, schainHash).should.be.eventually.true;
             });
 
+            it.only("should allow delete schain if schain owner is multisig wallet", async () => {
+                const schainName = "d2";
+                const amountInWei = 100;
+                const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
+                const gnosisWallet = await (await ethers.getContractFactory("GnosisSafeProxyMock")).deploy(holder.address);
+                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
+                await skaleManager.grantRole(await skaleManager.SCHAIN_REMOVAL_ROLE(), holder.address);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, gnosisWallet.address, holder.address, []);
+                await wallets.rechargeSchainWallet(schainHash, {value: amountInWei.toString()})
+                await ethers.provider.getBalance(gnosisWallet.address).should.be.eventually.equal(0);
+                await skaleManager.connect(holder).deleteSchainByRoot(schainName);
+                await ethers.provider.getBalance(gnosisWallet.address).should.be.eventually.equal(amountInWei);                
+            });
+
             it("should assign schain creator on different address", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
                 await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", holder.address, ethers.constants.AddressZero, []);

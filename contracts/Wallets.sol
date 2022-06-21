@@ -165,7 +165,9 @@ contract Wallets is Permissions, IWallets {
         uint amount = _schainWallets[schainHash];
         delete _schainWallets[schainHash];
         emit WithdrawFromSchainWallet(schainHash, amount);
-        schainOwner.transfer(amount);
+        // slither-disable-next-line low-level-calls
+        (bool sent, ) = schainOwner.call{gas : gasleft()*63/64, value: amount}("");
+        require(sent, "ETH did not send to schain owner");
     }
     
     /**
