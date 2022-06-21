@@ -5,14 +5,14 @@ import {
     ContractManager,
     Nodes,
     Schains,
-    SchainsInternal,
+    SchainsInternalMock,
     SkaleDKGTester,
     SkaleManager,
     ValidatorService
 } from "../typechain-types";
 import { privateKeys } from "../test/tools/private-keys";
 import { deploySchains } from "../test/tools/deploy/schains";
-import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
+import { deploySchainsInternalMock } from "../test/tools/deploy/test/schainsInternalMock";
 import { deploySkaleDKGTester } from "../test/tools/deploy/test/skaleDKGTester";
 import { skipTime } from "../test/tools/time";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
@@ -50,7 +50,7 @@ describe("nodeRotation", () => {
     let validatorService: ValidatorService;
     let skaleManager: SkaleManager;
     let schains: Schains;
-    let schainsInternal: SchainsInternal;
+    let schainsInternal: SchainsInternalMock;
     let skaleDKG: SkaleDKGTester;
     let nodes: Nodes;
 
@@ -60,11 +60,12 @@ describe("nodeRotation", () => {
             await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});
 
             contractManager = await deployContractManager();
+            schainsInternal = await deploySchainsInternalMock(contractManager);
+            await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
             skaleDKG = await deploySkaleDKGTester(contractManager);
 
             validatorService = await deployValidatorService(contractManager);
             skaleManager = await deploySkaleManager(contractManager);
-            schainsInternal = await deploySchainsInternal(contractManager);
             schains = await deploySchains(contractManager);
             nodes = await deployNodes(contractManager);
             await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
