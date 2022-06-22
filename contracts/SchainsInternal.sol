@@ -31,12 +31,16 @@ import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./utils/Random.sol";
 
+interface IInitializeNodeAddresses {
+    function initializeSchainAddresses(bytes32[] calldata schainHashesArray) external;
+}
+
 
 /**
  * @title SchainsInternal
  * @dev Contract contains all functionality logic to internally manage Schains.
  */
-contract SchainsInternal is Permissions, ISchainsInternal {
+contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddresses {
 
     using Random for IRandom.RandomGenerator;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
@@ -107,6 +111,18 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     modifier schainExists(bytes32 schainHash) {
         require(isSchainExist(schainHash), "The schain does not exist");
         _;
+    }
+
+    function initializeSchainAddresses(bytes32[] calldata schainHashesArray) external virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not authorized");
+        require(schainHashesArray.length <= 10, "Array is too long");
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
+        for (uint256 i = 0; i < schainHashesArray.length; i++) {
+            uint[] memory group = schainsGroups[schainHashesArray[i]];
+            for (uint j = 0; j < group.length; j++) {
+                _addAddressToSchain(schainHashesArray[i], nodes.getNodeAddress(group[j]));
+            }
+        }
     }
 
     /**
