@@ -36,8 +36,6 @@ contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
     mapping (bytes32 => EnumerableSetUpgradeable.AddressSet) private _nodeAddressInSchainTest;
 
     function initializeSchainAddresses(bytes32[] calldata schainHashesArray) external override {
-        // require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not authorized");
-        // require(schainHashesArray.length <= 30, "Array is too long");
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         for (uint256 i = 0; i < schainHashesArray.length; i++) {
             uint[] memory group = schainsGroups[schainHashesArray[i]];

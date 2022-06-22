@@ -49,15 +49,16 @@ async function main() {
         async (safeTransactions, abi) => {
             const schainsInternal = await getSchainsInternal(abi);
             const numberOfSchains = (await schainsInternal.numberOfSchains()).toNumber();
-            if (numberOfSchains > 10) {
+            const schainLimitPerTransaction = 10;
+            if (numberOfSchains > schainLimitPerTransaction) {
                 console.log(chalk.redBright("----------------------------Attention----------------------------"));
                 console.log(chalk.redBright(`Total schains amount is ${numberOfSchains}`));
                 console.log(chalk.redBright("Initialization should be in DIFFERENT safe upgrade transactions"));
             }
-            for (let index = 0; index < numberOfSchains / 10 + 1; index++) {
+            for (let index = 0; index < numberOfSchains / schainLimitPerTransaction + 1; index++) {
                 const schainHashes = [];
-                for (let i = 0; i < 10 && index * 10 + i < numberOfSchains; i++) {
-                    schainHashes.push(await schainsInternal.schainsAtSystem(index * 10 + i));
+                for (let i = 0; i < schainLimitPerTransaction && index * schainLimitPerTransaction + i < numberOfSchains; i++) {
+                    schainHashes.push(await schainsInternal.schainsAtSystem(index * schainLimitPerTransaction + i));
                 }
                 if (index == 0) {
                     safeTransactions.push(encodeTransaction(
