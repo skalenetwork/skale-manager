@@ -687,7 +687,7 @@ describe("SkaleManager", () => {
 
                     const res = await (await schainsInternal.initializeSchainAddresses(allSchains)).wait();
 
-                    res.gasUsed.toNumber().should.be.lessThan(10000000)
+                    res.gasUsed.toNumber().should.be.lessThan(12000000)
                 });
 
                 describe("when schains are created", () => {
