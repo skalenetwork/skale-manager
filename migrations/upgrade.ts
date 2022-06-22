@@ -46,7 +46,7 @@ async function main() {
         async () => {
             // deploy new contracts
         },
-        async (safeTransactions, abi, contractManager) => {
+        async (safeTransactions, abi) => {
             const schainsInternal = await getSchainsInternal(abi);
             const numberOfSchains = (await schainsInternal.numberOfSchains()).toNumber();
             if (numberOfSchains > 10) {

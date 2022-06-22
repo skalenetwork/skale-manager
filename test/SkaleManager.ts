@@ -661,9 +661,9 @@ describe("SkaleManager", () => {
                     const price = await schains.getSchainPrice(2, 5);
 
                     for (let i = 0; i < 10; ++i) {
-                        const schainName = "d" + i;
+                        const schainName = "d" + i.toString();
                         const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
-                        const receipt = await (await skaleToken.connect(developer).send(
+                        await skaleToken.connect(developer).send(
                             skaleManager.address,
                             price,
                             ethers.utils.defaultAbiCoder.encode(
@@ -677,7 +677,7 @@ describe("SkaleManager", () => {
                                     options: []
                                 }]
                             )
-                        )).wait();
+                        );
 
                         const schain = await schainsInternal.schains(schainHash);
                         schain[0].should.be.equal(schainName);
