@@ -31,7 +31,7 @@ import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { skipTime, currentTime, nextMonth } from "./tools/time";
 import { deployBounty } from "./tools/deploy/bounty";
-import { BigNumber, Wallet } from "ethers";
+import { BigNumber, ContractTransaction, Wallet } from "ethers";
 import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
@@ -43,6 +43,15 @@ import { schainParametersType, SchainType } from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
+
+async function ethSpent(response: ContractTransaction) {
+    const receipt = await response.wait();
+    if (receipt.effectiveGasPrice) {
+        return receipt.effectiveGasPrice.mul(receipt.gasUsed);
+    } else {
+        throw new ReferenceError("gasPrice is undefined");
+    }
+}
 
 describe("SkaleManager", () => {
     let owner: SignerWithAddress;
@@ -214,7 +223,7 @@ describe("SkaleManager", () => {
                     getPublicKey(nodeAddress), // public key
                     "d2", // name
                     "some.domain.name");
-                await wallets.rechargeValidatorWallet(validatorId, {value: 1e18.toString()});
+                await wallets.rechargeValidatorWallet(validatorId, {value: 5e18.toString()});
             });
 
             it("should fail to init exiting of someone else's node", async () => {
@@ -234,7 +243,8 @@ describe("SkaleManager", () => {
                 await skaleManager.connect(nodeAddress).nodeExit(0);
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
             });
-
+            9999970456401781562155
+            9999998009911348137355
             it("should create and remove node from validator address", async () => {
                 (await validatorService.getValidatorIdByNodeAddress(validator.address)).should.be.equal(1);
                 await skaleManager.connect(validator).createNode(
@@ -254,13 +264,17 @@ describe("SkaleManager", () => {
             });
 
             it("should pay bounty if Node is In Active state", async () => {
+                const maxNodeDeposit = await constantsHolder.maxNodeDeposit();
+                await nodeAddress.sendTransaction({
+                    to: owner.address,
+                    value: (await nodeAddress.getBalance()).sub(maxNodeDeposit)
+                });
                 await nextMonth(contractManager);
-                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
-                const balanceBefore = await nodeAddress.getBalance();
-                await skaleManager.connect(nodeAddress).getBounty(0);
+                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber());
+                const spentValue = await ethSpent(await skaleManager.connect(nodeAddress).getBounty(0));
                 const balance = await nodeAddress.getBalance();
-                balance.should.be.least(balanceBefore);
-                balance.should.be.closeTo(balanceBefore, ethers.utils.parseEther("0.002").toNumber());
+                balance.add(spentValue).should.be.least(maxNodeDeposit);
+                balance.add(spentValue).should.be.closeTo(maxNodeDeposit, 1e12);
             });
 
             it("should pay bounty if Node is In Leaving state", async () => {
