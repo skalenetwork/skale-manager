@@ -128,6 +128,8 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
 
     uint public complaintTimeLimit;
 
+    uint public maxNodeDeposit;
+
     bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
 
     modifier onlyConstantsHolderManager() {
@@ -291,6 +293,15 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         complaintTimeLimit = timeLimit;
     }
 
+    function setMaxNodeDeposit(uint newMaxNodeDeposit) external override onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("MaxNodeDeposit")),
+            uint(maxNodeDeposit),
+            uint(newMaxNodeDeposit)
+        );
+        maxNodeDeposit = newMaxNodeDeposit;
+    }
+
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
@@ -306,5 +317,6 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
         complaintTimeLimit = 1800;
+        maxNodeDeposit = 1 ether;
     }
 }

@@ -26,6 +26,8 @@ pragma solidity 0.8.11;
 import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 import "./Permissions.sol";
 
@@ -71,25 +73,21 @@ contract Wallets is Permissions, IWallets {
     function refundGasByValidator(
         uint validatorId,
         address payable spender,
-        uint spentGas
+        uint gasLimit
     )
         external
         override
-        allowTwo("SkaleManager", "SkaleDKG")
+        allow("SkaleManager")
     {
         require(spender != address(0), "Spender must be specified");
         require(validatorId != 0, "ValidatorId could not be zero");
-        uint amount = tx.gasprice * spentGas;
-        if (amount <= _validatorWallets[validatorId]) {
-            _validatorWallets[validatorId] = _validatorWallets[validatorId] - amount;
-            emit NodeRefundedByValidator(spender, validatorId, amount);
-            spender.transfer(amount);
-        } else {
-            uint wholeAmount = _validatorWallets[validatorId];
-            // solhint-disable-next-line reentrancy
-            delete _validatorWallets[validatorId];
-            emit NodeRefundedByValidator(spender, validatorId, wholeAmount);
-            spender.transfer(wholeAmount);
+        uint maxNodeDeposit = IConstantsHolder(contractManager.getContract("ConstantsHolder")).maxNodeDeposit();
+        uint actualSpenderBalance = spender.balance + gasLimit * tx.gasprice;
+        if (maxNodeDeposit > actualSpenderBalance) {
+            uint amount = Math.min(_validatorWallets[validatorId],  maxNodeDeposit - actualSpenderBalance);
+            _validatorWallets[validatorId] -= amount;
+                emit NodeRefundedByValidator(spender, validatorId, amount);
+                spender.transfer(amount);
         }
     }
 

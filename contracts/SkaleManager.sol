@@ -106,7 +106,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external override {
-        uint gasTotal = gasleft();
+        uint gasLimit = (gasleft() + 7600) * 64 / 63 + 21000;
         IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
@@ -133,7 +133,9 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             );
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
-        _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
+        IWallets(payable(contractManager.getContract("Wallets"))).refundGasByValidator(
+            validatorId, payable(msg.sender), gasLimit
+        );
     }
 
     function deleteSchain(string calldata name) external override {
@@ -149,7 +151,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
     }
 
     function getBounty(uint nodeIndex) external override {
-        uint gasTotal = gasleft();
+        uint gasLimit = (gasleft() + 7600) * 64 / 63 + 21000;
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
@@ -173,7 +175,9 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             bounty,
             type(uint).max);
         
-        _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
+        IWallets(payable(contractManager.getContract("Wallets"))).refundGasByValidator(
+            validatorId, payable(msg.sender), gasLimit
+        );
     }
 
     function setVersion(string calldata newVersion) external override onlyOwner {
@@ -195,11 +199,5 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             IMintableToken(address(skaleToken)).mint(address(distributor), bounty, abi.encode(validatorId), ""),
             "Token was not minted"
         );
-    }
-
-    function _refundGasByValidator(uint validatorId, address payable spender, uint spentGas) private {
-        uint gasCostOfRefundGasByValidator = 55723;
-        IWallets(payable(contractManager.getContract("Wallets")))
-        .refundGasByValidator(validatorId, spender, spentGas + gasCostOfRefundGasByValidator);
     }
 }
