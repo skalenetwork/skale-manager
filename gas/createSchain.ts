@@ -1,9 +1,7 @@
 import { deployContractManager } from "../test/tools/deploy/contractManager";
 import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
 import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
-import { deploySchainsInternalMock } from "../test/tools/deploy/test/schainsInternalMock";
-import { ContractManager, Schains, SkaleManager, ValidatorService, SchainsInternalMock } from "../typechain-types";
-import { privateKeys } from "../test/tools/private-keys";
+import { ContractManager, Schains, SkaleManager, ValidatorService } from "../typechain-types";
 import { deploySchains } from "../test/tools/deploy/schains";
 import fs from 'fs';
 import { ethers } from "hardhat";
@@ -31,22 +29,16 @@ function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, 
 describe("createSchains", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
-    let nodeAddress: Wallet
+    let richGuy: SignerWithAddress;
 
     let contractManager: ContractManager;
     let validatorService: ValidatorService;
     let skaleManager: SkaleManager;
     let schains: Schains;
-    let schainsInternal: SchainsInternalMock;
 
     fastBeforeEach(async () => {
-        [owner, validator] = await ethers.getSigners();
-        nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        [owner, richGuy, validator] = await ethers.getSigners();
         contractManager = await deployContractManager();
-
-        schainsInternal = await deploySchainsInternalMock(contractManager);
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
         validatorService = await deployValidatorService(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
@@ -57,20 +49,24 @@ describe("createSchains", () => {
         await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
         const validatorId = await validatorService.getValidatorId(validator.address);
         await validatorService.disableWhitelist();
-        const signature = await getValidatorIdSignature(validatorId, nodeAddress);
-        await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature);
+        const maxNodesAmount = 1000;
+        const etherAmount = ethers.utils.parseEther("10");
+        const nodeAddresses: Wallet[] = [];
         await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
 
-        const maxNodesAmount = 1000;
         const gasLimit = 12e6;
         const measurements = []
         for (let nodeId = 0; nodeId < maxNodesAmount; ++nodeId) {
-            await skaleManager.connect(nodeAddress).createNode(
+            nodeAddresses.push(Wallet.createRandom().connect(ethers.provider));
+            await richGuy.sendTransaction({to: nodeAddresses[nodeId].address, value: etherAmount});
+            const signature = await getValidatorIdSignature(validatorId, nodeAddresses[nodeId]);
+            await validatorService.connect(validator).linkNodeAddress(nodeAddresses[nodeId].address, signature);
+            await skaleManager.connect(nodeAddresses[nodeId]).createNode(
                 1, // port
                 0, // nonce
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
-                getPublicKey(nodeAddress),
+                getPublicKey(nodeAddresses[nodeId]),
                 `d2-${nodeId}`, // name)
                 "some.domain.name");
 
