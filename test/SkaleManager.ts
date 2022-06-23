@@ -243,8 +243,7 @@ describe("SkaleManager", () => {
                 await skaleManager.connect(nodeAddress).nodeExit(0);
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
             });
-            9999970456401781562155
-            9999998009911348137355
+
             it("should create and remove node from validator address", async () => {
                 (await validatorService.getValidatorIdByNodeAddress(validator.address)).should.be.equal(1);
                 await skaleManager.connect(validator).createNode(
