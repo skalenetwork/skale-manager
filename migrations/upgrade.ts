@@ -38,8 +38,14 @@ async function main() {
             // deploy new contracts
         },
         // async (safeTransactions, abi, contractManager) => {
-        async () => {
-            // initialize
+        async (safeTransactions, abi) => {
+            const constantsHolder = (await ethers.getContractFactory("ConstantsHolder")).attach(abi["constants_holder_address"] as string);
+            safeTransactions.push(encodeTransaction(
+                0,
+                constantsHolder.address,
+                0,
+                constantsHolder.interface.encodeFunctionData("setMaxNodeDeposit", [15e17]),
+            ));
         }
     );
 }
