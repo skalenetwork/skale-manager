@@ -32,7 +32,7 @@ import "./ConstantsHolder.sol";
 import "./utils/Random.sol";
 
 interface IInitializeNodeAddresses {
-    function initializeSchainAddresses(bytes32[] calldata schainHashesArray) external;
+    function initializeSchainAddresses(uint256 start, uint256 finish) external;
 }
 
 
@@ -113,14 +113,14 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
         _;
     }
 
-    function initializeSchainAddresses(bytes32[] calldata schainHashesArray) external virtual override {
+    function initializeSchainAddresses(uint256 start, uint256 finish) external virtual override {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not authorized");
-        require(schainHashesArray.length <= 10, "Array is too long");
+        require(finish > start && finish - start <= 10, "Incorrect input");
         INodes nodes = INodes(contractManager.getContract("Nodes"));
-        for (uint256 i = 0; i < schainHashesArray.length; i++) {
-            uint[] memory group = schainsGroups[schainHashesArray[i]];
+        for (uint256 i = start; i < finish; i++) {
+            uint[] memory group = schainsGroups[schainsAtSystem[i]];
             for (uint j = 0; j < group.length; j++) {
-                _addAddressToSchain(schainHashesArray[i], nodes.getNodeAddress(group[j]));
+                _addAddressToSchain(schainsAtSystem[i], nodes.getNodeAddress(group[j]));
             }
         }
     }

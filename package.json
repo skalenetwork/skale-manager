@@ -45,7 +45,7 @@
     "@openzeppelin/contracts-upgradeable": "^4.4.2",
     "@openzeppelin/hardhat-upgrades": "^1.13.0",
     "@skalenetwork/skale-manager-interfaces": "1.0.0-fix-agent-authorized-interfaces-sm.0",
-    "@skalenetwork/upgrade-tools": "^1.0.0",
+    "@skalenetwork/upgrade-tools": "1.0.0-develop.8",
     "@typechain/hardhat": "^4.0.0",
     "dotenv": "^16.0.0",
     "ethereumjs-util": "^7.1.4",

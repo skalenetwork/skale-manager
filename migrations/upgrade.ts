@@ -4,7 +4,6 @@ import { SkaleManager, SchainsInternal } from "../typechain-types";
 import { upgrade, SkaleABIFile, getContractKeyInAbiFile, encodeTransaction } from "@skalenetwork/upgrade-tools"
 
 import chalk from "chalk";
-import { promises as fs } from "fs";
 
 
 async function getSkaleManager(abi: SkaleABIFile) {
@@ -50,38 +49,48 @@ async function main() {
             const schainsInternal = await getSchainsInternal(abi);
             const numberOfSchains = (await schainsInternal.numberOfSchains()).toNumber();
             const schainLimitPerTransaction = 10;
+            if (numberOfSchains > 0) {
+                let limitOfSchains = schainLimitPerTransaction;
+                if (numberOfSchains < schainLimitPerTransaction) {
+                    limitOfSchains = numberOfSchains;
+                }
+                safeTransactions.push(encodeTransaction(
+                    0,
+                    schainsInternal.address,
+                    0,
+                    schainsInternal.interface.encodeFunctionData("initializeSchainAddresses", [
+                        0,
+                        limitOfSchains
+                    ])
+                ));
+            }
+        },
+        async (abi) => {
+            const schainsInternal = await getSchainsInternal(abi);
+            const numberOfSchains = (await schainsInternal.numberOfSchains()).toNumber();
+            const schainLimitPerTransaction = 10;
+            const nextSafeTransactions: string[][] = [];
             if (numberOfSchains > schainLimitPerTransaction) {
-                console.log(chalk.redBright("----------------------------Attention----------------------------"));
+                console.log(chalk.redBright("---------------------------Attention---------------------------"));
                 console.log(chalk.redBright(`Total schains amount is ${numberOfSchains}`));
                 console.log(chalk.redBright("Initialization should be in DIFFERENT safe upgrade transactions"));
-            }
-            for (let index = 0; index < numberOfSchains / schainLimitPerTransaction + 1; index++) {
-                const schainHashes = [];
-                for (let i = 0; i < schainLimitPerTransaction && index * schainLimitPerTransaction + i < numberOfSchains; i++) {
-                    schainHashes.push(await schainsInternal.schainsAtSystem(index * schainLimitPerTransaction + i));
-                }
-                if (index == 0) {
-                    safeTransactions.push(encodeTransaction(
+                for (let step = 1; step * schainLimitPerTransaction < numberOfSchains; step++) {
+                    let limitOfSchains = step * schainLimitPerTransaction + schainLimitPerTransaction;
+                    if (numberOfSchains < limitOfSchains) {
+                        limitOfSchains = numberOfSchains;
+                    }
+                    nextSafeTransactions[step - 1].push(encodeTransaction(
                         0,
                         schainsInternal.address,
                         0,
                         schainsInternal.interface.encodeFunctionData("initializeSchainAddresses", [
-                            schainHashes
+                            step * schainLimitPerTransaction,
+                            limitOfSchains
                         ])
                     ));
-                } else {
-                    const nextSafeTransactions: string[] = [];
-                    nextSafeTransactions.push(encodeTransaction(
-                        0,
-                        schainsInternal.address,
-                        0,
-                        schainsInternal.interface.encodeFunctionData("initializeSchainAddresses", [
-                            schainHashes
-                        ])
-                    ));
-                    await fs.writeFile(`data/transactions-to-initialize-${index}.json`, JSON.stringify(nextSafeTransactions, null, 4));
                 }
             }
+            return nextSafeTransactions;
         }
     );
 }

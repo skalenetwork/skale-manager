@@ -683,9 +683,7 @@ describe("SkaleManager", () => {
                         schain[0].should.be.equal(schainName);
                     }
 
-                    const allSchains = await schainsInternal.getSchains();
-
-                    const res = await (await schainsInternal.initializeSchainAddresses(allSchains)).wait();
+                    const res = await (await schainsInternal.initializeSchainAddresses(0, 10)).wait();
 
                     res.gasUsed.toNumber().should.be.lessThan(12000000)
                 });
