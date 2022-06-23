@@ -186,4 +186,12 @@ describe("ConstantsHolder", () => {
     (await constantsHolder.complaintTimeLimit()).should.be.equal(timeLimit);
   });
 
+  it("should set maxNodeDeposit", async () => {
+    const maxNodeDeposit = 1000;
+    await constantsHolder.connect(user).setMaxNodeDeposit(maxNodeDeposit)
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
+    await constantsHolder.setMaxNodeDeposit(maxNodeDeposit);
+    (await constantsHolder.maxNodeDeposit()).should.be.equal(maxNodeDeposit);
+  });
+
 });
