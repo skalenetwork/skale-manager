@@ -5,7 +5,7 @@ import { ContractManager,
          KeyStorage,
          Nodes,
          NodeRotation,
-         SchainsInternal,
+         SchainsInternalMock,
          Schains,
          SkaleDKG,
          SkaleToken,
@@ -20,7 +20,7 @@ import { deployDelegationController } from "./tools/deploy/delegation/delegation
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
@@ -71,7 +71,7 @@ describe("SkaleDKG", () => {
 
     let contractManager: ContractManager;
     let keyStorage: KeyStorage
-    let schainsInternal: SchainsInternal;
+    let schainsInternal: SchainsInternalMock;
     let schains: Schains;
     let skaleDKG: SkaleDKG;
     let skaleToken: SkaleToken;
@@ -106,7 +106,7 @@ describe("SkaleDKG", () => {
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
+        schainsInternal = await deploySchainsInternalMock(contractManager);
         schains = await deploySchains(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
         keyStorage = await deployKeyStorage(contractManager);
@@ -117,6 +117,8 @@ describe("SkaleDKG", () => {
         nodeRotation = await deployNodeRotation(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         wallets = await deployWallets(contractManager);
+
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
 
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);

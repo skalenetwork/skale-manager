@@ -40,8 +40,14 @@ describe("Wallets", () => {
     let owner: SignerWithAddress;
     let validator1: SignerWithAddress;
     let validator2: SignerWithAddress;
+    let richGuy1: SignerWithAddress;
+    let richGuy2: SignerWithAddress;
+    let richGuy3: SignerWithAddress;
+    let richGuy4: SignerWithAddress;
     let nodeAddress1: Wallet;
     let nodeAddress2: Wallet;
+    let nodeAddress3: Wallet;
+    let nodeAddress4: Wallet;
 
     let contractManager: ContractManager;
     let wallets: Wallets;
@@ -58,12 +64,20 @@ describe("Wallets", () => {
 
     before(async() => {
         chai.use(chaiAlmost(tolerance));
-        [owner, validator1, validator2] = await ethers.getSigners();
+        [owner, validator1, validator2, richGuy1, richGuy2, richGuy3, richGuy4] = await ethers.getSigners();
 
-        nodeAddress1 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
-        nodeAddress2 = new Wallet(String(privateKeys[4])).connect(ethers.provider);
-        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+        nodeAddress1 = new Wallet(String(privateKeys[0])).connect(ethers.provider);
+        nodeAddress2 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
+        nodeAddress3 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
+        nodeAddress4 = new Wallet(String(privateKeys[4])).connect(ethers.provider);
+        const balanceRichGuy1 = await richGuy1.getBalance();
+        const balanceRichGuy2 = await richGuy2.getBalance();
+        const balanceRichGuy3 = await richGuy3.getBalance();
+        const balanceRichGuy4 = await richGuy4.getBalance();
+        await richGuy1.sendTransaction({to: nodeAddress1.address, value: balanceRichGuy1.sub(ethers.utils.parseEther("1"))});
+        await richGuy2.sendTransaction({to: nodeAddress2.address, value: balanceRichGuy2.sub(ethers.utils.parseEther("1"))});
+        await richGuy3.sendTransaction({to: nodeAddress3.address, value: balanceRichGuy3.sub(ethers.utils.parseEther("1"))});
+        await richGuy4.sendTransaction({to: nodeAddress4.address, value: balanceRichGuy4.sub(ethers.utils.parseEther("1"))});
 
         contractManager = await deployContractManager();
         wallets = await deployWallets(contractManager);
@@ -82,6 +96,17 @@ describe("Wallets", () => {
         await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
         const SCHAIN_REMOVAL_ROLE = await skaleManager.SCHAIN_REMOVAL_ROLE();
         await skaleManager.grantRole(SCHAIN_REMOVAL_ROLE, owner.address);
+    });
+
+    after(async () => {
+        const balanceNode1 = await nodeAddress1.getBalance();
+        const balanceNode2 = await nodeAddress2.getBalance();
+        const balanceNode3 = await nodeAddress3.getBalance();
+        const balanceNode4 = await nodeAddress4.getBalance();
+        await nodeAddress1.sendTransaction({to: richGuy1.address, value: balanceNode1.sub(ethers.utils.parseEther("1"))});
+        await nodeAddress2.sendTransaction({to: richGuy2.address, value: balanceNode2.sub(ethers.utils.parseEther("1"))});
+        await nodeAddress3.sendTransaction({to: richGuy2.address, value: balanceNode3.sub(ethers.utils.parseEther("1"))});
+        await nodeAddress4.sendTransaction({to: richGuy2.address, value: balanceNode4.sub(ethers.utils.parseEther("1"))});
     });
 
     beforeEach(async () => {
@@ -140,29 +165,45 @@ describe("Wallets", () => {
             await validatorService.disableWhitelist();
             let signature = await getValidatorIdSignature(validator1Id, nodeAddress1);
             await validatorService.connect(validator1).linkNodeAddress(nodeAddress1.address, signature);
-            signature = await getValidatorIdSignature(validator2Id, nodeAddress2);
-            await validatorService.connect(validator2).linkNodeAddress(nodeAddress2.address, signature);
+            signature = await getValidatorIdSignature(validator1Id, nodeAddress2);
+            await validatorService.connect(validator1).linkNodeAddress(nodeAddress2.address, signature);
+            signature = await getValidatorIdSignature(validator2Id, nodeAddress3);
+            await validatorService.connect(validator2).linkNodeAddress(nodeAddress3.address, signature);
+            signature = await getValidatorIdSignature(validator2Id, nodeAddress4);
+            await validatorService.connect(validator2).linkNodeAddress(nodeAddress4.address, signature);
 
             const nodesPerValidator = 2;
             const validators = [
                 {
-                    nodePublicKey: getPublicKey(nodeAddress1),
-                    nodeAddress: nodeAddress1
+                    nodePublicKey: [
+                        getPublicKey(nodeAddress1),
+                        getPublicKey(nodeAddress2)
+                    ],
+                    nodeAddress: [
+                        nodeAddress1,
+                        nodeAddress2
+                    ]
                 },
                 {
-                    nodePublicKey: getPublicKey(nodeAddress2),
-                    nodeAddress: nodeAddress2
+                    nodePublicKey: [
+                        getPublicKey(nodeAddress3),
+                        getPublicKey(nodeAddress4)
+                    ],
+                    nodeAddress: [
+                        nodeAddress3,
+                        nodeAddress4
+                    ]
                 }
             ];
             for (const [validatorIndex, validator] of validators.entries()) {
                 for (const index of Array(nodesPerValidator).keys()) {
                     const hexIndex = ("0" + (validatorIndex * nodesPerValidator + index).toString(16)).slice(-2);
-                    await skaleManager.connect(validator.nodeAddress).createNode(
+                    await skaleManager.connect(validator.nodeAddress[index]).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        validator.nodePublicKey, // public key
+                        validator.nodePublicKey[index], // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }

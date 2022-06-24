@@ -223,7 +223,7 @@ contract NodeRotation is Permissions, INodeRotation {
         nodeIndex = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
         require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");
         schainsInternal.makeSchainNodesVisible(schainHash);
-        schainsInternal.addSchainForNode(nodeIndex, schainHash);
+        schainsInternal.addSchainForNode(nodes, nodeIndex, schainHash);
         schainsInternal.setException(schainHash, nodeIndex);
         schainsInternal.setNodeInGroup(schainHash, nodeIndex);
     }

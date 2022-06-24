@@ -1,13 +1,15 @@
 import { promises as fs } from 'fs';
 import { Interface } from "ethers/lib/utils";
-import { ethers, upgrades, network, run, artifacts } from "hardhat";
+import { ethers, upgrades, network, run } from "hardhat";
 import { ContractManager, SkaleManager, SkaleToken } from "../typechain-types";
-import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
-import { getAbi } from './tools/abi';
-import { verify, verifyProxy } from './tools/verification';
-import { Manifest, hashBytecode } from "@openzeppelin/upgrades-core";
-import { getVersion } from './tools/version';
-import { SkaleManifestData } from './tools/types';
+import {
+    getAbi,
+    getVersion,
+    verify,
+    verifyProxy,
+    getContractFactory,
+    getContractKeyInAbiFile
+} from '@skalenetwork/upgrade-tools';
 
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
@@ -28,45 +30,9 @@ function getNameInContractManager(contract: string) {
     }
 }
 
-export function getContractKeyInAbiFile(contract: string) {
-    return contract.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
-}
-
 const customNames: {[key: string]: string} = {
     "TimeHelpersWithDebug": "TimeHelpers",
     "BountyV2": "Bounty"
-}
-
-export async function getManifestFile(): Promise<string> {
-    return (await Manifest.forNetwork(ethers.provider)).file;
-}
-
-export async function getContractFactory(contract: string) {
-    const { linkReferences } = await artifacts.readArtifact(contract);
-    if (!Object.keys(linkReferences).length)
-        return await ethers.getContractFactory(contract);
-
-    const libraryNames = [];
-    for (const key of Object.keys(linkReferences)) {
-        const libraryName = Object.keys(linkReferences[key])[0];
-        libraryNames.push(libraryName);
-    }
-
-    const libraries = await deployLibraries(libraryNames);
-    const libraryArtifacts: {[key: string]: unknown} = {};
-    for (const [libraryName, libraryAddress] of libraries.entries()) {
-        const { bytecode } = await artifacts.readArtifact(libraryName);
-        libraryArtifacts[libraryName] = {"address": libraryAddress, "bytecodeHash": hashBytecode(bytecode)};
-    }
-    let manifest;
-    try {
-        manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8")) as SkaleManifestData;
-        Object.assign(libraryArtifacts, manifest.libraries);
-    } finally {
-        Object.assign(manifest, {libraries: libraryArtifacts});
-        await fs.writeFile(await getManifestFile(), JSON.stringify(manifest, null, 4));
-    }
-    return await getLinkedContractFactory(contract, libraries);
 }
 
 export const contracts = [

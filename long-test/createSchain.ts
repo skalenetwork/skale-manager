@@ -1,8 +1,8 @@
 import { deployContractManager } from "../test/tools/deploy/contractManager";
 import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
 import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
-import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
-import { ContractManager, Schains, SkaleManager, ValidatorService } from "../typechain-types";
+import { deploySchainsInternalMock } from "../test/tools/deploy/test/schainsInternalMock";
+import { ContractManager, Schains, SkaleManager, ValidatorService, SchainsInternalMock } from "../typechain-types";
 import { privateKeys } from "../test/tools/private-keys";
 import { deploySchains } from "../test/tools/deploy/schains";
 import { ethers } from "hardhat";
@@ -35,6 +35,7 @@ describe("Schain creation test", () => {
     let validatorService: ValidatorService;
     let skaleManager: SkaleManager;
     let schains: Schains;
+    let schainsInternal: SchainsInternalMock;
 
     beforeEach(async () => {
         [owner, validator] = await ethers.getSigners();
@@ -42,10 +43,11 @@ describe("Schain creation test", () => {
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
         contractManager = await deployContractManager();
 
+        schainsInternal = await deploySchainsInternalMock(contractManager);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
         validatorService = await deployValidatorService(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
-        await deploySchainsInternal(contractManager);
     });
 
     it("create and delete medium schains", async () => {
