@@ -929,11 +929,27 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
         return bytes(schains[schainHash].name).length != 0;
     }
 
-    function _addAddressToSchain(bytes32 schainHash, address nodeAddress) internal virtual returns (bool) {
+    function _addAddressToSchain(
+        bytes32 schainHash,
+        address nodeAddress
+    )
+        internal
+        virtual
+        schainExists(schainHash)
+        returns (bool)
+    {
         return _nodeAddressInSchain[schainHash].add(nodeAddress);
     }
 
-    function _removeAddressFromSchain(bytes32 schainHash, address nodeAddress) internal virtual returns (bool) {
+    function _removeAddressFromSchain(
+        bytes32 schainHash,
+        address nodeAddress
+    )
+        internal
+        virtual
+        schainExists(schainHash)
+        returns (bool)
+    {
         return _nodeAddressInSchain[schainHash].remove(nodeAddress);
     }
 
