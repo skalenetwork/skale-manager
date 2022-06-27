@@ -79,7 +79,7 @@ async function main() {
                     if (numberOfSchains < limitOfSchains) {
                         limitOfSchains = numberOfSchains;
                     }
-                    nextSafeTransactions[step - 1].push(encodeTransaction(
+                    nextSafeTransactions.push([encodeTransaction(
                         0,
                         schainsInternal.address,
                         0,
@@ -87,7 +87,7 @@ async function main() {
                             step * schainLimitPerTransaction,
                             limitOfSchains
                         ])
-                    ));
+                    )]);
                 }
             }
             return nextSafeTransactions;
