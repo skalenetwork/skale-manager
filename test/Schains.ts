@@ -1069,15 +1069,16 @@ describe("Schains", () => {
                 await schainsInternal.isOwnerAddress(schainCreator.address, schainHash).should.be.eventually.true;
             });
 
-            it("should allow delete schain if schain owner is multisig wallet", async () => {
+            it("should allow to delete schain if schain owner is a multisig wallet", async () => {
                 const schainName = "d2";
                 const amountInWei = 100;
-                const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
-                const fallbackMock = await (await ethers.getContractFactory("FallbackMock")).deploy(1e5);
+                const fallbackGasUsage = 1e5;
+                const schainHash = stringKeccak256(schainName);
+                const fallbackMock = await (await ethers.getContractFactory("FallbackMock")).deploy(fallbackGasUsage);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
                 await skaleManager.grantRole(await skaleManager.SCHAIN_REMOVAL_ROLE(), holder.address);
                 await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, fallbackMock.address, holder.address, []);
-                await wallets.rechargeSchainWallet(schainHash, {value: amountInWei.toString()})
+                await wallets.rechargeSchainWallet(schainHash, {value: amountInWei})
                 await ethers.provider.getBalance(fallbackMock.address).should.be.eventually.equal(0);
                 await skaleManager.connect(holder).deleteSchainByRoot(schainName);
                 await ethers.provider.getBalance(fallbackMock.address).should.be.eventually.equal(amountInWei);                
