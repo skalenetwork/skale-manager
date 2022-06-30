@@ -7,11 +7,3 @@ selfdestruct
 staticcall
 struct
 abicoder
-keccak
-sload
-mstore
-calldataload
-calldatasize
-calldatacopy
-returndatacopy
-returndatasize
