@@ -1073,14 +1073,14 @@ describe("Schains", () => {
                 const schainName = "d2";
                 const amountInWei = 100;
                 const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
-                const gnosisWallet = await (await ethers.getContractFactory("GnosisSafeProxyMock")).deploy(holder.address);
+                const fallbackMock = await (await ethers.getContractFactory("FallbackMock")).deploy(1e5);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
                 await skaleManager.grantRole(await skaleManager.SCHAIN_REMOVAL_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, gnosisWallet.address, holder.address, []);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, fallbackMock.address, holder.address, []);
                 await wallets.rechargeSchainWallet(schainHash, {value: amountInWei.toString()})
-                await ethers.provider.getBalance(gnosisWallet.address).should.be.eventually.equal(0);
+                await ethers.provider.getBalance(fallbackMock.address).should.be.eventually.equal(0);
                 await skaleManager.connect(holder).deleteSchainByRoot(schainName);
-                await ethers.provider.getBalance(gnosisWallet.address).should.be.eventually.equal(amountInWei);                
+                await ethers.provider.getBalance(fallbackMock.address).should.be.eventually.equal(amountInWei);                
             });
 
             it("should assign schain creator on different address", async () => {
