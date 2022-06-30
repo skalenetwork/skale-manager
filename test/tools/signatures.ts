@@ -17,5 +17,7 @@ export async function getValidatorIdSignature(validatorId: BigNumberish, signer:
 
 export function getPublicKey(wallet: Wallet): [BytesLike, BytesLike] {
     const publicKey = secp256k1EC.keyFromPrivate(wallet.privateKey.slice(2)).getPublic();
-    return [ethers.utils.hexlify(publicKey.getX().toBuffer()), ethers.utils.hexlify(publicKey.getY().toBuffer())]
+    const pubA = ethers.utils.hexZeroPad(ethers.utils.hexlify(publicKey.getX().toBuffer()), 32);
+    const pubB = ethers.utils.hexZeroPad(ethers.utils.hexlify(publicKey.getY().toBuffer()), 32);
+    return [pubA, pubB];
 }
