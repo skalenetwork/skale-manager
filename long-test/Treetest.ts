@@ -5,7 +5,7 @@ import {
     ContractManager,
     Nodes,
     Schains,
-    SchainsInternal,
+    SchainsInternalMock,
     SkaleDKGTester,
     SkaleManager,
     ValidatorService,
@@ -13,7 +13,7 @@ import {
 } from "../typechain-types";
 import { privateKeys } from "../test/tools/private-keys";
 import { deploySchains } from "../test/tools/deploy/schains";
-import { deploySchainsInternal } from "../test/tools/deploy/schainsInternal";
+import { deploySchainsInternalMock } from "../test/tools/deploy/test/schainsInternalMock";
 import { deploySkaleDKGTester } from "../test/tools/deploy/test/skaleDKGTester";
 import { deployNodes } from "../test/tools/deploy/nodes";
 import { deployWallets } from "../test/tools/deploy/wallets";
@@ -88,7 +88,7 @@ async function createSchain(schains: Schains, typeOfSchain: SchainType, name: st
     console.log("Schain", name, "with type", typeOfSchain, "created");
 }
 
-async function getNodesInSchain(schainsInternal: SchainsInternal, name: string) {
+async function getNodesInSchain(schainsInternal: SchainsInternalMock, name: string) {
     const res = await schainsInternal.getNodesInGroup(stringKeccak256(name));
     const arrOfNodes: string[] = [];
     res.forEach(element => {
@@ -97,7 +97,7 @@ async function getNodesInSchain(schainsInternal: SchainsInternal, name: string) 
     return arrOfNodes;
 }
 
-async function getRandomNodeInSchain(schainsInternal: SchainsInternal, name: string, exceptions: string[]) {
+async function getRandomNodeInSchain(schainsInternal: SchainsInternalMock, name: string, exceptions: string[]) {
     const arrOfNodes = await getNodesInSchain(schainsInternal, name);
     let randomNumber = Math.floor(Math.random() * arrOfNodes.length).toString();
     let node = arrOfNodes[parseInt(randomNumber, 10)];
@@ -151,11 +151,11 @@ function getRandomSecretKeyContribution(n: number): { publicKey: [BytesLike, Byt
     return secretKeyContributions;
 }
 
-async function getNumberOfNodesInGroup(schainsInternal: SchainsInternal, name: string) {
+async function getNumberOfNodesInGroup(schainsInternal: SchainsInternalMock, name: string) {
     return (await schainsInternal.getNumberOfNodesInGroup(stringKeccak256(name))).toString();
 }
 
-async function rotateOnDKG(schainsInternal: SchainsInternal, name: string, skaleDKG: SkaleDKGTester, node: Wallet, skipNode = "") {
+async function rotateOnDKG(schainsInternal: SchainsInternalMock, name: string, skaleDKG: SkaleDKGTester, node: Wallet, skipNode = "") {
     let randomNode1 = await getRandomNodeInSchain(schainsInternal, name, []);
     let randomNode2 = await getRandomNodeInSchain(schainsInternal, name, [randomNode1]);
     if (skipNode !== "") {
@@ -220,7 +220,7 @@ describe("Tree test", () => {
     let skaleManager: SkaleManager;
     let nodes: Nodes;
     let schains: Schains;
-    let schainsInternal: SchainsInternal;
+    let schainsInternal: SchainsInternalMock;
     let skaleDKG: SkaleDKGTester;
     let wallets: Wallets;
 
@@ -234,13 +234,14 @@ describe("Tree test", () => {
         contractManager = await deployContractManager();
 
         contractManager = await deployContractManager();
+        schainsInternal = await deploySchainsInternalMock(contractManager);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
         skaleDKG = await deploySkaleDKGTester(contractManager);
 
         nodes = await deployNodes(contractManager);
         wallets = await deployWallets(contractManager);
         validatorService = await deployValidatorService(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
         schains = await deploySchains(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 

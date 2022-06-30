@@ -3,6 +3,7 @@ import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
          ContractManager,
          Nodes,
+         SchainsInternal,
          SchainsInternalMock,
          Schains,
          SkaleDKGTester,
@@ -18,6 +19,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
+import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
@@ -38,14 +40,20 @@ describe("Schains", () => {
     let owner: SignerWithAddress;
     let holder: SignerWithAddress;
     let validator: SignerWithAddress;
-    let nodeAddress: Wallet;
+    let richGuy1: SignerWithAddress;
+    let richGuy2: SignerWithAddress;
+    let richGuy3: SignerWithAddress;
+    let richGuy4: SignerWithAddress;
+    let nodeAddress1: Wallet;
     let nodeAddress2: Wallet;
     let nodeAddress3: Wallet;
+    let nodeAddress4: Wallet;
 
     let constantsHolder: ConstantsHolder;
     let contractManager: ContractManager;
     let schains: Schains;
     let schainsInternal: SchainsInternalMock;
+    let schainsInternal2: SchainsInternal;
     let nodes: Nodes;
     let validatorService: ValidatorService;
     let skaleDKG: SkaleDKGTester;
@@ -54,15 +62,17 @@ describe("Schains", () => {
     let wallets: Wallets;
 
     fastBeforeEach(async () => {
-        [owner, holder, validator] = await ethers.getSigners();
+        [owner, holder, validator, richGuy1, richGuy2, richGuy3, richGuy4] = await ethers.getSigners();
 
-        nodeAddress = new Wallet(String(privateKeys[3])).connect(ethers.provider);
+        nodeAddress1 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[4])).connect(ethers.provider);
         nodeAddress3 = new Wallet(String(privateKeys[5])).connect(ethers.provider);
+        nodeAddress4 = new Wallet(String(privateKeys[0])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: nodeAddress3.address, value: ethers.utils.parseEther("10000")});
+        await richGuy1.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
+        await richGuy2.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+        await richGuy3.sendTransaction({to: nodeAddress3.address, value: ethers.utils.parseEther("10000")});
+        await richGuy4.sendTransaction({to: nodeAddress4.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
@@ -70,6 +80,7 @@ describe("Schains", () => {
         nodes = await deployNodes(contractManager);
         // await contractManager.setContractsAddress("Nodes", nodes.address);
         schainsInternal = await deploySchainsInternalMock(contractManager);
+        schainsInternal2 = await deploySchainsInternal(contractManager);
         await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
         schains = await deploySchains(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -89,12 +100,14 @@ describe("Schains", () => {
         await validatorService.connect(validator).registerValidator("D2", "D2 is even", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
         await validatorService.enableValidator(validatorIndex);
-        const signature = await getValidatorIdSignature(validatorIndex, nodeAddress);
-        await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature);
+        const signature = await getValidatorIdSignature(validatorIndex, nodeAddress1);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress1.address, signature);
         const signature2 = await getValidatorIdSignature(validatorIndex, nodeAddress2);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress2.address, signature2);
         const signature3 = await getValidatorIdSignature(validatorIndex, nodeAddress3);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress3.address, signature3);
+        const signature4 = await getValidatorIdSignature(validatorIndex, nodeAddress4);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress4.address, signature4);
         await constantsHolder.setMSR(0);
     });
 
@@ -210,12 +223,12 @@ describe("Schains", () => {
                 const nodesCount = 2;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress).createNode(
+                    await skaleManager.connect(nodeAddress1).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress), // public key
+                        getPublicKey(nodeAddress1), // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -271,12 +284,12 @@ describe("Schains", () => {
 
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("1" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress).createNode(
+                    await skaleManager.connect(nodeAddress1).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress), // public key
+                        getPublicKey(nodeAddress1), // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -304,12 +317,12 @@ describe("Schains", () => {
                 const nodesCount = 2;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress).createNode(
+                    await skaleManager.connect(nodeAddress1).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress), // public key
+                        getPublicKey(nodeAddress1), // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -360,19 +373,19 @@ describe("Schains", () => {
                     )
                 );
                 let res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
-                let res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d2"), res1[0]);
+                let res = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d2"), res1[0]);
                 assert.equal(res, true);
                 await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("d2"), {value: 1e20.toString()});
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     stringKeccak256("d2"),
                     res1[0],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
                     encryptedSecretKeyContribution
                 );
-                res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d2"), res1[1]);
+                res = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d2"), res1[1]);
                 assert.equal(res, true);
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     stringKeccak256("d2"),
                     res1[1],
                     verificationVector,
@@ -383,10 +396,10 @@ describe("Schains", () => {
                 let resO = await skaleDKG.isChannelOpened(stringKeccak256("d2"));
                 assert.equal(resO, true);
 
-                res = await skaleDKG.connect(nodeAddress).isAlrightPossible(stringKeccak256("d2"), res1[0]);
+                res = await skaleDKG.connect(nodeAddress1).isAlrightPossible(stringKeccak256("d2"), res1[0]);
                 assert.equal(res, true);
 
-                await skaleDKG.connect(nodeAddress).alright(
+                await skaleDKG.connect(nodeAddress1).alright(
                     stringKeccak256("d2"),
                     res1[0]
                 );
@@ -394,20 +407,20 @@ describe("Schains", () => {
                 resO = await skaleDKG.isChannelOpened(stringKeccak256("d2"));
                 assert.equal(resO, true);
 
-                res = await skaleDKG.connect(nodeAddress).isAlrightPossible(stringKeccak256("d2"), res1[1]);
+                res = await skaleDKG.connect(nodeAddress1).isAlrightPossible(stringKeccak256("d2"), res1[1]);
                 assert.equal(res, true);
 
-                await skaleDKG.connect(nodeAddress).alright(
+                await skaleDKG.connect(nodeAddress1).alright(
                     stringKeccak256("d2"),
                     res1[1]
                 );
 
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000011", // ip
                     "0x7f000011", // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-11", // name
                     "some.domain.name");
 
@@ -415,23 +428,23 @@ describe("Schains", () => {
                 assert.equal(resO, false);
 
                 await nodes.initExit(0);
-                await skaleManager.connect(nodeAddress).nodeExit(0);
+                await skaleManager.connect(nodeAddress1).nodeExit(0);
                 res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
                 const nodeRot = res1[1];
-                res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d2"), nodeRot);
+                res = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d2"), nodeRot);
                 assert.equal(res, true);
-                res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d2"), res1[0]);
+                res = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d2"), res1[0]);
                 assert.equal(res, true);
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     stringKeccak256("d2"),
                     res1[0],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
                     encryptedSecretKeyContribution
                 );
-                res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d2"), res1[1]);
+                res = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d2"), res1[1]);
                 assert.equal(res, true);
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     stringKeccak256("d2"),
                     res1[1],
                     verificationVector,
@@ -442,13 +455,13 @@ describe("Schains", () => {
                 resO = await skaleDKG.isChannelOpened(stringKeccak256("d2"));
                 assert.equal(resO, true);
 
-                res = await skaleDKG.connect(nodeAddress).isAlrightPossible(
+                res = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
                     stringKeccak256("d2"),
                     res1[0]
                 );
                 assert.equal(res, true);
 
-                await skaleDKG.connect(nodeAddress).alright(
+                await skaleDKG.connect(nodeAddress1).alright(
                     stringKeccak256("d2"),
                     res1[0]
                 );
@@ -456,13 +469,13 @@ describe("Schains", () => {
                 resO = await skaleDKG.isChannelOpened(stringKeccak256("d2"));
                 assert.equal(resO, true);
 
-                res = await skaleDKG.connect(nodeAddress).isAlrightPossible(
+                res = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
                     stringKeccak256("d2"),
                     res1[1]
                 );
                 assert.equal(res, true);
 
-                await skaleDKG.connect(nodeAddress).alright(
+                await skaleDKG.connect(nodeAddress1).alright(
                     stringKeccak256("d2"),
                     res1[1]
                 );
@@ -472,12 +485,12 @@ describe("Schains", () => {
                 const nodesCount = 2;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress).createNode(
+                    await skaleManager.connect(nodeAddress1).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress), // public key
+                        getPublicKey(nodeAddress1), // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -488,18 +501,18 @@ describe("Schains", () => {
                 await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains.address, owner.address, []);
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
 
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000011", // ip
                     "0x7f000011", // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-11", // name
                     "some.domain.name"
                 );
 
                 await nodes.initExit(0);
-                await skaleManager.connect(nodeAddress).nodeExit(0);
+                await skaleManager.connect(nodeAddress1).nodeExit(0);
 
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
 
@@ -509,19 +522,19 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 3).should.be.eventually.rejectedWith("No previous node");
 
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000012", // ip
                     "0x7f000012", // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-12", // name
                     "some.domain.name"
                 );
 
                 await skipTime(43260);
                 await nodes.initExit(2);
-                await skaleManager.connect(nodeAddress).nodeExit(2);
+                await skaleManager.connect(nodeAddress1).nodeExit(2);
 
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
 
@@ -531,19 +544,19 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 4).should.be.eventually.rejectedWith("No previous node");
 
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000013", // ip
                     "0x7f000013", // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-13", // name
                     "some.domain.name"
                 );
 
                 await skipTime(43260);
                 await nodes.initExit(1);
-                await skaleManager.connect(nodeAddress).nodeExit(1);
+                await skaleManager.connect(nodeAddress1).nodeExit(1);
 
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
 
@@ -560,12 +573,12 @@ describe("Schains", () => {
                 const nodesCount = 2;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress).createNode(
+                    await skaleManager.connect(nodeAddress1).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress), // public key
+                        getPublicKey(nodeAddress1), // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -604,7 +617,7 @@ describe("Schains", () => {
                     }
                 ];
 
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     schainHash,
                     0,
                     verificationVector,
@@ -612,7 +625,7 @@ describe("Schains", () => {
                     encryptedSecretKeyContribution
                 );
 
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     schainHash,
                     1,
                     verificationVector,
@@ -620,23 +633,23 @@ describe("Schains", () => {
                     encryptedSecretKeyContribution
                 );
 
-                await skaleDKG.connect(nodeAddress).alright(
+                await skaleDKG.connect(nodeAddress1).alright(
                     schainHash,
                     1
                 );
 
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000011", // ip
                     "0x7f000011", // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-11", // name
                     "some.domain.name"
                 );
 
                 await skipTime(1800);
-                await skaleDKG.connect(nodeAddress).complaint(
+                await skaleDKG.connect(nodeAddress1).complaint(
                     schainHash,
                     1,
                     0
@@ -647,7 +660,7 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 3).should.be.eventually.rejectedWith("No previous node");
 
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     schainHash,
                     2,
                     verificationVector,
@@ -655,7 +668,7 @@ describe("Schains", () => {
                     encryptedSecretKeyContribution
                 );
 
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     schainHash,
                     1,
                     verificationVector,
@@ -663,23 +676,23 @@ describe("Schains", () => {
                     encryptedSecretKeyContribution
                 );
 
-                await skaleDKG.connect(nodeAddress).alright(
+                await skaleDKG.connect(nodeAddress1).alright(
                     schainHash,
                     1
                 );
 
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000012", // ip
                     "0x7f000012", // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-12", // name
                     "some.domain.name"
                 );
 
                 await skipTime(1800);
-                await skaleDKG.connect(nodeAddress).complaint(
+                await skaleDKG.connect(nodeAddress1).complaint(
                     schainHash,
                     1,
                     2
@@ -691,7 +704,7 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 4).should.be.eventually.rejectedWith("No previous node");
 
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     schainHash,
                     3,
                     verificationVector,
@@ -699,7 +712,7 @@ describe("Schains", () => {
                     encryptedSecretKeyContribution
                 );
 
-                await skaleDKG.connect(nodeAddress).broadcast(
+                await skaleDKG.connect(nodeAddress1).broadcast(
                     schainHash,
                     1,
                     verificationVector,
@@ -707,23 +720,23 @@ describe("Schains", () => {
                     encryptedSecretKeyContribution
                 );
 
-                await skaleDKG.connect(nodeAddress).alright(
+                await skaleDKG.connect(nodeAddress1).alright(
                     schainHash,
                     3
                 );
 
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000013", // ip
                     "0x7f000013", // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-13", // name
                     "some.domain.name"
                 );
 
                 await skipTime(1800);
-                await skaleDKG.connect(nodeAddress).complaint(
+                await skaleDKG.connect(nodeAddress1).complaint(
                     schainHash,
                     3,
                     1
@@ -744,12 +757,12 @@ describe("Schains", () => {
                 const nodesCount = 4;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress).createNode(
+                    await skaleManager.connect(nodeAddress1).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress), // public key
+                        getPublicKey(nodeAddress1), // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -903,12 +916,12 @@ describe("Schains", () => {
                 await nodes.initExit(removedNode);
                 await nodes.completeExit(removedNode);
 
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000028", // ip
                     "0x7f000028", // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-28", // name
                     "some.domain.name");
 
@@ -1118,12 +1131,12 @@ describe("Schains", () => {
                 const nodesCount = 20;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress).createNode(
+                    await skaleManager.connect(nodeAddress1).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress), // public key
+                        getPublicKey(nodeAddress1), // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -1222,17 +1235,105 @@ describe("Schains", () => {
             });
         });
 
+        describe("when nodes are registered correctly", () => {
+            fastBeforeEach(async () => {
+                const nodesCount = 4;
+                const nodeAddresses = [
+                    nodeAddress1,
+                    nodeAddress2,
+                    nodeAddress3,
+                    nodeAddress4
+                ];
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("0" + index.toString(16)).slice(-2);
+                    await skaleManager.connect(nodeAddresses[index]).createNode(
+                        8545, // port
+                        0, // nonce
+                        "0x7f0000" + hexIndex, // ip
+                        "0x7f0000" + hexIndex, // public ip
+                        getPublicKey(nodeAddresses[index]), // public key
+                        "D2-" + hexIndex, // name
+                        "some.domain.name");
+                }
+                await contractManager.setContractsAddress("SchainsInternal", schainsInternal2.address);
+            });
+
+            it("should check node addresses after schain creation", async () => {
+                const deposit = await schains.getSchainPrice(5, 5);
+                await schains.addSchain(
+                    holder.address,
+                    deposit,
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "D2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
+                );
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress1.address)).be.true;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress2.address)).be.true;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress3.address)).be.true;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress4.address)).be.true;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), owner.address)).be.false;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), holder.address)).be.false;
+            });
+
+            it("should not add the same address", async () => {
+                const deposit = await schains.getSchainPrice(5, 5);
+                await schains.addSchain(
+                    holder.address,
+                    deposit,
+                    ethers.utils.defaultAbiCoder.encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.MEDIUM_TEST,
+                            nonce: 0,
+                            name: "D2",
+                            originator: ethers.constants.AddressZero,
+                            options: []
+                        }]
+                    )
+                );
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress1.address)).be.true;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress2.address)).be.true;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress3.address)).be.true;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress4.address)).be.true;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), owner.address)).be.false;
+                expect(await schainsInternal2.isNodeAddressesInGroup(stringKeccak256("D2"), holder.address)).be.false;
+                await skaleManager.connect(nodeAddress1).createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f0000ff", // ip
+                    "0x7f0000ff", // public ip
+                    getPublicKey(nodeAddress1), // public key
+                    "D2-ff", // name
+                    "some.domain.name"
+                );
+                await skaleDKG.setSuccessfulDKGPublic(
+                    stringKeccak256("D2"),
+                );
+                await nodes.initExit(1);
+                await skaleManager.connect(nodeAddress2).nodeExit(1).should.be.eventually.rejectedWith("Node address already exist");
+            });
+        });
+
         describe("when nodes are registered", () => {
             fastBeforeEach(async () => {
                 const nodesCount = 16;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress).createNode(
+                    await skaleManager.connect(nodeAddress1).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress), // public key
+                        getPublicKey(nodeAddress1), // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -1394,11 +1495,6 @@ describe("Schains", () => {
                     res.length.should.be.equal(16);
                 });
 
-                it("should check node addresses", async () => {
-                    expect(await schainsInternal.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress.address)).be.true;
-                    expect(await schainsInternal.isNodeAddressesInGroup(stringKeccak256("D2"), nodeAddress2.address)).be.false;
-                });
-
                 it("should delete group", async () => {
                     await schainsInternal.deleteGroup(stringKeccak256("D2"));
                     const res = await schainsInternal.getNodesInGroup(stringKeccak256("D2"));
@@ -1408,7 +1504,7 @@ describe("Schains", () => {
 
                 it("should fail on deleting schain if owner is wrong", async () => {
                     await schains.deleteSchain(
-                        nodeAddress.address,
+                        nodeAddress1.address,
                         "D2",
                     ).should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
@@ -1467,7 +1563,7 @@ describe("Schains", () => {
                 it("should fail on deleting schain if owner is wrong", async () => {
 
                     await schains.deleteSchain(
-                        nodeAddress.address,
+                        nodeAddress1.address,
                         "D2",
                     ).should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
@@ -1529,12 +1625,12 @@ describe("Schains", () => {
             const nodesCount = 4;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
                     "0x7f0000" + hexIndex, // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-" + hexIndex, // name
                     "some.domain.name");
             }
@@ -1575,20 +1671,20 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
-            await skaleManager.connect(nodeAddress).createNode(
+            await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f000010", // ip
                 "0x7f000010", // public ip
-                getPublicKey(nodeAddress), // public key
+                getPublicKey(nodeAddress1), // public key
                 "D2-10", // name
                 "some.domain.name");
-            await skaleManager.connect(nodeAddress).createNode(
+            await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f000011", // ip
                 "0x7f000011", // public ip
-                getPublicKey(nodeAddress), // public key
+                getPublicKey(nodeAddress1), // public key
                 "D2-11", // name
                 "some.domain.name");
         });
@@ -1602,7 +1698,7 @@ describe("Schains", () => {
             const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
             const _12hours = 43200;
             assert.equal(await currentTime(), leavingTimeOfNode-_12hours);
@@ -1626,7 +1722,7 @@ describe("Schains", () => {
                 stringKeccak256("d3"),
             );
             await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
             );
@@ -1638,7 +1734,7 @@ describe("Schains", () => {
 
             nodeStatus = await nodes.getNodeStatus(0);
             assert.equal(nodeStatus, LEFT);
-            await skaleManager.connect(nodeAddress).nodeExit(0).should.be.eventually.rejectedWith("Sender is not permitted to call this function");
+            await skaleManager.connect(nodeAddress1).nodeExit(0).should.be.eventually.rejectedWith("Sender is not permitted to call this function");
 
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, ACTIVE);
@@ -1646,26 +1742,26 @@ describe("Schains", () => {
             await skipTime(43260);
 
             await nodes.initExit(1);
-            await skaleManager.connect(nodeAddress).nodeExit(1);
+            await skaleManager.connect(nodeAddress1).nodeExit(1);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEAVING);
-            await skaleManager.connect(nodeAddress).nodeExit(1);
+            await skaleManager.connect(nodeAddress1).nodeExit(1);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
             );
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEFT);
-            await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Sender is not permitted to call this function");
+            await skaleManager.connect(nodeAddress1).nodeExit(1).should.be.eventually.rejectedWith("Sender is not permitted to call this function");
         });
 
         it("should rotate node on the same position", async () => {
             const arrayD2 = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             const arrayD3 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             const newArrayD3 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             let zeroPositionD3 = 0;
             let iter = 0;
@@ -1696,7 +1792,7 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             const newArrayD2 = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             let zeroPositionD2 = 0;
             iter = 0;
@@ -1729,7 +1825,7 @@ describe("Schains", () => {
             );
             await skipTime(43260);
             await nodes.initExit(1);
-            await skaleManager.connect(nodeAddress).nodeExit(1);
+            await skaleManager.connect(nodeAddress1).nodeExit(1);
             const newNewArrayD3 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             let onePositionD3 = 0;
             iter = 0;
@@ -1760,7 +1856,7 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
-            await skaleManager.connect(nodeAddress).nodeExit(1);
+            await skaleManager.connect(nodeAddress1).nodeExit(1);
             const newNewArrayD2 = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             let onePositionD2 = 0;
             iter = 0;
@@ -1795,23 +1891,23 @@ describe("Schains", () => {
 
         it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
             await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
             await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skipTime(43260);
             await nodes.initExit(1);
-            await skaleManager.connect(nodeAddress).nodeExit(1);
+            await skaleManager.connect(nodeAddress1).nodeExit(1);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
 
-            await skaleManager.connect(nodeAddress).nodeExit(0).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await skaleManager.connect(nodeAddress1).nodeExit(0).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
 
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEAVING);
-            await skaleManager.connect(nodeAddress).nodeExit(1);
+            await skaleManager.connect(nodeAddress1).nodeExit(1);
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEFT);
         });
@@ -1819,11 +1915,11 @@ describe("Schains", () => {
         it("should not create schain with the same name after removing", async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
             );
@@ -1896,19 +1992,19 @@ describe("Schains", () => {
             const nodesInGroupBN = await schainsInternal.getNodesInGroup(stringKeccak256("d4"));
             const nodeInGroup = nodesInGroupBN.map((value: BigNumber) => value.toNumber())[0];
             await nodes.initExit(nodeInGroup);
-            await skaleManager.connect(nodeAddress).nodeExit(nodeInGroup);
+            await skaleManager.connect(nodeAddress1).nodeExit(nodeInGroup);
         });
 
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, false);
             await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             const nodeRot = res1[3];
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
-            const resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
+            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
             assert.equal(resS, true);
         });
 
@@ -1916,16 +2012,16 @@ describe("Schains", () => {
             let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, false);
             await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             const nodeRot = res1[3];
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
-            const resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
+            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
             assert.equal(resS, true);
 
             await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
 
             await skipTime(43260);
 
@@ -1936,15 +2032,15 @@ describe("Schains", () => {
             let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, false);
             await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             const nodeRot = res1[3];
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
-            const resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
+            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
             assert.equal(resS, true);
             await skipTime(43260);
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
 
             await nodes.initExit(1).should.be.eventually.rejectedWith("DKG did not finish on Schain");
         });
@@ -1953,18 +2049,18 @@ describe("Schains", () => {
             let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, false);
             await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             const nodeRot = res1[3];
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
-            const resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
+            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
             assert.equal(resS, true);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
             await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
             );
@@ -1972,17 +2068,17 @@ describe("Schains", () => {
             await skipTime(43260);
 
             await nodes.initExit(1)
-            await skaleManager.connect(nodeAddress).nodeExit(1);
+            await skaleManager.connect(nodeAddress1).nodeExit(1);
         });
 
         it("should be possible to process dkg after node rotation", async () => {
             let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, false);
             await nodes.initExit(0)
-            await skaleManager.connect(nodeAddress).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             const nodeRot = res1[3];
-            let resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
+            let resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
             assert.equal(resS, true);
 
             const verificationVector = [
@@ -2050,10 +2146,10 @@ describe("Schains", () => {
             ];
 
             // let res10 = await keyStorage.getBroadcastedData(stringKeccak256("d3"), res1[0]);
-            resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d3"), res1[0]);
+            resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), res1[0]);
             assert.equal(resS, true);
             await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("d3"), {value: 1e20.toString()});
-            await skaleDKG.connect(nodeAddress).broadcast(
+            await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d3"),
                 res1[0],
                 verificationVector,
@@ -2061,25 +2157,25 @@ describe("Schains", () => {
                 encryptedSecretKeyContribution
             );
             // res10 = await keyStorage.getBroadcastedData(stringKeccak256("d3"), res1[1]);
-            resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d3"), res1[1]);
+            resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), res1[1]);
             assert.equal(resS, true);
-            await skaleDKG.connect(nodeAddress).broadcast(
+            await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d3"),
                 res1[1],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
                 encryptedSecretKeyContribution
             );
-            resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringKeccak256("d3"), res1[2]);
+            resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), res1[2]);
             assert.equal(resS, true);
-            await skaleDKG.connect(nodeAddress).broadcast(
+            await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d3"),
                 res1[2],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
                 encryptedSecretKeyContribution
             );
-            await skaleDKG.connect(nodeAddress).broadcast(
+            await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d3"),
                 res1[3],
                 verificationVector,
@@ -2090,13 +2186,13 @@ describe("Schains", () => {
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
 
-            resS = await skaleDKG.connect(nodeAddress).isAlrightPossible(
+            resS = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
                 stringKeccak256("d3"),
                 res1[0]
             );
             assert.equal(resS, true);
 
-            await skaleDKG.connect(nodeAddress).alright(
+            await skaleDKG.connect(nodeAddress1).alright(
                 stringKeccak256("d3"),
                 res1[0]
             );
@@ -2104,13 +2200,13 @@ describe("Schains", () => {
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
 
-            resS = await skaleDKG.connect(nodeAddress).isAlrightPossible(
+            resS = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
                 stringKeccak256("d3"),
                 res1[1]
             );
             assert.equal(resS, true);
 
-            await skaleDKG.connect(nodeAddress).alright(
+            await skaleDKG.connect(nodeAddress1).alright(
                 stringKeccak256("d3"),
                 res1[1]
             );
@@ -2118,13 +2214,13 @@ describe("Schains", () => {
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
 
-            resS = await skaleDKG.connect(nodeAddress).isAlrightPossible(
+            resS = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
                 stringKeccak256("d3"),
                 res1[2]
             );
             assert.equal(resS, true);
 
-            await skaleDKG.connect(nodeAddress).alright(
+            await skaleDKG.connect(nodeAddress1).alright(
                 stringKeccak256("d3"),
                 res1[2]
             );
@@ -2132,13 +2228,13 @@ describe("Schains", () => {
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
 
-            resS = await skaleDKG.connect(nodeAddress).isAlrightPossible(
+            resS = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
                 stringKeccak256("d3"),
                 res1[3]
             );
             assert.equal(resS, true);
 
-            await skaleDKG.connect(nodeAddress).alright(
+            await skaleDKG.connect(nodeAddress1).alright(
                 stringKeccak256("d3"),
                 res1[3]
             );
@@ -2152,12 +2248,12 @@ describe("Schains", () => {
             const nodesCount = 6;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
                     "0x7f0000" + hexIndex, // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-" + hexIndex, // name
                     "some.domain.name");
             }
@@ -2252,7 +2348,7 @@ describe("Schains", () => {
             }
             await nodes.initExit(rotIndex);
             for (const schainHash of Array.from(schainHashes).reverse()) {
-                await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
+                await skaleManager.connect(nodeAddress1).nodeExit(rotIndex);
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
             }
             await schainsInternal.getSchainHashesForNode(rotIndex).should.be.eventually.empty;
@@ -2271,7 +2367,7 @@ describe("Schains", () => {
             }
             await nodes.initExit(rotIndex1);
             for (const schainHash of Array.from(schainHashes1).reverse()) {
-                await skaleManager.connect(nodeAddress).nodeExit(rotIndex1);
+                await skaleManager.connect(nodeAddress1).nodeExit(rotIndex1);
                 await skaleDKG.setSuccessfulDKGPublic(
                     schainHash,
                 );
@@ -2293,7 +2389,7 @@ describe("Schains", () => {
             await skipTime(43260);
             await nodes.initExit(rotIndex2);
             for (const schainHash of Array.from(schainHashes2).reverse()) {
-                await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
+                await skaleManager.connect(nodeAddress1).nodeExit(rotIndex2);
                 await skaleDKG.setSuccessfulDKGPublic(
                     schainHash,
                 );
@@ -2310,12 +2406,12 @@ describe("Schains", () => {
             const nodesCount = 6;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
                     "0x7f0000" + hexIndex, // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-" + hexIndex, // name
                     "some.domain.name");
             }
@@ -2429,11 +2525,11 @@ describe("Schains", () => {
             }
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 if (rotIndex === 7) {
-                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
+                    await skaleManager.connect(nodeAddress1).nodeExit(rotIndex);
                 } else if (rotIndex === 6) {
                     await skaleManager.connect(nodeAddress2).nodeExit(rotIndex);
                 } else if (rotIndex < 6) {
-                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
+                    await skaleManager.connect(nodeAddress1).nodeExit(rotIndex);
                 } else {
                     break;
                 }
@@ -2460,11 +2556,11 @@ describe("Schains", () => {
             }
             for (const schainHash of Array.from(schainHashes1).reverse()) {
                 if (rotIndex1 === 7) {
-                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex1);
+                    await skaleManager.connect(nodeAddress1).nodeExit(rotIndex1);
                 } else if (rotIndex1 === 6) {
                     await skaleManager.connect(nodeAddress2).nodeExit(rotIndex1);
                 } else if (rotIndex1 < 6) {
-                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex1);
+                    await skaleManager.connect(nodeAddress1).nodeExit(rotIndex1);
                 } else {
                     break;
                 }
@@ -2492,11 +2588,11 @@ describe("Schains", () => {
             }
             for (const schainHash of Array.from(schainHashes2).reverse()) {
                 if (rotIndex2 === 7) {
-                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
+                    await skaleManager.connect(nodeAddress1).nodeExit(rotIndex2);
                 } else if (rotIndex2 === 6) {
                     await skaleManager.connect(nodeAddress2).nodeExit(rotIndex2);
                 } else if (rotIndex2 < 6) {
-                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
+                    await skaleManager.connect(nodeAddress1).nodeExit(rotIndex2);
                 } else {
                     break;
                 }
@@ -2597,7 +2693,7 @@ describe("Schains", () => {
                 }
             }
 
-            let senderAddress = nodeAddress;
+            let senderAddress = nodeAddress1;
             if (rotIndex === 6) {
                 senderAddress = nodeAddress2;
             } else if (rotIndex === 7) {
@@ -2749,12 +2845,12 @@ describe("Schains", () => {
             const nodesCount = 16;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await skaleManager.connect(nodeAddress).createNode(
+                await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
                     "0x7f0000" + hexIndex, // public ip
-                    getPublicKey(nodeAddress), // public key
+                    getPublicKey(nodeAddress1), // public key
                     "D2-" + hexIndex, // name
                     "some.domain.name");
             }
@@ -2804,23 +2900,23 @@ describe("Schains", () => {
         it("should make a node rotation", async () => {
             const rotIndex = 0;
             await nodes.initExit(rotIndex);
-            await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
-            await skaleManager.connect(nodeAddress).createNode(
+            await skaleManager.connect(nodeAddress1).nodeExit(rotIndex);
+            await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fe", // ip
                 "0x7f0000fe", // public ip
-                getPublicKey(nodeAddress), // public key
+                getPublicKey(nodeAddress1), // public key
                 "D2-fe", // name
                 "some.domain.name");
-            await skaleDKG.connect(nodeAddress).broadcast(
+            await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
                 1,
                 verificationVectorNew,
                 secretKeyContributions
             );
             await skipTime(1800);
-            await skaleDKG.connect(nodeAddress).complaint(
+            await skaleDKG.connect(nodeAddress1).complaint(
                 stringKeccak256("d1"),
                 1,
                 16
@@ -2841,23 +2937,23 @@ describe("Schains", () => {
             await schainsInternal.removeSchainType(1);
             const rotIndex = 0;
             await nodes.initExit(rotIndex);
-            await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
-            await skaleManager.connect(nodeAddress).createNode(
+            await skaleManager.connect(nodeAddress1).nodeExit(rotIndex);
+            await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fe", // ip
                 "0x7f0000fe", // public ip
-                getPublicKey(nodeAddress), // public key
+                getPublicKey(nodeAddress1), // public key
                 "D2-fe", // name
                 "some.domain.name");
-            await skaleDKG.connect(nodeAddress).broadcast(
+            await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
                 1,
                 verificationVectorNew,
                 secretKeyContributions
             );
             await skipTime(1800);
-            await skaleDKG.connect(nodeAddress).complaint(
+            await skaleDKG.connect(nodeAddress1).complaint(
                 stringKeccak256("d1"),
                 1,
                 16
@@ -2879,24 +2975,24 @@ describe("Schains", () => {
             await schainsInternal.addSchainType(32, 16);
             const rotIndex = 0;
             await nodes.initExit(rotIndex);
-            await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
-            await skaleManager.connect(nodeAddress).createNode(
+            await skaleManager.connect(nodeAddress1).nodeExit(rotIndex);
+            await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fe", // ip
                 "0x7f0000fe", // public ip
-                getPublicKey(nodeAddress), // public key
+                getPublicKey(nodeAddress1), // public key
                 "D2-fe", // name
                 "some.domain.name");
 
-            await skaleDKG.connect(nodeAddress).broadcast(
+            await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
                 1,
                 verificationVectorNew,
                 secretKeyContributions
             );
             await skipTime(1800);
-            await skaleDKG.connect(nodeAddress).complaint(
+            await skaleDKG.connect(nodeAddress1).complaint(
                 stringKeccak256("d1"),
                 1,
                 16
@@ -2919,7 +3015,7 @@ describe("Schains", () => {
             const deposit = await schains.getSchainPrice(6, 5);
             const rotIndex = 0;
             await nodes.initExit(rotIndex);
-            await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
+            await skaleManager.connect(nodeAddress1).nodeExit(rotIndex);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d1"),
             );
@@ -2943,39 +3039,39 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
             );
-            await skaleManager.connect(nodeAddress).createNode(
+            await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fe", // ip
                 "0x7f0000fe", // public ip
-                getPublicKey(nodeAddress), // public key
+                getPublicKey(nodeAddress1), // public key
                 "D2-fe", // name
                 "some.domain.name");
             const rotIndex2 = 1;
             await nodes.initExit(rotIndex2);
             while(await nodes.getNodeStatus(rotIndex2) !== 2) {
-                await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
+                await skaleManager.connect(nodeAddress1).nodeExit(rotIndex2);
             }
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
             );
-            await skaleManager.connect(nodeAddress).createNode(
+            await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fd", // ip
                 "0x7f0000fd", // public ip
-                getPublicKey(nodeAddress), // public key
+                getPublicKey(nodeAddress1), // public key
                 "D2-fd", // name
                 "some.domain.name");
 
-            await skaleDKG.connect(nodeAddress).broadcast(
+            await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
                 2,
                 verificationVectorNew,
                 secretKeyContributions
             );
             await skipTime(1800);
-            await skaleDKG.connect(nodeAddress).complaint(
+            await skaleDKG.connect(nodeAddress1).complaint(
                 stringKeccak256("d1"),
                 2,
                 16

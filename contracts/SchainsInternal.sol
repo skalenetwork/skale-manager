@@ -31,15 +31,20 @@ import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./utils/Random.sol";
 
+interface IInitializeNodeAddresses {
+    function initializeSchainAddresses(uint256 start, uint256 finish) external;
+}
+
 
 /**
  * @title SchainsInternal
  * @dev Contract contains all functionality logic to internally manage Schains.
  */
-contract SchainsInternal is Permissions, ISchainsInternal {
+contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddresses {
 
     using Random for IRandom.RandomGenerator;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
@@ -82,6 +87,8 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
     uint public currentGeneration;
 
+    mapping (bytes32 => EnumerableSetUpgradeable.AddressSet) private _nodeAddressInSchain;
+
     bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
     bytes32 public constant GENERATION_MANAGER_ROLE = keccak256("GENERATION_MANAGER_ROLE");
@@ -104,6 +111,18 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     modifier schainExists(bytes32 schainHash) {
         require(isSchainExist(schainHash), "The schain does not exist");
         _;
+    }
+
+    function initializeSchainAddresses(uint256 start, uint256 finish) external virtual override {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not authorized");
+        require(finish > start && finish - start <= 10, "Incorrect input");
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
+        for (uint256 i = start; i < finish; i++) {
+            uint[] memory group = schainsGroups[schainsAtSystem[i]];
+            for (uint j = 0; j < group.length; j++) {
+                _addAddressToSchain(schainsAtSystem[i], nodes.getNodeAddress(group[j]));
+            }
+        }
     }
 
     /**
@@ -270,6 +289,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         removeSchainForNode(nodeIndex, placeOfSchainOnNode[schainHash][nodeIndex] - 1);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
         INodes nodes = INodes(contractManager.getContract("Nodes"));
+        require(_removeAddressFromSchain(schainHash, nodes.getNodeAddress(nodeIndex)), "Incorrect node address");
         nodes.addSpaceToNode(nodeIndex, schains[schainHash].partOfNode);
     }
 
@@ -683,13 +703,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         schainExists(schainHash)
         returns (bool)
     {
-        INodes nodes = INodes(contractManager.getContract("Nodes"));
-        for (uint i = 0; i < schainsGroups[schainHash].length; i++) {
-            if (nodes.getNodeAddress(schainsGroups[schainHash][i]) == sender) {
-                return true;
-            }
-        }
-        return false;
+        return _nodeAddressInSchain[schainHash].contains(sender);
     }
 
     /**
@@ -826,6 +840,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
      * - Schain must exist
      */
     function addSchainForNode(
+        INodes nodes,
         uint nodeIndex,
         bytes32 schainHash
     )
@@ -843,6 +858,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             placeOfSchainOnNode[schainHash][nodeIndex] = lastHoleOfNode + 1;
             holesForNodes[nodeIndex].pop();
         }
+        require(_addAddressToSchain(schainHash, nodes.getNodeAddress(nodeIndex)), "Node address already exist");
     }
 
     /**
@@ -913,6 +929,14 @@ contract SchainsInternal is Permissions, ISchainsInternal {
         return bytes(schains[schainHash].name).length != 0;
     }
 
+    function _addAddressToSchain(bytes32 schainHash, address nodeAddress) internal virtual returns (bool) {
+        return _nodeAddressInSchain[schainHash].add(nodeAddress);
+    }
+
+    function _removeAddressFromSchain(bytes32 schainHash, address nodeAddress) internal virtual returns (bool) {
+        return _nodeAddressInSchain[schainHash].remove(nodeAddress);
+    }
+
     function _getNodeToLockedSchains() internal view returns (mapping(uint => bytes32[]) storage) {
         return _nodeToLockedSchains;
     }
@@ -937,7 +961,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
             uint node = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
             nodesInGroup[i] = node;
             _setException(schainHash, node);
-            addSchainForNode(node, schainHash);
+            addSchainForNode(nodes, node, schainHash);
             nodes.makeNodeInvisible(node);
             require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
         }

@@ -35,7 +35,11 @@ describe("Pricing", () => {
     let owner: SignerWithAddress;
     let holder: SignerWithAddress;
     let validator: SignerWithAddress;
-    let nodeAddress: Wallet;
+    let nodeAddress1: Wallet;
+    let nodeAddress2: Wallet;
+    let nodeAddress3: Wallet;
+    let nodeAddress4: Wallet;
+    let nodeAddress5: Wallet;
 
     let contractManager: ContractManager;
     let pricing: Pricing;
@@ -48,9 +52,12 @@ describe("Pricing", () => {
     fastBeforeEach(async () => {
         [owner, holder, validator] = await ethers.getSigners();
 
-        nodeAddress = new Wallet(String(privateKeys[3])).connect(ethers.provider);
+        nodeAddress1 = new Wallet(String(privateKeys[0])).connect(ethers.provider);
+        nodeAddress2 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
+        nodeAddress3 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
+        nodeAddress4 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
+        nodeAddress5 = new Wallet(String(privateKeys[4])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
@@ -67,8 +74,16 @@ describe("Pricing", () => {
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
-        const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
-        await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
+        const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress1);
+        const signature2 = await getValidatorIdSignature(validatorIndex, nodeAddress2);
+        const signature3 = await getValidatorIdSignature(validatorIndex, nodeAddress3);
+        const signature4 = await getValidatorIdSignature(validatorIndex, nodeAddress4);
+        const signature5 = await getValidatorIdSignature(validatorIndex, nodeAddress5);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress1.address, signature1);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress2.address, signature2);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress3.address, signature3);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress4.address, signature4);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress5.address, signature5);
         const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
         await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
     });
@@ -79,49 +94,49 @@ describe("Pricing", () => {
             await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.constants.AddressZero, 10, 4);
             await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.constants.AddressZero, 10, 8);
             await nodes.createNode(
-                nodeAddress.address,
+                nodeAddress1.address,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: getPublicKey(nodeAddress),
+                    publicKey: getPublicKey(nodeAddress1),
                     name: "elvis1",
                     domainName: "some.domain.name"
                 });
 
             await nodes.createNode(
-                nodeAddress.address,
+                nodeAddress2.address,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
-                    publicKey: getPublicKey(nodeAddress),
+                    publicKey: getPublicKey(nodeAddress2),
                     name: "elvis2",
                     domainName: "some.domain.name"
                 });
 
             await nodes.createNode(
-                nodeAddress.address,
+                nodeAddress3.address,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f000005",
                     publicIp: "0x7f000005",
-                    publicKey: getPublicKey(nodeAddress),
+                    publicKey: getPublicKey(nodeAddress3),
                     name: "elvis3",
                     domainName: "some.domain.name"
                 });
 
             await nodes.createNode(
-                nodeAddress.address,
+                nodeAddress4.address,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f000007",
                     publicIp: "0x7f000007",
-                    publicKey: getPublicKey(nodeAddress),
+                    publicKey: getPublicKey(nodeAddress4),
                     name: "elvis4",
                     domainName: "some.domain.name"
                 });
@@ -220,13 +235,13 @@ describe("Pricing", () => {
 
                 it("should change price when new active node has been added", async () => {
                     await nodes.createNode(
-                        nodeAddress.address,
+                        nodeAddress5.address,
                         {
                             port: 8545,
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: getPublicKey(nodeAddress),
+                            publicKey: getPublicKey(nodeAddress5),
                             name: "vadim",
                             domainName: "some.domain.name"
                         });
@@ -283,13 +298,13 @@ describe("Pricing", () => {
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
                     await nodes.createNode(
-                        nodeAddress.address,
+                        nodeAddress5.address,
                         {
                             port: 8545,
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: getPublicKey(nodeAddress),
+                            publicKey: getPublicKey(nodeAddress5),
                             name: "vadim",
                             domainName: "some.domain.name"
                         });
