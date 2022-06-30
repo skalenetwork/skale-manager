@@ -10,7 +10,7 @@ contract FallbackMock {
         _minimalGasToSpend = minimalGasToSpend;
     }
 
-    // solhint-disable-next-line comprehensive-interface
+    // solhint-disable-next-line comprehensive-interface, no-complex-fallback
     fallback() external payable {
         uint gasTotal = gasleft();
         while (gasTotal - gasleft() < _minimalGasToSpend) {
