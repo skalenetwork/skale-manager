@@ -302,6 +302,10 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         maxNodeDeposit = newMaxNodeDeposit;
     }
 
+    function reinitialize() external override reinitializer(2) {
+        maxNodeDeposit = 1.5 ether;
+    }
+
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
@@ -317,6 +321,6 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
         complaintTimeLimit = 1800;
-        maxNodeDeposit = 1 ether;
+        maxNodeDeposit = 1.5 ether;
     }
 }

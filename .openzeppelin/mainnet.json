@@ -18,7 +18,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol"
           },
           {
@@ -167,7 +167,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -372,7 +372,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -572,7 +572,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -651,7 +651,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -1109,7 +1109,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -1231,7 +1231,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -1396,7 +1396,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -1612,7 +1612,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol"
           },
           {
@@ -1786,7 +1786,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -1963,7 +1963,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -2267,7 +2267,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -2398,7 +2398,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -2523,7 +2523,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -2636,7 +2636,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -2941,7 +2941,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -3205,7 +3205,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -3327,7 +3327,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -3440,7 +3440,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -3569,7 +3569,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol"
           },
           {
@@ -3750,7 +3750,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol"
           },
           {
@@ -3887,7 +3887,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -4021,7 +4021,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -4244,7 +4244,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -4379,7 +4379,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -4452,7 +4452,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -4911,7 +4911,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -5034,7 +5034,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -5193,7 +5193,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -5319,7 +5319,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -5450,7 +5450,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -5585,7 +5585,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -5808,7 +5808,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -6009,7 +6009,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -6344,7 +6344,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -6522,7 +6522,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -6855,7 +6855,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -6985,7 +6985,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -7202,7 +7202,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -7473,7 +7473,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -7587,7 +7587,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -7719,7 +7719,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -7851,7 +7851,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -8057,7 +8057,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -8180,7 +8180,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -8306,7 +8306,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -8429,7 +8429,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -8564,7 +8564,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -8787,7 +8787,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -8988,7 +8988,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -9329,7 +9329,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -9507,7 +9507,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -9840,7 +9840,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -10111,7 +10111,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -10243,7 +10243,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -10449,7 +10449,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -10584,7 +10584,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -10807,7 +10807,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -11148,7 +11148,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {
@@ -11419,7 +11419,7 @@
           {
             "contract": "Initializable",
             "label": "initialized",
-            "type": "t_bool",
+            "type": "t_uint8",
             "src": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol:21"
           },
           {

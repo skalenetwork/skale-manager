@@ -42,9 +42,9 @@
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@openzeppelin/contracts": "^4.4.2",
-    "@openzeppelin/contracts-upgradeable": "^4.4.2",
+    "@openzeppelin/contracts-upgradeable": "^4.6.0",
     "@openzeppelin/hardhat-upgrades": "^1.13.0",
-    "@skalenetwork/skale-manager-interfaces": "1.0.0-srw-interfaces.1",
+    "@skalenetwork/skale-manager-interfaces": "1.0.0-srw-interfaces.2",
     "@skalenetwork/upgrade-tools": "^1.0.0",
     "@typechain/hardhat": "^4.0.0",
     "dotenv": "^16.0.0",
