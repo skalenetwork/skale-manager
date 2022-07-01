@@ -1095,15 +1095,15 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/skale-manager-interfaces@1.0.0-srw-interfaces.2":
-  version "1.0.0-srw-interfaces.2"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-srw-interfaces.2.tgz#a78d7660fdefa7ce7cfcd896206a35bd3912b14f"
-  integrity sha512-jIQ/CWMf3NsxouK6T/q01Pgp7abP6/2jFOD+M44bFo+Klefl8Jy+/SPIGS4DefP6MsPBLBfak4al5hnR+n6PsA==
+"@skalenetwork/skale-manager-interfaces@1.0.0-srw-interfaces.3":
+  version "1.0.0-srw-interfaces.3"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-srw-interfaces.3.tgz#66ca687a12bfa87283482b7ab75a68fab82ce500"
+  integrity sha512-ifD1UQx5I3oy12ePAgBlTWguyLsq5WtdfA00nl6+YU4vpPhnsOi3rW5f78cEVvLXAKcT9SaiPws/2fmgehaqYQ==
 
-"@skalenetwork/upgrade-tools@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-1.0.0.tgz#57612e2ad85f9b98fbe17c3b62f11cbb5e4a89cc"
-  integrity sha512-fy5PiO2etR6w3sRNe4JJk1+Z+/akdR5sbET3x4gmjrip8TqwsxhvirRGtDEdpT8CS5wEORlWOpYbP7+wHuILmg==
+"@skalenetwork/upgrade-tools@1.0.0-develop.11":
+  version "1.0.0-develop.11"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-1.0.0-develop.11.tgz#cfaee96d2a54e962a81cdbef2f5fdba70540b604"
+  integrity sha512-8GoksAQjNogzupSg0xDkCrkBeY1qaFKz9t4uc8Gg+3nOuvGptJTEzEbmaHlAlQYEyTTYktnqNTqZyn7gOY79XA==
   dependencies:
     "@openzeppelin/contracts-upgradeable" "^4.4.2"
     axios "^0.27.2"

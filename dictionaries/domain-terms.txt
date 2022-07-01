@@ -14,3 +14,4 @@ secp256k1
 untrusted
 Timelimit
 impls
+predeployed

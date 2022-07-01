@@ -5,6 +5,7 @@ import { ConstantsHolder,
          KeyStorage,
          Nodes,
          Schains,
+         SchainsInternalMock,
          SkaleDKGTester,
          SkaleManager,
          SkaleVerifier,
@@ -14,6 +15,7 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
+import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
@@ -41,6 +43,7 @@ describe("SkaleVerifier", () => {
     let constantsHolder: ConstantsHolder;
     let contractManager: ContractManager;
     let schains: Schains;
+    let schainsInternal: SchainsInternalMock;
     let skaleVerifier: SkaleVerifier;
     let validatorService: ValidatorService;
     let nodes: Nodes;
@@ -58,6 +61,7 @@ describe("SkaleVerifier", () => {
         constantsHolder = await deployConstantsHolder(contractManager);
 
         nodes = await deployNodes(contractManager);
+        schainsInternal = await deploySchainsInternalMock(contractManager);
         validatorService = await deployValidatorService(contractManager);
         schains = await deploySchains(contractManager);
         skaleVerifier = await deploySkaleVerifier(contractManager);
@@ -66,6 +70,7 @@ describe("SkaleVerifier", () => {
         skaleManager = await deploySkaleManager(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
 
         await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();

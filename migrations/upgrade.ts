@@ -1,7 +1,7 @@
 import { contracts } from "./deploy";
 import hre, { ethers, upgrades } from "hardhat";
 import chalk from "chalk";
-import { ProxyAdmin, SkaleManager } from "../typechain-types";
+import { ProxyAdmin, SkaleManager, SchainsInternal } from "../typechain-types";
 import { upgrade, SkaleABIFile, getContractKeyInAbiFile, encodeTransaction, verify, getAbi } from "@skalenetwork/upgrade-tools"
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
 
@@ -10,6 +10,12 @@ async function getSkaleManager(abi: SkaleABIFile) {
     return ((await ethers.getContractFactory("SkaleManager")).attach(
         abi[getContractKeyInAbiFile("SkaleManager") + "_address"] as string
     )) as SkaleManager;
+}
+
+async function getSchainsInternal(abi: SkaleABIFile) {
+    return ((await ethers.getContractFactory("SchainsInternal")).attach(
+        abi[getContractKeyInAbiFile("SchainsInternal") + "_address"] as string
+    )) as SchainsInternal;
 }
 
 export async function getDeployedVersion(abi: SkaleABIFile) {
@@ -50,8 +56,28 @@ async function main() {
         async () => {
             // deploy new contracts
         },
-        // async (safeTransactions, abi, contractManager) => {
         async (safeTransactions, abi) => {
+            const schainsInternal = await getSchainsInternal(abi);
+            const numberOfSchains = (await schainsInternal.numberOfSchains()).toNumber();
+            const schainLimitPerTransaction = 10;
+            if (numberOfSchains > 0) {
+                let limitOfSchains = schainLimitPerTransaction;
+                if (numberOfSchains < schainLimitPerTransaction) {
+                    limitOfSchains = numberOfSchains;
+                }
+                safeTransactions.push(encodeTransaction(
+                    0,
+                    schainsInternal.address,
+                    0,
+                    schainsInternal.interface.encodeFunctionData("initializeSchainAddresses", [
+                        0,
+                        limitOfSchains
+                    ])
+                ));
+            }
+
+            // ======================================================================================
+
             const proxyAdmin = await getManifestAdmin(hre) as ProxyAdmin;
             const constantsHolderName = "ConstantsHolder";
             const constantsHolderAddress = abi["constants_holder_address"] as string;
@@ -74,7 +100,33 @@ async function main() {
                 proxyAdmin.interface.encodeFunctionData("upgradeAndCall", [constantsHolderAddress, newImplementationAddress, encodedReinitialize])
             ));
             abi[getContractKeyInAbiFile(constantsHolderName) + "_abi"] = getAbi(constantsHolderFactory.interface);
-
+        },
+        async (abi) => {
+            const schainsInternal = await getSchainsInternal(abi);
+            const numberOfSchains = (await schainsInternal.numberOfSchains()).toNumber();
+            const schainLimitPerTransaction = 10;
+            const nextSafeTransactions: string[][] = [];
+            if (numberOfSchains > schainLimitPerTransaction) {
+                console.log(chalk.redBright("---------------------------Attention---------------------------"));
+                console.log(chalk.redBright(`Total schains amount is ${numberOfSchains}`));
+                console.log(chalk.redBright("Initialization should be in DIFFERENT safe upgrade transactions"));
+                for (let step = 1; step * schainLimitPerTransaction < numberOfSchains; step++) {
+                    let limitOfSchains = step * schainLimitPerTransaction + schainLimitPerTransaction;
+                    if (numberOfSchains < limitOfSchains) {
+                        limitOfSchains = numberOfSchains;
+                    }
+                    nextSafeTransactions.push([encodeTransaction(
+                        0,
+                        schainsInternal.address,
+                        0,
+                        schainsInternal.interface.encodeFunctionData("initializeSchainAddresses", [
+                            step * schainLimitPerTransaction,
+                            limitOfSchains
+                        ])
+                    )]);
+                }
+            }
+            return nextSafeTransactions;
         }
     );
 }

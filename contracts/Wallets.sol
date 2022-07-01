@@ -36,6 +36,7 @@ import "./Permissions.sol";
  * @dev Contract contains logic to perform automatic self-recharging ether for nodes
  */
 contract Wallets is Permissions, IWallets {
+    using AddressUpgradeable for address payable;
 
     mapping (uint => uint) private _validatorWallets;
     mapping (bytes32 => uint) private _schainWallets;
@@ -163,7 +164,7 @@ contract Wallets is Permissions, IWallets {
         uint amount = _schainWallets[schainHash];
         delete _schainWallets[schainHash];
         emit WithdrawFromSchainWallet(schainHash, amount);
-        schainOwner.transfer(amount);
+        schainOwner.sendValue(amount);
     }
     
     /**
