@@ -289,7 +289,7 @@ describe("Wallets", () => {
                     value: (await nodeAddress1.getBalance()).sub(maxNodeDeposit)
                 });
                 await nodes.initExit(0);
-                const response = await skaleManager.connect(nodeAddress1).nodeExit(0);
+                const response = await skaleManager.connect(nodeAddress1).nodeExit(0, {gasLimit: 2e6});
                 const balance = await nodeAddress1.getBalance();
                 const spentValue = await ethSpent(response);
 

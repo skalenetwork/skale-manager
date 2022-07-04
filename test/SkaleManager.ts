@@ -271,7 +271,7 @@ describe("SkaleManager", () => {
                 });
                 await nextMonth(contractManager);
                 await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber());
-                const spentValue = await ethSpent(await skaleManager.connect(nodeAddress).getBounty(0));
+                const spentValue = await ethSpent(await skaleManager.connect(nodeAddress).getBounty(0, {gasLimit: 2e6}));
                 const balance = await nodeAddress.getBalance();
                 balance.add(spentValue).should.be.least(maxNodeDeposit);
                 balance.add(spentValue).should.be.closeTo(maxNodeDeposit, 1e12);
