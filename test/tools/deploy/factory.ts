@@ -1,8 +1,6 @@
 import { ethers, upgrades } from "hardhat";
-import hre from "hardhat";
 import { ContractManager } from "../../../typechain-types";
-import { Artifact } from "hardhat/types";
-upgrades.silenceWarnings();
+import { deployLibraries, getLinkedContractFactory } from "@skalenetwork/upgrade-tools";
 
 async function defaultDeploy(contractName: string,
                              contractManager: ContractManager) {
@@ -102,54 +100,11 @@ function deployWithLibraryWithConstructor(
     }
 }
 
-async function getLinkedContractFactory(contractName: string, libraries: Map<string, string>) {
-    const cArtifact = await hre.artifacts.readArtifact(contractName);
-    const linkedBytecode = _linkBytecode(cArtifact, libraries);
-    const ContractFactory = await ethers.getContractFactory(cArtifact.abi, linkedBytecode);
-    return ContractFactory;
-}
-
-async function deployLibraries(libraryNames: string[]) {
-    const libraries = new Map<string, string>();
-    for (const libraryName of libraryNames) {
-        libraries.set(libraryName, await _deployLibrary(libraryName));
-    }
-    return libraries;
-}
-
-async function _deployLibrary(libraryName: string) {
-    const Library = await ethers.getContractFactory(libraryName);
-    const library = await Library.deploy();
-    await library.deployed();
-    return library.address;
-}
-
-function _linkBytecode(artifact: Artifact, libraries: Map<string, string>) {
-    let bytecode = artifact.bytecode;
-    for (const [, fileReferences] of Object.entries(artifact.linkReferences)) {
-        for (const [libName, fixups] of Object.entries(fileReferences)) {
-            const addr = libraries.get(libName);
-            if (addr === undefined) {
-                continue;
-            }
-            for (const fixup of fixups) {
-                bytecode =
-                bytecode.substr(0, 2 + fixup.start * 2) +
-                addr.substr(2) +
-                bytecode.substr(2 + (fixup.start + fixup.length) * 2);
-            }
-        }
-    }
-    return bytecode;
-}
-
 export {
     deployFunctionFactory,
     deployWithConstructorFunctionFactory,
     deployWithConstructor,
     defaultDeploy,
     deployWithLibraryFunctionFactory,
-    deployLibraries,
-    getLinkedContractFactory,
     deployWithLibraryWithConstructor
 };

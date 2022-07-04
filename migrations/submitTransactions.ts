@@ -1,4 +1,4 @@
-import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-safe";
+import { createMultiSendTransaction, sendSafeTransaction } from "@skalenetwork/upgrade-tools";
 import { ethers } from "hardhat";
 import { promises as fs } from "fs";
 
