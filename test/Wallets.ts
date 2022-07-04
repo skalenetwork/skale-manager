@@ -59,7 +59,7 @@ describe("Wallets", () => {
     let nodes: Nodes;
     let constantsHolder: ConstantsHolder;
 
-    const tolerance = 0.003;
+    const tolerance = 0.004;
     const validator1Id = 1;
     const validator2Id = 2;
     let snapshot: number;
@@ -297,7 +297,7 @@ describe("Wallets", () => {
                 balance.add(spentValue).should.be.closeTo(maxNodeDeposit, 1e12);
 
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);
-                initialBalance.sub(await ethSpent(response)).sub(validatorBalance).toNumber()
+                initialBalance.sub(spentValue).sub(validatorBalance).toNumber()
                     .should.be.almost(0, ethers.utils.parseEther(tolerance.toString()).toNumber());
             });
         });
