@@ -519,20 +519,6 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
     }
 
     /**
-     * @dev Returns hashes of schain names running on a node.
-     */
-    function getSchainHashesForNode(uint nodeIndex) external view override returns (bytes32[] memory) {
-        return schainsForNodes[nodeIndex];
-    }
-
-    /**
-     * @dev Returns hashes of schain names running on a node.
-     */
-    function getSchainIdsForNode(uint nodeIndex) external view override returns (bytes32[] memory) {
-        return schainsForNodes[nodeIndex];
-    }
-
-    /**
      * @dev Returns the owner of an schain.
      *
      * Requirements:
@@ -636,18 +622,14 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns active schains of a node.
      */
     function getActiveSchains(uint nodeIndex) external view override returns (bytes32[] memory activeSchains) {
-        uint activeAmount = 0;
-        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
-            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
-                activeAmount++;
-            }
-        }
+        uint activeAmount = schainsForNodes[nodeIndex].length - holesForNodes[nodeIndex].length;
 
         uint cursor = 0;
         activeSchains = new bytes32[](activeAmount);
-        for (uint i = schainsForNodes[nodeIndex].length; i > 0; i--) {
-            if (schainsForNodes[nodeIndex][i - 1] != bytes32(0)) {
-                activeSchains[cursor++] = schainsForNodes[nodeIndex][i - 1];
+        uint schainsForNodesLength = schainsForNodes[nodeIndex].length;
+        for (uint i = 0; i < schainsForNodesLength; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                activeSchains[cursor++] = schainsForNodes[nodeIndex][i];
             }
         }
     }

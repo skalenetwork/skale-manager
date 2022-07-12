@@ -2337,9 +2337,9 @@ describe("Schains", () => {
 
         it("should rotate 1 node with 3 schains", async () => {
             let rotIndex = 7;
-            let schainHashes = await schainsInternal.getSchainHashesForNode(0);
+            let schainHashes = await schainsInternal.getActiveSchains(0);
             for(const index of Array(6).keys()) {
-                const res = await schainsInternal.getSchainHashesForNode(index);
+                const res = await schainsInternal.getActiveSchains(index);
                 if (res.length >= 3) {
                     rotIndex = index;
                     schainHashes = res;
@@ -2351,14 +2351,14 @@ describe("Schains", () => {
                 await skaleManager.connect(nodeAddress1).nodeExit(rotIndex);
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
             }
-            await schainsInternal.getSchainHashesForNode(rotIndex).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex).should.be.eventually.empty;
         });
 
         it("should rotate another 1 node with 4 schains", async () => {
             let rotIndex1 = 7;
-            let schainHashes1 = await schainsInternal.getSchainHashesForNode(0);
+            let schainHashes1 = await schainsInternal.getActiveSchains(0);
             for(const index of Array.from(Array(6).keys())) {
-                const res = await schainsInternal.getSchainHashesForNode(index);
+                const res = await schainsInternal.getActiveSchains(index);
                 if (res.length >= 3) {
                     rotIndex1 = index;
                     schainHashes1 = res;
@@ -2372,12 +2372,12 @@ describe("Schains", () => {
                     schainHash,
                 );
             }
-            await schainsInternal.getSchainHashesForNode(rotIndex1).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex1).should.be.eventually.empty;
             let rotIndex2 = 7;
-            let schainHashes2 = await schainsInternal.getSchainHashesForNode(0);
+            let schainHashes2 = await schainsInternal.getActiveSchains(0);
             for(const index of Array.from(Array(6).keys())) {
                 if (await nodes.isNodeActive(index)) {
-                    const res = await schainsInternal.getSchainHashesForNode(index);
+                    const res = await schainsInternal.getActiveSchains(index);
                     if (res.length === 4) {
                         rotIndex2 = index;
                         schainHashes2 = res;
@@ -2394,8 +2394,8 @@ describe("Schains", () => {
                     schainHash,
                 );
             }
-            await schainsInternal.getSchainHashesForNode(rotIndex2).should.be.eventually.empty;
-            await schainsInternal.getSchainHashesForNode(rotIndex1).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex2).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex1).should.be.eventually.empty;
         });
     });
 
@@ -2511,9 +2511,9 @@ describe("Schains", () => {
 
         it("should rotate 1 node with 3 schains", async () => {
             let rotIndex = 8;
-            let schainHashes = await schainsInternal.getSchainHashesForNode(0);
+            let schainHashes = await schainsInternal.getActiveSchains(0);
             for(const index of Array.from(Array(6).keys())) {
-                const res = await schainsInternal.getSchainHashesForNode(index);
+                const res = await schainsInternal.getActiveSchains(index);
                 if (res.length >= 3) {
                     rotIndex = index;
                     schainHashes = res;
@@ -2537,14 +2537,14 @@ describe("Schains", () => {
                     schainHash,
                 );
             }
-            await schainsInternal.getSchainHashesForNode(rotIndex).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex).should.be.eventually.empty;
         });
 
         it("should rotate another 1 node with 4 schains", async () => {
             let rotIndex1 = 8;
-            let schainHashes1 = await schainsInternal.getSchainHashesForNode(0);
+            let schainHashes1 = await schainsInternal.getActiveSchains(0);
             for(const index of Array.from(Array(6).keys())) {
-                const res = await schainsInternal.getSchainHashesForNode(index);
+                const res = await schainsInternal.getActiveSchains(index);
                 if (res.length >= 3) {
                     rotIndex1 = index;
                     schainHashes1 = res;
@@ -2568,12 +2568,12 @@ describe("Schains", () => {
                     schainHash,
                 );
             }
-            await schainsInternal.getSchainHashesForNode(rotIndex1).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex1).should.be.eventually.empty;
             let rotIndex2 = 8;
-            let schainHashes2 = await schainsInternal.getSchainHashesForNode(0);
+            let schainHashes2 = await schainsInternal.getActiveSchains(0);
             for(const index of Array.from(Array(6).keys())) {
                 if (await nodes.isNodeActive(index)) {
-                    const res = await schainsInternal.getSchainHashesForNode(index);
+                    const res = await schainsInternal.getActiveSchains(index);
                     if (res.length === 4) {
                         rotIndex2 = index;
                         schainHashes2 = res;
@@ -2600,13 +2600,13 @@ describe("Schains", () => {
                     schainHash,
                 );
             }
-            await schainsInternal.getSchainHashesForNode(rotIndex2).should.be.eventually.empty;
-            await schainsInternal.getSchainHashesForNode(rotIndex1).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex2).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex1).should.be.eventually.empty;
         });
 
         it("should rotate 7 node and unlink from Validator", async () => {
             const rotIndex = 6;
-            const schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
+            const schainHashes = await schainsInternal.getActiveSchains(rotIndex);
             await nodes.initExit(rotIndex);
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address);
@@ -2621,12 +2621,12 @@ describe("Schains", () => {
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
-            await schainsInternal.getSchainHashesForNode(rotIndex).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex).should.be.eventually.empty;
         });
 
         it("should rotate 7 node from validator address", async () => {
             const rotatedNodeIndex = 6;
-            const schainHashes = await schainsInternal.getSchainHashesForNode(rotatedNodeIndex);
+            const schainHashes = await schainsInternal.getActiveSchains(rotatedNodeIndex);
             await nodes.initExit(rotatedNodeIndex);
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 const validatorId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address);
@@ -2639,12 +2639,12 @@ describe("Schains", () => {
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
-            await schainsInternal.getSchainHashesForNode(rotatedNodeIndex).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotatedNodeIndex).should.be.eventually.empty;
         });
 
         it("should rotate 7 node from contract owner address", async () => {
             const rotatedNodeIndex = 6;
-            const schainHashes = await schainsInternal.getSchainHashesForNode(rotatedNodeIndex);
+            const schainHashes = await schainsInternal.getActiveSchains(rotatedNodeIndex);
             await nodes.initExit(rotatedNodeIndex);
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 const validatorId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address);
@@ -2657,12 +2657,12 @@ describe("Schains", () => {
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
-            await schainsInternal.getSchainHashesForNode(rotatedNodeIndex).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotatedNodeIndex).should.be.eventually.empty;
         });
 
         it("should rotate 8 node and unlink from Validator", async () => {
             const rotIndex = 7;
-            const schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
+            const schainHashes = await schainsInternal.getActiveSchains(rotIndex);
             await nodes.initExit(rotIndex);
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address);
@@ -2677,15 +2677,15 @@ describe("Schains", () => {
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address)
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
-            await schainsInternal.getSchainHashesForNode(rotIndex).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(rotIndex).should.be.eventually.empty;
         });
 
         it("should check rotation in progress", async () => {
             let rotIndex = 0;
-            let schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
+            let schainHashes = await schainsInternal.getActiveSchains(rotIndex);
 
             for(const index of Array.from(Array(6).keys())) {
-                const res = await schainsInternal.getSchainHashesForNode(index);
+                const res = await schainsInternal.getActiveSchains(index);
                 if (res.length >= 3) {
                     rotIndex = index;
                     schainHashes = res;

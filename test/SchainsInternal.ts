@@ -132,8 +132,7 @@ describe("SchainsInternal", () => {
 
         it("should be able to add schain to node", async () => {
             await schainsInternal.addSchainForNode(nodes.address, 0, schainNameHash);
-            await schainsInternal.getSchainHashesForNode(0).should.eventually.deep.equal([schainNameHash]);
-            await schainsInternal.getSchainIdsForNode(0).should.eventually.deep.equal([schainNameHash]);
+            await schainsInternal.getActiveSchains(0).should.eventually.deep.equal([schainNameHash]);
         });
 
         it("should set amount of resources that schains occupied", async () => {
@@ -186,14 +185,14 @@ describe("SchainsInternal", () => {
 
             it("should remove schain from node", async () => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
-                await schainsInternal.getSchainHashesForNode(nodeIndex).should.be.eventually.empty;
+                await schainsInternal.getActiveSchains(nodeIndex).should.be.eventually.empty;
             });
 
             it("should add another schain to the node and remove first correctly", async () => {
                 await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[0]);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[1]);
-                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getActiveSchains(nodeIndex).should.eventually.be.deep.equal(
                     [newSchainHashes[1], newSchainHashes[0]],
                 );
             });
@@ -230,9 +229,8 @@ describe("SchainsInternal", () => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[2]);
                 (await schainsInternal.holesForNodes(nodeIndex, 0)).should.be.equal(0);
-                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getActiveSchains(nodeIndex).should.eventually.be.deep.equal(
                     [
-                        "0x0000000000000000000000000000000000000000000000000000000000000000",
                         newSchainHashes[2],
                         newSchainHashes[1],
                     ],
@@ -246,7 +244,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[2]);
                 await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[3]);
-                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getActiveSchains(nodeIndex).should.eventually.be.deep.equal(
                     [
                         newSchainHashes[3],
                         newSchainHashes[2],
@@ -263,7 +261,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[2]);
                 await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[3]);
                 await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[4]);
-                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getActiveSchains(nodeIndex).should.eventually.be.deep.equal(
                     [
                         newSchainHashes[3],
                         newSchainHashes[2],
@@ -289,7 +287,7 @@ describe("SchainsInternal", () => {
             });
 
             it("should return schains by node", async () => {
-                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal([schainNameHash]);
+                await schainsInternal.getActiveSchains(nodeIndex).should.eventually.be.deep.equal([schainNameHash]);
             });
 
             it("should return number of schains per node", async () => {
