@@ -28,10 +28,10 @@ export async function setNewVersion(safeTransactions: string[], abi: SkaleABIFil
 async function main() {
     await upgrade(
         "skale-manager",
-        "1.9.1",
+        "1.9.2",
         getDeployedVersion,
         setNewVersion,
-        ["SkaleManager", "SchainsInternal"],
+        [],
         ["ContractManager"].concat(contracts),
         // async (safeTransactions, abi, contractManager) => {
         async () => {
