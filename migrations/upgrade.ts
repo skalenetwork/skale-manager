@@ -31,7 +31,8 @@ async function main() {
         "1.9.2",
         getDeployedVersion,
         setNewVersion,
-        [],
+        // Permissions in SkaleManager are needed to set a new version
+        ["SkaleManager"],
         ["ContractManager"].concat(contracts),
         // async (safeTransactions, abi, contractManager) => {
         async () => {
