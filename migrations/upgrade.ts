@@ -41,10 +41,10 @@ function getContractsWithout(contractName: string | undefined): string[] {
 async function main() {
     await upgrade(
         "skale-manager",
-        "1.9.1",
+        "1.9.2",
         getDeployedVersion,
         setNewVersion,
-        ["SkaleManager", "SchainsInternal"],
+        ["SkaleManager"],
         getContractsWithout("ConstantsHolder"), // Remove ConstantsHolder from contracts to do upgradeAndCall
         // async (safeTransactions, abi, contractManager) => {
         async () => {
