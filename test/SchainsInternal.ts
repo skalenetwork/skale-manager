@@ -284,7 +284,6 @@ describe("SchainsInternal", () => {
 
             it("should get schains ids by user", async () => {
                 await schainsInternal.getSchainHashesByAddress(holder.address).should.eventually.be.deep.equal([schainNameHash]);
-                await schainsInternal.getSchainIdsByAddress(holder.address).should.eventually.be.deep.equal([schainNameHash]);
             });
 
             it("should return schains by node", async () => {

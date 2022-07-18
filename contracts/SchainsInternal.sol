@@ -512,13 +512,6 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
     }
 
     /**
-     * @dev Returns hashes of schain names by schain owner.
-     */
-    function getSchainIdsByAddress(address from) external view override returns (bytes32[] memory) {
-        return schainIndexes[from];
-    }
-
-    /**
      * @dev Returns hashes of schain names running on a node.
      */
     function getSchainHashesForNode(uint nodeIndex) external view override returns (bytes32[] memory) {
