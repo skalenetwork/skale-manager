@@ -76,7 +76,7 @@
     "ethereum-waffle": "^3.2.2",
     "ganache-cli": "^6.11.0",
     "kill-port": "^1.6.1",
-    "solhint": "3.3.6",
+    "solhint": "3.3.7",
     "solidity-coverage": "^0.7.21",
     "solidity-docgen": "^0.5.16",
     "ts-generator": "^0.1.1",
