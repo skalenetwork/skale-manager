@@ -41,7 +41,7 @@ To create your network, see examples in `truffle-config.js`
 Create a `.env` file with following data:
 
     ENDPOINT="your endpoint"
-    ETH_PRIVATE_KEY="your private key"
+    PRIVATE_KEY="your private key"
     NETWORK="your created network"
 
 -   deploy:
