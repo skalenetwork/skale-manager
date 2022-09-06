@@ -133,7 +133,6 @@ describe("SchainsInternal", () => {
         it("should be able to add schain to node", async () => {
             await schainsInternal.addSchainForNode(nodes.address, 0, schainNameHash);
             await schainsInternal.getSchainHashesForNode(0).should.eventually.deep.equal([schainNameHash]);
-            await schainsInternal.getSchainIdsForNode(0).should.eventually.deep.equal([schainNameHash]);
         });
 
         it("should set amount of resources that schains occupied", async () => {
@@ -285,7 +284,6 @@ describe("SchainsInternal", () => {
 
             it("should get schains ids by user", async () => {
                 await schainsInternal.getSchainHashesByAddress(holder.address).should.eventually.be.deep.equal([schainNameHash]);
-                await schainsInternal.getSchainIdsByAddress(holder.address).should.eventually.be.deep.equal([schainNameHash]);
             });
 
             it("should return schains by node", async () => {

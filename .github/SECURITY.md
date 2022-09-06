@@ -8,7 +8,8 @@ Please refer to the SKALE Network [security policy](https://skale.network/securi
 
 SKALE Manager contracts are periodically audited by third parties, and have been audited independently by [ConsenSys Diligence](https://diligence.consensys.net/) and by [Quantstamp](https://www.quantstamp.com).
 
--   <https://diligence.consensys.net/audits/2020/01/skale-token/>
+-   <https://consensys.net/diligence/audits/2020/01/skale-token/>
+-   <https://consensys.net/diligence/audits/2020/10/skale-network/>
 -   <https://certificate.quantstamp.com/full/skale-network>
 
 ## Code Coverage

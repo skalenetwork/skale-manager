@@ -103,11 +103,9 @@ contract NodeRotation is Permissions, INodeRotation {
     function freezeSchains(uint nodeIndex) external override allow("Nodes") {
         bytes32[] memory schains = ISchainsInternal(
             contractManager.getContract("SchainsInternal")
-        ).getSchainHashesForNode(nodeIndex);
+        ).getActiveSchains(nodeIndex);
         for (uint i = 0; i < schains.length; i++) {
-            if (schains[i] != bytes32(0)) {
-                _checkBeforeRotation(schains[i], nodeIndex);
-            }
+            _checkBeforeRotation(schains[i], nodeIndex);
         }
     }
 
