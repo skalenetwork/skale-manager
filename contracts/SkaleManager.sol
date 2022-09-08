@@ -133,9 +133,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             );
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
-        IWallets(payable(contractManager.getContract("Wallets"))).refundGasByValidator(
-            validatorId, payable(msg.sender), gasLimit
-        );
+        _refundGasByValidator(validatorId, payable(msg.sender), gasLimit);
     }
 
     function deleteSchain(string calldata name) external override {
@@ -175,9 +173,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             bounty,
             type(uint).max);
         
-        IWallets(payable(contractManager.getContract("Wallets"))).refundGasByValidator(
-            validatorId, payable(msg.sender), gasLimit
-        );
+        _refundGasByValidator(validatorId, payable(msg.sender), gasLimit);
     }
 
     function setVersion(string calldata newVersion) external override onlyOwner {
@@ -199,5 +195,10 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             IMintableToken(address(skaleToken)).mint(address(distributor), bounty, abi.encode(validatorId), ""),
             "Token was not minted"
         );
+    }
+
+    function _refundGasByValidator(uint validatorId, address payable spender, uint gasLimit) private {
+        IWallets(payable(contractManager.getContract("Wallets")))
+            .refundGasByValidator(validatorId, spender, gasLimit);
     }
 }
