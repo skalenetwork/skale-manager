@@ -117,10 +117,10 @@ contract Wallets is Permissions, IWallets {
     {
         require(spender != address(0), "Spender must be specified");
         require(validatorId != 0, "ValidatorId could not be zero");
-        uint maxNodeDeposit = IConstantsHolder(contractManager.getContract("ConstantsHolder")).maxNodeDeposit();
+        uint minNodeBalance = IConstantsHolder(contractManager.getContract("ConstantsHolder")).minNodeBalance();
         uint actualSpenderBalance = spender.balance + gasLimit * tx.gasprice;
-        if (maxNodeDeposit > actualSpenderBalance) {
-            uint amount = Math.min(_validatorWallets[validatorId],  maxNodeDeposit - actualSpenderBalance);
+        if (minNodeBalance > actualSpenderBalance) {
+            uint amount = Math.min(_validatorWallets[validatorId],  minNodeBalance - actualSpenderBalance);
             _validatorWallets[validatorId] -= amount;
                 emit NodeRefundedByValidator(spender, validatorId, amount);
                 spender.transfer(amount);

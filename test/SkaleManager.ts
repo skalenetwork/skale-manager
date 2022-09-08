@@ -224,7 +224,7 @@ describe("SkaleManager", () => {
                     getPublicKey(nodeAddress), // public key
                     "d2", // name
                     "some.domain.name");
-                await wallets.rechargeValidatorWallet(validatorId, {value: 5e18.toString()});
+                await wallets.rechargeValidatorWallet(validatorId, {value: ethers.utils.parseEther('5.0')});
             });
 
             it("should fail to init exiting of someone else's node", async () => {
@@ -264,17 +264,17 @@ describe("SkaleManager", () => {
             });
 
             it("should pay bounty if Node is In Active state", async () => {
-                const maxNodeDeposit = await constantsHolder.maxNodeDeposit();
+                const minNodeBalance = await constantsHolder.minNodeBalance();
                 await nodeAddress.sendTransaction({
                     to: owner.address,
-                    value: (await nodeAddress.getBalance()).sub(maxNodeDeposit)
+                    value: (await nodeAddress.getBalance()).sub(minNodeBalance)
                 });
                 await nextMonth(contractManager);
                 await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber());
                 const spentValue = await ethSpent(await skaleManager.connect(nodeAddress).getBounty(0, {gasLimit: 2e6}));
                 const balance = await nodeAddress.getBalance();
-                balance.add(spentValue).should.be.least(maxNodeDeposit);
-                balance.add(spentValue).should.be.closeTo(maxNodeDeposit, 1e12);
+                balance.add(spentValue).should.be.least(minNodeBalance);
+                balance.add(spentValue).should.be.closeTo(minNodeBalance, 1e12);
             });
 
             it("should pay bounty if Node is In Leaving state", async () => {

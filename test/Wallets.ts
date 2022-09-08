@@ -283,18 +283,18 @@ describe("Wallets", () => {
             });
 
             it("should reimburse gas for node exit", async() => {
-                const maxNodeDeposit = await constantsHolder.maxNodeDeposit();
+                const minNodeBalance = await constantsHolder.minNodeBalance();
                 await nodeAddress1.sendTransaction({
                     to: owner.address,
-                    value: (await nodeAddress1.getBalance()).sub(maxNodeDeposit)
+                    value: (await nodeAddress1.getBalance()).sub(minNodeBalance)
                 });
                 await nodes.initExit(0);
                 const response = await skaleManager.connect(nodeAddress1).nodeExit(0, {gasLimit: 2e6});
                 const balance = await nodeAddress1.getBalance();
                 const spentValue = await ethSpent(response);
 
-                balance.add(spentValue).should.be.least(maxNodeDeposit);
-                balance.add(spentValue).should.be.closeTo(maxNodeDeposit, 1e12);
+                balance.add(spentValue).should.be.least(minNodeBalance);
+                balance.add(spentValue).should.be.closeTo(minNodeBalance, 1e12);
 
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);
                 initialBalance.sub(spentValue).sub(validatorBalance).toNumber()

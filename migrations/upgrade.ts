@@ -28,9 +28,9 @@ export async function setNewVersion(safeTransactions: string[], abi: SkaleABIFil
 }
 
 function getContractsWithout(contractName: string | undefined): string[] {
-    if (!contractName)
+    if (!contractName) {
         return ["ContractManager"].concat(contracts);
-
+    }
     const index = contracts.indexOf(contractName);
     if (~index) {
         contracts.splice(index, 1);
