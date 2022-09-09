@@ -294,7 +294,7 @@ describe("Wallets", () => {
                 const spentValue = await ethSpent(response);
 
                 balance.add(spentValue).should.be.least(minNodeBalance);
-                balance.add(spentValue).should.be.closeTo(minNodeBalance, 1e12);
+                balance.add(spentValue).should.be.closeTo(minNodeBalance, 1e13);
 
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);
                 initialBalance.sub(spentValue).sub(validatorBalance).toNumber()

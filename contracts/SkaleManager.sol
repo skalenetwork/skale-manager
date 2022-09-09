@@ -52,7 +52,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    uint constant public HEADER_COSTS = 7600;
+    uint constant public HEADER_COSTS = 7654;
     uint constant public CALL_PRICE = 21000;
 
     string public version;

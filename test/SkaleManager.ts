@@ -274,7 +274,7 @@ describe("SkaleManager", () => {
                 const spentValue = await ethSpent(await skaleManager.connect(nodeAddress).getBounty(0, {gasLimit: 2e6}));
                 const balance = await nodeAddress.getBalance();
                 balance.add(spentValue).should.be.least(minNodeBalance);
-                balance.add(spentValue).should.be.closeTo(minNodeBalance, 1e12);
+                balance.add(spentValue).should.be.closeTo(minNodeBalance, 1e13);
             });
 
             it("should pay bounty if Node is In Leaving state", async () => {
