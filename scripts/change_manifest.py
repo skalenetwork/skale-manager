@@ -10,7 +10,9 @@ def main():
     manifest_filename = sys.argv[1]
     with open(manifest_filename) as f:
         manifest = json.load(f)
+        # cspell:disable-next-line
         for impl in manifest['impls'].keys():
+            # cspell:disable-next-line
             storage = manifest['impls'][impl]['layout']['storage']
             for slot in storage:
                 if slot['contract'] == 'Initializable' and slot['label'] == '_initialized' and slot['type'] == 't_bool':
