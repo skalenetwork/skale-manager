@@ -1,4 +1,4 @@
-import { ContractManager,
+import { ConstantsHolder, ContractManager,
         Nodes,
         Schains,
         SkaleDKGTester,
@@ -23,6 +23,7 @@ import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
 import { stringKeccak256 } from "./tools/hashes";
 import { deployNodes } from "./tools/deploy/nodes";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -56,8 +57,9 @@ describe("Wallets", () => {
     let skaleManager: SkaleManager;
     let skaleDKG: SkaleDKGTester;
     let nodes: Nodes;
+    let constantsHolder: ConstantsHolder;
 
-    const tolerance = 0.003;
+    const tolerance = 0.004;
     const validator1Id = 1;
     const validator2Id = 2;
     let snapshot: number;
@@ -86,6 +88,8 @@ describe("Wallets", () => {
         skaleManager = await deploySkaleManager(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         nodes = await deployNodes(contractManager);
+        constantsHolder = await deployConstantsHolder(contractManager);
+
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
         await validatorService.connect(validator1).registerValidator("Validator 1", "", 0, 0);
@@ -96,6 +100,8 @@ describe("Wallets", () => {
         await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
         const SCHAIN_REMOVAL_ROLE = await skaleManager.SCHAIN_REMOVAL_ROLE();
         await skaleManager.grantRole(SCHAIN_REMOVAL_ROLE, owner.address);
+        const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
+        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
     });
 
     after(async () => {
@@ -277,18 +283,21 @@ describe("Wallets", () => {
             });
 
             it("should reimburse gas for node exit", async() => {
-                const balanceBefore = await nodeAddress1.getBalance();
+                const minNodeBalance = await constantsHolder.minNodeBalance();
+                await nodeAddress1.sendTransaction({
+                    to: owner.address,
+                    value: (await nodeAddress1.getBalance()).sub(minNodeBalance)
+                });
                 await nodes.initExit(0);
-                const response = await skaleManager.connect(nodeAddress1).nodeExit(0);
+                const response = await skaleManager.connect(nodeAddress1).nodeExit(0, {gasLimit: 2e6});
                 const balance = await nodeAddress1.getBalance();
-                balance.sub(balanceBefore).toNumber().should.not.be.lessThan(0);
+                const spentValue = await ethSpent(response);
 
-                const floatBalance = Number.parseFloat(ethers.utils.formatEther(balance));
-                const floatBalanceBefore = Number.parseFloat(ethers.utils.formatEther(balanceBefore));
-                floatBalance.should.be.almost(floatBalanceBefore);
+                balance.add(spentValue).should.be.least(minNodeBalance);
+                balance.add(spentValue).should.be.closeTo(minNodeBalance, 1e13);
 
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);
-                initialBalance.sub(await ethSpent(response)).sub(validatorBalance).toNumber()
+                initialBalance.sub(spentValue).sub(validatorBalance).toNumber()
                     .should.be.almost(0, ethers.utils.parseEther(tolerance.toString()).toNumber());
             });
         });
