@@ -939,6 +939,11 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.4.2.tgz#748a5986a02548ef541cabc2ce8c67a890044c40"
   integrity sha512-bavxs18L47EmcdnL9I6DzsVSUJO+0/zD6zH7/6qG7QRBugvR3VNVZR+nMvuZlCNwuTTnCa3apR00PYzYr/efAw==
 
+"@openzeppelin/contracts-upgradeable@^4.6.0":
+  version "4.7.3"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.7.3.tgz#f1d606e2827d409053f3e908ba4eb8adb1dd6995"
+  integrity sha512-+wuegAMaLcZnLCJIvrVUDzA9z/Wp93f0Dla/4jJvIhijRrPabjQbZe6fWiECLaJyfn5ci9fqf9vTw3xpQOad2A==
+
 "@openzeppelin/contracts@^4.7.1":
   version "4.7.1"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.7.1.tgz#33d0a857b76b18d313e6bb6ed28cdaf367e90cfe"
@@ -1090,10 +1095,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/skale-manager-interfaces@^1.0.0-develop.3":
-  version "1.0.0-develop.3"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-develop.3.tgz#d8042f92125a21de107d03f2de3d603bba4bae85"
-  integrity sha512-R3i3diG1qIKjnkYQPgDZcxT9vilK51QZxOHQr9sk94sbli2yrxBI6D2Vn6RQ7kZ6qM/c7f601l8sYgHHenKydw==
+"@skalenetwork/skale-manager-interfaces@1.0.0-develop.7":
+  version "1.0.0-develop.7"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-develop.7.tgz#f705cf5be508ea40a0c5022dc74fca92c00530d5"
+  integrity sha512-pilxHptZGuL7HIGCDWxMmNppVo3EuAXSdWkvJGBh97d7Agx+t091YGfL1/gSRX78ZtShDfDB1+lpQyi1BkTHBQ==
 
 "@skalenetwork/upgrade-tools@1.0.0-develop.11":
   version "1.0.0-develop.11"
@@ -9519,10 +9524,10 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-typescript@4.5.5:
-  version "4.5.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.5.5.tgz#d8c953832d28924a9e3d37c73d729c846c5896f3"
-  integrity sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA==
+typescript@4.8.3:
+  version "4.8.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.8.3.tgz#d59344522c4bc464a65a730ac695007fdb66dd88"
+  integrity sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==
 
 typewise-core@^1.2, typewise-core@^1.2.0:
   version "1.2.0"
