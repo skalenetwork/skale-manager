@@ -41,6 +41,8 @@ cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
 
+# TODO remove after upgrade from 1.9.2
+python3 scripts/change_manifest.py $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
 ABI="data/$ABI_FILENAME" npx hardhat run migrations/upgrade.ts --network localhost
 
 npx kill-port 8545

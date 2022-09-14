@@ -82,8 +82,8 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     uint public constant BROADCAST_DELTA = 177490;
     uint public constant COMPLAINT_BAD_DATA_DELTA = 80995;
     uint public constant PRE_RESPONSE_DELTA = 100061;
-    uint public constant COMPLAINT_DELTA = 104611;
-    uint public constant RESPONSE_DELTA = 49132;
+    uint public constant COMPLAINT_DELTA = 106611;
+    uint public constant RESPONSE_DELTA = 48132;
 
     // MSR - Minimum staking requirement
     uint public msr;
@@ -127,6 +127,8 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     uint public minimalSchainLifetime;
 
     uint public complaintTimeLimit;
+
+    uint public minNodeBalance;
 
     bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
 
@@ -291,6 +293,19 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         complaintTimeLimit = timeLimit;
     }
 
+    function setMinNodeBalance(uint newMinNodeBalance) external override onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("MinNodeBalance")),
+            uint(minNodeBalance),
+            uint(newMinNodeBalance)
+        );
+        minNodeBalance = newMinNodeBalance;
+    }
+
+    function reinitialize() external override reinitializer(2) {
+        minNodeBalance = 1.5 ether;
+    }
+
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
@@ -306,5 +321,6 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
         complaintTimeLimit = 1800;
+        minNodeBalance = 1.5 ether;
     }
 }

@@ -26,6 +26,8 @@ pragma solidity 0.8.11;
 import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 import "./Permissions.sol";
 
@@ -39,6 +41,41 @@ contract Wallets is Permissions, IWallets {
     mapping (uint => uint) private _validatorWallets;
     mapping (bytes32 => uint) private _schainWallets;
     mapping (bytes32 => uint) private _schainDebts;
+
+    /**
+     * @dev Emitted when the validator wallet was funded
+     */
+    event ValidatorWalletRecharged(address sponsor, uint amount, uint validatorId);
+
+    /**
+     * @dev Emitted when the schain wallet was funded
+     */
+    event SchainWalletRecharged(address sponsor, uint amount, bytes32 schainHash);
+
+    /**
+     * @dev Emitted when the node received a refund from validator to its wallet
+     */
+    event NodeRefundedByValidator(address node, uint validatorId, uint amount);
+
+    /**
+     * @dev Emitted when the node received a refund from schain to its wallet
+     */
+    event NodeRefundedBySchain(address node, bytes32 schainHash, uint amount);
+
+    /**
+     * @dev Emitted when the validator withdrawn funds from validator wallet
+     */
+    event WithdrawFromValidatorWallet(uint indexed validatorId, uint amount);
+
+    /**
+     * @dev Emitted when the schain owner withdrawn funds from schain wallet
+     */
+    event WithdrawFromSchainWallet(bytes32 indexed schainHash, uint amount);
+
+    /**
+     * @dev Emitted when validators returns a debt to schain wallet
+     */
+    event ReturnDebtFromValidator(uint validatorId, bytes32 schainHash, uint debtAmount);
 
     /**
      * @dev Is executed on a call to the contract with empty calldata. 
@@ -72,25 +109,21 @@ contract Wallets is Permissions, IWallets {
     function refundGasByValidator(
         uint validatorId,
         address payable spender,
-        uint spentGas
+        uint gasLimit
     )
         external
         override
-        allowTwo("SkaleManager", "SkaleDKG")
+        allow("SkaleManager")
     {
         require(spender != address(0), "Spender must be specified");
         require(validatorId != 0, "ValidatorId could not be zero");
-        uint amount = tx.gasprice * spentGas;
-        if (amount <= _validatorWallets[validatorId]) {
-            _validatorWallets[validatorId] = _validatorWallets[validatorId] - amount;
-            emit NodeRefundedByValidator(spender, validatorId, amount);
-            spender.transfer(amount);
-        } else {
-            uint wholeAmount = _validatorWallets[validatorId];
-            // solhint-disable-next-line reentrancy
-            delete _validatorWallets[validatorId];
-            emit NodeRefundedByValidator(spender, validatorId, wholeAmount);
-            spender.transfer(wholeAmount);
+        uint minNodeBalance = IConstantsHolder(contractManager.getContract("ConstantsHolder")).minNodeBalance();
+        uint actualSpenderBalance = spender.balance + gasLimit * tx.gasprice;
+        if (minNodeBalance > actualSpenderBalance) {
+            uint amount = Math.min(_validatorWallets[validatorId],  minNodeBalance - actualSpenderBalance);
+            _validatorWallets[validatorId] -= amount;
+                emit NodeRefundedByValidator(spender, validatorId, amount);
+                spender.transfer(amount);
         }
     }
 
@@ -110,6 +143,7 @@ contract Wallets is Permissions, IWallets {
         }
         _schainWallets[schainHash] = _schainWallets[schainHash] + debtAmount;
         delete _schainDebts[schainHash];
+        emit ReturnDebtFromValidator(validatorId, schainHash, debtAmount);
     }
 
     /**
