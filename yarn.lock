@@ -1095,10 +1095,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/skale-manager-interfaces@1.0.0-develop.7":
-  version "1.0.0-develop.7"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-develop.7.tgz#f705cf5be508ea40a0c5022dc74fca92c00530d5"
-  integrity sha512-pilxHptZGuL7HIGCDWxMmNppVo3EuAXSdWkvJGBh97d7Agx+t091YGfL1/gSRX78ZtShDfDB1+lpQyi1BkTHBQ==
+"@skalenetwork/skale-manager-interfaces@1.0.0-change-for-499-node-exit-for-ngc-nodes.2":
+  version "1.0.0-change-for-499-node-exit-for-ngc-nodes.2"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-change-for-499-node-exit-for-ngc-nodes.2.tgz#3ba3c240243aafaae4d947247f2462e7e528e667"
+  integrity sha512-gci43vE5T3vVNDX+XBkMDxYYiBU2mtnnCNeeRTxnS3ctP2j/muUk6LezQZ4Yos0kBYwXzUt23XWqLLHvAA7R9g==
 
 "@skalenetwork/upgrade-tools@1.0.0-develop.11":
   version "1.0.0-develop.11"
