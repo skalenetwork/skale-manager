@@ -670,37 +670,6 @@ describe("SkaleManager", () => {
                     schain2[0].should.be.equal("d3");
                 });
 
-                it("should create 10 small schains and run initialize", async () => {
-                    const price = await schains.getSchainPrice(2, 5);
-
-                    for (let i = 0; i < 10; ++i) {
-                        const schainName = "d" + i.toString();
-                        const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
-                        await skaleToken.connect(developer).send(
-                            skaleManager.address,
-                            price,
-                            ethers.utils.defaultAbiCoder.encode(
-                                [schainParametersType],
-                                [{
-                                    lifetime: 5,
-                                    typeOfSchain: SchainType.MEDIUM,
-                                    nonce: 0,
-                                    name: schainName,
-                                    originator: ethers.constants.AddressZero,
-                                    options: []
-                                }]
-                            )
-                        );
-
-                        const schain = await schainsInternal.schains(schainHash);
-                        schain[0].should.be.equal(schainName);
-                    }
-
-                    const res = await (await schainsInternal.initializeSchainAddresses(0, 10)).wait();
-
-                    res.gasUsed.toNumber().should.be.lessThan(12000000)
-                });
-
                 describe("when schains are created", () => {
 
                     fastBeforeEach(async () => {
