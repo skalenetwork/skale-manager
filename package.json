@@ -70,7 +70,7 @@
     "chai": "^4.3.6",
     "chai-almost": "^1.0.1",
     "chai-as-promised": "^7.1.1",
-    "cspell": "^5.17.0",
+    "cspell": "^6.16.0",
     "elliptic": "^6.5.3",
     "eslint": "^8.8.0",
     "ethereum-waffle": "^3.2.2",
