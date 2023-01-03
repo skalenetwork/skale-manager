@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.1.0",
-    "@openzeppelin/contracts": "^4.7.1",
+    "@openzeppelin/contracts": "^4.7.3",
     "@openzeppelin/contracts-upgradeable": "^4.6.0",
     "@openzeppelin/hardhat-upgrades": "^1.13.0",
     "@skalenetwork/skale-manager-interfaces": "1.0.0-develop.7",
@@ -75,7 +75,7 @@
     "eslint": "^8.8.0",
     "ethereum-waffle": "^3.2.2",
     "ganache-cli": "^6.11.0",
-    "kill-port": "^1.6.1",
+    "kill-port": "^2.0.1",
     "solhint": "3.3.7",
     "solidity-coverage": "^0.7.21",
     "solidity-docgen": "^0.5.16",
