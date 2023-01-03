@@ -107,7 +107,7 @@ contract Wallets is Permissions, IWallets {
     /**
      * @dev Reimburse gas for node by validator wallet if node would have less than
      * `minNodeBalance` amount after current tx. If validator wallet has not enough
-     * funda the node will receive the entire remaining amount in the validator's wallet.
+     * funds the node will receive the entire remaining amount in the validator's wallet.
      * `validatorId` - validator that will reimburse desired transaction
      * `spender` - address to send reimbursed funds
      * `gasLimit` - amount of gas that should be reimbursed to desired node
