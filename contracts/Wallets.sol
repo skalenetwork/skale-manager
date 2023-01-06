@@ -36,7 +36,7 @@ import "./Permissions.sol";
  * @dev Contract contains logic to perform automatic self-recharging ether for nodes
  * from validator wallets or schain wallets. Where validators can top up a validator 
  * wallet and node addresses for this validator would be auto recharged. And schain 
- * owners should hold funds for recharging nodes which providing security for the schain.
+ * owners should hold funds for recharging nodes that provide security for the schain.
  */
 contract Wallets is Permissions, IWallets {
     using AddressUpgradeable for address payable;
@@ -105,14 +105,11 @@ contract Wallets is Permissions, IWallets {
     }
 
     /**
-     * @dev Reimburse gas for node by validator wallet if node would have less than
-     * `minNodeBalance` amount after current tx. If validator wallet has not enough
+     * @dev Reimburse gas for node by validator wallet if node has less than
+     * `minNodeBalance` amount after current tx. If validator wallet has insufficient
      * funds the node will receive the entire remaining amount in the validator's wallet.
-     * `validatorId` - validator that will reimburse desired transaction
-     * `spender` - address to send reimbursed funds
-     * `gasLimit` - amount of gas that should be reimbursed to desired node
      * 
-     * Emits a {NodeRefundedByValidator} event if .
+     * Emits a {NodeRefundedByValidator} event.
      * 
      * Requirements: 
      * - Given validator should exist
@@ -143,6 +140,9 @@ contract Wallets is Permissions, IWallets {
      * @dev Returns the amount owed to the owner of the schain by the validator, 
      * if the validator does not have enough funds, then everything 
      * that the validator has will be returned to the owner of the schain.
+     *
+     * Emits a {ReturnDebtFromValidator} event.
+     *
      */
     function refundGasByValidatorToSchain(uint validatorId, bytes32 schainHash) external override allow("SkaleDKG") {
         uint debtAmount = _schainDebts[schainHash];
@@ -161,10 +161,6 @@ contract Wallets is Permissions, IWallets {
     /**
      * @dev Reimburse gas for node by schain wallet. If schain wallet has not enough funds 
      * than transaction will be reverted.
-     * `schainHash` - schain that will reimburse desired transaction
-     * `spender` - address to send reimbursed funds
-     * `spentGas` - amount of spent gas that should be reimbursed to desired node
-     * `isDebt` - parameter that indicates whether this amount should be recorded as debt for the validator
      * 
      * Emits a {NodeRefundedBySchain} event.
      * 
@@ -197,9 +193,7 @@ contract Wallets is Permissions, IWallets {
     }
 
     /**
-     * @dev Withdraws money from schain wallet. Possible to execute only after deleting schain.
-     * `schainOwner` - address of schain owner that will receive rest of the schain balance
-     * `schainHash` - schain wallet from which money is withdrawn
+     * @dev Withdraws ether from schain wallet. Possible to execute only after deleting schain.
      * 
      * Requirements: 
      * - Executable only after initializing delete schain
@@ -217,8 +211,7 @@ contract Wallets is Permissions, IWallets {
     }
     
     /**
-     * @dev Withdraws money from validator wallet.
-     * `amount` - the amount of money in wei
+     * @dev Withdraws ether from validator wallet.
      * 
      * Requirements: 
      * - Validator must have sufficient withdrawal amount
@@ -235,7 +228,6 @@ contract Wallets is Permissions, IWallets {
 
     /**
      * @dev Returns schain eth balance.
-     * `schainHash` - keccak256 hash of schain name.
      */
     function getSchainBalance(bytes32 schainHash) external view override returns (uint) {
         return _schainWallets[schainHash];
@@ -243,7 +235,6 @@ contract Wallets is Permissions, IWallets {
 
     /**
      * @dev Returns validator eth balance.
-     * `validatorId` - id of existing validator.
      */
     function getValidatorBalance(uint validatorId) external view override returns (uint) {
         return _validatorWallets[validatorId];
@@ -251,7 +242,6 @@ contract Wallets is Permissions, IWallets {
 
     /**
      * @dev Recharge the validator wallet by id.
-     * `validatorId` - id of existing validator.
      * 
      * Emits a {ValidatorWalletRecharged} event.
      * 
@@ -267,7 +257,6 @@ contract Wallets is Permissions, IWallets {
 
     /**
      * @dev Recharge the schain wallet by schainHash (hash of schain name).
-     * `schainHash` - keccak256 hash of schain name..
      * 
      * Emits a {SchainWalletRecharged} event.
      * 
