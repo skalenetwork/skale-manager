@@ -20,20 +20,20 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "./Random.sol";
 
 /**
  * @title SegmentTree
  * @dev This library implements segment tree data structure
- * 
+ *
  * Segment tree allows effectively calculate sum of elements in sub arrays
  * by storing some amount of additional data.
- * 
+ *
  * IMPORTANT: Provided implementation assumes that arrays is indexed from 1 to n.
  * Size of initial array always must be power of 2
- * 
+ *
  * Example:
  *
  * Array:
@@ -66,9 +66,9 @@ library SegmentTree {
 
     /**
      * @dev Allocates storage for segment tree of `size` elements
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - `size` must be greater than 0
      * - `size` must be power of 2
      */
@@ -80,9 +80,9 @@ library SegmentTree {
 
     /**
      * @dev Adds `delta` to element of segment tree at `place`
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - `place` must be in range [1, size]
      */
     function addToPlace(Tree storage self, uint place, uint delta) external {
@@ -106,9 +106,9 @@ library SegmentTree {
 
     /**
      * @dev Subtracts `delta` from element of segment tree at `place`
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - `place` must be in range [1, size]
      * - initial value of target element must be not less than `delta`
      */
@@ -134,9 +134,9 @@ library SegmentTree {
     /**
      * @dev Adds `delta` to element of segment tree at `toPlace`
      * and subtracts `delta` from element at `fromPlace`
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - `fromPlace` must be in range [1, size]
      * - `toPlace` must be in range [1, size]
      * - initial value of element at `fromPlace` must be not less than `delta`
@@ -196,9 +196,9 @@ library SegmentTree {
      * @dev Returns random position in range [`place`, size]
      * with probability proportional to value stored at this position.
      * If all element in range are 0 returns 0
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - `place` must be in range [1, size]
      */
     function getRandomNonZeroElementFromPlaceToLast(
@@ -246,9 +246,9 @@ library SegmentTree {
 
     /**
      * @dev Returns sum of elements in range [`place`, size]
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - `place` must be in range [1, size]
      */
     function sumFromPlaceToLast(Tree storage self, uint place) public view returns (uint sum) {

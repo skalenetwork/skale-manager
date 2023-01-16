@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
@@ -93,7 +93,7 @@ library SkaleDkgComplaint {
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
     )
         external
-    { 
+    {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         require(skaleDKG.isNodeBroadcasted(schainHash, fromNodeIndex), "Node has not broadcasted");
         require(skaleDKG.isNodeBroadcasted(schainHash, toNodeIndex), "Accused node has not broadcasted");
@@ -156,7 +156,7 @@ library SkaleDkgComplaint {
         uint toNodeIndex,
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels
-    ) 
+    )
         private
     {
         if (channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit(contractManager) <= block.timestamp) {

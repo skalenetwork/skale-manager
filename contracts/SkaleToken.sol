@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@skalenetwork/skale-manager-interfaces/delegation/IDelegatableToken.sol";
@@ -57,13 +57,13 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     }
 
     /**
-     * @dev Allows Owner or SkaleManager to mint an amount of tokens and 
+     * @dev Allows Owner or SkaleManager to mint an amount of tokens and
      * transfer minted tokens to a specified address.
-     * 
+     *
      * Returns whether the operation is successful.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Mint must not exceed the total supply.
      */
     function mint(
@@ -151,7 +151,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
 
     // we have to override _msgData() and _msgSender() functions because of collision in Context and ContextUpgradeable
 
-    function _msgData() internal view override(Context, ContextUpgradeable) returns (bytes memory) {
+    function _msgData() internal view override(Context, ContextUpgradeable) returns (bytes calldata) {
         return Context._msgData();
     }
 

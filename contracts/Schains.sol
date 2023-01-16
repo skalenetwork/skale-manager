@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
 import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
@@ -66,11 +66,11 @@ contract Schains is Permissions, ISchains {
 
     /**
      * @dev Allows SkaleManager contract to create an Schain.
-     * 
+     *
      * Emits an {SchainCreated} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Schain type is valid.
      * - There is sufficient deposit to create type of schain.
      * - If from is a smart contract originator must be specified
@@ -93,11 +93,11 @@ contract Schains is Permissions, ISchains {
 
     /**
      * @dev Allows the foundation to create an Schain without tokens.
-     * 
+     *
      * Emits an {SchainCreated} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - sender is granted with SCHAIN_CREATOR_ROLE
      * - Schain type is valid.
      * - If schain owner is a smart contract schain originator must be specified
@@ -141,11 +141,11 @@ contract Schains is Permissions, ISchains {
     /**
      * @dev Allows SkaleManager to remove an schain from the network.
      * Upon removal, the space availability of each node is updated.
-     * 
+     *
      * Emits an {SchainDeleted} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Executed by schain owner.
      */
     function deleteSchain(address from, string calldata name) external override allow("SkaleManager") {
@@ -162,11 +162,11 @@ contract Schains is Permissions, ISchains {
     /**
      * @dev Allows SkaleManager to delete any Schain.
      * Upon removal, the space availability of each node is updated.
-     * 
+     *
      * Emits an {SchainDeleted} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Schain exists.
      */
     function deleteSchainByRoot(string calldata name) external override allow("SkaleManager") {
@@ -176,11 +176,11 @@ contract Schains is Permissions, ISchains {
     /**
      * @dev Allows SkaleManager contract to restart schain creation by forming a
      * new schain group. Executed when DKG procedure fails and becomes stuck.
-     * 
+     *
      * Emits a {NodeAdded} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Previous DKG procedure must have failed.
      * - DKG failure got stuck because there were no free nodes to rotate in.
      * - A free node must be released in the network.
@@ -292,9 +292,9 @@ contract Schains is Permissions, ISchains {
 
     /**
      * @dev Initializes an schain in the SchainsInternal contract.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Schain name is not already in use.
      */
     function _initializeSchainInSchainsInternal(
@@ -321,7 +321,7 @@ contract Schains is Permissions, ISchains {
 
     /**
      * @dev Allows creation of node group for Schain.
-     * 
+     *
      * Emits an {SchainNodes} event.
      */
     function _createGroupForSchain(
@@ -344,11 +344,11 @@ contract Schains is Permissions, ISchains {
 
     /**
      * @dev Creates an schain.
-     * 
+     *
      * Emits an {SchainCreated} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Schain type must be valid.
      */
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {

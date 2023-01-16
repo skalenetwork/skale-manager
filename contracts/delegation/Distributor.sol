@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -64,11 +64,11 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     /**
      * @dev Allows msg.sender to withdraw earned bounty. Bounties are locked
      * until launchTimestamp and BOUNTY_LOCKUP_MONTHS have both passed.
-     * 
+     *
      * Emits a {WithdrawBounty} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Bounty must be unlocked.
      */
     function withdrawBounty(uint validatorId, address to) external override {
@@ -98,13 +98,13 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     }
 
     /**
-     * @dev Allows `msg.sender` to withdraw earned validator fees. Fees are 
+     * @dev Allows `msg.sender` to withdraw earned validator fees. Fees are
      * locked until launchTimestamp and BOUNTY_LOCKUP_MONTHS both have passed.
-     * 
+     *
      * Emits a {WithdrawFee} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Fee must be unlocked.
      */
     function withdrawFee(address to) external override {
@@ -198,7 +198,7 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
             uint effectiveDelegatedToValidator =
                 delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
             if (effectiveDelegatedToValidator.muchGreater(0)) {
-                earned = earned + 
+                earned = earned +
                     _bountyPaid[validatorId][i] *
                     delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i) /
                     effectiveDelegatedToValidator;
@@ -233,7 +233,7 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
 
     /**
      * @dev Distributes bounties to delegators.
-     * 
+     *
      * Emits a {BountyWasPaid} event.
      */
     function _distributeBounty(uint amount, uint validatorId) private {

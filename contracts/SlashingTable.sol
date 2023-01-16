@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
 
@@ -34,7 +34,7 @@ contract SlashingTable is Permissions, ISlashingTable {
     mapping (uint => uint) private _penalties;
 
     bytes32 public constant PENALTY_SETTER_ROLE = keccak256("PENALTY_SETTER_ROLE");
-    
+
     /**
      * @dev Allows the Owner to set a slashing penalty in SKL tokens for a
      * given offense.
