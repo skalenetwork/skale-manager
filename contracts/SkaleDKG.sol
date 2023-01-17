@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
@@ -69,7 +69,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     mapping(bytes32 => uint) public startAlrightTimestamp;
 
     mapping(bytes32 => mapping(uint => bytes32)) public hashedData;
-    
+
     mapping(bytes32 => uint) private _badNodes;
 
     modifier correctGroup(bytes32 schainHash) {
@@ -103,7 +103,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _checkMsgSenderIsNodeOwner(nodeIndex);
         _;
     }
-    
+
     modifier refundGasBySchain(bytes32 schainHash, Context memory context) {
         uint gasTotal = gasleft();
         _;
@@ -120,10 +120,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     function alright(bytes32 schainHash, uint fromNodeIndex)
         external
         override
-        refundGasBySchain(schainHash, 
+        refundGasBySchain(schainHash,
             Context({
                 isDebt: false,
-                delta: ConstantsHolder(contractManager.getConstantsHolder()).ALRIGHT_DELTA(), 
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).ALRIGHT_DELTA(),
                 dkgFunction: DkgFunction.Alright
         }))
         correctGroup(schainHash)
@@ -185,7 +185,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctNode(schainHash, fromNodeIndex)
         correctNodeWithoutRevert(schainHash, toNodeIndex)
         onlyNodeOwner(fromNodeIndex)
-    { 
+    {
         SkaleDkgComplaint.complaintBadData(
             schainHash,
             fromNodeIndex,
@@ -282,11 +282,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     /**
      * @dev Allows Schains and NodeRotation contracts to open a channel.
-     * 
+     *
      * Emits a {ChannelOpened} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Channel is not already created.
      */
     function openChannel(bytes32 schainHash) external override allowTwo("Schains","NodeRotation") {

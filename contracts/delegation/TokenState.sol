@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
 import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
@@ -31,16 +31,16 @@ import "../Permissions.sol";
 /**
  * @title Token State
  * @dev This contract manages lockers to control token transferability.
- * 
+ *
  * The SKALE Network has three types of locked tokens:
- * 
+ *
  * - Tokens that are transferrable but are currently locked into delegation with
  * a validator.
- * 
+ *
  * - Tokens that are not transferable from one address to another, but may be
  * delegated to a validator `getAndUpdateLockedAmount`. This lock enforces
  * Proof-of-Use requirements.
- * 
+ *
  * - Tokens that are neither transferable nor delegatable
  * `getAndUpdateForbiddenForDelegationAmount`. This lock enforces slashing.
  */
@@ -90,7 +90,7 @@ contract TokenState is Permissions, ILocker, ITokenState {
 
     /**
      * @dev Allows the Owner to remove a contract from the locker.
-     * 
+     *
      * Emits a {LockerWasRemoved} event.
      */
     function removeLocker(string calldata locker) external override onlyLockerManager {
@@ -120,7 +120,7 @@ contract TokenState is Permissions, ILocker, ITokenState {
 
     /**
      * @dev Allows the Owner to add a contract to the Locker.
-     * 
+     *
      * Emits a {LockerWasAdded} event.
      */
     function addLocker(string memory locker) public override onlyLockerManager {

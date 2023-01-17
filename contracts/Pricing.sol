@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/IPricing.sol";
 import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
@@ -48,9 +48,9 @@ contract Pricing is Permissions, IPricing {
 
     /**
      * @dev Adjust the schain price based on network capacity and demand.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Cooldown time has exceeded.
      */
     function adjustPrice() external override {
@@ -73,9 +73,9 @@ contract Pricing is Permissions, IPricing {
 
         uint priceChangeSpeedMultipliedByCapacityAndMinPrice =
             constantsHolder.ADJUSTMENT_SPEED() * loadDiff * price;
-        
+
         uint timeSkipped = block.timestamp - lastUpdated;
-        
+
         uint priceChange = priceChangeSpeedMultipliedByCapacityAndMinPrice
             * timeSkipped
             / constantsHolder.COOLDOWN_TIME()

@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
@@ -34,10 +34,10 @@ import "../Permissions.sol";
  * @title ValidatorService
  * @dev This contract handles all validator operations including registration,
  * node management, validator-specific delegation parameters, and more.
- * 
+ *
  * TIP: For more information see our main instructions
  * https://forum.skale.network/t/skale-mainnet-launch-faq/182[SKALE MainNet Launch FAQ].
- * 
+ *
  * Validators register an address, and use this address to accept delegations and
  * register nodes.
  */
@@ -72,11 +72,11 @@ contract ValidatorService is Permissions, IValidatorService {
     /**
      * @dev Creates a new validator ID that includes a validator name, description,
      * commission or fee rate, and a minimum delegation amount accepted by the validator.
-     * 
+     *
      * Emits a {ValidatorRegistered} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Sender must not already have registered a validator ID.
      * - Fee rate must be between 0 - 1000‰. Note: in per mille.
      */
@@ -111,11 +111,11 @@ contract ValidatorService is Permissions, IValidatorService {
     /**
      * @dev Allows Admin to enable a validator by adding their ID to the
      * trusted list.
-     * 
+     *
      * Emits a {ValidatorWasEnabled} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Validator must not already be enabled.
      */
     function enableValidator(uint validatorId)
@@ -133,11 +133,11 @@ contract ValidatorService is Permissions, IValidatorService {
     /**
      * @dev Allows Admin to disable a validator by removing their ID from
      * the trusted list.
-     * 
+     *
      * Emits a {ValidatorWasDisabled} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Validator must not already be disabled.
      */
     function disableValidator(uint validatorId)
@@ -168,7 +168,7 @@ contract ValidatorService is Permissions, IValidatorService {
 
     /**
      * @dev Allows `msg.sender` to request a new address.
-     * 
+     *
      * Requirements:
      *
      * - `msg.sender` must already be a validator.
@@ -187,11 +187,11 @@ contract ValidatorService is Permissions, IValidatorService {
 
     /**
      * @dev Allows msg.sender to confirm an address change.
-     * 
+     *
      * Emits a {ValidatorAddressChanged} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Must be owner of new address.
      */
     function confirmNewAddress(uint validatorId)
@@ -212,9 +212,9 @@ contract ValidatorService is Permissions, IValidatorService {
     /**
      * @dev Links a node address to validator ID. Validator must present
      * the node signature of the validator ID.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Signature must be valid.
      * - Address must not be assigned to a validator.
      */
@@ -233,7 +233,7 @@ contract ValidatorService is Permissions, IValidatorService {
 
     /**
      * @dev Unlinks a node address from a validator.
-     * 
+     *
      * Emits a {NodeAddressWasRemoved} event.
      */
     function unlinkNodeAddress(address nodeAddress) external override {
@@ -250,7 +250,7 @@ contract ValidatorService is Permissions, IValidatorService {
     function setValidatorMDA(uint minimumDelegationAmount) external override {
         // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
-        
+
         emit SetMinimumDelegationAmount(
             validatorId,
             validators[validatorId].minimumDelegationAmount,
@@ -283,9 +283,9 @@ contract ValidatorService is Permissions, IValidatorService {
 
     /**
      * @dev Allows a validator to start accepting new delegation requests.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Must not have already enabled accepting new requests.
      */
     function startAcceptingNewRequests() external override {
@@ -299,9 +299,9 @@ contract ValidatorService is Permissions, IValidatorService {
 
     /**
      * @dev Allows a validator to stop accepting new delegation requests.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Must not have already stopped accepting new requests.
      */
     function stopAcceptingNewRequests() external override {
@@ -379,9 +379,9 @@ contract ValidatorService is Permissions, IValidatorService {
 
     /**
      * @dev Returns the validator ID linked to a node address.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Node address must be linked to a validator.
      */
     function getValidatorIdByNodeAddress(address nodeAddress) external view override returns (uint validatorId) {
@@ -479,9 +479,9 @@ contract ValidatorService is Permissions, IValidatorService {
 
     /**
      * @dev Links a validator address to a validator ID.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Address is not already in use by another validator.
      */
     function _setValidatorAddress(uint validatorId, address validatorAddress) private {
@@ -498,9 +498,9 @@ contract ValidatorService is Permissions, IValidatorService {
 
     /**
      * @dev Links a node address to a validator ID.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Node address must not be already linked to a validator.
      */
     function _addNodeAddress(uint validatorId, address nodeAddress) private {

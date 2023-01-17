@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
@@ -33,14 +33,14 @@ import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
  */
 contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
     using AddressUpgradeable for address;
-    
+
     IContractManager public contractManager;
 
     /**
      * @dev Modifier to make a function callable only when caller is the Owner.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - The caller must be the owner.
      */
     modifier onlyOwner() {
@@ -50,9 +50,9 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
 
     /**
      * @dev Modifier to make a function callable only when caller is an Admin.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - The caller must be an admin.
      */
     modifier onlyAdmin() {
@@ -61,11 +61,11 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
     }
 
     /**
-     * @dev Modifier to make a function callable only when caller is the Owner 
+     * @dev Modifier to make a function callable only when caller is the Owner
      * or `contractName` contract.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - The caller must be the owner or `contractName`.
      */
     modifier allow(string memory contractName) {
@@ -76,11 +76,11 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
     }
 
     /**
-     * @dev Modifier to make a function callable only when caller is the Owner 
+     * @dev Modifier to make a function callable only when caller is the Owner
      * or `contractName1` or `contractName2` contract.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - The caller must be the owner, `contractName1`, or `contractName2`.
      */
     modifier allowTwo(string memory contractName1, string memory contractName2) {
@@ -93,12 +93,12 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
     }
 
     /**
-     * @dev Modifier to make a function callable only when caller is the Owner 
+     * @dev Modifier to make a function callable only when caller is the Owner
      * or `contractName1`, `contractName2`, or `contractName3` contract.
-     * 
+     *
      * Requirements:
-     * 
-     * - The caller must be the owner, `contractName1`, `contractName2`, or 
+     *
+     * - The caller must be the owner, `contractName1`, `contractName2`, or
      * `contractName3`.
      */
     modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {

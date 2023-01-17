@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
@@ -174,7 +174,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             0,
             bounty,
             type(uint).max);
-        
+
         _refundGasByValidator(validatorId, payable(msg.sender), gasLimit);
     }
 
@@ -192,7 +192,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
     function _payBounty(uint bounty, uint validatorId) private {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         IDistributor distributor = IDistributor(contractManager.getContract("Distributor"));
-        
+
         require(
             IMintableToken(address(skaleToken)).mint(address(distributor), bounty, abi.encode(validatorId), ""),
             "Token was not minted"

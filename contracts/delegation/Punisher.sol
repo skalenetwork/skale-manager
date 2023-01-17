@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
 import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
@@ -41,11 +41,11 @@ contract Punisher is Permissions, ILocker, IPunisher {
     /**
      * @dev Allows SkaleDKG contract to execute slashing on a validator and
      * validator's delegations by an `amount` of tokens.
-     * 
+     *
      * Emits a {Slash} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Validator must exist.
      */
     function slash(uint validatorId, uint amount) external override allow("SkaleDKG") {
@@ -62,11 +62,11 @@ contract Punisher is Permissions, ILocker, IPunisher {
 
     /**
      * @dev Allows the Admin to forgive a slashing condition.
-     * 
+     *
      * Emits a {Forgive} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - All slashes must have been processed.
      */
     function forgive(address holder, uint amount) external override {

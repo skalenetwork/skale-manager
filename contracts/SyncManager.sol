@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/ISyncManager.sol";
@@ -27,7 +27,7 @@ import "./Permissions.sol";
 
 /**
  * @title SyncManager
- * @dev SyncManager is a contract on the mainnet 
+ * @dev SyncManager is a contract on the mainnet
  * that keeps a list of allowed sync IP address ranges.
  */
 contract SyncManager is Permissions, ISyncManager {
