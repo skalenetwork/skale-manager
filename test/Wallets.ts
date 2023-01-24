@@ -282,6 +282,11 @@ describe("Wallets", () => {
                 balance.should.be.equal(balanceBefore.add(initialBalance));
             });
 
+            it("should not withdraw ETH from schain wallet if schain is still active", async () => {
+                await wallets.connect(validator1).withdrawFundsFromSchainWallet(owner.address, schain1Id).should.be.eventually.rejectedWith("Message sender is invalid");
+                await wallets.connect(owner).withdrawFundsFromSchainWallet(owner.address, schain1Id).should.be.eventually.rejectedWith("Schain is active");
+            });
+
             it("should reimburse gas for node exit", async() => {
                 const minNodeBalance = await constantsHolder.minNodeBalance();
                 await nodeAddress1.sendTransaction({
