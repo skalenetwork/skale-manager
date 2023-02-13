@@ -934,12 +934,7 @@
     widest-line "^3.1.0"
     wrap-ansi "^6.2.0"
 
-"@openzeppelin/contracts-upgradeable@^4.4.2":
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.4.2.tgz#748a5986a02548ef541cabc2ce8c67a890044c40"
-  integrity sha512-bavxs18L47EmcdnL9I6DzsVSUJO+0/zD6zH7/6qG7QRBugvR3VNVZR+nMvuZlCNwuTTnCa3apR00PYzYr/efAw==
-
-"@openzeppelin/contracts-upgradeable@^4.6.0":
+"@openzeppelin/contracts-upgradeable@^4.4.2", "@openzeppelin/contracts-upgradeable@^4.6.0":
   version "4.7.3"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.7.3.tgz#f1d606e2827d409053f3e908ba4eb8adb1dd6995"
   integrity sha512-+wuegAMaLcZnLCJIvrVUDzA9z/Wp93f0Dla/4jJvIhijRrPabjQbZe6fWiECLaJyfn5ci9fqf9vTw3xpQOad2A==
@@ -1100,10 +1095,10 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-1.0.0-develop.7.tgz#f705cf5be508ea40a0c5022dc74fca92c00530d5"
   integrity sha512-pilxHptZGuL7HIGCDWxMmNppVo3EuAXSdWkvJGBh97d7Agx+t091YGfL1/gSRX78ZtShDfDB1+lpQyi1BkTHBQ==
 
-"@skalenetwork/upgrade-tools@1.0.0-develop.11":
-  version "1.0.0-develop.11"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-1.0.0-develop.11.tgz#cfaee96d2a54e962a81cdbef2f5fdba70540b604"
-  integrity sha512-8GoksAQjNogzupSg0xDkCrkBeY1qaFKz9t4uc8Gg+3nOuvGptJTEzEbmaHlAlQYEyTTYktnqNTqZyn7gOY79XA==
+"@skalenetwork/upgrade-tools@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-1.0.0.tgz#57612e2ad85f9b98fbe17c3b62f11cbb5e4a89cc"
+  integrity sha512-fy5PiO2etR6w3sRNe4JJk1+Z+/akdR5sbET3x4gmjrip8TqwsxhvirRGtDEdpT8CS5wEORlWOpYbP7+wHuILmg==
   dependencies:
     "@openzeppelin/contracts-upgradeable" "^4.4.2"
     axios "^0.27.2"
