@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
@@ -88,7 +88,7 @@ contract Wallets is Permissions, IWallets {
     event ReturnDebtFromValidator(uint validatorId, bytes32 schainHash, uint debtAmount);
 
     /**
-     * @dev Is executed on a call to the contract with empty calldata. 
+     * @dev Is executed on a call to the contract with empty calldata.
      * This is the function that is executed on plain Ether transfers,
      * so validator or schain owner can use usual transfer ether to recharge wallet.
      */
@@ -110,8 +110,8 @@ contract Wallets is Permissions, IWallets {
      * funds the node will receive the entire remaining amount in the validator's wallet.
      * 
      * Emits a {NodeRefundedByValidator} event.
-     * 
-     * Requirements: 
+     *
+     * Requirements:
      * - Given validator should exist
      * - `spender` address should not be zero address
      */
@@ -159,12 +159,12 @@ contract Wallets is Permissions, IWallets {
     }
 
     /**
-     * @dev Reimburse gas for node by schain wallet. If schain wallet has not enough funds 
+     * @dev Reimburse gas for node by schain wallet. If schain wallet has not enough funds
      * than transaction will be reverted.
-     * 
+     *
      * Emits a {NodeRefundedBySchain} event.
-     * 
-     * Requirements: 
+     *
+     * Requirements:
      * - Given schain should exist
      * - Schain wallet should have enough funds
      * - `spender` address should not be zero address
@@ -194,8 +194,8 @@ contract Wallets is Permissions, IWallets {
 
     /**
      * @dev Withdraws ether from schain wallet. Possible to execute only after deleting schain.
-     * 
-     * Requirements: 
+     *
+     * Requirements:
      * - Executable only after initializing delete schain
      */
     function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainHash)
@@ -209,11 +209,11 @@ contract Wallets is Permissions, IWallets {
         emit WithdrawFromSchainWallet(schainHash, amount);
         schainOwner.sendValue(amount);
     }
-    
+
     /**
      * @dev Withdraws ether from validator wallet.
-     * 
-     * Requirements: 
+     *
+     * Requirements:
      * - Validator must have sufficient withdrawal amount
      * - `msg.sender` should be a validator address
      */
@@ -242,10 +242,10 @@ contract Wallets is Permissions, IWallets {
 
     /**
      * @dev Recharge the validator wallet by id.
-     * 
+     *
      * Emits a {ValidatorWalletRecharged} event.
-     * 
-     * Requirements: 
+     *
+     * Requirements:
      * - Given validator must exist
      */
     function rechargeValidatorWallet(uint validatorId) public payable override {
@@ -257,10 +257,10 @@ contract Wallets is Permissions, IWallets {
 
     /**
      * @dev Recharge the schain wallet by schainHash (hash of schain name).
-     * 
+     *
      * Emits a {SchainWalletRecharged} event.
-     * 
-     * Requirements: 
+     *
+     * Requirements:
      * - Given schain must be created
      */
     function rechargeSchainWallet(bytes32 schainHash) public payable override {

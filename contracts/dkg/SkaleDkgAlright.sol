@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
@@ -48,7 +48,7 @@ library SkaleDkgAlright {
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => uint) storage lastSuccessfulDKG,
         mapping(bytes32 => uint) storage startAlrightTimestamp
-        
+
     )
         external
     {
