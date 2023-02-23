@@ -414,7 +414,6 @@ contract Schains is Permissions, ISchains {
                 "Some Node does not contain given Schain"
             );
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainHash);
-            schainsInternal.removeNodeFromExceptions(schainHash, nodesInGroup[i]);
         }
         schainsInternal.removeAllNodesFromSchainExceptions(schainHash);
         schainsInternal.deleteGroup(schainHash);

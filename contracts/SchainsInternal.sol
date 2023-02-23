@@ -409,8 +409,9 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
      * @dev Clear list of nodes that can't be chosen to schain with id {schainHash}
      */
     function removeAllNodesFromSchainExceptions(bytes32 schainHash) external override allow("Schains") {
-        for (uint i = 0; i < _schainToExceptionNodes[schainHash].length; ++i) {
-            removeNodeFromExceptions(schainHash, _schainToExceptionNodes[schainHash][i]);
+        uint nodesAmount = _schainToExceptionNodes[schainHash].length;
+        for (uint i = nodesAmount; i > 0; --i) {
+            removeNodeFromExceptions(schainHash, _schainToExceptionNodes[schainHash][i - 1]);
         }
     }
 
