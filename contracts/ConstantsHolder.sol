@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
@@ -56,7 +56,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     uint public constant NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
 
     // number of Nodes for Test Skale-chain (4 Nodes)
-    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;    
+    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
 
     // number of seconds in one year
     uint32 public constant SECONDS_TO_YEAR = 31622400;
@@ -172,7 +172,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
             uint(newCheckTime)
         );
         checkTime = newCheckTime;
-    }    
+    }
 
     /**
      * @dev Allows the Owner to set the allowable latency in milliseconds.

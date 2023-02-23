@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
@@ -55,11 +55,11 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
 
     /**
      * @dev Allows the Owner to add contract to mapping of contract addresses.
-     * 
+     *
      * Emits a {ContractUpgraded} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - New address is non-zero.
      * - Contract is not already added.
      * - Contract address contains code.
@@ -86,9 +86,9 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
 
     /**
      * @dev Returns contract address.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Contract must exist.
      */
     function getDelegationPeriodManager() external view override returns (address) {
