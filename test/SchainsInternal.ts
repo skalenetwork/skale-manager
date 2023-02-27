@@ -170,6 +170,15 @@ describe("SchainsInternal", () => {
                 res.name.should.be.equal("");
             });
 
+            it("Should properly process node exceptions on schain removing", async () => {
+                await schainsInternal.setException(schainNameHash, 1);
+                await schainsInternal.setException(schainNameHash, 2);
+                await schainsInternal.removeAllNodesFromSchainExceptions(schainNameHash);
+                await schainsInternal.removeSchain(schainNameHash, holder.address);
+                await schainsInternal.removeNodeFromAllExceptionSchains(1);
+                await schainsInternal.removeNodeFromAllExceptionSchains(2);
+            });
+
             it("should check group", async () => {
                 const res = await schainsInternal.getNodesInGroup(schainNameHash);
                 res.length.should.be.equal(1);
