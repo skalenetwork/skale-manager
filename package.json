@@ -28,6 +28,7 @@
   "scripts": {
     "compile": "npx hardhat clean && npx hardhat compile",
     "docs": "scripts/prepare-docs.sh",
+    "docs:watch": "npx skl-reload --node-runner yarn --path docs --ui-repo https://github.com/skalenetwork/doc-ui.git --ui-path doc-ui --ui-only --docs-playbook local-playbook-ui.yml --docs-stacktrace --watch-paths docs/**/*.yml,docs/**/*.adoc --watch-event change --server-open --server-dir build/site/",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn cspell && yarn slither",
     "hooks": "git config core.hooksPath .githooks || true",
     "no-hooks": "git config core.hooksPath .git/hooks",
@@ -45,6 +46,7 @@
     "@openzeppelin/contracts": "^3.4.1",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
     "@openzeppelin/hardhat-upgrades": "^1.9.0",
+    "@skalenetwork/doc-utils": "https://github.com/skalenetwork/doc-utils.git",
     "@skalenetwork/skale-manager-interfaces": "^0.1.2",
     "axios": "^0.21.1",
     "dotenv": "^10.0.0",

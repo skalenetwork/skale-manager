@@ -1,0 +1,3 @@
+[submodule "doc-ui"]
+	path = doc-ui
+	url = https://github.com/skalenetwork/doc-ui.git
