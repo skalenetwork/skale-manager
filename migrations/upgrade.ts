@@ -26,7 +26,7 @@ async function getSkaleManagerAbiAndAddresses(): Promise<SkaleABIFile> {
         process.exit(1);
     }
     const abiFilename = process.env.ABI;
-    return JSON.parse(await fs.readFile(abiFilename, "utf-8"));
+    return JSON.parse(await fs.readFile(abiFilename, "utf-8")) as SkaleABIFile;
 }
 
 function getMappingValueSlot(slot: number, key: number | string) {
