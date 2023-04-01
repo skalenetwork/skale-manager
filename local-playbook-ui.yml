@@ -15,6 +15,6 @@ asciidoc:
   attributes:
     :plantuml-server-url: https://www.plantuml.com/plantuml
   extensions:
-    - node_modules/@skalenetwork/doc-utils/lib/cjs/tabs-block.js
+    - ./node_modules/@skalenetwork/doc-utils/lib/cjs/tabs-block.js
     - '@djencks/asciidoctor-mathjax'
     - asciidoctor-kroki

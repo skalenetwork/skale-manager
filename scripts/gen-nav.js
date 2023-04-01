@@ -14,7 +14,7 @@ function getPageTitle (directory) {
   return startCase(directory);
 }
 
-const exceptionFolders = ["test/", "interfaces/"];
+const exceptionFolders = ["test/", "interfaces/", "thirdparty/"];
 
 const files = proc.execFileSync(
   'find', [baseDir, '-type', 'f'], { encoding: 'utf8' }
