@@ -257,14 +257,19 @@ contract NodeRotation is Permissions, INodeRotation {
         bool shouldDelay)
         private
     {
-        leavingHistory[nodeIndex].push(
-            LeavingHistory(
-                schainHash,
-                shouldDelay ? block.timestamp +
-                    IConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay()
-                : block.timestamp
-            )
-        );
+        uint finishTimestamp;
+        if (shouldDelay) {
+            finishTimestamp = block.timestamp +
+                    IConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay();
+        } else {
+            require(_rotations[schainHash].rotationCounter > 0, "First rotation has to be delayed");
+            uint previousRotatedNode = _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex];
+            uint previousRotationTimestamp = leavingHistory[previousRotatedNode][
+                _rotations[schainHash].indexInLeavingHistory[previousRotatedNode]
+            ].finishedRotation;
+            finishTimestamp = previousRotationTimestamp + 1;
+        }
+        leavingHistory[nodeIndex].push(LeavingHistory({schainHash: schainHash, finishedRotation: finishTimestamp}));
         require(_rotations[schainHash].newNodeIndexes.add(newNodeIndex), "New node was already added");
         _rotations[schainHash].newNodeIndex = newNodeIndex;
         _rotations[schainHash].rotationCounter++;
