@@ -22,7 +22,6 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
@@ -269,7 +268,7 @@ contract NodeRotation is Permissions, INodeRotation {
                 uint previousRotationTimestamp = leavingHistory[previousRotatedNode][
                     _rotations[schainHash].indexInLeavingHistory[previousRotatedNode]
                 ].finishedRotation;
-                finishTimestamp = MathUpgradeable.max(previousRotationTimestamp + 1, block.timestamp);
+                finishTimestamp = previousRotationTimestamp + 1;
             } else {
                 finishTimestamp = block.timestamp;
             }
