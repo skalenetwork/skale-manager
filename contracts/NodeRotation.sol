@@ -39,7 +39,7 @@ import "./Permissions.sol";
 contract NodeRotation is Permissions, INodeRotation {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using Random for IRandom.RandomGenerator;
-    
+
 
     /**
      * nodeIndex - index of Node which is in process of rotation (left from schain)
@@ -258,6 +258,12 @@ contract NodeRotation is Permissions, INodeRotation {
         bool shouldDelay)
         private
     {
+        // During skaled config generation skale-admin relies on a fact that
+        // for each pair of nodes swaps (rotations) the more new swap has bigger finish_ts value.
+
+        // Also skale-admin supposes that if the different between finish_ts is minimum possible (1 second)
+        // the corresponding swap was cased by failed DKG and no proper keys were generated.
+
         uint finishTimestamp;
         if (shouldDelay) {
             finishTimestamp = block.timestamp +
