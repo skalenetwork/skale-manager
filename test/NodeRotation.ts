@@ -75,7 +75,7 @@ describe("NodeRotation", () => {
 
         const totalNumberOfNodes = 20;
         const registeredNodes: RegisteredNode[] = [];
-        const nodeBalance = ethers.utils.parseEther("1");
+        const nodeBalance = ethers.utils.parseEther("10000");
 
         fastBeforeEach(async () => {
             for (const index of Array.from(Array(totalNumberOfNodes).keys())) {
