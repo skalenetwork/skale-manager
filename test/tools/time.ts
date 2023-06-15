@@ -1,10 +1,12 @@
 import { ethers } from "hardhat";
 import { ContractManager } from "../../typechain-types";
 import { deployTimeHelpers } from "./deploy/delegation/timeHelpers";
+import { BigNumberish } from "ethers";
 
 
-export async function skipTime(seconds: number) {
-    await ethers.provider.send("evm_increaseTime", [seconds]);
+export async function skipTime(seconds: BigNumberish) {
+    const secondsNumber = Number.parseInt(seconds.toString());
+    await ethers.provider.send("evm_increaseTime", [secondsNumber]);
     await ethers.provider.send("evm_mine", []);
 }
 
