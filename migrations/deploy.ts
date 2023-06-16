@@ -8,7 +8,6 @@ import {
     verify,
     verifyProxy,
     getContractFactory,
-    getContractKeyInAbiFile
 } from '@skalenetwork/upgrade-tools';
 
 
@@ -28,6 +27,10 @@ function getNameInContractManager(contract: string) {
     } else {
         return contract;
     }
+}
+
+function getContractKeyInAbiFile(contract: string) {
+    return contract.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
 }
 
 const customNames: {[key: string]: string} = {

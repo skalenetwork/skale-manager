@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
@@ -42,19 +42,19 @@ import "./NodeRotation.sol";
  * @title Nodes
  * @dev This contract contains all logic to manage SKALE Network nodes states,
  * space availability, stake requirement checks, and exit functions.
- * 
+ *
  * Nodes may be in one of several states:
- * 
+ *
  * - Active:            Node is registered and is in network operation.
  * - Leaving:           Node has begun exiting from the network.
  * - Left:              Node has left the network.
  * - In_Maintenance:    Node is temporarily offline or undergoing infrastructure
  * maintenance
- * 
+ *
  * Note: Online nodes contain both Active and Leaving states.
  */
 contract Nodes is Permissions, INodes {
-    
+
     using Random for IRandom.RandomGenerator;
     using SafeCastUpgradeable for uint;
     using SegmentTree for SegmentTree.Tree;
@@ -115,7 +115,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Allows Schains and SchainsInternal contracts to occupy available
      * space on a node.
-     * 
+     *
      * Returns whether operation is successful.
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
@@ -139,7 +139,7 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Allows Schains contract to occupy free space on a node.
-     * 
+     *
      * Returns whether operation is successful.
      */
     function addSpaceToNode(uint nodeIndex, uint8 space)
@@ -183,11 +183,11 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Allows SkaleManager contract to create new node and add it to the
      * Nodes contract.
-     * 
+     *
      * Emits a {NodeCreated} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Node IP must be non-zero.
      * - Node IP must be available.
      * - Node name must not already be registered.
@@ -245,9 +245,9 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Allows NODE_MANAGER_ROLE to initiate a node exit procedure.
-     * 
+     *
      * Returns whether the operation is successful.
-     * 
+     *
      * Emits an {ExitInitialized} event.
      */
     function initExit(uint nodeIndex)
@@ -264,13 +264,13 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Allows SkaleManager contract to complete a node exit procedure.
-     * 
+     *
      * Returns whether the operation is successful.
-     * 
+     *
      * Emits an {ExitCompleted} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Node must have already initialized a node exit procedure.
      */
     function completeExit(uint nodeIndex)
@@ -290,9 +290,9 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Allows SkaleManager contract to delete a validator's node.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Validator ID must exist.
      */
     function deleteNodeForValidator(uint validatorId, uint nodeIndex)
@@ -327,9 +327,9 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Allows SkaleManager contract to check whether a validator has
      * sufficient stake to create another node.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Validator must be included on trusted list if trusted list is enabled.
      * - Validator must have sufficient stake to operate an additional node.
      */
@@ -345,11 +345,11 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Allows SkaleManager contract to check whether a validator has
      * sufficient stake to maintain a node.
-     * 
+     *
      * Returns whether validator can maintain node with current stake.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Validator ID and nodeIndex must both exist.
      */
     function checkPossibilityToMaintainNode(
@@ -372,9 +372,9 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Allows Node to set In_Maintenance status.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Node must already be Active.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
@@ -386,9 +386,9 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Allows Node to remove In_Maintenance status.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Node must already be In Maintenance.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
@@ -400,7 +400,7 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Marks the node as incompliant
-     * 
+     *
      */
     function setNodeIncompliant(uint nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
         if (!incompliant[nodeIndex]) {
@@ -412,7 +412,7 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Marks the node as compliant
-     * 
+     *
      */
     function setNodeCompliant(uint nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
         if (incompliant[nodeIndex]) {
@@ -429,7 +429,7 @@ contract Nodes is Permissions, INodes {
     {
         domainNames[nodeIndex] = domainName;
     }
-    
+
     function makeNodeVisible(uint nodeIndex) external override allow("SchainsInternal") {
         _tryToMakeNodeVisible(nodeIndex);
     }
@@ -473,7 +473,7 @@ contract Nodes is Permissions, INodes {
             randomGenerator
         ).toUint8();
         require(place > 0, "Node not found");
-        return spaceToNodes[place][randomGenerator.random(spaceToNodes[place].length)]; 
+        return spaceToNodes[place][randomGenerator.random(spaceToNodes[place].length)];
     }
 
     /**
@@ -491,9 +491,9 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Returns IP address of a given node.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Node must exist.
      */
     function getNodeIP(uint nodeIndex)
@@ -509,9 +509,9 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Returns domain name of a given node.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Node must exist.
      */
     function getNodeDomainName(uint nodeIndex)
@@ -639,7 +639,7 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Returns the total number of online nodes.
-     * 
+     *
      * Note: Online nodes are equal to the number of active plus leaving nodes.
      */
     function getNumberOnlineNodes() external view override returns (uint) {
@@ -675,9 +675,9 @@ contract Nodes is Permissions, INodes {
 
     /**
      * @dev Return a validator's linked nodes.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Validator ID must exist.
      */
     function getValidatorNodeIndexes(uint validatorId) external view override returns (uint[] memory) {

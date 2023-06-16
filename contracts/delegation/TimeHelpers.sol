@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
@@ -28,7 +28,7 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 /**
  * @title TimeHelpers
  * @dev The contract performs time operations.
- * 
+ *
  * These functions are used to calculate monthly and Proof of Use epochs.
  */
 contract TimeHelpers is ITimeHelpers {

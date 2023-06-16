@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
 
@@ -38,8 +38,8 @@ contract KeyStorage is Permissions, IKeyStorage {
 
     // Unused variable!!
     mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
-    // 
-    
+    //
+
     mapping(bytes32 => ISkaleDKG.G2Point) private _publicKeysInProgress;
     mapping(bytes32 => ISkaleDKG.G2Point) private _schainsPublicKeys;
 

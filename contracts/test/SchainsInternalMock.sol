@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "../SchainsInternal.sol";
 
@@ -34,17 +34,6 @@ contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     mapping (bytes32 => EnumerableSetUpgradeable.AddressSet) private _nodeAddressInSchainTest;
-
-    function initializeSchainAddresses(uint256 start, uint256 finish) external virtual override {
-        INodes nodes = INodes(contractManager.getContract("Nodes"));
-        for (uint256 i = start; i < finish; i++) {
-            uint[] memory group = schainsGroups[schainsAtSystem[i]];
-            for (uint j = 0; j < group.length; j++) {
-                address nodeAddress = address(uint160(nodes.getNodeAddress(group[j])) + uint160(j));
-                _nodeAddressInSchainTest[schainsAtSystem[i]].add(nodeAddress);
-            }
-        }
-    }
 
     function removePlaceOfSchainOnNode(bytes32 schainHash, uint nodeIndex) external override {
         delete placeOfSchainOnNode[schainHash][nodeIndex];

@@ -18,7 +18,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "../BountyV2.sol";
 import "../Permissions.sol";
@@ -49,7 +49,7 @@ contract NodesMock is Permissions, INodesMock {
     constructor (address contractManagerAddress) {
         Permissions.initialize(contractManagerAddress);
     }
-    
+
     function registerNodes(uint amount, uint validatorId) external override {
         for (uint nodeId = nodesCount; nodeId < nodesCount + amount; ++nodeId) {
             lastRewardDate[nodeId] = block.timestamp;

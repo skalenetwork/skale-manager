@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
@@ -31,8 +31,8 @@ import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./utils/Random.sol";
 
-interface IInitializeNodeAddresses {
-    function initializeSchainAddresses(uint256 start, uint256 finish) external;
+interface IPruningSchainsInternal is ISchainsInternal {
+    function pruneNode(uint nodeIndex) external;
 }
 
 
@@ -40,7 +40,7 @@ interface IInitializeNodeAddresses {
  * @title SchainsInternal
  * @dev Contract contains all functionality logic to internally manage Schains.
  */
-contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddresses {
+contract SchainsInternal is Permissions, IPruningSchainsInternal {
 
     using Random for IRandom.RandomGenerator;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
@@ -113,18 +113,6 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
         _;
     }
 
-    function initializeSchainAddresses(uint256 start, uint256 finish) external virtual override {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not authorized");
-        require(finish > start && finish - start <= 10, "Incorrect input");
-        INodes nodes = INodes(contractManager.getContract("Nodes"));
-        for (uint256 i = start; i < finish; i++) {
-            uint[] memory group = schainsGroups[schainsAtSystem[i]];
-            for (uint j = 0; j < group.length; j++) {
-                _addAddressToSchain(schainsAtSystem[i], nodes.getNodeAddress(group[j]));
-            }
-        }
-    }
-
     /**
      * @dev Allows Schain contract to initialize an schain.
      */
@@ -146,7 +134,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
             owner: from,
             indexInOwnerList: schainIndexes[from].length,
             partOfNode: 0,
-            startDate: block.timestamp,            
+            startDate: block.timestamp,
             startBlock: block.number,
             lifetime: lifetime,
             deposit: deposit,
@@ -165,7 +153,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Allows Schain contract to create a node group for an schain.
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains smart contract
      * - Schain must exist
      */
@@ -194,7 +182,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * an additional SKL token deposit.
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains smart contract
      * - Schain must exist
      */
@@ -218,7 +206,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * simply allowed to expire.
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains smart contract
      * - Schain must exist
      */
@@ -257,7 +245,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * schain for node rotation or DKG failure.
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains, SkaleDKG or NodeRotation smart contract
      * - Schain must exist
      */
@@ -297,7 +285,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Allows Schains contract to delete a group of schains
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains smart contract
      * - Schain must exist
      */
@@ -313,7 +301,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * exception for a given schain and nodeIndex.
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains or NodeRotation smart contract
      * - Schain must exist
      */
@@ -334,7 +322,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * group.
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains or NodeRotation smart contract
      * - Schain must exist
      */
@@ -374,7 +362,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Allows Schains contract to remove holes for schains
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains smart contract
      * - Schain must exist
      */
@@ -421,8 +409,9 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Clear list of nodes that can't be chosen to schain with id {schainHash}
      */
     function removeAllNodesFromSchainExceptions(bytes32 schainHash) external override allow("Schains") {
-        for (uint i = 0; i < _schainToExceptionNodes[schainHash].length; ++i) {
-            removeNodeFromExceptions(schainHash, _schainToExceptionNodes[schainHash][i]);
+        uint nodesAmount = _schainToExceptionNodes[schainHash].length;
+        for (uint i = nodesAmount; i > 0; --i) {
+            removeNodeFromExceptions(schainHash, _schainToExceptionNodes[schainHash][i - 1]);
         }
     }
 
@@ -430,7 +419,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Mark all nodes in the schain as invisible
      *
      * Requirements:
-     * 
+     *
      * - Message sender is NodeRotation or SkaleDKG smart contract
      * - Schain must exist
      */
@@ -453,7 +442,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Mark all nodes in the schain as visible
      *
      * Requirements:
-     * 
+     *
      * - Message sender is NodeRotation or SkaleDKG smart contract
      * - Schain must exist
      */
@@ -472,11 +461,34 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Increments generation for all new schains
      *
      * Requirements:
-     * 
+     *
      * - Sender must be granted with GENERATION_MANAGER_ROLE
      */
     function newGeneration() external override onlyGenerationManager {
         currentGeneration += 1;
+    }
+
+    /**
+     * @dev Removes references to deleted schains
+     * Remove after upgrade from version 1.9.2
+     */
+    function pruneNode(uint nodeIndex) external override {
+        for (uint i = 0; i < _nodeToLockedSchains[nodeIndex].length;) {
+            bytes32 schainHash = _nodeToLockedSchains[nodeIndex][i];
+            if(!isSchainExist(schainHash)) {
+                _nodeToLockedSchains[nodeIndex][i] =
+                    _nodeToLockedSchains[nodeIndex][_nodeToLockedSchains[nodeIndex].length - 1];
+                _nodeToLockedSchains[nodeIndex].pop();
+
+                delete _exceptionsForGroups[schainHash][nodeIndex];
+
+                while (_schainToExceptionNodes[schainHash].length > 0) {
+                    _schainToExceptionNodes[schainHash].pop();
+                }
+            } else {
+                ++i;
+            }
+        }
     }
 
     /**
@@ -490,7 +502,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns all occupied resources on one node for an Schain.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function getSchainsPartOfNode(bytes32 schainHash) external view override schainExists(schainHash) returns (uint8) {
@@ -522,7 +534,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns the owner of an schain.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function getSchainOwner(bytes32 schainHash) external view override schainExists(schainHash) returns (address) {
@@ -533,7 +545,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns an originator of the schain.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function getSchainOriginator(bytes32 schainHash)
@@ -563,7 +575,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Checks whether schain lifetime has expired.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function isTimeExpired(bytes32 schainHash) external view override schainExists(schainHash) returns (bool) {
@@ -574,7 +586,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Checks whether address is owner of schain.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function isOwnerAddress(
@@ -594,7 +606,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns schain name.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function getSchainName(bytes32 schainHash)
@@ -638,7 +650,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns number of nodes in an schain group.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function getNumberOfNodesInGroup(bytes32 schainHash)
@@ -655,7 +667,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns nodes in an schain group.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function getNodesInGroup(bytes32 schainHash)
@@ -672,7 +684,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Checks whether sender is a node address from a given schain group.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function isNodeAddressesInGroup(
@@ -692,7 +704,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns node index in schain group.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function getNodeIndexInGroup(
@@ -718,7 +730,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * schain.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function isAnyFreeNode(bytes32 schainHash) external view override schainExists(schainHash) returns (bool) {
@@ -731,7 +743,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns whether any exceptions exist for node in a schain group.
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function checkException(bytes32 schainHash, uint nodeIndex)
@@ -748,7 +760,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Checks if the node is in holes for the schain
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function checkHoleForSchain(
@@ -773,7 +785,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Checks if the node is assigned for the schain
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function checkSchainOnNode(
@@ -798,7 +810,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Returns generation of a particular schain
      *
      * Requirements:
-     * 
+     *
      * - Schain must exist
      */
     function getGeneration(bytes32 schainHash) external view override schainExists(schainHash) returns (uint) {
@@ -817,7 +829,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Allows Schains and NodeRotation contracts to add schain to node.
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains or NodeRotation smart contract
      * - Schain must exist
      */
@@ -844,7 +856,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
     }
 
     /**
-     * @dev Allows Schains, NodeRotation, and SkaleDKG contracts to remove an 
+     * @dev Allows Schains, NodeRotation, and SkaleDKG contracts to remove an
      * schain from a node.
      */
     function removeSchainForNode(uint nodeIndex, uint schainIndex)
@@ -871,7 +883,7 @@ contract SchainsInternal is Permissions, ISchainsInternal, IInitializeNodeAddres
      * @dev Allows Schains contract to remove node from exceptions
      *
      * Requirements:
-     * 
+     *
      * - Message sender is Schains, NodeRotation or SkaleManager smart contract
      * - Schain must exist
      */

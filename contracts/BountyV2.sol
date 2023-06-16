@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
@@ -39,7 +39,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         uint month;
         uint bountyPaid;
     }
-    
+
     // TODO: replace with an array when solidity starts supporting it
     uint public constant YEAR1_BOUNTY = 3850e5 * 1e18;
     uint public constant YEAR2_BOUNTY = 3465e5 * 1e18;
@@ -52,7 +52,7 @@ contract BountyV2 is Permissions, IBountyV2 {
     uint public constant BOUNTY_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
 
     bytes32 public constant BOUNTY_REDUCTION_MANAGER_ROLE = keccak256("BOUNTY_REDUCTION_MANAGER_ROLE");
-    
+
     uint private _nextEpoch;
     uint private _epochPool;
     uint private _bountyWasPaidInCurrentEpoch;
@@ -83,7 +83,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController")
         );
-        
+
         require(
             _getNextRewardTimestamp(nodeIndex, nodes, timeHelpers) <= block.timestamp,
             "Transaction is sent too early"
@@ -117,7 +117,7 @@ contract BountyV2 is Permissions, IBountyV2 {
             nodes,
             constantsHolder
         );
-        
+
         _epochPool = _epochPool - bounty;
         _bountyWasPaidInCurrentEpoch = _bountyWasPaidInCurrentEpoch + bounty;
 
@@ -272,7 +272,7 @@ contract BountyV2 is Permissions, IBountyV2 {
             // bounty is turned off
             return 0;
         }
-        
+
         if (effectiveDelegatedSum == 0) {
             // no delegations in the system
             return 0;
