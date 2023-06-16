@@ -6,11 +6,12 @@ Please refer to the SKALE Network [security policy](https://skale.network/securi
 
 ## Independent Audits
 
-SKALE Manager contracts are periodically audited by third parties, and have been audited independently by [ConsenSys Diligence](https://diligence.consensys.net/) and by [Quantstamp](https://www.quantstamp.com).
+SKALE Manager contracts are periodically audited by third parties, and have been audited independently by [ConsenSys Diligence](https://diligence.consensys.net/), [Quantstamp](https://www.quantstamp.com), and [Solidified](https://www.solidified.io/).
 
 -   <https://consensys.net/diligence/audits/2020/01/skale-token/>
 -   <https://consensys.net/diligence/audits/2020/10/skale-network/>
 -   <https://certificate.quantstamp.com/full/skale-network>
+-   <https://github.com/solidified-platform/audits/blob/master/Audit%20Report%20-%20SKALE%20Self-Recharging%20Wallets.pdf>
 
 ## Code Coverage
 

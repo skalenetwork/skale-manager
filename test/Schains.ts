@@ -1094,7 +1094,7 @@ describe("Schains", () => {
                 await wallets.rechargeSchainWallet(schainHash, {value: amountInWei})
                 await ethers.provider.getBalance(fallbackMock.address).should.be.eventually.equal(0);
                 await skaleManager.connect(holder).deleteSchainByRoot(schainName);
-                await ethers.provider.getBalance(fallbackMock.address).should.be.eventually.equal(amountInWei);                
+                await ethers.provider.getBalance(fallbackMock.address).should.be.eventually.equal(amountInWei);
             });
 
             it("should assign schain creator on different address", async () => {
@@ -1435,7 +1435,7 @@ describe("Schains", () => {
                 await schainsInternal.isOwnerAddress(holder.address, schainHash).should.be.eventually.true;
 
                 const obtainedSchain = await schainsInternal.schains(schainHash);
-                
+
                 obtainedSchain.name.should.be.equal("d2");
                 obtainedSchain.owner.should.be.equal(holder.address);
                 obtainedSchain.partOfNode.should.be.equal(32);
@@ -2731,7 +2731,7 @@ describe("Schains", () => {
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 if (schainHash == schainHashes[schainHashes.length - 1]) {
                     (await nodeRotation.isRotationInProgress(schainHash)).should.be.true;
-                    (await nodeRotation.isNewNodeFound(schainHash)).should.be.true;    
+                    (await nodeRotation.isNewNodeFound(schainHash)).should.be.true;
                 } else {
                     (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
                     (await nodeRotation.isNewNodeFound(schainHash)).should.be.false;
@@ -3156,7 +3156,7 @@ describe("Schains", () => {
             );
             await wallets.rechargeSchainWallet(schain3Hash, {value: schainWalletValue});
             await skaleDKG.setSuccessfulDKGPublic(schain3Hash);
-            
+
             await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
                 0, // nonce
@@ -3179,7 +3179,7 @@ describe("Schains", () => {
             await skaleManager.deleteSchainByRoot(schain2Name);
             await skaleManager.connect(nodeAddress1).nodeExit(leavingNodeIndex);
             await skaleManager.connect(nodeAddress1).nodeExit(leavingNodeIndex);
-            
+
             await skaleDKG.setSuccessfulDKGPublic(schainHash);
             await skaleDKG.setSuccessfulDKGPublic(schain3Hash);
 

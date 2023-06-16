@@ -37,8 +37,9 @@ import "./Permissions.sol";
  * @dev This contract handles all node rotation functionality.
  */
 contract NodeRotation is Permissions, INodeRotation {
-    using Random for IRandom.RandomGenerator;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
+    using Random for IRandom.RandomGenerator;
+
 
     /**
      * nodeIndex - index of Node which is in process of rotation (left from schain)
@@ -257,14 +258,28 @@ contract NodeRotation is Permissions, INodeRotation {
         bool shouldDelay)
         private
     {
-        leavingHistory[nodeIndex].push(
-            LeavingHistory(
-                schainHash,
-                shouldDelay ? block.timestamp +
-                    IConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay()
-                : block.timestamp
-            )
-        );
+        // During skaled config generation skale-admin relies on a fact that
+        // for each pair of nodes swaps (rotations) the more new swap has bigger finish_ts value.
+
+        // Also skale-admin supposes that if the different between finish_ts is minimum possible (1 second)
+        // the corresponding swap was cased by failed DKG and no proper keys were generated.
+
+        uint finishTimestamp;
+        if (shouldDelay) {
+            finishTimestamp = block.timestamp +
+                    IConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay();
+        } else {
+            if(_rotations[schainHash].rotationCounter > 0) {
+                uint previousRotatedNode = _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex];
+                uint previousRotationTimestamp = leavingHistory[previousRotatedNode][
+                    _rotations[schainHash].indexInLeavingHistory[previousRotatedNode]
+                ].finishedRotation;
+                finishTimestamp = previousRotationTimestamp + 1;
+            } else {
+                finishTimestamp = block.timestamp;
+            }
+        }
+        leavingHistory[nodeIndex].push(LeavingHistory({schainHash: schainHash, finishedRotation: finishTimestamp}));
         require(_rotations[schainHash].newNodeIndexes.add(newNodeIndex), "New node was already added");
         _rotations[schainHash].newNodeIndex = newNodeIndex;
         _rotations[schainHash].rotationCounter++;
