@@ -31,7 +31,7 @@ jobs:
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
-    
+
     - name: Install NODE JS
       uses: actions/setup-node@v2
       with:
@@ -39,7 +39,7 @@ jobs:
 
     - name: Install project
       run: yarn install
-    
+
     - name: Build and publish container
       run: |
         export BRANCH=${GITHUB_REF##*/}
@@ -50,7 +50,10 @@ jobs:
         ( test $BRANCH = "stable" || test $BRANCH = "master" && export PRERELEASE=false ) || export PRERELEASE=true
         echo "PRERELEASE=$PRERELEASE" >> $GITHUB_ENV
         bash ./scripts/build_and_publish.sh
-    
+
+    - name: Generate ABI
+      run: npx hardhat run scripts/generateAbi.ts
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -61,3 +64,12 @@ jobs:
         release_name: ${{ env.VERSION }}
         draft: false
         prerelease: ${{ env.PRERELEASE }}
+
+    - name: Upload ABIs
+      id: upload-abi
+      uses: dwenegar/upload-release-assets@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        release_id: ${{ steps.create_release.outputs.id }}
+        assets_path: data/skale-manager-*-abi.json

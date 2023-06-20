@@ -71,6 +71,9 @@ jobs:
         NODE_VERSION: ${{ matrix.node-version }}
       run: ./scripts/test_upgrade.sh
 
+    - name: Test ABI ageneration
+      run: npx hardhat run scripts/generateAbi.ts
+
     - name: Run tests
       run: npx hardhat coverage --solcoverjs .solcover.js
 
