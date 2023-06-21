@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11; 
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
@@ -78,11 +78,11 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     /**
-     * @dev Allows SkaleManager to remove, find new node, and rotate node from 
+     * @dev Allows SkaleManager to remove, find new node, and rotate node from
      * schain.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - A free node must exist.
      */
     function exitFromSchain(uint nodeIndex) external override allow("SkaleManager") returns (bool, bool) {
@@ -103,11 +103,9 @@ contract NodeRotation is Permissions, INodeRotation {
     function freezeSchains(uint nodeIndex) external override allow("Nodes") {
         bytes32[] memory schains = ISchainsInternal(
             contractManager.getContract("SchainsInternal")
-        ).getSchainHashesForNode(nodeIndex);
+        ).getActiveSchains(nodeIndex);
         for (uint i = 0; i < schains.length; i++) {
-            if (schains[i] != bytes32(0)) {
-                _checkBeforeRotation(schains[i], nodeIndex);
-            }
+            _checkBeforeRotation(schains[i], nodeIndex);
         }
     }
 
@@ -196,11 +194,11 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     /**
-     * @dev Allows SkaleManager, Schains, and SkaleDKG contracts to 
+     * @dev Allows SkaleManager, Schains, and SkaleDKG contracts to
      * pseudo-randomly select a new Node for an Schain.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Schain is active.
      * - A free node already exists.
      * - Free space can be allocated from the node.
@@ -229,7 +227,7 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     function isNewNodeFound(bytes32 schainHash) public view override returns (bool) {
-        return _rotations[schainHash].newNodeIndexes.contains(_rotations[schainHash].newNodeIndex) && 
+        return _rotations[schainHash].newNodeIndexes.contains(_rotations[schainHash].newNodeIndex) &&
             _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
             _rotations[schainHash].nodeIndex;
     }
@@ -262,7 +260,7 @@ contract NodeRotation is Permissions, INodeRotation {
         leavingHistory[nodeIndex].push(
             LeavingHistory(
                 schainHash,
-                shouldDelay ? block.timestamp + 
+                shouldDelay ? block.timestamp +
                     IConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay()
                 : block.timestamp
             )

@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 
@@ -44,15 +44,15 @@ import "./PartialDifferences.sol";
  * @title Delegation Controller
  * @dev This contract performs all delegation functions including delegation
  * requests, and undelegation, etc.
- * 
+ *
  * Delegators and validators may both perform delegations. Validators who perform
  * delegations to themselves are effectively self-delegating or self-bonding.
- * 
+ *
  * IMPORTANT: Undelegation may be requested at any time, but undelegation is only
  * performed at the completion of the current delegation period.
- * 
+ *
  * Delegated tokens may be in one of several states:
- * 
+ *
  * - PROPOSED: token holder proposes tokens to delegate to a validator.
  * - ACCEPTED: token delegations are accepted by a validator and are locked-by-delegation.
  * - CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the validator.
@@ -197,13 +197,13 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
      * and `delegationPeriod` to a `validatorId`. Delegation must be accepted
      * by the validator before the UTC start of the month, otherwise the
      * delegation will be rejected.
-     * 
+     *
      * The token holder may add additional information in each proposal.
-     * 
+     *
      * Emits a {DelegationProposed} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Holder must have sufficient delegatable tokens.
      * - Delegation must be above the validator's minimum delegation amount.
      * - Delegation period must be allowed.
@@ -222,7 +222,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         require(
             _getDelegationPeriodManager().isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed");
-        _getValidatorService().checkValidatorCanReceiveDelegation(validatorId, amount);        
+        _getValidatorService().checkValidatorCanReceiveDelegation(validatorId, amount);
         _checkIfDelegationIsAllowed(msg.sender, validatorId);
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);
@@ -261,11 +261,11 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
 
     /**
      * @dev Allows token holder to cancel a delegation proposal.
-     * 
+     *
      * Emits a {DelegationRequestCanceledByUser} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - `msg.sender` must be the token holder of the delegation proposal.
      * - Delegation state must be PROPOSED.
      */
@@ -284,11 +284,11 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
      * Successful acceptance of delegations transition the tokens from a
      * PROPOSED state to ACCEPTED, and tokens are locked for the remainder of the
      * delegation period.
-     * 
+     *
      * Emits a {DelegationAccepted} event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Validator must be recipient of proposal.
      * - Delegation state must be PROPOSED.
      */
@@ -301,11 +301,11 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
 
     /**
      * @dev Allows delegator to undelegate a specific delegation.
-     * 
+     *
      * Emits UndelegationRequested event.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - `msg.sender` must be the delegator or the validator.
      * - Delegation state must be DELEGATED.
      */
@@ -330,7 +330,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         );
 
         _subtractFromAllStatistics(delegationId);
-        
+
         emit UndelegationRequested(delegationId);
     }
 
@@ -340,9 +340,9 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
      * which reduces the amount that the validator has staked. This consequence
      * may force the SKALE Manager to reduce the number of nodes a validator is
      * operating so the validator can meet the Minimum Staking Requirement.
-     * 
+     *
      * Emits a {SlashingEvent}.
-     * 
+     *
      * See {Punisher}.
      */
     function confiscate(uint validatorId, uint amount) external override allow("Punisher") {
@@ -369,13 +369,13 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
 
         IBountyV2 bounty = _getBounty();
         bounty.handleDelegationRemoving(
-            initialEffectiveDelegated - 
+            initialEffectiveDelegated -
                 _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth),
             currentMonth
         );
         for (uint i = 0; i < initialSubtractions.length; ++i) {
             bounty.handleDelegationAdd(
-                initialSubtractions[i] - 
+                initialSubtractions[i] -
                     _effectiveDelegatedToValidator[validatorId].subtractDiff[currentMonth + i + 1],
                 currentMonth + i + 1
             );
@@ -384,7 +384,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     }
 
     /**
-     * @dev Allows Distributor contract to return and update the effective 
+     * @dev Allows Distributor contract to return and update the effective
      * amount delegated (minus slash) to a validator for a given month.
      */
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
@@ -527,7 +527,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
      */
     function hasUnprocessedSlashes(address holder) public view override returns (bool) {
         return _everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
-    }    
+    }
 
     // private
 
@@ -797,7 +797,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             currentMonth + 1);
-        uint effectiveAmount = delegations[delegationId].amount * 
+        uint effectiveAmount = delegations[delegationId].amount *
             _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod);
         _addToEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
@@ -847,7 +847,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
 
     function _accept(uint delegationId) private {
         _checkIfDelegationIsAllowed(delegations[delegationId].holder, delegations[delegationId].validatorId);
-        
+
         State currentState = getState(delegationId);
         if (currentState != State.PROPOSED) {
             if (currentState == State.ACCEPTED ||
@@ -867,10 +867,10 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(delegations[delegationId].holder);
 
         _addToAllStatistics(delegationId);
-        
+
         uint amount = delegations[delegationId].amount;
 
-        uint effectiveAmount = amount * 
+        uint effectiveAmount = amount *
             _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod);
         _getBounty().handleDelegationAdd(
             effectiveAmount,
@@ -934,9 +934,9 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
 
     /**
      * @dev Checks whether delegation to a validator is allowed.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - Delegator must not have reached the validator limit.
      * - Delegation must be made in or after the first delegation month.
      */

@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
 
@@ -31,15 +31,15 @@ import "./utils/FieldOperations.sol";
  * @title SkaleVerifier
  * @dev Contains verify function to perform BLS signature verification.
  */
-contract SkaleVerifier is Permissions, ISkaleVerifier {  
+contract SkaleVerifier is Permissions, ISkaleVerifier {
     using Fp2Operations for ISkaleDKG.Fp2Point;
     using G2Operations for ISkaleDKG.G2Point;
 
     /**
     * @dev Verifies a BLS signature.
-    * 
+    *
     * Requirements:
-    * 
+    *
     * - Signature is in G1.
     * - Hash is in G1.
     * - G2.one in G2.

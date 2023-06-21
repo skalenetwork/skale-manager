@@ -22,7 +22,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
@@ -138,7 +138,7 @@ library G1Operations {
 
     function isG1Point(uint x, uint y) internal pure returns (bool) {
         uint p = Fp2Operations.P;
-        return mulmod(y, y, p) == 
+        return mulmod(y, y, p) ==
             addmod(mulmod(mulmod(x, x, p), x, p), 3, p);
     }
 

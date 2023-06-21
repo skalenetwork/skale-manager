@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 
 library MathUtils {
@@ -29,7 +29,7 @@ library MathUtils {
     event UnderflowError(
         uint a,
         uint b
-    );    
+    );
 
     function boundedSub(uint256 a, uint256 b) internal returns (uint256) {
         if (a >= b) {

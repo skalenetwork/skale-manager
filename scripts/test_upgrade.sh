@@ -19,7 +19,7 @@ DEPLOYED_TAG=$(cat $GITHUB_WORKSPACE/DEPLOYED)
 DEPLOYED_VERSION=$(echo $DEPLOYED_TAG | cut -d '-' -f 1)
 DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
-DEPLOYED_WITH_NODE_VERSION="lts/erbium"
+DEPLOYED_WITH_NODE_VERSION="lts/fermium"
 CURRENT_NODE_VERSION=$(nvm current)
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
@@ -41,6 +41,8 @@ cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
 
+# TODO remove after upgrade from 1.9.2
+python3 scripts/change_manifest.py $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
 ABI="data/$ABI_FILENAME" npx hardhat run migrations/upgrade.ts --network localhost
 
 npx kill-port 8545

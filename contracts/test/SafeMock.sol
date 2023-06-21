@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -86,7 +86,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
             // solhint-disable-next-line no-empty-blocks
             for { } lt(i, length) { } {
                 // First byte of the data is the operation.
-                // We shift by 248 bits (256 - 8 [operation byte]) it right 
+                // We shift by 248 bits (256 - 8 [operation byte]) it right
                 // since mload will always load 32 bytes (a word).
                 // This will also zero out unused data.
                 let operation := shr(0xf8, mload(add(transactions, i)))

@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
@@ -109,7 +109,7 @@ library SkaleDkgPreResponse {
         require(
             _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMultiplication),
             "Multiplied verification vector is incorrect"
-        ); 
+        );
     }
 
     function _calculateSum(ISkaleDKG.G2Point[] memory verificationVectorMultiplication)

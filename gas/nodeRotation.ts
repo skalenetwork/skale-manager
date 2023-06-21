@@ -119,7 +119,7 @@ describe("nodeRotation", () => {
 
             const gasLimit = 12e6;
             const rotIndex = Math.floor(Math.random() * nodesAmount);
-            const schainHashes = await schainsInternal.getSchainHashesForNode(rotIndex);
+            const schainHashes = await schainsInternal.getActiveSchains(rotIndex);
             console.log("Rotation for node", rotIndex);
             console.log("Will process", schainHashes.length, "rotations");
             const gas = [];
@@ -201,7 +201,7 @@ describe("nodeRotation", () => {
                 "some.domain.name"
             );
 
-            schainHashes = await schainsInternal.getSchainHashesForNode(leavingNode);
+            schainHashes = await schainsInternal.getActiveSchains(leavingNode);
             await nodes.initExit(leavingNode);
         });
 
@@ -292,7 +292,7 @@ describe("nodeRotation", () => {
                     const leavingNode = activeNodes[randomIndex];
                     activeNodes[randomIndex] = activeNodes[activeNodes.length - 1];
                     activeNodes.pop();
-                    const schainHashes = await schainsInternal.getSchainHashesForNode(leavingNode);
+                    const schainHashes = await schainsInternal.getActiveSchains(leavingNode);
                     console.log("Rotation for node", leavingNode);
                     console.log("Will process", schainHashes.length, "rotations");
                     const gas = [];

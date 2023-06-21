@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
@@ -52,6 +52,8 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    uint constant public HEADER_COSTS = 7654;
+    uint constant public CALL_PRICE = 21000;
 
     string public version;
 
@@ -106,7 +108,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external override {
-        uint gasTotal = gasleft();
+        uint gasLimit = _getGasLimit();
         IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
@@ -133,7 +135,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             );
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
-        _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
+        _refundGasByValidator(validatorId, payable(msg.sender), gasLimit);
     }
 
     function deleteSchain(string calldata name) external override {
@@ -149,7 +151,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
     }
 
     function getBounty(uint nodeIndex) external override {
-        uint gasTotal = gasleft();
+        uint gasLimit = _getGasLimit();
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
@@ -172,8 +174,8 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             0,
             bounty,
             type(uint).max);
-        
-        _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
+
+        _refundGasByValidator(validatorId, payable(msg.sender), gasLimit);
     }
 
     function setVersion(string calldata newVersion) external override onlyOwner {
@@ -190,16 +192,19 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
     function _payBounty(uint bounty, uint validatorId) private {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         IDistributor distributor = IDistributor(contractManager.getContract("Distributor"));
-        
+
         require(
             IMintableToken(address(skaleToken)).mint(address(distributor), bounty, abi.encode(validatorId), ""),
             "Token was not minted"
         );
     }
 
-    function _refundGasByValidator(uint validatorId, address payable spender, uint spentGas) private {
-        uint gasCostOfRefundGasByValidator = 55723;
+    function _refundGasByValidator(uint validatorId, address payable spender, uint gasLimit) private {
         IWallets(payable(contractManager.getContract("Wallets")))
-        .refundGasByValidator(validatorId, spender, spentGas + gasCostOfRefundGasByValidator);
+            .refundGasByValidator(validatorId, spender, gasLimit);
+    }
+
+    function _getGasLimit() private view returns (uint gasLimit) {
+        gasLimit = (gasleft() + HEADER_COSTS) * 64 / 63 + CALL_PRICE;
     }
 }

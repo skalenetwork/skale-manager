@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
@@ -56,7 +56,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     uint public constant NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
 
     // number of Nodes for Test Skale-chain (4 Nodes)
-    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;    
+    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
 
     // number of seconds in one year
     uint32 public constant SECONDS_TO_YEAR = 31622400;
@@ -82,8 +82,8 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     uint public constant BROADCAST_DELTA = 177490;
     uint public constant COMPLAINT_BAD_DATA_DELTA = 80995;
     uint public constant PRE_RESPONSE_DELTA = 100061;
-    uint public constant COMPLAINT_DELTA = 104611;
-    uint public constant RESPONSE_DELTA = 49132;
+    uint public constant COMPLAINT_DELTA = 106611;
+    uint public constant RESPONSE_DELTA = 48132;
 
     // MSR - Minimum staking requirement
     uint public msr;
@@ -128,6 +128,8 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
 
     uint public complaintTimeLimit;
 
+    uint public minNodeBalance;
+
     bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
 
     modifier onlyConstantsHolderManager() {
@@ -170,7 +172,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
             uint(newCheckTime)
         );
         checkTime = newCheckTime;
-    }    
+    }
 
     /**
      * @dev Allows the Owner to set the allowable latency in milliseconds.
@@ -291,6 +293,19 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         complaintTimeLimit = timeLimit;
     }
 
+    function setMinNodeBalance(uint newMinNodeBalance) external override onlyConstantsHolderManager {
+        emit ConstantUpdated(
+            keccak256(abi.encodePacked("MinNodeBalance")),
+            uint(minNodeBalance),
+            uint(newMinNodeBalance)
+        );
+        minNodeBalance = newMinNodeBalance;
+    }
+
+    function reinitialize() external override reinitializer(2) {
+        minNodeBalance = 1.5 ether;
+    }
+
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
@@ -306,5 +321,6 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
         complaintTimeLimit = 1800;
+        minNodeBalance = 1.5 ether;
     }
 }

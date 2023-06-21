@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
 
@@ -41,7 +41,7 @@ contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
     /**
      * @dev Allows the Owner to create a new available delegation period and
      * stake multiplier in the network.
-     * 
+     *
      * Emits a {DelegationPeriodWasSet} event.
      */
     function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external override {
