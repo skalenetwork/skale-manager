@@ -39,7 +39,7 @@ const customNames: {[key: string]: string} = {
 }
 
 export const contracts = [
-    // "ContractManager", // it will be deployed explicitly
+    "ContractManager",
 
     "DelegationController",
     "DelegationPeriodManager",
@@ -98,7 +98,7 @@ async function main() {
     contractArtifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
     await verifyProxy(contractManagerName, contractManager.address, []);
 
-    for (const contract of contracts) {
+    for (const contract of contracts.filter(contract => contract != "ContractManager")) {
         const contractFactory = await getContractFactory(contract);
         console.log("Deploy", contract);
         const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), { unsafeAllowLinkedLibraries: true });
