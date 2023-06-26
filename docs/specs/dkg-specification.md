@@ -175,7 +175,7 @@ To derive common key for encrypting/decrypting
 
 Input params:
 
-- cypherText - encrypted data(bytes32)
+- cipherText - encrypted data(bytes32)
 - Key - common key(number)
 
 Description:
