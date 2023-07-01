@@ -1,1 +1,1 @@
-slither-analyzer==0.8.3
+slither-analyzer==0.9.5
