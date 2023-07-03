@@ -1,37 +1,43 @@
 import chalk from "chalk";
 import { contracts } from "./deploy";
-import { promises as fs } from "fs";
 import { ethers } from "hardhat";
 import { Upgrader, AutoSubmitter } from "@skalenetwork/upgrade-tools";
-import { SkaleABIFile } from "@skalenetwork/upgrade-tools/dist/src/types/SkaleABIFile";
+import { skaleContracts, Instance } from "@skalenetwork/skale-contracts";
 import { SkaleManager } from "../typechain-types";
 
-async function getSkaleManagerAbiAndAddresses(): Promise<SkaleABIFile> {
-    if (!process.env.ABI) {
-        console.log(chalk.red("Set path to file with ABI and addresses to ABI environment variables"));
+async function getSkaleManagerInstance() {
+    if (process.env.ABI) {
+        console.log("This version of the upgrade script ignores manually provided ABI");
+        console.log("Do not set ABI environment variable");
+    }
+    if (!process.env.TARGET) {
+        console.log(chalk.red("Specify desired skale-manager instance"));
+        console.log(chalk.red("Set instance alias or SkaleManager address to TARGET environment variable"));
         process.exit(1);
     }
-    const abiFilename = process.env.ABI;
-    return JSON.parse(await fs.readFile(abiFilename, "utf-8")) as SkaleABIFile;
+    const network = await skaleContracts.getNetworkByChainId((await ethers.provider.getNetwork()).chainId);
+    const project = await network.getProject("skale-manager");
+    return await project.getInstance(process.env.TARGET);
 }
 
 class SkaleManagerUpgrader extends Upgrader {
 
     constructor(
         targetVersion: string,
-        abi: SkaleABIFile,
+        instance: Instance,
         contractNamesToUpgrade: string[],
         submitter = new AutoSubmitter()) {
             super(
                 "skale-manager",
                 targetVersion,
-                abi,
+                instance,
                 contractNamesToUpgrade,
                 submitter);
         }
 
     async getSkaleManager() {
-        return await ethers.getContractAt("SkaleManager", this.abi.skale_manager_address as string) as SkaleManager;
+        // TODO: replace with this.instance.getContract
+        return await ethers.getContractAt("SkaleManager", await this.instance.getContractAddress("SkaleManager")) as SkaleManager;
     }
 
     getDeployedVersion = async () => {
@@ -59,7 +65,7 @@ class SkaleManagerUpgrader extends Upgrader {
 async function main() {
     const upgrader = new SkaleManagerUpgrader(
         "1.9.3",
-        await getSkaleManagerAbiAndAddresses(),
+        await getSkaleManagerInstance(),
         contracts,
     );
     await upgrader.upgrade();
