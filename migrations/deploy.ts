@@ -136,6 +136,17 @@ async function main() {
         await skaleToken.mint(owner.address, money, "0x", "0x");
     }
 
+    console.log("Store addresses");
+
+    const addressesOutput: {[name: string]: string} = {};
+    for (const artifact of contractArtifacts) {
+        addressesOutput[artifact.contract] = artifact.address;
+    }
+    await fs.writeFile(`data/skale-manager-${version}-${network.name}-contracts.json`, JSON.stringify(addressesOutput, null, 4));
+
+
+    // TODO: remove storing of ABIs to a file
+
     console.log("Store ABIs");
 
     const outputObject: {[k: string]: unknown} = {};
@@ -146,6 +157,7 @@ async function main() {
     }
 
     await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(outputObject, null, 4));
+
 
     console.log("Done");
 }

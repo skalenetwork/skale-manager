@@ -34,6 +34,9 @@ yarn install
 PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost
 rm $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json || true
 cp .openzeppelin/unknown-*.json $GITHUB_WORKSPACE/.openzeppelin
+CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
+# TODO: copy contracts.json file when deployed version starts supporting it
+# cp "data/$CONTRACTS_FILENAME" "$GITHUB_WORKSPACE/data"
 ABI_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-abi.json"
 cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data"
 
@@ -41,8 +44,9 @@ cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
 
-# TODO remove after upgrade from 1.9.2
-python3 scripts/change_manifest.py $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
-ALLOW_NOT_ATOMIC_UPGRADE="OK" ABI="data/$ABI_FILENAME" npx hardhat run migrations/upgrade.ts --network localhost
+# TODO: use contracts.json file when deployed version starts supporting it
+# SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
+SKALE_MANAGER_ADDRESS=$(cat data/$ABI_FILENAME | jq -r .skale_manager_address)
+ALLOW_NOT_ATOMIC_UPGRADE="OK" TARGET="$SKALE_MANAGER_ADDRESS" npx hardhat run migrations/upgrade.ts --network localhost
 
 npx kill-port 8545
