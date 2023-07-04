@@ -1520,10 +1520,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/skale-contracts@^0.0.1-main.15":
-  version "0.0.1-main.15"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-contracts/-/skale-contracts-0.0.1-main.15.tgz#86d9dba1e617f6c5c250a02e55745b50eae5fc9e"
-  integrity sha512-vlztY9cLSOo3Sk61dE5kmXxFmv6mKG4B1wbF9cVk6ErYLSpamPsOkIsqFL6+tw/nAXgkzkzRi2uiLKvTy2PtAA==
+"@skalenetwork/skale-contracts@^0.0.1-main.16":
+  version "0.0.1-main.16"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-contracts/-/skale-contracts-0.0.1-main.16.tgz#e789baa1f72826d688bbc0870fb7c1ab4fb9f98d"
+  integrity sha512-vURGIkbT0FhW0wUDI6tM+QvESDr/N5zAbJiRUPGgUb+GIZP3wMtN6xIZGGlhbLcdcGohwi3lqG1hiVyjdbenPg==
   dependencies:
     axios "^1.4.0"
     ethers "^5.7.2"
@@ -1533,13 +1533,13 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-2.0.0.tgz#afb63131e5c498cfa69219567f9f52b85f0856c9"
   integrity sha512-Pge3p4vpeNaXHjwntX+8b38NEcT81a67I32bbnU+l1uSo4kmyXd0VblHMO84H1Azr9TzF3ZmNCG+GI2yntSx2w==
 
-"@skalenetwork/upgrade-tools@^3.0.0-skale-contracts.0":
-  version "3.0.0-skale-contracts.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-skale-contracts.0.tgz#db1e0f81ab6d72715c982e0bd5006c9a11bf377a"
-  integrity sha512-ekJpPUblmSUvoClEfT4gsg0hWL7wEOwmoCk3fxBDMS8/djePeyRa8EM09ZoFzzaX0nzXaSS+zq/X0Pc8RrE42w==
+"@skalenetwork/upgrade-tools@^3.0.0-skale-contracts.1":
+  version "3.0.0-skale-contracts.1"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-skale-contracts.1.tgz#137c1c7b69176ac92494ef53099ef2958ee3e94d"
+  integrity sha512-074hVRsi3QNm77YkIINJ2al7OvkLyf8BllN4YZwdi9bJvSWZICAPMsY2/laptuzg4SreZF8nMyOd46EcaMKeQQ==
   dependencies:
     "@openzeppelin/contracts-upgradeable" "^4.4.2"
-    "@skalenetwork/skale-contracts" "^0.0.1-main.15"
+    "@skalenetwork/skale-contracts" "^0.0.1-main.16"
     axios "^0.27.2"
     ethereumjs-util "^7.1.4"
 
@@ -4938,7 +4938,7 @@ ethers@^4.0.32:
     uuid "2.0.1"
     xmlhttprequest "1.8.0"
 
-ethers@^5.0.1, ethers@^5.0.2, ethers@^5.4.7, ethers@^5.5.2, ethers@^5.5.3:
+ethers@^5.0.1, ethers@^5.0.2, ethers@^5.4.7, ethers@^5.5.2:
   version "5.5.3"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.5.3.tgz#1e361516711c0c3244b6210e7e3ecabf0c75fca0"
   integrity sha512-fTT4WT8/hTe/BLwRUtl7I5zlpF3XC3P/Xwqxc5AIP2HGlH15qpmjs0Ou78az93b1rLITzXLFxoNX63B8ZbUd7g==

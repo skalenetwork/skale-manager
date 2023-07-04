@@ -15,7 +15,7 @@ async function getSkaleManagerInstance() {
         console.log(chalk.red("Set instance alias or SkaleManager address to TARGET environment variable"));
         process.exit(1);
     }
-    const network = await skaleContracts.getNetworkByChainId((await ethers.provider.getNetwork()).chainId);
+    const network = await skaleContracts.getNetworkByProvider(ethers.provider);
     const project = await network.getProject("skale-manager");
     return await project.getInstance(process.env.TARGET);
 }
@@ -36,8 +36,7 @@ class SkaleManagerUpgrader extends Upgrader {
         }
 
     async getSkaleManager() {
-        // TODO: replace with this.instance.getContract
-        return await ethers.getContractAt("SkaleManager", await this.instance.getContractAddress("SkaleManager")) as SkaleManager;
+        return await this.instance.getContract("SkaleManager") as SkaleManager;
     }
 
     getDeployedVersion = async () => {
