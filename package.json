@@ -63,7 +63,7 @@
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^9.1.1",
     "@types/node": "^18.6.2",
-    "@types/sinon-chai": "^3.2.8",
+    "@types/sinon-chai": "^3.2.9",
     "@typescript-eslint/eslint-plugin": "^5.10.1",
     "@typescript-eslint/parser": "^5.10.1",
     "bignumber.js": "^9.0.2",
