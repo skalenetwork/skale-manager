@@ -1520,10 +1520,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/skale-contracts@^0.0.1-main.16":
-  version "0.0.1-main.16"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-contracts/-/skale-contracts-0.0.1-main.16.tgz#e789baa1f72826d688bbc0870fb7c1ab4fb9f98d"
-  integrity sha512-vURGIkbT0FhW0wUDI6tM+QvESDr/N5zAbJiRUPGgUb+GIZP3wMtN6xIZGGlhbLcdcGohwi3lqG1hiVyjdbenPg==
+"@skalenetwork/skale-contracts@^0.0.1-main.20":
+  version "0.0.1-main.20"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-contracts/-/skale-contracts-0.0.1-main.20.tgz#961e9e710ac3e78430c8c6155d208416f35b0333"
+  integrity sha512-yUowWey14mLXrfTc5aY4DhsLRPlAzIMeIFxnTuU14rMG7graSqV8f8I5JDx0vQcnjXtziOSnjDYIYVtyoGx2Sw==
   dependencies:
     axios "^1.4.0"
     ethers "^5.7.2"
@@ -1533,13 +1533,13 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-2.0.0.tgz#afb63131e5c498cfa69219567f9f52b85f0856c9"
   integrity sha512-Pge3p4vpeNaXHjwntX+8b38NEcT81a67I32bbnU+l1uSo4kmyXd0VblHMO84H1Azr9TzF3ZmNCG+GI2yntSx2w==
 
-"@skalenetwork/upgrade-tools@^3.0.0-skale-contracts.1":
-  version "3.0.0-skale-contracts.1"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-skale-contracts.1.tgz#137c1c7b69176ac92494ef53099ef2958ee3e94d"
-  integrity sha512-074hVRsi3QNm77YkIINJ2al7OvkLyf8BllN4YZwdi9bJvSWZICAPMsY2/laptuzg4SreZF8nMyOd46EcaMKeQQ==
+"@skalenetwork/upgrade-tools@^3.0.0-skale-contracts.6":
+  version "3.0.0-skale-contracts.6"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-skale-contracts.6.tgz#a0b8c48b9b25b6f816afd8a264a67758aeb58db0"
+  integrity sha512-imKRT//6S/Bh7hvrPfUdxdEnrp+yGuGUoYKKqR02j/PxbQqYMlFte3/OnSgCnNaxjjqzlBoPqZ2mfHCNcRWQ7g==
   dependencies:
     "@openzeppelin/contracts-upgradeable" "^4.4.2"
-    "@skalenetwork/skale-contracts" "^0.0.1-main.16"
+    "@skalenetwork/skale-contracts" "^0.0.1-main.20"
     axios "^0.27.2"
     ethereumjs-util "^7.1.4"
 

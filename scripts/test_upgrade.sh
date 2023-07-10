@@ -16,7 +16,7 @@ export NVM_DIR=~/.nvm;
 source $NVM_DIR/nvm.sh;
 
 DEPLOYED_TAG=$(cat $GITHUB_WORKSPACE/DEPLOYED)
-DEPLOYED_VERSION=$(echo $DEPLOYED_TAG | cut -d '-' -f 1)
+DEPLOYED_VERSION=$(echo $DEPLOYED_TAG | xargs ) # trim
 DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
 DEPLOYED_WITH_NODE_VERSION="lts/fermium"
