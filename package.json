@@ -50,7 +50,7 @@
     "dotenv": "^16.0.0",
     "ethereumjs-util": "^7.1.5",
     "ethers": "^5.5.3",
-    "hardhat": "^2.8.3"
+    "hardhat": "^2.17.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-etherscan": "^3.0.0",
