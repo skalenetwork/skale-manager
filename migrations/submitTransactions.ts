@@ -1,5 +1,5 @@
-import { createMultiSendTransaction, sendSafeTransaction } from "@skalenetwork/upgrade-tools";
-import { ethers } from "hardhat";
+import { createMultiSendTransaction } from "@skalenetwork/upgrade-tools";
+import { UnsignedTransaction } from "ethers";
 import { promises as fs } from "fs";
 
 async function main() {
@@ -20,11 +20,9 @@ async function main() {
     if (!privateKey.startsWith("0x")) {
         privateKey = "0x" + privateKey;
     }
-    const safeTransactions = JSON.parse(await fs.readFile(process.env.TRANSACTIONS, "utf-8")) as string[];
+    const safeTransactions = JSON.parse(await fs.readFile(process.env.TRANSACTIONS, "utf-8")) as UnsignedTransaction[];
 
-    const chainId = (await ethers.provider.getNetwork()).chainId;
-    const safeTx = await createMultiSendTransaction(ethers, safe, privateKey, safeTransactions, chainId);
-    await sendSafeTransaction(safe, chainId, safeTx);
+    await createMultiSendTransaction(safe, safeTransactions);
     console.log("Done");
 }
 
