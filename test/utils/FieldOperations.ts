@@ -1,6 +1,6 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { FieldOperationsTester } from "../../typechain-types/FieldOperationsTester";
+import { FieldOperationsTester } from "../../typechain-types";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployFieldOperationsTester } from "../tools/deploy/test/fieldOperationsTester";
 import { makeSnapshot, applySnapshot } from "../tools/snapshot";
