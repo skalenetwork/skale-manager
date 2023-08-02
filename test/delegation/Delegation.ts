@@ -312,7 +312,7 @@ describe("Delegation", () => {
                             await skaleToken.connect(holder2).transferFrom(holder1.address, holder2.address, 1);
                             await skaleToken.connect(holder1).send(holder2.address, 1, "0x");
 
-                            const balance = await skaleToken.balanceOf(holder1.address);
+                            const balance = BigNumber.from(await skaleToken.balanceOf(holder1.address));
                             const correctBalance = BigNumber.from(defaultAmount.toString()).sub(3);
 
                             balance.should.be.deep.equal(correctBalance);

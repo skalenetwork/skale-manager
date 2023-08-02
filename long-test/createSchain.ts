@@ -10,8 +10,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { Event, Wallet } from "ethers";
 import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
 import { SchainType } from "../test/tools/types";
-import { SchainNodesEvent } from "../typechain-types/ISchains";
 import { TypedEvent } from "../typechain-types/common";
+import { SchainNodesEvent } from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
 
 function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
     if (events) {
