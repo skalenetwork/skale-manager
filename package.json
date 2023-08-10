@@ -73,7 +73,7 @@
     "cspell": "^6.31.1",
     "elliptic": "^6.5.3",
     "eslint": "^8.8.0",
-    "ethereum-waffle": "^3.2.2",
+    "ethereum-waffle": "^3.4.4",
     "ganache-cli": "^6.11.0",
     "kill-port": "^2.0.1",
     "solhint": "3.3.7",
