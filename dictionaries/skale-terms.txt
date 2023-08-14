@@ -5,6 +5,7 @@ githooks
 schain
 schains
 skale
+skaled
 skalenetwork
 strConcat
 thirdparty
