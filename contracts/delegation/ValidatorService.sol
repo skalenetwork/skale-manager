@@ -389,6 +389,18 @@ contract ValidatorService is Permissions, IValidatorService {
         require(validatorId != 0, "Node address is not assigned to a validator");
     }
 
+    /**
+     * @dev Returns the validator ID linked to a node address without revert.
+     */
+    function getValidatorIdByNodeAddressWithoutRevert(address nodeAddress) 
+        external
+        view
+        override 
+        returns (uint validatorId)
+    {
+        validatorId = _nodeAddressToValidatorId[nodeAddress];
+    }
+
     function checkValidatorCanReceiveDelegation(uint validatorId, uint amount) external view override {
         require(isAuthorizedValidator(validatorId), "Validator is not authorized to accept delegation request");
         require(isAcceptingNewRequests(validatorId), "The validator is not currently accepting new requests");
