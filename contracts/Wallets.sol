@@ -197,6 +197,7 @@ contract Wallets is Permissions, IWallets {
      *
      * Requirements:
      * - Executable only after initializing delete schain
+     * - Schain should not be Active
      */
     function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainHash)
         external
@@ -204,6 +205,8 @@ contract Wallets is Permissions, IWallets {
         allow("Schains")
     {
         require(schainOwner != address(0), "Schain owner must be specified");
+        ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
+        require(!schainsInternal.isSchainActive(schainHash), "Schain is active");
         uint amount = _schainWallets[schainHash];
         delete _schainWallets[schainHash];
         emit WithdrawFromSchainWallet(schainHash, amount);
