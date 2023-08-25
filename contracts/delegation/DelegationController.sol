@@ -28,12 +28,10 @@ import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/de
 import { IDelegationPeriodManager }
 from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
 import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
-import { ITokenState } from "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
 import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
 import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
 import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
-import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
 import { Permissions } from "../Permissions.sol";

@@ -25,8 +25,7 @@ import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Ad
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import { IPermissions } from "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
 
-import { AccessControlUpgradeableLegacy, ContextUpgradeable }
-from "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
+import { AccessControlUpgradeableLegacy } from "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
 
 
 /**

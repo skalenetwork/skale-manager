@@ -25,7 +25,6 @@ import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
 import { Permissions } from "./Permissions.sol";
-import { Precompiled } from "./utils/Precompiled.sol";
 import { Fp2Operations, G2Operations } from "./utils/FieldOperations.sol";
 
 contract KeyStorage is Permissions, IKeyStorage {

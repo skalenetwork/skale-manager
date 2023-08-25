@@ -20,7 +20,6 @@
 */
 pragma solidity 0.8.17;
 
-import { BountyV2 } from "../BountyV2.sol";
 import { Permissions } from "../Permissions.sol";
 
 interface INodesMock {

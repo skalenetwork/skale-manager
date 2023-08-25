@@ -17,6 +17,7 @@
     "no-empty-blocks": "error",
     "no-global-import": "error",
     "no-inline-assembly": "error",
+    "no-unused-import": "error",
     "no-unused-vars": "error",
     "ordering": "error",
     "private-vars-leading-underscore": "error",
