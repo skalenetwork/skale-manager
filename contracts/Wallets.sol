@@ -23,13 +23,14 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import "./Permissions.sol";
+import { Permissions } from "./Permissions.sol";
 
 /**
  * @title Wallets

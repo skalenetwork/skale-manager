@@ -21,15 +21,16 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { EnumerableSetUpgradeable }
+from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
-import "./utils/Random.sol";
+import { Permissions } from "./Permissions.sol";
+import { ConstantsHolder } from "./ConstantsHolder.sol";
+import { IRandom, Random } from "./utils/Random.sol";
 
 interface IPruningSchainsInternal is ISchainsInternal {
     function pruneNode(uint256 nodeIndex) external;

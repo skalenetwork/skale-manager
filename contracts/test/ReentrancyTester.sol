@@ -21,14 +21,14 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import { IERC777Sender } from "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC777 } from "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 
-import "../Permissions.sol";
-import "../delegation/DelegationController.sol";
+import { Permissions } from "../Permissions.sol";
+import { DelegationController } from "../delegation/DelegationController.sol";
 
 interface IReentrancyTester {
     function prepareToReentrancyCheck() external;

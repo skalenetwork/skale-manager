@@ -23,10 +23,11 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
-import "../utils/FieldOperations.sol";
+import { G1Operations, G2Operations } from "../utils/FieldOperations.sol";
+import { Precompiled } from "../utils/Precompiled.sol";
 
 /**
  * @title SkaleDkgPreResponse

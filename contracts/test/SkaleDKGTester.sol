@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.17;
 
-import "../SkaleDKG.sol";
+import { IKeyStorage, SkaleDKG } from "../SkaleDKG.sol";
 
 interface ISkaleDKGTester {
     function setSuccessfulDKGPublic(bytes32 schainHash) external;

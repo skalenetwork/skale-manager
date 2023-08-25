@@ -22,7 +22,7 @@
 
 pragma solidity 0.8.17;
 
-import "../utils/SegmentTree.sol";
+import { IRandom, Random, SegmentTree } from "../utils/SegmentTree.sol";
 
 interface ISegmentTreeTester {
     function initTree() external;

@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.17;
 
-import "../SkaleToken.sol";
+import { SkaleToken } from "../SkaleToken.sol";
 
 interface ISkaleTokenInterfaceTester {
     function getMsgData() external view returns (bytes memory);

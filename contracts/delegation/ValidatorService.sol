@@ -23,12 +23,12 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import { ECDSAUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
-import "../Permissions.sol";
+import { Permissions } from "../Permissions.sol";
 
 /**
  * @title ValidatorService

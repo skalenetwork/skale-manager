@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.17;
 
-import "../utils/FieldOperations.sol";
+import { Fp2Operations, G2Operations, ISkaleDKG } from "../utils/FieldOperations.sol";
 
 interface IFieldOperationsTester {
     function add(ISkaleDKG.G2Point memory value1, ISkaleDKG.G2Point memory value2)

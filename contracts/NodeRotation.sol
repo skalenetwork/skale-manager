@@ -21,15 +21,17 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { EnumerableSetUpgradeable }
+from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { IRandom } from "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 
-import "./utils/Random.sol";
-import "./Permissions.sol";
+import { Random } from "./utils/Random.sol";
+import { Permissions } from "./Permissions.sol";
 
 
 /**

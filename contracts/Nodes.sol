@@ -23,19 +23,19 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
+import { SafeCastUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
-import "./utils/Random.sol";
-import "./utils/SegmentTree.sol";
+import { Permissions } from "./Permissions.sol";
+import { ConstantsHolder } from "./ConstantsHolder.sol";
+import { IRandom, Random } from "./utils/Random.sol";
+import { SegmentTree } from "./utils/SegmentTree.sol";
 
-import "./NodeRotation.sol";
+import { NodeRotation } from "./NodeRotation.sol";
 
 
 /**
@@ -883,7 +883,7 @@ contract Nodes is Permissions, INodes {
             contractManager.getContract("DelegationController")
         );
         uint256 delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint256 msr = IConstantsHolder(contractManager.getConstantsHolder()).msr();
+        uint256 msr = ConstantsHolder(contractManager.getConstantsHolder()).msr();
         return (position + 1) * msr <= delegationsTotal;
     }
 

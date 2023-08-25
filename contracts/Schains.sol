@@ -21,17 +21,20 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
-import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
-import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { EnumerableSetUpgradeable }
+from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { ISchains } from "@skalenetwork/skale-manager-interfaces/ISchains.sol";
+import { ISkaleVerifier } from "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
+import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
-import "./utils/FieldOperations.sol";
+import { Permissions } from "./Permissions.sol";
+import { ConstantsHolder } from "./ConstantsHolder.sol";
+import { G2Operations } from "./utils/FieldOperations.sol";
 
 
 /**

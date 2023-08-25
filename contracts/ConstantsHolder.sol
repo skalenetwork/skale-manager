@@ -21,9 +21,9 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
-import "./Permissions.sol";
+import { Permissions } from "./Permissions.sol";
 
 
 /**

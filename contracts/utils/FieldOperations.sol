@@ -24,9 +24,9 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
-import "./Precompiled.sol";
+import { Precompiled } from "./Precompiled.sol";
 
 
 library Fp2Operations {

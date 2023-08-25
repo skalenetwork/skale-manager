@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.17;
 
-import "../delegation/PartialDifferences.sol";
+import { FractionUtils, PartialDifferences } from "../delegation/PartialDifferences.sol";
 
 interface IPartialDifferencesTester {
     function createSequence() external;

@@ -21,10 +21,12 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
-import "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
+import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import { IPermissions } from "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
 
-import "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
+import { AccessControlUpgradeableLegacy, ContextUpgradeable }
+from "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
 
 
 /**

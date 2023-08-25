@@ -21,23 +21,23 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import { IERC777 } from "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleManager.sol";
-import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
-import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import { ISkaleManager } from "@skalenetwork/skale-manager-interfaces/ISkaleManager.sol";
+import { IMintableToken } from "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
+import { IDistributor } from "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
+import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { ISchains } from "@skalenetwork/skale-manager-interfaces/ISchains.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
-import "./Permissions.sol";
+import { Permissions } from "./Permissions.sol";
 
 /**
  * @title SkaleManager

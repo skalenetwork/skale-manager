@@ -22,12 +22,12 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/IPricing.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { IPricing } from "@skalenetwork/skale-manager-interfaces/IPricing.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
+import { Permissions } from "./Permissions.sol";
+import { ConstantsHolder } from "./ConstantsHolder.sol";
 
 /**
  * @title Pricing

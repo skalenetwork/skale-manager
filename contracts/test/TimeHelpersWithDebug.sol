@@ -21,9 +21,9 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "../delegation/TimeHelpers.sol";
+import { TimeHelpers } from "../delegation/TimeHelpers.sol";
 
 interface ITimeHelpersWithDebug {
     function initialize() external;

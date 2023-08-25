@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.17;
 
-import "../SchainsInternal.sol";
+import { EnumerableSetUpgradeable, SchainsInternal } from "../SchainsInternal.sol";
 
 interface ISchainsInternalMock {
     function removePlaceOfSchainOnNode(bytes32 schainHash, uint256 nodeIndex) external;

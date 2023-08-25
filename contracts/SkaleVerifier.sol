@@ -21,11 +21,11 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
+import { ISkaleVerifier } from "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
 
-import "./Permissions.sol";
-import "./utils/Precompiled.sol";
-import "./utils/FieldOperations.sol";
+import { Permissions } from "./Permissions.sol";
+import { Precompiled } from "./utils/Precompiled.sol";
+import { Fp2Operations, G1Operations, G2Operations, ISkaleDKG } from "./utils/FieldOperations.sol";
 
 /**
  * @title SkaleVerifier

@@ -21,8 +21,8 @@
 
 pragma solidity 0.8.17;
 
-import "../utils/MathUtils.sol";
-import "../utils/FractionUtils.sol";
+import { MathUtils } from "../utils/MathUtils.sol";
+import { FractionUtils } from "../utils/FractionUtils.sol";
 
 /**
  * @title Partial Differences Library

@@ -15,6 +15,7 @@
     "function-max-lines": "error",
     "max-states-count": ["error", 20],
     "no-empty-blocks": "error",
+    "no-global-import": "error",
     "no-inline-assembly": "error",
     "no-unused-vars": "error",
     "ordering": "error",

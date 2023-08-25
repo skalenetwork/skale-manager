@@ -21,14 +21,14 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
-import "./delegation/PartialDifferences.sol";
+import { Permissions } from "./Permissions.sol";
+import { ConstantsHolder } from "./ConstantsHolder.sol";
+import { PartialDifferences } from "./delegation/PartialDifferences.sol";
 
 
 contract BountyV2 is Permissions, IBountyV2 {

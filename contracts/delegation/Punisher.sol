@@ -21,12 +21,12 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
-import "../Permissions.sol";
+import { Permissions } from "../Permissions.sol";
 
 /**
  * @title Punisher

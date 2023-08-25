@@ -22,7 +22,7 @@
 
 pragma solidity 0.8.17;
 
-import "./Random.sol";
+import { IRandom, Random } from "./Random.sol";
 
 /**
  * @title SegmentTree

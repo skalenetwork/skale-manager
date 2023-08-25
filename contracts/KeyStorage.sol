@@ -21,11 +21,12 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
-import "./Permissions.sol";
-import "./utils/Precompiled.sol";
-import "./utils/FieldOperations.sol";
+import { Permissions } from "./Permissions.sol";
+import { Precompiled } from "./utils/Precompiled.sol";
+import { Fp2Operations, G2Operations } from "./utils/FieldOperations.sol";
 
 contract KeyStorage is Permissions, IKeyStorage {
     using Fp2Operations for ISkaleDKG.Fp2Point;

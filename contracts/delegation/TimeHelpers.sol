@@ -21,9 +21,9 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
-import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
+import { BokkyPooBahsDateTimeLibrary } from "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
 /**
  * @title TimeHelpers

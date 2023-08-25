@@ -21,12 +21,12 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
-import "./utils/StringUtils.sol";
-import "./thirdparty/openzeppelin/InitializableWithGap.sol";
+import { StringUtils } from "./utils/StringUtils.sol";
+import { InitializableWithGap } from "./thirdparty/openzeppelin/InitializableWithGap.sol";
 
 /**
  * @title ContractManager

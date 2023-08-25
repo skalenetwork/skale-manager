@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.17;
 
-import "../utils/MathUtils.sol";
+import { MathUtils } from "../utils/MathUtils.sol";
 
 interface IMathUtilsTester {
     function boundedSub(uint256 a, uint256 b) external returns (uint256);

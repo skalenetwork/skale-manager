@@ -22,23 +22,24 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import { IERC777 } from "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
-import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { IDelegationPeriodManager }
+from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
+import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import { ITokenState } from "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
+import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
-import "../Permissions.sol";
-import "../utils/FractionUtils.sol";
-import "../utils/MathUtils.sol";
-import "./PartialDifferences.sol";
+import { Permissions } from "../Permissions.sol";
+import { FractionUtils } from "../utils/FractionUtils.sol";
+import { MathUtils } from "../utils/MathUtils.sol";
+import { PartialDifferences } from "./PartialDifferences.sol";
 
 /**
  * @title Delegation Controller

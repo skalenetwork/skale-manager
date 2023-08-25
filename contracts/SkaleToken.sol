@@ -21,17 +21,18 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegatableToken.sol";
-import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { IDelegatableToken } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegatableToken.sol";
+import { IMintableToken } from "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
+import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import { ITokenState } from "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
+import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
 
-import "./thirdparty/openzeppelin/ERC777.sol";
+import { Context, ERC777 } from "./thirdparty/openzeppelin/ERC777.sol";
 
-import "./Permissions.sol";
+import { ContextUpgradeable, Permissions } from "./Permissions.sol";
 
 
 /**

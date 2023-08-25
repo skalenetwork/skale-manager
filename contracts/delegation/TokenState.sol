@@ -21,11 +21,11 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { ITokenState } from "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
+import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
-import "../Permissions.sol";
+import { Permissions } from "../Permissions.sol";
 
 
 /**

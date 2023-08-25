@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
 
 contract LockerMock is ILocker {
     function getAndUpdateLockedAmount(address) external pure override returns (uint256) {

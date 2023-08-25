@@ -21,25 +21,26 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
-import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
-import "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { ISlashingTable } from "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
+import { ISchains } from "@skalenetwork/skale-manager-interfaces/ISchains.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import { IECDH } from "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
-import "./utils/FieldOperations.sol";
-import "./utils/Precompiled.sol";
-import "./dkg/SkaleDkgAlright.sol";
-import "./dkg/SkaleDkgBroadcast.sol";
-import "./dkg/SkaleDkgComplaint.sol";
-import "./dkg/SkaleDkgPreResponse.sol";
-import "./dkg/SkaleDkgResponse.sol";
+import { Permissions } from "./Permissions.sol";
+import { ConstantsHolder } from "./ConstantsHolder.sol";
+import { Fp2Operations, G2Operations } from "./utils/FieldOperations.sol";
+import { Precompiled } from "./utils/Precompiled.sol";
+import { SkaleDkgAlright } from "./dkg/SkaleDkgAlright.sol";
+import { SkaleDkgBroadcast } from "./dkg/SkaleDkgBroadcast.sol";
+import { SkaleDkgComplaint } from "./dkg/SkaleDkgComplaint.sol";
+import { SkaleDkgPreResponse } from "./dkg/SkaleDkgPreResponse.sol";
+import { SkaleDkgResponse } from "./dkg/SkaleDkgResponse.sol";
 
 /**
  * @title SkaleDKG
