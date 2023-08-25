@@ -40,6 +40,10 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWi
 
     TimeShift[] private _timeShift;
 
+    function initialize() external override initializer {
+        OwnableUpgradeable.__Ownable_init();
+    }
+
     function skipTime(uint sec) external override onlyOwner {
         if (_timeShift.length > 0) {
             _timeShift.push(TimeShift({
@@ -49,10 +53,6 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWi
         } else {
             _timeShift.push(TimeShift({pointInTime: block.timestamp, shift: sec}));
         }
-    }
-
-    function initialize() external override initializer {
-        OwnableUpgradeable.__Ownable_init();
     }
 
     function timestampToMonth(uint timestamp) public view override returns (uint) {

@@ -41,6 +41,12 @@ contract Pricing is Permissions, IPricing {
     uint public totalNodes;
     uint public lastUpdated;
 
+    function initialize(address newContractsAddress) public override initializer {
+        Permissions.initialize(newContractsAddress);
+        lastUpdated = block.timestamp;
+        price = INITIAL_PRICE;
+    }
+
     function initNodes() external override {
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         totalNodes = nodes.getNumberOnlineNodes();
@@ -103,12 +109,6 @@ contract Pricing is Permissions, IPricing {
      */
     function getTotalLoadPercentage() external view override returns (uint) {
         return _getTotalLoad() * 100 / _getTotalCapacity();
-    }
-
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
-        lastUpdated = block.timestamp;
-        price = INITIAL_PRICE;
     }
 
     function checkAllNodes() public override {

@@ -113,6 +113,18 @@ contract Nodes is Permissions, INodes {
     }
 
     /**
+     * @dev constructor in Permissions approach.
+     */
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+
+        numberOfActiveNodes = 0;
+        numberOfLeavingNodes = 0;
+        numberOfLeftNodes = 0;
+        _nodesAmountBySpace.create(128);
+    }
+
+    /**
      * @dev Allows Schains and SchainsInternal contracts to occupy available
      * space on a node.
      *
@@ -313,7 +325,7 @@ contract Nodes is Permissions, INodes {
         address nodeOwner = _publicKeyToAddress(nodes[nodeIndex].publicKey);
         uint validatorIdByNode = validatorService.getValidatorIdByNodeAddressWithoutRevert(nodeOwner);
         if (validatorIdByNode == validatorId || validatorIdByNode == 0) {
-            if (nodeIndexes[nodeOwner].numberOfNodes == 1 && 
+            if (nodeIndexes[nodeOwner].numberOfNodes == 1 &&
                 !validatorService.validatorAddressExists(nodeOwner) &&
                 validatorIdByNode == validatorId
             ) {
@@ -694,18 +706,6 @@ contract Nodes is Permissions, INodes {
             return _nodesAmountBySpace.sumFromPlaceToLast(1);
         }
         return _nodesAmountBySpace.sumFromPlaceToLast(freeSpace);
-    }
-
-    /**
-     * @dev constructor in Permissions approach.
-     */
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-
-        numberOfActiveNodes = 0;
-        numberOfLeavingNodes = 0;
-        numberOfLeftNodes = 0;
-        _nodesAmountBySpace.create(128);
     }
 
     /**

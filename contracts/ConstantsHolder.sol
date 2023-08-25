@@ -137,6 +137,24 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         _;
     }
 
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+
+        msr = 0;
+        rewardPeriod = 2592000;
+        allowableLatency = 150000;
+        deltaPeriod = 3600;
+        checkTime = 300;
+        launchTimestamp = type(uint).max;
+        rotationDelay = 12 hours;
+        proofOfUseLockUpPeriodDays = 90;
+        proofOfUseDelegationPercentage = 50;
+        limitValidatorsPerDelegator = 20;
+        firstDelegationsMonth = 0;
+        complaintTimeLimit = 1800;
+        minNodeBalance = 1.5 ether;
+    }
+
     /**
      * @dev Allows the Owner to set new reward and delta periods
      * This function is only for tests.
@@ -303,24 +321,6 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     }
 
     function reinitialize() external override reinitializer(2) {
-        minNodeBalance = 1.5 ether;
-    }
-
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-
-        msr = 0;
-        rewardPeriod = 2592000;
-        allowableLatency = 150000;
-        deltaPeriod = 3600;
-        checkTime = 300;
-        launchTimestamp = type(uint).max;
-        rotationDelay = 12 hours;
-        proofOfUseLockUpPeriodDays = 90;
-        proofOfUseDelegationPercentage = 50;
-        limitValidatorsPerDelegator = 20;
-        firstDelegationsMonth = 0;
-        complaintTimeLimit = 1800;
         minNodeBalance = 1.5 ether;
     }
 }

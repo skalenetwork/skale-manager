@@ -38,6 +38,10 @@ contract Punisher is Permissions, ILocker, IPunisher {
     mapping (address => uint) private _locked;
     bytes32 public constant FORGIVER_ROLE = keccak256("FORGIVER_ROLE");
 
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+    }
+
     /**
      * @dev Allows SkaleDKG contract to execute slashing on a validator and
      * validator's delegations by an `amount` of tokens.
@@ -105,10 +109,6 @@ contract Punisher is Permissions, ILocker, IPunisher {
      */
     function handleSlash(address holder, uint amount) external override allow("DelegationController") {
         _locked[holder] = _locked[holder] + amount;
-    }
-
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
     }
 
     // private

@@ -69,6 +69,11 @@ contract ValidatorService is Permissions, IValidatorService {
         _;
     }
 
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+        useWhitelist = true;
+    }
+
     /**
      * @dev Creates a new validator ID that includes a validator name, description,
      * commission or fee rate, and a minimum delegation amount accepted by the validator.
@@ -392,10 +397,10 @@ contract ValidatorService is Permissions, IValidatorService {
     /**
      * @dev Returns the validator ID linked to a node address without revert.
      */
-    function getValidatorIdByNodeAddressWithoutRevert(address nodeAddress) 
+    function getValidatorIdByNodeAddressWithoutRevert(address nodeAddress)
         external
         view
-        override 
+        override
         returns (uint validatorId)
     {
         validatorId = _nodeAddressToValidatorId[nodeAddress];
@@ -408,11 +413,6 @@ contract ValidatorService is Permissions, IValidatorService {
             validators[validatorId].minimumDelegationAmount <= amount,
             "Amount does not meet the validator's minimum delegation amount"
         );
-    }
-
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
-        useWhitelist = true;
     }
 
     /**

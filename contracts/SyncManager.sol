@@ -42,6 +42,10 @@ contract SyncManager is Permissions, ISyncManager {
         _;
     }
 
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+    }
+
     function addIPRange(string memory name, bytes4 startIP, bytes4 endIP) external override onlySyncManager {
         require(startIP <= endIP && startIP != bytes4(0) && endIP != bytes4(0), "Invalid IP ranges provided");
         bytes32 ipRangeNameHash = keccak256(abi.encodePacked(name));
@@ -70,9 +74,4 @@ contract SyncManager is Permissions, ISyncManager {
         bytes32 ipRangeNameHash = keccak256(abi.encodePacked(name));
         return ipRanges[ipRangeNameHash];
     }
-
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
-    }
-
 }

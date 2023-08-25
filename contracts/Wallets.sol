@@ -34,8 +34,8 @@ import "./Permissions.sol";
 /**
  * @title Wallets
  * @dev Contract contains logic to perform automatic self-recharging ether for nodes
- * from validator wallets or schain wallets. Where validators can top up a validator 
- * wallet and node addresses for this validator would be auto recharged. And schain 
+ * from validator wallets or schain wallets. Where validators can top up a validator
+ * wallet and node addresses for this validator would be auto recharged. And schain
  * owners should hold funds for recharging nodes that provide security for the schain.
  */
 contract Wallets is Permissions, IWallets {
@@ -87,6 +87,10 @@ contract Wallets is Permissions, IWallets {
      */
     event ReturnDebtFromValidator(uint validatorId, bytes32 schainHash, uint debtAmount);
 
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+    }
+
     /**
      * @dev Is executed on a call to the contract with empty calldata.
      * This is the function that is executed on plain Ether transfers,
@@ -108,7 +112,7 @@ contract Wallets is Permissions, IWallets {
      * @dev Reimburse gas for node by validator wallet if node has less than
      * `minNodeBalance` amount after current tx. If validator wallet has insufficient
      * funds the node will receive the entire remaining amount in the validator's wallet.
-     * 
+     *
      * Emits a {NodeRefundedByValidator} event.
      *
      * Requirements:
@@ -137,8 +141,8 @@ contract Wallets is Permissions, IWallets {
     }
 
     /**
-     * @dev Returns the amount owed to the owner of the schain by the validator, 
-     * if the validator does not have enough funds, then everything 
+     * @dev Returns the amount owed to the owner of the schain by the validator,
+     * if the validator does not have enough funds, then everything
      * that the validator has will be returned to the owner of the schain.
      *
      * Emits a {ReturnDebtFromValidator} event.
@@ -268,9 +272,5 @@ contract Wallets is Permissions, IWallets {
         require(schainsInternal.isSchainActive(schainHash), "Schain should be active for recharging");
         _schainWallets[schainHash] = _schainWallets[schainHash] + msg.value;
         emit SchainWalletRecharged(msg.sender, msg.value, schainHash);
-    }
-
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
     }
 }

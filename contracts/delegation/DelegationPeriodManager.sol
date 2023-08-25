@@ -39,6 +39,16 @@ contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
     bytes32 public constant DELEGATION_PERIOD_SETTER_ROLE = keccak256("DELEGATION_PERIOD_SETTER_ROLE");
 
     /**
+     * @dev Initial delegation period and multiplier settings.
+     */
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+        stakeMultipliers[2] = 100;  // 2 months at 100
+        // stakeMultipliers[6] = 150;  // 6 months at 150
+        // stakeMultipliers[12] = 200; // 12 months at 200
+    }
+
+    /**
      * @dev Allows the Owner to create a new available delegation period and
      * stake multiplier in the network.
      *
@@ -57,15 +67,5 @@ contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
      */
     function isDelegationPeriodAllowed(uint monthsCount) external view override returns (bool) {
         return stakeMultipliers[monthsCount] != 0;
-    }
-
-    /**
-     * @dev Initial delegation period and multiplier settings.
-     */
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-        stakeMultipliers[2] = 100;  // 2 months at 100
-        // stakeMultipliers[6] = 150;  // 6 months at 150
-        // stakeMultipliers[12] = 200; // 12 months at 200
     }
 }

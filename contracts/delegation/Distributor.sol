@@ -54,6 +54,12 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     // validatorId => month
     mapping (uint => uint) private _firstUnwithdrawnMonthForValidator;
 
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
+    }
+
     /**
      * @dev Return and update the amount of earned bounty from a validator.
      */
@@ -159,12 +165,6 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     function getEarnedFeeAmount() external view override returns (uint earned, uint endMonth) {
         IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         return getEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
-    }
-
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
     /**

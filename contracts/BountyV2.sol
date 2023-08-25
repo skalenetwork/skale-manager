@@ -71,6 +71,15 @@ contract BountyV2 is Permissions, IBountyV2 {
         _;
     }
 
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+        _nextEpoch = 0;
+        _epochPool = 0;
+        _bountyWasPaidInCurrentEpoch = 0;
+        bountyReduction = false;
+        nodeCreationWindowSeconds = 3 * SECONDS_PER_DAY;
+    }
+
     function calculateBounty(uint nodeIndex)
         external
         override
@@ -198,15 +207,6 @@ contract BountyV2 is Permissions, IBountyV2 {
 
     function getEffectiveDelegatedSum() external view override returns (uint[] memory) {
         return _effectiveDelegatedSum.getValues();
-    }
-
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
-        _nextEpoch = 0;
-        _epochPool = 0;
-        _bountyWasPaidInCurrentEpoch = 0;
-        bountyReduction = false;
-        nodeCreationWindowSeconds = 3 * SECONDS_PER_DAY;
     }
 
     // private

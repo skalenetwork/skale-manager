@@ -49,6 +49,10 @@ contract KeyStorage is Permissions, IKeyStorage {
 
     mapping(bytes32 => ISkaleDKG.G2Point[]) private _previousSchainsPublicKeys;
 
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+    }
+
     function deleteKey(bytes32 schainHash) external override allow("SkaleDKG") {
         _previousSchainsPublicKeys[schainHash].push(_schainsPublicKeys[schainHash]);
         delete _schainsPublicKeys[schainHash];
@@ -87,10 +91,6 @@ contract KeyStorage is Permissions, IKeyStorage {
 
     function getAllPreviousPublicKeys(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point[] memory) {
         return _previousSchainsPublicKeys[schainHash];
-    }
-
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
     }
 
     function _isSchainsPublicKeyZero(bytes32 schainHash) private view returns (bool) {

@@ -64,6 +64,10 @@ contract Schains is Permissions, ISchains {
         _;
     }
 
+    function initialize(address newContractsAddress) public override initializer {
+        Permissions.initialize(newContractsAddress);
+    }
+
     /**
      * @dev Allows SkaleManager contract to create an Schain.
      *
@@ -260,10 +264,6 @@ contract Schains is Permissions, ISchains {
             options[i] = _options[schainHash][_optionsIndex[schainHash].at(i)];
         }
         return options;
-    }
-
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
     }
 
     /**

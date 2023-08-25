@@ -35,6 +35,10 @@ contract SlashingTable is Permissions, ISlashingTable {
 
     bytes32 public constant PENALTY_SETTER_ROLE = keccak256("PENALTY_SETTER_ROLE");
 
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+    }
+
     /**
      * @dev Allows the Owner to set a slashing penalty in SKL tokens for a
      * given offense.
@@ -52,9 +56,5 @@ contract SlashingTable is Permissions, ISlashingTable {
     function getPenalty(string calldata offense) external view override returns (uint) {
         uint penalty = _penalties[uint(keccak256(abi.encodePacked(offense)))];
         return penalty;
-    }
-
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
     }
 }

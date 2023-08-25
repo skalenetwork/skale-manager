@@ -59,6 +59,12 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
 
     bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
 
+    function initialize(address newContractsAddress) public override initializer {
+        Permissions.initialize(newContractsAddress);
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+        _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
+    }
+
     function tokensReceived(
         address, // operator
         address from,
@@ -181,12 +187,6 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
     function setVersion(string calldata newVersion) external override onlyOwner {
         emit VersionUpdated(version, newVersion);
         version = newVersion;
-    }
-
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
-        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-        _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
 
     function _payBounty(uint bounty, uint validatorId) private {

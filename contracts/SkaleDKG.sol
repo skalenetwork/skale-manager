@@ -117,6 +117,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _refundGasByValidatorToSchain(schainHash);
     }
 
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+    }
+
     function alright(bytes32 schainHash, uint fromNodeIndex)
         external
         override
@@ -524,10 +528,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
         }
         return keccak256(data);
-    }
-
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
     }
 
     function checkAndReturnIndexInGroup(

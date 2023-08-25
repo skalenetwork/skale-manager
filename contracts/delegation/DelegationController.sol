@@ -162,6 +162,10 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         _;
     }
 
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+    }
+
     /**
      * @dev Update and return a validator's delegations.
      */
@@ -452,10 +456,6 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
      */
     function getDelegationsByHolderLength(address holder) external view override returns (uint) {
         return delegationsByHolder[holder].length;
-    }
-
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
     }
 
     /**

@@ -78,6 +78,10 @@ contract NodeRotation is Permissions, INodeRotation {
         _;
     }
 
+    function initialize(address newContractsAddress) public override initializer {
+        Permissions.initialize(newContractsAddress);
+    }
+
     /**
      * @dev Allows SkaleManager to remove, find new node, and rotate node from
      * schain.
@@ -164,10 +168,6 @@ contract NodeRotation is Permissions, INodeRotation {
     function getPreviousNode(bytes32 schainHash, uint256 nodeIndex) external view override returns (uint256) {
         require(_rotations[schainHash].newNodeIndexes.contains(nodeIndex), "No previous node");
         return _rotations[schainHash].previousNodes[nodeIndex];
-    }
-
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
     }
 
     /**

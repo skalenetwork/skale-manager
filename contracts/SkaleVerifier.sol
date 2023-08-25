@@ -35,6 +35,10 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
     using Fp2Operations for ISkaleDKG.Fp2Point;
     using G2Operations for ISkaleDKG.G2Point;
 
+    function initialize(address newContractsAddress) public override initializer {
+        Permissions.initialize(newContractsAddress);
+    }
+
     /**
     * @dev Verifies a BLS signature.
     *
@@ -86,10 +90,6 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
             hashA, hashB,
             publicKey.x.b, publicKey.x.a, publicKey.y.b, publicKey.y.a
         );
-    }
-
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
     }
 
     function _checkHashToGroupWithHelper(

@@ -113,6 +113,14 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
         _;
     }
 
+    function initialize(address newContractsAddress) public override initializer {
+        Permissions.initialize(newContractsAddress);
+
+        numberOfSchains = 0;
+        sumOfSchainsResources = 0;
+        numberOfSchainTypes = 0;
+    }
+
     /**
      * @dev Allows Schain contract to initialize an schain.
      */
@@ -815,14 +823,6 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
      */
     function getGeneration(bytes32 schainHash) external view override schainExists(schainHash) returns (uint) {
         return schains[schainHash].generation;
-    }
-
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
-
-        numberOfSchains = 0;
-        sumOfSchainsResources = 0;
-        numberOfSchainTypes = 0;
     }
 
     /**

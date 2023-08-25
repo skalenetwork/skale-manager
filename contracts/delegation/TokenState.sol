@@ -57,6 +57,13 @@ contract TokenState is Permissions, ILocker, ITokenState {
         _;
     }
 
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+        _setupRole(LOCKER_MANAGER_ROLE, msg.sender);
+        addLocker("DelegationController");
+        addLocker("Punisher");
+    }
+
     /**
      *  @dev See {ILocker-getAndUpdateLockedAmount}.
      */
@@ -109,13 +116,6 @@ contract TokenState is Permissions, ILocker, ITokenState {
             _lockers.pop();
             emit LockerWasRemoved(locker);
         }
-    }
-
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
-        _setupRole(LOCKER_MANAGER_ROLE, msg.sender);
-        addLocker("DelegationController");
-        addLocker("Punisher");
     }
 
     /**
