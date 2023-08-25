@@ -46,9 +46,9 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
 
     string public constant SYMBOL = "SKL";
 
-    uint public constant DECIMALS = 18;
+    uint256 public constant DECIMALS = 18;
 
-    uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
+    uint256 public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
     constructor(address contractsAddress, address[] memory defOps)
     ERC777("SKALE", "SKL", defOps)
@@ -92,7 +92,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     /**
      * @dev See {IDelegatableToken-getAndUpdateDelegatedAmount}.
      */
-    function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
+    function getAndUpdateDelegatedAmount(address wallet) external override returns (uint256) {
         return IDelegationController(contractManager.getContract("DelegationController"))
             .getAndUpdateDelegatedAmount(wallet);
     }
@@ -100,14 +100,14 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     /**
      * @dev See {IDelegatableToken-getAndUpdateSlashedAmount}.
      */
-    function getAndUpdateSlashedAmount(address wallet) external override returns (uint) {
+    function getAndUpdateSlashedAmount(address wallet) external override returns (uint256) {
         return ILocker(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
     }
 
     /**
      * @dev See {IDelegatableToken-getAndUpdateLockedAmount}.
      */
-    function getAndUpdateLockedAmount(address wallet) public override returns (uint) {
+    function getAndUpdateLockedAmount(address wallet) public override returns (uint256) {
         return ILocker(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
     }
 
@@ -120,7 +120,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         uint256 tokenId)
         internal override
     {
-        uint locked = getAndUpdateLockedAmount(from);
+        uint256 locked = getAndUpdateLockedAmount(from);
         if (locked > 0) {
             require(balanceOf(from) >= locked.add(tokenId), "Token should be unlocked for transferring");
         }

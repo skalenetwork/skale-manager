@@ -52,8 +52,8 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    uint constant public HEADER_COSTS = 7654;
-    uint constant public CALL_PRICE = 21000;
+    uint256 constant public HEADER_COSTS = 7654;
+    uint256 constant public CALL_PRICE = 21000;
 
     string public version;
 
@@ -113,12 +113,12 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         nodes.createNode(msg.sender, params);
     }
 
-    function nodeExit(uint nodeIndex) external override {
-        uint gasLimit = _getGasLimit();
+    function nodeExit(uint256 nodeIndex) external override {
+        uint256 gasLimit = _getGasLimit();
         IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
-        uint validatorId = nodes.getValidatorId(nodeIndex);
+        uint256 validatorId = nodes.getValidatorId(nodeIndex);
         bool permitted = (_isOwner() || nodes.isNodeExist(msg.sender, nodeIndex));
         if (!permitted && validatorService.validatorAddressExists(msg.sender)) {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
@@ -156,8 +156,8 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         schains.deleteSchainByRoot(name);
     }
 
-    function getBounty(uint nodeIndex) external override {
-        uint gasLimit = _getGasLimit();
+    function getBounty(uint256 nodeIndex) external override {
+        uint256 gasLimit = _getGasLimit();
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
@@ -165,10 +165,10 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         require(!nodes.incompliant(nodeIndex), "The node is incompliant");
         IBountyV2 bountyContract = IBountyV2(contractManager.getContract("Bounty"));
 
-        uint bounty = bountyContract.calculateBounty(nodeIndex);
+        uint256 bounty = bountyContract.calculateBounty(nodeIndex);
 
         nodes.changeNodeLastRewardDate(nodeIndex);
-        uint validatorId = nodes.getValidatorId(nodeIndex);
+        uint256 validatorId = nodes.getValidatorId(nodeIndex);
         if (bounty > 0) {
             _payBounty(bounty, validatorId);
         }
@@ -189,7 +189,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         version = newVersion;
     }
 
-    function _payBounty(uint bounty, uint validatorId) private {
+    function _payBounty(uint256 bounty, uint256 validatorId) private {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         IDistributor distributor = IDistributor(contractManager.getContract("Distributor"));
 
@@ -199,12 +199,12 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         );
     }
 
-    function _refundGasByValidator(uint validatorId, address payable spender, uint gasLimit) private {
+    function _refundGasByValidator(uint256 validatorId, address payable spender, uint256 gasLimit) private {
         IWallets(payable(contractManager.getContract("Wallets")))
             .refundGasByValidator(validatorId, spender, gasLimit);
     }
 
-    function _getGasLimit() private view returns (uint gasLimit) {
+    function _getGasLimit() private view returns (uint256 gasLimit) {
         gasLimit = (gasleft() + HEADER_COSTS) * 64 / 63 + CALL_PRICE;
     }
 }

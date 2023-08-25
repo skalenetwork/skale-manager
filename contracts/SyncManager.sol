@@ -61,11 +61,11 @@ contract SyncManager is Permissions, ISyncManager {
         emit IPRangeRemoved(name);
     }
 
-    function getIPRangesNumber() external view override returns (uint) {
+    function getIPRangesNumber() external view override returns (uint256) {
         return _ipRangeNames.length();
     }
 
-    function getIPRangeByIndex(uint index) external view override returns (IPRange memory) {
+    function getIPRangeByIndex(uint256 index) external view override returns (IPRange memory) {
         bytes32 ipRangeNameHash = _ipRangeNames.at(index);
         return ipRanges[ipRangeNameHash];
     }

@@ -46,13 +46,13 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     IERC1820Registry private _erc1820;
 
     // validatorId =>        month => token
-    mapping (uint => mapping (uint => uint)) private _bountyPaid;
+    mapping (uint256 => mapping (uint256 => uint256)) private _bountyPaid;
     // validatorId =>        month => token
-    mapping (uint => mapping (uint => uint)) private _feePaid;
+    mapping (uint256 => mapping (uint256 => uint256)) private _feePaid;
     //        holder =>   validatorId => month
-    mapping (address => mapping (uint => uint)) private _firstUnwithdrawnMonth;
+    mapping (address => mapping (uint256 => uint256)) private _firstUnwithdrawnMonth;
     // validatorId => month
-    mapping (uint => uint) private _firstUnwithdrawnMonthForValidator;
+    mapping (uint256 => uint256) private _firstUnwithdrawnMonthForValidator;
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
@@ -63,7 +63,13 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     /**
      * @dev Return and update the amount of earned bounty from a validator.
      */
-    function getAndUpdateEarnedBountyAmount(uint validatorId) external override returns (uint earned, uint endMonth) {
+    function getAndUpdateEarnedBountyAmount(
+        uint256 validatorId
+    )
+        external
+        override
+        returns (uint256 earned, uint256 endMonth)
+    {
         return getAndUpdateEarnedBountyAmountOf(msg.sender, validatorId);
     }
 
@@ -77,7 +83,7 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
      *
      * - Bounty must be unlocked.
      */
-    function withdrawBounty(uint validatorId, address to) external override {
+    function withdrawBounty(uint256 validatorId, address to) external override {
         ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
@@ -86,8 +92,8 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
                 constantsHolder.BOUNTY_LOCKUP_MONTHS()
             ), "Bounty is locked");
 
-        uint bounty;
-        uint endMonth;
+        uint256 bounty;
+        uint256 endMonth;
         (bounty, endMonth) = getAndUpdateEarnedBountyAmountOf(msg.sender, validatorId);
 
         _firstUnwithdrawnMonth[msg.sender][validatorId] = endMonth;
@@ -124,10 +130,10 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
                 constantsHolder.BOUNTY_LOCKUP_MONTHS()
             ), "Fee is locked");
         // check Validator Exist inside getValidatorId
-        uint validatorId = validatorService.getValidatorId(msg.sender);
+        uint256 validatorId = validatorService.getValidatorId(msg.sender);
 
-        uint fee;
-        uint endMonth;
+        uint256 fee;
+        uint256 endMonth;
         (fee, endMonth) = getEarnedFeeAmountOf(validatorId);
 
         _firstUnwithdrawnMonthForValidator[validatorId] = endMonth;
@@ -155,14 +161,14 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     {
         require(to == address(this), "Receiver is incorrect");
         require(userData.length == 32, "Data length is incorrect");
-        uint validatorId = abi.decode(userData, (uint));
+        uint256 validatorId = abi.decode(userData, (uint256));
         _distributeBounty(amount, validatorId);
     }
 
     /**
      * @dev Return the amount of earned validator fees of `msg.sender`.
      */
-    function getEarnedFeeAmount() external view override returns (uint earned, uint endMonth) {
+    function getEarnedFeeAmount() external view override returns (uint256 earned, uint256 endMonth) {
         IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         return getEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
     }
@@ -170,18 +176,18 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     /**
      * @dev Return and update the amount of earned bounties.
      */
-    function getAndUpdateEarnedBountyAmountOf(address wallet, uint validatorId)
+    function getAndUpdateEarnedBountyAmountOf(address wallet, uint256 validatorId)
         public
         override
-        returns (uint earned, uint endMonth)
+        returns (uint256 earned, uint256 endMonth)
     {
         IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController"));
         ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
 
-        uint currentMonth = timeHelpers.getCurrentMonth();
+        uint256 currentMonth = timeHelpers.getCurrentMonth();
 
-        uint startMonth = _firstUnwithdrawnMonth[wallet][validatorId];
+        uint256 startMonth = _firstUnwithdrawnMonth[wallet][validatorId];
         if (startMonth == 0) {
             startMonth = delegationController.getFirstDelegationMonth(wallet, validatorId);
             if (startMonth == 0) {
@@ -194,8 +200,8 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         if (endMonth > startMonth + 12) {
             endMonth = startMonth + 12;
         }
-        for (uint i = startMonth; i < endMonth; ++i) {
-            uint effectiveDelegatedToValidator =
+        for (uint256 i = startMonth; i < endMonth; ++i) {
+            uint256 effectiveDelegatedToValidator =
                 delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
             if (effectiveDelegatedToValidator.muchGreater(0)) {
                 earned = earned +
@@ -209,12 +215,12 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     /**
      * @dev Return the amount of earned fees by validator ID.
      */
-    function getEarnedFeeAmountOf(uint validatorId) public view override returns (uint earned, uint endMonth) {
+    function getEarnedFeeAmountOf(uint256 validatorId) public view override returns (uint256 earned, uint256 endMonth) {
         ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
 
-        uint currentMonth = timeHelpers.getCurrentMonth();
+        uint256 currentMonth = timeHelpers.getCurrentMonth();
 
-        uint startMonth = _firstUnwithdrawnMonthForValidator[validatorId];
+        uint256 startMonth = _firstUnwithdrawnMonthForValidator[validatorId];
         if (startMonth == 0) {
             return (0, 0);
         }
@@ -224,7 +230,7 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         if (endMonth > startMonth + 12) {
             endMonth = startMonth + 12;
         }
-        for (uint i = startMonth; i < endMonth; ++i) {
+        for (uint256 i = startMonth; i < endMonth; ++i) {
             earned = earned + _feePaid[validatorId][i];
         }
     }
@@ -236,15 +242,15 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
      *
      * Emits a {BountyWasPaid} event.
      */
-    function _distributeBounty(uint amount, uint validatorId) private {
+    function _distributeBounty(uint256 amount, uint256 validatorId) private {
         ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
         IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
 
-        uint currentMonth = timeHelpers.getCurrentMonth();
-        uint feeRate = validatorService.getValidator(validatorId).feeRate;
+        uint256 currentMonth = timeHelpers.getCurrentMonth();
+        uint256 feeRate = validatorService.getValidator(validatorId).feeRate;
 
-        uint fee = amount * feeRate / 1000;
-        uint bounty = amount - fee;
+        uint256 fee = amount * feeRate / 1000;
+        uint256 bounty = amount - fee;
         _bountyPaid[validatorId][currentMonth] = _bountyPaid[validatorId][currentMonth] + bounty;
         _feePaid[validatorId][currentMonth] = _feePaid[validatorId][currentMonth] + fee;
 

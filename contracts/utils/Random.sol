@@ -33,7 +33,7 @@ library Random {
     /**
      * @dev Create an instance of RandomGenerator
      */
-    function create(uint seed) internal pure returns (IRandom.RandomGenerator memory) {
+    function create(uint256 seed) internal pure returns (IRandom.RandomGenerator memory) {
         return IRandom.RandomGenerator({seed: seed});
     }
 
@@ -44,7 +44,7 @@ library Random {
     /**
      * @dev Generates random value
      */
-    function random(IRandom.RandomGenerator memory self) internal pure returns (uint) {
+    function random(IRandom.RandomGenerator memory self) internal pure returns (uint256) {
         self.seed = uint(sha256(abi.encodePacked(self.seed)));
         return self.seed;
     }
@@ -52,13 +52,13 @@ library Random {
     /**
      * @dev Generates random value in range [0, max)
      */
-    function random(IRandom.RandomGenerator memory self, uint max) internal pure returns (uint) {
+    function random(IRandom.RandomGenerator memory self, uint256 max) internal pure returns (uint256) {
         assert(max > 0);
-        uint maxRand = type(uint).max - type(uint).max % max;
+        uint256 maxRand = type(uint).max - type(uint).max % max;
         if (type(uint).max - maxRand == max - 1) {
             return random(self) % max;
         } else {
-            uint rand = random(self);
+            uint256 rand = random(self);
             while (rand >= maxRand) {
                 rand = random(self);
             }

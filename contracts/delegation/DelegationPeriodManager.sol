@@ -34,7 +34,7 @@ import "../Permissions.sol";
  */
 contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
 
-    mapping (uint => uint) public stakeMultipliers;
+    mapping (uint256 => uint256) public stakeMultipliers;
 
     bytes32 public constant DELEGATION_PERIOD_SETTER_ROLE = keccak256("DELEGATION_PERIOD_SETTER_ROLE");
 
@@ -54,7 +54,7 @@ contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
      *
      * Emits a {DelegationPeriodWasSet} event.
      */
-    function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external override {
+    function setDelegationPeriod(uint256 monthsCount, uint256 stakeMultiplier) external override {
         require(hasRole(DELEGATION_PERIOD_SETTER_ROLE, msg.sender), "DELEGATION_PERIOD_SETTER_ROLE is required");
         require(stakeMultipliers[monthsCount] == 0, "Delegation period is already set");
         stakeMultipliers[monthsCount] = stakeMultiplier;
@@ -65,7 +65,7 @@ contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
     /**
      * @dev Checks whether given delegation period is allowed.
      */
-    function isDelegationPeriodAllowed(uint monthsCount) external view override returns (bool) {
+    function isDelegationPeriodAllowed(uint256 monthsCount) external view override returns (bool) {
         return stakeMultipliers[monthsCount] != 0;
     }
 }

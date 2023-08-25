@@ -29,7 +29,7 @@ import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
 import "../Permissions.sol";
 
 interface ISkaleManagerMock {
-    function payBounty(uint validatorId, uint amount) external;
+    function payBounty(uint256 validatorId, uint256 amount) external;
 }
 
 
@@ -44,7 +44,7 @@ contract SkaleManagerMock is Permissions, IERC777Recipient, ISkaleManagerMock {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function payBounty(uint validatorId, uint amount) external override {
+    function payBounty(uint256 validatorId, uint256 amount) external override {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         require(IMintableToken(address(skaleToken)).mint(address(this), amount, "", ""), "Token was not minted");
         require(

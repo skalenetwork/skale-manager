@@ -67,15 +67,15 @@ contract TokenState is Permissions, ILocker, ITokenState {
     /**
      *  @dev See {ILocker-getAndUpdateLockedAmount}.
      */
-    function getAndUpdateLockedAmount(address holder) external override returns (uint) {
+    function getAndUpdateLockedAmount(address holder) external override returns (uint256) {
         if (address(_delegationController) == address(0)) {
             _delegationController =
                 IDelegationController(contractManager.getContract("DelegationController"));
         }
-        uint locked = 0;
+        uint256 locked = 0;
         if (_delegationController.getDelegationsByHolderLength(holder) > 0) {
             // the holder ever delegated
-            for (uint i = 0; i < _lockers.length; ++i) {
+            for (uint256 i = 0; i < _lockers.length; ++i) {
                 ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
                 locked = locked + locker.getAndUpdateLockedAmount(holder);
             }
@@ -86,9 +86,9 @@ contract TokenState is Permissions, ILocker, ITokenState {
     /**
      * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
-    function getAndUpdateForbiddenForDelegationAmount(address holder) external override returns (uint amount) {
-        uint forbidden = 0;
-        for (uint i = 0; i < _lockers.length; ++i) {
+    function getAndUpdateForbiddenForDelegationAmount(address holder) external override returns (uint256 amount) {
+        uint256 forbidden = 0;
+        for (uint256 i = 0; i < _lockers.length; ++i) {
             ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
             forbidden = forbidden + locker.getAndUpdateForbiddenForDelegationAmount(holder);
         }
@@ -101,7 +101,7 @@ contract TokenState is Permissions, ILocker, ITokenState {
      * Emits a {LockerWasRemoved} event.
      */
     function removeLocker(string calldata locker) external override onlyLockerManager {
-        uint index;
+        uint256 index;
         bytes32 hash = keccak256(abi.encodePacked(locker));
         for (index = 0; index < _lockers.length; ++index) {
             if (keccak256(abi.encodePacked(_lockers[index])) == hash) {

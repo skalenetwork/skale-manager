@@ -43,8 +43,8 @@ library SkaleDkgResponse {
 
     function response(
         bytes32 schainHash,
-        uint fromNodeIndex,
-        uint secretNumber,
+        uint256 fromNodeIndex,
+        uint256 secretNumber,
         ISkaleDKG.G2Point memory multipliedShare,
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels,
@@ -52,7 +52,7 @@ library SkaleDkgResponse {
     )
         external
     {
-        uint index = ISchainsInternal(contractManager.getContract("SchainsInternal"))
+        uint256 index = ISchainsInternal(contractManager.getContract("SchainsInternal"))
             .getNodeIndexInGroup(schainHash, fromNodeIndex);
         require(index < channels[schainHash].n, "Node is not in this group");
         require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
@@ -62,7 +62,7 @@ library SkaleDkgResponse {
             "Incorrect time for response"
         );
         require(complaints[schainHash].isResponse, "Have not submitted pre-response data");
-        uint badNode = _verifyDataAndSlash(
+        uint256 badNode = _verifyDataAndSlash(
             schainHash,
             secretNumber,
             multipliedShare,
@@ -74,13 +74,13 @@ library SkaleDkgResponse {
 
     function _verifyDataAndSlash(
         bytes32 schainHash,
-        uint secretNumber,
+        uint256 secretNumber,
         ISkaleDKG.G2Point memory multipliedShare,
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
     )
         private
-        returns (uint badNode)
+        returns (uint256 badNode)
     {
         bytes32[2] memory publicKey = INodes(contractManager.getContract("Nodes")).getNodePublicKey(
             complaints[schainHash].fromNodeToComplaint
@@ -91,7 +91,7 @@ library SkaleDkgResponse {
         bytes32 key = bytes32(pkX);
 
         // Decrypt secret key contribution
-        uint secret = IDecryption(contractManager.getContract("Decryption")).decrypt(
+        uint256 secret = IDecryption(contractManager.getContract("Decryption")).decrypt(
             complaints[schainHash].keyShare,
             sha256(abi.encodePacked(key))
         );
@@ -107,7 +107,7 @@ library SkaleDkgResponse {
 
     function _checkCorrectMultipliedShare(
         ISkaleDKG.G2Point memory multipliedShare,
-        uint secret
+        uint256 secret
     )
         private
         view
@@ -137,7 +137,7 @@ library SkaleDkgResponse {
             tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
     }
 
-    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint) {
+    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256) {
         return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 

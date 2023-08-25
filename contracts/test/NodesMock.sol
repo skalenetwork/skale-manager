@@ -24,60 +24,63 @@ import "../BountyV2.sol";
 import "../Permissions.sol";
 
 interface INodesMock {
-    function registerNodes(uint amount, uint validatorId) external;
-    function removeNode(uint nodeId) external;
-    function changeNodeLastRewardDate(uint nodeId) external;
-    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint);
-    function isNodeLeft(uint nodeId) external view returns (bool);
-    function getNumberOnlineNodes() external view returns (uint);
-    function getValidatorId(uint nodeId) external view returns (uint);
-    function checkPossibilityToMaintainNode(uint /* validatorId */, uint /* nodeIndex */) external pure returns (bool);
+    function registerNodes(uint256 amount, uint256 validatorId) external;
+    function removeNode(uint256 nodeId) external;
+    function changeNodeLastRewardDate(uint256 nodeId) external;
+    function getNodeLastRewardDate(uint256 nodeIndex) external view returns (uint256);
+    function isNodeLeft(uint256 nodeId) external view returns (bool);
+    function getNumberOnlineNodes() external view returns (uint256);
+    function getValidatorId(uint256 nodeId) external view returns (uint256);
+    function checkPossibilityToMaintainNode(
+        uint256 /* validatorId */,
+        uint256 /* nodeIndex */
+    ) external pure returns (bool);
 }
 
 
 contract NodesMock is Permissions, INodesMock {
 
-    uint public nodesCount = 0;
-    uint public nodesLeft = 0;
+    uint256 public nodesCount = 0;
+    uint256 public nodesLeft = 0;
     //     nodeId => timestamp
-    mapping (uint => uint) public lastRewardDate;
+    mapping (uint256 => uint256) public lastRewardDate;
     //     nodeId => left
-    mapping (uint => bool) public nodeLeft;
+    mapping (uint256 => bool) public nodeLeft;
     //     nodeId => validatorId
-    mapping (uint => uint) public owner;
+    mapping (uint256 => uint256) public owner;
 
     constructor (address contractManagerAddress) {
         Permissions.initialize(contractManagerAddress);
     }
 
-    function registerNodes(uint amount, uint validatorId) external override {
-        for (uint nodeId = nodesCount; nodeId < nodesCount + amount; ++nodeId) {
+    function registerNodes(uint256 amount, uint256 validatorId) external override {
+        for (uint256 nodeId = nodesCount; nodeId < nodesCount + amount; ++nodeId) {
             lastRewardDate[nodeId] = block.timestamp;
             owner[nodeId] = validatorId;
         }
         nodesCount += amount;
     }
-    function removeNode(uint nodeId) external override {
+    function removeNode(uint256 nodeId) external override {
         ++nodesLeft;
         nodeLeft[nodeId] = true;
     }
-    function changeNodeLastRewardDate(uint nodeId) external override {
+    function changeNodeLastRewardDate(uint256 nodeId) external override {
         lastRewardDate[nodeId] = block.timestamp;
     }
-    function getNodeLastRewardDate(uint nodeIndex) external view override returns (uint) {
+    function getNodeLastRewardDate(uint256 nodeIndex) external view override returns (uint256) {
         require(nodeIndex < nodesCount, "Node does not exist");
         return lastRewardDate[nodeIndex];
     }
-    function isNodeLeft(uint nodeId) external view override returns (bool) {
+    function isNodeLeft(uint256 nodeId) external view override returns (bool) {
         return nodeLeft[nodeId];
     }
-    function getNumberOnlineNodes() external view override returns (uint) {
+    function getNumberOnlineNodes() external view override returns (uint256) {
         return nodesCount - nodesLeft;
     }
-    function getValidatorId(uint nodeId) external view override returns (uint) {
+    function getValidatorId(uint256 nodeId) external view override returns (uint256) {
         return owner[nodeId];
     }
-    function checkPossibilityToMaintainNode(uint /* validatorId */, uint /* nodeIndex */)
+    function checkPossibilityToMaintainNode(uint256 /* validatorId */, uint256 /* nodeIndex */)
         external
         pure
         override

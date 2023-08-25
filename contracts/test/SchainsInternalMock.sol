@@ -24,8 +24,8 @@ pragma solidity 0.8.17;
 import "../SchainsInternal.sol";
 
 interface ISchainsInternalMock {
-    function removePlaceOfSchainOnNode(bytes32 schainHash, uint nodeIndex) external;
-    function removeNodeToLocked(uint nodeIndex) external;
+    function removePlaceOfSchainOnNode(bytes32 schainHash, uint256 nodeIndex) external;
+    function removeNodeToLocked(uint256 nodeIndex) external;
     function removeSchainToExceptionNode(bytes32 schainHash) external;
 }
 
@@ -35,17 +35,17 @@ contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
 
     mapping (bytes32 => EnumerableSetUpgradeable.AddressSet) private _nodeAddressInSchainTest;
 
-    function removePlaceOfSchainOnNode(bytes32 schainHash, uint nodeIndex) external override {
+    function removePlaceOfSchainOnNode(bytes32 schainHash, uint256 nodeIndex) external override {
         delete placeOfSchainOnNode[schainHash][nodeIndex];
     }
 
-    function removeNodeToLocked(uint nodeIndex) external override {
-        mapping(uint => bytes32[]) storage nodeToLocked = _getNodeToLockedSchains();
+    function removeNodeToLocked(uint256 nodeIndex) external override {
+        mapping(uint256 => bytes32[]) storage nodeToLocked = _getNodeToLockedSchains();
         delete nodeToLocked[nodeIndex];
     }
 
     function removeSchainToExceptionNode(bytes32 schainHash) external override {
-        mapping(bytes32 => uint[]) storage schainToException = _getSchainToExceptionNodes();
+        mapping(bytes32 => uint256[]) storage schainToException = _getSchainToExceptionNodes();
         delete schainToException[schainHash];
     }
 

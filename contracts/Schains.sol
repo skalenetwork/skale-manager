@@ -44,7 +44,7 @@ contract Schains is Permissions, ISchains {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.Bytes32Set;
 
     struct SchainParameters {
-        uint lifetime;
+        uint256 lifetime;
         uint8 typeOfSchain;
         uint16 nonce;
         string name;
@@ -79,11 +79,11 @@ contract Schains is Permissions, ISchains {
      * - There is sufficient deposit to create type of schain.
      * - If from is a smart contract originator must be specified
      */
-    function addSchain(address from, uint deposit, bytes calldata data) external override allow("SkaleManager") {
+    function addSchain(address from, uint256 deposit, bytes calldata data) external override allow("SkaleManager") {
         SchainParameters memory schainParameters = abi.decode(data, (SchainParameters));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
-        uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
-        uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
+        uint256 schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
+        uint256 minSchainLifetime = constantsHolder.minimalSchainLifetime();
         require(block.timestamp >= schainCreationTimeStamp, "It is not a time for creating Schain");
         require(
             schainParameters.lifetime >= minSchainLifetime,
@@ -107,7 +107,7 @@ contract Schains is Permissions, ISchains {
      * - If schain owner is a smart contract schain originator must be specified
      */
     function addSchainByFoundation(
-        uint lifetime,
+        uint256 lifetime,
         uint8 typeOfSchain,
         uint16 nonce,
         string calldata name,
@@ -197,7 +197,7 @@ contract Schains is Permissions, ISchains {
         ISchainsInternal schainsInternal = ISchainsInternal(
             contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainHash), "No free Nodes for new group formation");
-        uint newNodeIndex = nodeRotation.selectNodeToGroup(schainHash);
+        uint256 newNodeIndex = nodeRotation.selectNodeToGroup(schainHash);
         skaleDKG.openChannel(schainHash);
         emit NodeAdded(schainHash, newNodeIndex);
     }
@@ -207,12 +207,12 @@ contract Schains is Permissions, ISchains {
      * @dev Checks whether schain group signature is valid.
      */
     function verifySchainSignature(
-        uint signatureA,
-        uint signatureB,
+        uint256 signatureA,
+        uint256 signatureB,
         bytes32 hash,
-        uint counter,
-        uint hashA,
-        uint hashB,
+        uint256 counter,
+        uint256 hashA,
+        uint256 hashB,
         string calldata schainName
     )
         external
@@ -260,7 +260,7 @@ contract Schains is Permissions, ISchains {
 
     function getOptions(bytes32 schainHash) external view override returns (SchainOption[] memory) {
         SchainOption[] memory options = new SchainOption[](_optionsIndex[schainHash].length());
-        for (uint i = 0; i < options.length; ++i) {
+        for (uint256 i = 0; i < options.length; ++i) {
             options[i] = _options[schainHash][_optionsIndex[schainHash].at(i)];
         }
         return options;
@@ -269,18 +269,18 @@ contract Schains is Permissions, ISchains {
     /**
      * @dev Returns the current price in SKL tokens for given Schain type and lifetime.
      */
-    function getSchainPrice(uint typeOfSchain, uint lifetime) public view override returns (uint) {
+    function getSchainPrice(uint256 typeOfSchain, uint256 lifetime) public view override returns (uint256) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
-        uint nodeDeposit = constantsHolder.NODE_DEPOSIT();
-        uint numberOfNodes;
+        uint256 nodeDeposit = constantsHolder.NODE_DEPOSIT();
+        uint256 numberOfNodes;
         uint8 divisor;
         (divisor, numberOfNodes) = schainsInternal.getSchainType(typeOfSchain);
         if (divisor == 0) {
             return 1e18;
         } else {
-            uint up = nodeDeposit * numberOfNodes * lifetime * 2;
-            uint down = uint(
+            uint256 up = nodeDeposit * numberOfNodes * lifetime * 2;
+            uint256 down = uint(
                 uint(constantsHolder.SMALL_DIVISOR())
                 * uint(constantsHolder.SECONDS_TO_YEAR())
                 / divisor
@@ -301,8 +301,8 @@ contract Schains is Permissions, ISchains {
         string memory name,
         address from,
         address originator,
-        uint deposit,
-        uint lifetime,
+        uint256 deposit,
+        uint256 lifetime,
         ISchainsInternal schainsInternal,
         SchainOption[] memory options
     )
@@ -311,7 +311,7 @@ contract Schains is Permissions, ISchains {
         require(schainsInternal.isSchainNameAvailable(name), "Schain name is not available");
 
         bytes32 schainHash = keccak256(abi.encodePacked(name));
-        for (uint i = 0; i < options.length; ++i) {
+        for (uint256 i = 0; i < options.length; ++i) {
             _setOption(schainHash, options[i]);
         }
 
@@ -327,13 +327,13 @@ contract Schains is Permissions, ISchains {
     function _createGroupForSchain(
         string memory schainName,
         bytes32 schainHash,
-        uint numberOfNodes,
+        uint256 numberOfNodes,
         uint8 partOfNode,
         ISchainsInternal schainsInternal
     )
         private
     {
-        uint[] memory nodesInGroup = schainsInternal.createGroupForSchain(schainHash, numberOfNodes, partOfNode);
+        uint256[] memory nodesInGroup = schainsInternal.createGroupForSchain(schainHash, numberOfNodes, partOfNode);
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
 
         emit SchainNodes(
@@ -351,7 +351,7 @@ contract Schains is Permissions, ISchains {
      *
      * - Schain type must be valid.
      */
-    function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
+    function _addSchain(address from, uint256 deposit, SchainParameters memory schainParameters) private {
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
 
         require(!schainParameters.originator.isContract(), "Originator address must be not a contract");
@@ -373,7 +373,7 @@ contract Schains is Permissions, ISchains {
         );
 
         // create a group for Schain
-        uint numberOfNodes;
+        uint256 numberOfNodes;
         uint8 partOfNode;
         (partOfNode, numberOfNodes) = schainsInternal.getSchainType(schainParameters.typeOfSchain);
 
@@ -404,8 +404,8 @@ contract Schains is Permissions, ISchains {
 
         _deleteOptions(schainHash, schainsInternal);
 
-        uint[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
-        for (uint i = 0; i < nodesInGroup.length; i++) {
+        uint256[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
+        for (uint256 i = 0; i < nodesInGroup.length; i++) {
             if (schainsInternal.checkHoleForSchain(schainHash, i)) {
                 continue;
             }

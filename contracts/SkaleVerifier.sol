@@ -52,9 +52,9 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
     function verify(
         ISkaleDKG.Fp2Point calldata signature,
         bytes32 hash,
-        uint counter,
-        uint hashA,
-        uint hashB,
+        uint256 counter,
+        uint256 hashA,
+        uint256 hashB,
         ISkaleDKG.G2Point calldata publicKey
     )
         external
@@ -74,7 +74,7 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
             return false;
         }
 
-        uint newSignB = G1Operations.negate(signature.b);
+        uint256 newSignB = G1Operations.negate(signature.b);
         require(G1Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
         require(G1Operations.isG1Point(hashA, hashB), "Hash not in G1");
 
@@ -94,9 +94,9 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
 
     function _checkHashToGroupWithHelper(
         bytes32 hash,
-        uint counter,
-        uint hashA,
-        uint hashB
+        uint256 counter,
+        uint256 hashA,
+        uint256 hashB
     )
         private
         pure
@@ -105,10 +105,10 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
         if (counter > 100) {
             return false;
         }
-        uint xCoord = uint(hash) % Fp2Operations.P;
+        uint256 xCoord = uint(hash) % Fp2Operations.P;
         xCoord = (xCoord + counter) % Fp2Operations.P;
 
-        uint ySquared = addmod(
+        uint256 ySquared = addmod(
             mulmod(mulmod(xCoord, xCoord, Fp2Operations.P), xCoord, Fp2Operations.P),
             3,
             Fp2Operations.P

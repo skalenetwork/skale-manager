@@ -35,11 +35,11 @@ import "./ConstantsHolder.sol";
  */
 contract Pricing is Permissions, IPricing {
 
-    uint public constant INITIAL_PRICE = 5 * 10**6;
+    uint256 public constant INITIAL_PRICE = 5 * 10**6;
 
-    uint public price;
-    uint public totalNodes;
-    uint public lastUpdated;
+    uint256 public price;
+    uint256 public totalNodes;
+    uint256 public lastUpdated;
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
@@ -66,23 +66,23 @@ contract Pricing is Permissions, IPricing {
             "It's not a time to update a price"
         );
         checkAllNodes();
-        uint load = _getTotalLoad();
-        uint capacity = _getTotalCapacity();
+        uint256 load = _getTotalLoad();
+        uint256 capacity = _getTotalCapacity();
 
         bool networkIsOverloaded = load * 100 > constantsHolder.OPTIMAL_LOAD_PERCENTAGE() * capacity;
-        uint loadDiff;
+        uint256 loadDiff;
         if (networkIsOverloaded) {
             loadDiff = load * 100 - constantsHolder.OPTIMAL_LOAD_PERCENTAGE() * capacity;
         } else {
             loadDiff = constantsHolder.OPTIMAL_LOAD_PERCENTAGE() * capacity - load * 100;
         }
 
-        uint priceChangeSpeedMultipliedByCapacityAndMinPrice =
+        uint256 priceChangeSpeedMultipliedByCapacityAndMinPrice =
             constantsHolder.ADJUSTMENT_SPEED() * loadDiff * price;
 
-        uint timeSkipped = block.timestamp - lastUpdated;
+        uint256 timeSkipped = block.timestamp - lastUpdated;
 
-        uint priceChange = priceChangeSpeedMultipliedByCapacityAndMinPrice
+        uint256 priceChange = priceChangeSpeedMultipliedByCapacityAndMinPrice
             * timeSkipped
             / constantsHolder.COOLDOWN_TIME()
             / capacity
@@ -107,33 +107,33 @@ contract Pricing is Permissions, IPricing {
     /**
      * @dev Returns the total load percentage.
      */
-    function getTotalLoadPercentage() external view override returns (uint) {
+    function getTotalLoadPercentage() external view override returns (uint256) {
         return _getTotalLoad() * 100 / _getTotalCapacity();
     }
 
     function checkAllNodes() public override {
         INodes nodes = INodes(contractManager.getContract("Nodes"));
-        uint numberOfActiveNodes = nodes.getNumberOnlineNodes();
+        uint256 numberOfActiveNodes = nodes.getNumberOnlineNodes();
 
         require(totalNodes != numberOfActiveNodes, "No changes to node supply");
         totalNodes = numberOfActiveNodes;
     }
 
-    function _getTotalLoad() private view returns (uint) {
+    function _getTotalLoad() private view returns (uint256) {
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
 
-        uint load = 0;
-        uint numberOfSchains = schainsInternal.numberOfSchains();
-        for (uint i = 0; i < numberOfSchains; i++) {
+        uint256 load = 0;
+        uint256 numberOfSchains = schainsInternal.numberOfSchains();
+        for (uint256 i = 0; i < numberOfSchains; i++) {
             bytes32 schain = schainsInternal.schainsAtSystem(i);
-            uint numberOfNodesInSchain = schainsInternal.getNumberOfNodesInGroup(schain);
-            uint part = schainsInternal.getSchainsPartOfNode(schain);
+            uint256 numberOfNodesInSchain = schainsInternal.getNumberOfNodesInGroup(schain);
+            uint256 part = schainsInternal.getSchainsPartOfNode(schain);
             load = load + numberOfNodesInSchain * part;
         }
         return load;
     }
 
-    function _getTotalCapacity() private view returns (uint) {
+    function _getTotalCapacity() private view returns (uint256) {
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 

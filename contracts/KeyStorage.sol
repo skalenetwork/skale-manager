@@ -37,7 +37,7 @@ contract KeyStorage is Permissions, IKeyStorage {
     }
 
     // Unused variable!!
-    mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
+    mapping(bytes32 => mapping(uint256 => BroadcastedData)) private _data;
     //
 
     mapping(bytes32 => ISkaleDKG.G2Point) private _publicKeysInProgress;
@@ -82,7 +82,7 @@ contract KeyStorage is Permissions, IKeyStorage {
     }
 
     function getPreviousPublicKey(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point memory) {
-        uint length = _previousSchainsPublicKeys[schainHash].length;
+        uint256 length = _previousSchainsPublicKeys[schainHash].length;
         if (length == 0) {
             return G2Operations.getG2Zero();
         }
