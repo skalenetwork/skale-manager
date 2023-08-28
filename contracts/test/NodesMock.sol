@@ -21,20 +21,7 @@
 pragma solidity 0.8.17;
 
 import { Permissions } from "../Permissions.sol";
-
-interface INodesMock {
-    function registerNodes(uint256 amount, uint256 validatorId) external;
-    function removeNode(uint256 nodeId) external;
-    function changeNodeLastRewardDate(uint256 nodeId) external;
-    function getNodeLastRewardDate(uint256 nodeIndex) external view returns (uint256 timestamp);
-    function isNodeLeft(uint256 nodeId) external view returns (bool left);
-    function getNumberOnlineNodes() external view returns (uint256 amount);
-    function getValidatorId(uint256 nodeId) external view returns (uint256 id);
-    function checkPossibilityToMaintainNode(
-        uint256 /* validatorId */,
-        uint256 /* nodeIndex */
-    ) external pure returns (bool possible);
-}
+import { INodesMock } from "./interfaces/INodesMock.sol";
 
 
 contract NodesMock is Permissions, INodesMock {

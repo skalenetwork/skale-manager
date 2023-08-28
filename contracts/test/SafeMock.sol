@@ -23,25 +23,8 @@ pragma solidity 0.8.17;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-interface ISafeMock {
-    enum Operation {Call, DelegateCall}
+import { ISafeMock } from "./interfaces/ISafeMock.sol";
 
-    function transferProxyAdminOwnership(OwnableUpgradeable proxyAdmin, address newOwner) external;
-    function destroy() external;
-    function multiSend(bytes memory transactions) external;
-    function getTransactionHash(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Operation operation,
-        uint256 safeTxGas,
-        uint256 baseGas,
-        uint256 gasPrice,
-        address gasToken,
-        address refundReceiver,
-        uint256 _nonce
-    ) external view returns (bytes32 hash);
-}
 
 contract SafeMock is OwnableUpgradeable, ISafeMock {
 

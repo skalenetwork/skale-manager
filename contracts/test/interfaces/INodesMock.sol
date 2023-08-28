@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleTokenInternalTester.sol - SKALE Manager
+    INodesMock.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Dmytro Stebaiev
 
@@ -18,21 +18,19 @@
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
-
 pragma solidity 0.8.17;
 
-import { SkaleToken } from "../SkaleToken.sol";
-import { ISkaleTokenInterfaceTester } from "./interfaces/ISkaleTokenInterfaceTester.sol";
 
-
-contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
-
-    constructor(address contractManagerAddress, address[] memory defOps)
-    SkaleToken(contractManagerAddress, defOps)
-    // solhint-disable-next-line no-empty-blocks
-    { }
-
-    function getMsgData() external view override returns (bytes memory msgData) {
-        return _msgData();
-    }
+interface INodesMock {
+    function registerNodes(uint256 amount, uint256 validatorId) external;
+    function removeNode(uint256 nodeId) external;
+    function changeNodeLastRewardDate(uint256 nodeId) external;
+    function getNodeLastRewardDate(uint256 nodeIndex) external view returns (uint256 timestamp);
+    function isNodeLeft(uint256 nodeId) external view returns (bool left);
+    function getNumberOnlineNodes() external view returns (uint256 amount);
+    function getValidatorId(uint256 nodeId) external view returns (uint256 id);
+    function checkPossibilityToMaintainNode(
+        uint256 /* validatorId */,
+        uint256 /* nodeIndex */
+    ) external pure returns (bool possible);
 }

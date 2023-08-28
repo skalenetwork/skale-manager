@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleTokenInternalTester.sol - SKALE Manager
+    IPruningSchainsInternal.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
-    @author Dmytro Stebaiev
+    @author Artem Payvin
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -21,18 +21,9 @@
 
 pragma solidity 0.8.17;
 
-import { SkaleToken } from "../SkaleToken.sol";
-import { ISkaleTokenInterfaceTester } from "./interfaces/ISkaleTokenInterfaceTester.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 
 
-contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
-
-    constructor(address contractManagerAddress, address[] memory defOps)
-    SkaleToken(contractManagerAddress, defOps)
-    // solhint-disable-next-line no-empty-blocks
-    { }
-
-    function getMsgData() external view override returns (bytes memory msgData) {
-        return _msgData();
-    }
+interface IPruningSchainsInternal is ISchainsInternal {
+    function pruneNode(uint256 nodeIndex) external;
 }

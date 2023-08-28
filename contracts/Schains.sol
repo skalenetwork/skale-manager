@@ -34,7 +34,7 @@ import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
 import { Permissions } from "./Permissions.sol";
 import { ConstantsHolder } from "./ConstantsHolder.sol";
-import { G2Operations } from "./utils/FieldOperations.sol";
+import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 
 
 /**

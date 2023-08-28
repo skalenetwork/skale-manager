@@ -23,19 +23,7 @@
 pragma solidity 0.8.17;
 
 import { IRandom, Random, SegmentTree } from "../utils/SegmentTree.sol";
-
-interface ISegmentTreeTester {
-    function initTree() external;
-    function addElemInPlaces(uint256 place, uint256 elem) external;
-    function addToLast(uint256 elem) external;
-    function addToPlace(uint256 place, uint256 elem) external;
-    function removeFromPlace(uint256 place, uint256 elem) external;
-    function moveFromPlaceToPlace(uint256 fromPlace, uint256 toPlace, uint256 elem) external;
-    function sumFromPlaceToLast(uint256 place) external view returns (uint256 sum);
-    function getRandomElem(uint256 place) external view returns (uint256 element);
-    function getElem(uint256 index) external view returns (uint256 element);
-    function getSize() external view returns (uint256 size);
-}
+import { ISegmentTreeTester } from "./interfaces/ISegmentTreeTester.sol";
 
 
 contract SegmentTreeTester is ISegmentTreeTester {

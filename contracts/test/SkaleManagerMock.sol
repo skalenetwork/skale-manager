@@ -27,10 +27,7 @@ import { IERC777 } from "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import { IMintableToken } from "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
 
 import { Permissions } from "../Permissions.sol";
-
-interface ISkaleManagerMock {
-    function payBounty(uint256 validatorId, uint256 amount) external;
-}
+import { ISkaleManagerMock } from "./interfaces/ISkaleManagerMock.sol";
 
 
 contract SkaleManagerMock is Permissions, IERC777Recipient, ISkaleManagerMock {

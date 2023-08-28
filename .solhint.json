@@ -20,6 +20,7 @@
     "no-inline-assembly": "error",
     "no-unused-import": "error",
     "no-unused-vars": "error",
+    "one-contract-per-file": "error",
     "ordering": "error",
     "private-vars-leading-underscore": "error",
     "state-visibility": "error",

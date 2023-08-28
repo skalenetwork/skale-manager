@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleTokenInternalTester.sol - SKALE Manager
-    Copyright (C) 2018-Present SKALE Labs
+    IFieldOperationsTester.sol - SKALE Manager
+    Copyright (C) 2021-Present SKALE Labs
     @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -21,18 +21,12 @@
 
 pragma solidity 0.8.17;
 
-import { SkaleToken } from "../SkaleToken.sol";
-import { ISkaleTokenInterfaceTester } from "./interfaces/ISkaleTokenInterfaceTester.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
 
-contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
-
-    constructor(address contractManagerAddress, address[] memory defOps)
-    SkaleToken(contractManagerAddress, defOps)
-    // solhint-disable-next-line no-empty-blocks
-    { }
-
-    function getMsgData() external view override returns (bytes memory msgData) {
-        return _msgData();
-    }
+interface IFieldOperationsTester {
+    function add(ISkaleDKG.G2Point memory value1, ISkaleDKG.G2Point memory value2)
+        external
+        view
+        returns (ISkaleDKG.G2Point memory result);
 }

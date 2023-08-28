@@ -24,11 +24,7 @@ pragma solidity 0.8.17;
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import { TimeHelpers } from "../delegation/TimeHelpers.sol";
-
-interface ITimeHelpersWithDebug {
-    function initialize() external;
-    function skipTime(uint256 sec) external;
-}
+import { ITimeHelpersWithDebug } from "./interfaces/ITimeHelpersWithDebug.sol";
 
 
 contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWithDebug {

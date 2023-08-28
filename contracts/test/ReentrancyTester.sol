@@ -29,12 +29,7 @@ import { IERC777 } from "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 
 import { Permissions } from "../Permissions.sol";
 import { DelegationController } from "../delegation/DelegationController.sol";
-
-interface IReentrancyTester {
-    function prepareToReentrancyCheck() external;
-    function prepareToBurningAttack() external;
-    function burningAttack() external;
-}
+import { IReentrancyTester } from "./interfaces/IReentrancyTester.sol";
 
 
 contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender, IReentrancyTester {

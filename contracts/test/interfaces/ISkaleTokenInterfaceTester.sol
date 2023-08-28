@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleTokenInternalTester.sol - SKALE Manager
+    ISkaleTokenInterfaceTester.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Dmytro Stebaiev
 
@@ -21,18 +21,7 @@
 
 pragma solidity 0.8.17;
 
-import { SkaleToken } from "../SkaleToken.sol";
-import { ISkaleTokenInterfaceTester } from "./interfaces/ISkaleTokenInterfaceTester.sol";
 
-
-contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
-
-    constructor(address contractManagerAddress, address[] memory defOps)
-    SkaleToken(contractManagerAddress, defOps)
-    // solhint-disable-next-line no-empty-blocks
-    { }
-
-    function getMsgData() external view override returns (bytes memory msgData) {
-        return _msgData();
-    }
+interface ISkaleTokenInterfaceTester {
+    function getMsgData() external view returns (bytes memory msgData);
 }

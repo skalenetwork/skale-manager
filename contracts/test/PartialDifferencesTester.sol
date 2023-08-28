@@ -22,20 +22,7 @@
 pragma solidity 0.8.17;
 
 import { FractionUtils, PartialDifferences } from "../delegation/PartialDifferences.sol";
-
-interface IPartialDifferencesTester {
-    function createSequence() external;
-    function addToSequence(uint256 sequence, uint256 diff, uint256 month) external;
-    function subtractFromSequence(uint256 sequence, uint256 diff, uint256 month) external;
-    function getAndUpdateSequenceItem(uint256 sequence, uint256 month) external returns (uint256 item);
-    function reduceSequence(
-        uint256 sequence,
-        uint256 a,
-        uint256 b,
-        uint256 month
-    ) external;
-    function latestSequence() external view returns (uint256 id);
-}
+import { IPartialDifferencesTester } from "./interfaces/IPartialDifferencesTester.sol";
 
 
 contract PartialDifferencesTester is IPartialDifferencesTester {

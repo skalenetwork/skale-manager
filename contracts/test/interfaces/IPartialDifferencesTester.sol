@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleTokenInternalTester.sol - SKALE Manager
+    IPartialDifferencesTester.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Dmytro Stebaiev
 
@@ -21,18 +21,17 @@
 
 pragma solidity 0.8.17;
 
-import { SkaleToken } from "../SkaleToken.sol";
-import { ISkaleTokenInterfaceTester } from "./interfaces/ISkaleTokenInterfaceTester.sol";
 
-
-contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
-
-    constructor(address contractManagerAddress, address[] memory defOps)
-    SkaleToken(contractManagerAddress, defOps)
-    // solhint-disable-next-line no-empty-blocks
-    { }
-
-    function getMsgData() external view override returns (bytes memory msgData) {
-        return _msgData();
-    }
+interface IPartialDifferencesTester {
+    function createSequence() external;
+    function addToSequence(uint256 sequence, uint256 diff, uint256 month) external;
+    function subtractFromSequence(uint256 sequence, uint256 diff, uint256 month) external;
+    function getAndUpdateSequenceItem(uint256 sequence, uint256 month) external returns (uint256 item);
+    function reduceSequence(
+        uint256 sequence,
+        uint256 a,
+        uint256 b,
+        uint256 month
+    ) external;
+    function latestSequence() external view returns (uint256 id);
 }

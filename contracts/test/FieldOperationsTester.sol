@@ -21,14 +21,11 @@
 
 pragma solidity 0.8.17;
 
-import { Fp2Operations, G2Operations, ISkaleDKG } from "../utils/FieldOperations.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
-interface IFieldOperationsTester {
-    function add(ISkaleDKG.G2Point memory value1, ISkaleDKG.G2Point memory value2)
-        external
-        view
-        returns (ISkaleDKG.G2Point memory result);
-}
+import { Fp2Operations } from "../utils/fieldOperations/Fp2Operations.sol";
+import { G2Operations } from "../utils/fieldOperations/G2Operations.sol";
+import { IFieldOperationsTester } from "./interfaces/IFieldOperationsTester.sol";
 
 
 contract FieldOperationsTester is IFieldOperationsTester {

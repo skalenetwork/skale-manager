@@ -24,17 +24,13 @@ pragma solidity 0.8.17;
 import { EnumerableSetUpgradeable }
 from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
-import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
+import { IPruningSchainsInternal } from "./interfaces/IPruningSchainInternal.sol";
 import { Permissions } from "./Permissions.sol";
 import { ConstantsHolder } from "./ConstantsHolder.sol";
 import { IRandom, Random } from "./utils/Random.sol";
-
-interface IPruningSchainsInternal is ISchainsInternal {
-    function pruneNode(uint256 nodeIndex) external;
-}
 
 
 /**

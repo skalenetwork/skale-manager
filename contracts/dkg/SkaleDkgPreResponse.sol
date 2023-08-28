@@ -26,7 +26,8 @@ pragma solidity 0.8.17;
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
-import { G1Operations, G2Operations } from "../utils/FieldOperations.sol";
+import { G1Operations } from "../utils/fieldOperations/G1Operations.sol";
+import { G2Operations } from "../utils/fieldOperations/G2Operations.sol";
 import { Precompiled } from "../utils/Precompiled.sol";
 
 /**

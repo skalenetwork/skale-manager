@@ -31,7 +31,8 @@ import { IECDH } from "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.s
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
-import { G1Operations, G2Operations } from "../utils/FieldOperations.sol";
+import { G1Operations } from "../utils/fieldOperations/G1Operations.sol";
+import { G2Operations } from "../utils/fieldOperations/G2Operations.sol";
 import { Precompiled } from "../utils/Precompiled.sol";
 
 /**

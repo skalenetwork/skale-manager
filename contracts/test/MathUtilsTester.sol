@@ -22,13 +22,7 @@
 pragma solidity 0.8.17;
 
 import { MathUtils } from "../utils/MathUtils.sol";
-
-interface IMathUtilsTester {
-    function boundedSub(uint256 a, uint256 b) external returns (uint256 result);
-    function boundedSubWithoutEvent(uint256 a, uint256 b) external pure returns (uint256 result);
-    function muchGreater(uint256 a, uint256 b) external pure returns (bool greater);
-    function approximatelyEqual(uint256 a, uint256 b) external pure returns (bool qual);
-}
+import { IMathUtilsTester } from "./interfaces/IMathUtilsTester.sol";
 
 
 contract MathUtilsTester is IMathUtilsTester {

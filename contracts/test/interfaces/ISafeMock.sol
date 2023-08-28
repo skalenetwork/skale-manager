@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleTokenInternalTester.sol - SKALE Manager
-    Copyright (C) 2018-Present SKALE Labs
+    ISafeMock.sol - SKALE Manager
+    Copyright (C) 2021-Present SKALE Labs
     @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -21,18 +21,25 @@
 
 pragma solidity 0.8.17;
 
-import { SkaleToken } from "../SkaleToken.sol";
-import { ISkaleTokenInterfaceTester } from "./interfaces/ISkaleTokenInterfaceTester.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 
-contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
+interface ISafeMock {
+    enum Operation {Call, DelegateCall}
 
-    constructor(address contractManagerAddress, address[] memory defOps)
-    SkaleToken(contractManagerAddress, defOps)
-    // solhint-disable-next-line no-empty-blocks
-    { }
-
-    function getMsgData() external view override returns (bytes memory msgData) {
-        return _msgData();
-    }
+    function transferProxyAdminOwnership(OwnableUpgradeable proxyAdmin, address newOwner) external;
+    function destroy() external;
+    function multiSend(bytes memory transactions) external;
+    function getTransactionHash(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Operation operation,
+        uint256 safeTxGas,
+        uint256 baseGas,
+        uint256 gasPrice,
+        address gasToken,
+        address refundReceiver,
+        uint256 _nonce
+    ) external view returns (bytes32 hash);
 }

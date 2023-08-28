@@ -22,12 +22,8 @@
 pragma solidity 0.8.17;
 
 import { EnumerableSetUpgradeable, SchainsInternal } from "../SchainsInternal.sol";
+import { ISchainsInternalMock } from "./interfaces/ISchainsInternalMock.sol";
 
-interface ISchainsInternalMock {
-    function removePlaceOfSchainOnNode(bytes32 schainHash, uint256 nodeIndex) external;
-    function removeNodeToLocked(uint256 nodeIndex) external;
-    function removeSchainToExceptionNode(bytes32 schainHash) external;
-}
 
 contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
 

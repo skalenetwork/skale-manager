@@ -32,7 +32,8 @@ import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPu
 
 import { Permissions } from "./Permissions.sol";
 import { ConstantsHolder } from "./ConstantsHolder.sol";
-import { Fp2Operations, G2Operations } from "./utils/FieldOperations.sol";
+import { Fp2Operations } from "./utils/fieldOperations/Fp2Operations.sol";
+import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 import { SkaleDkgAlright } from "./dkg/SkaleDkgAlright.sol";
 import { SkaleDkgBroadcast } from "./dkg/SkaleDkgBroadcast.sol";
 import { SkaleDkgComplaint } from "./dkg/SkaleDkgComplaint.sol";
