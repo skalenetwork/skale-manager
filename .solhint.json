@@ -11,6 +11,7 @@
     "contract-name-camelcase": "error",
     "explicit-types": "error",
     "func-name-mixedcase": "error",
+    "func-named-parameters": "error",
     "func-visibility": ["error", {"ignoreConstructors": true}],
     "function-max-lines": "error",
     "max-states-count": ["error", 20],

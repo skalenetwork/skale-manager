@@ -134,7 +134,14 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         bytes memory userData,
         bytes memory operatorData
     ) internal override nonReentrant {
-        super._callTokensToSend(operator, from, to, amount, userData, operatorData);
+        super._callTokensToSend({
+            operator: operator,
+            from: from,
+            to: to,
+            amount: amount,
+            userData: userData,
+            operatorData: operatorData
+        });
     }
 
     function _callTokensReceived(
@@ -146,7 +153,15 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         bytes memory operatorData,
         bool requireReceptionAck
     ) internal override nonReentrant {
-        super._callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
+        super._callTokensReceived({
+            operator: operator,
+            from: from,
+            to: to,
+            amount: amount,
+            userData: userData,
+            operatorData: operatorData,
+            requireReceptionAck: requireReceptionAck
+        });
     }
 
     // we have to override _msgData() and _msgSender() functions because of collision in Context and ContextUpgradeable

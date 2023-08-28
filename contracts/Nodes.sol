@@ -244,15 +244,16 @@ contract Nodes is Permissions, INodes {
             indexInSpaceMap: spaceToNodes[totalSpace].length
         }));
         _setNodeActive(nodeIndex);
-        emit NodeCreated(
-            nodeIndex,
-            from,
-            params.name,
-            params.ip,
-            params.publicIp,
-            params.port,
-            params.nonce,
-            params.domainName);
+        emit NodeCreated({
+            nodeIndex: nodeIndex,
+            owner: from,
+            name: params.name,
+            ip: params.ip,
+            publicIP: params.publicIp,
+            port: params.port,
+            nonce: params.nonce,
+            domainName: params.domainName
+        });
     }
 
     /**

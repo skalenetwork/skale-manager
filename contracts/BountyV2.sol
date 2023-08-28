@@ -107,29 +107,29 @@ contract BountyV2 is Permissions, IBountyV2 {
         _refillEpochPool(currentMonth, timeHelpers, constantsHolder);
         _prepareBountyHistory(validatorId, currentMonth);
 
-        bounty = _calculateMaximumBountyAmount(
-            _epochPool,
-            _effectiveDelegatedSum.getAndUpdateValue(currentMonth),
-            _bountyWasPaidInCurrentEpoch,
-            nodeIndex,
-            _bountyHistory[validatorId].bountyPaid,
-            delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth),
-            delegationController.getAndUpdateDelegatedToValidatorNow(validatorId),
-            constantsHolder,
-            nodes
-        );
+        bounty = _calculateMaximumBountyAmount({
+            epochPoolSize: _epochPool,
+            effectiveDelegatedSum: _effectiveDelegatedSum.getAndUpdateValue(currentMonth),
+            bountyWasPaidInCurrentEpoch: _bountyWasPaidInCurrentEpoch,
+            nodeIndex: nodeIndex,
+            bountyPaidToTheValidator: _bountyHistory[validatorId].bountyPaid,
+            effectiveDelegated: delegationController.getAndUpdateEffectiveDelegatedToValidator(
+                validatorId,
+                currentMonth
+            ),
+            delegated: delegationController.getAndUpdateDelegatedToValidatorNow(validatorId),
+            constantsHolder: constantsHolder,
+            nodes: nodes
+        });
         _bountyHistory[validatorId].bountyPaid = _bountyHistory[validatorId].bountyPaid + bounty;
-
         bounty = _reduceBounty(
             bounty,
             nodeIndex,
             nodes,
             constantsHolder
         );
-
         _epochPool = _epochPool - bounty;
         _bountyWasPaidInCurrentEpoch = _bountyWasPaidInCurrentEpoch + bounty;
-
         return bounty;
     }
 
@@ -184,17 +184,17 @@ contract BountyV2 is Permissions, IBountyV2 {
         uint256 stagePoolSize;
         (stagePoolSize, ) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
 
-        return _calculateMaximumBountyAmount(
-            stagePoolSize,
-            _effectiveDelegatedSum.getValue(currentMonth),
-            _nextEpoch == currentMonth + 1 ? _bountyWasPaidInCurrentEpoch : 0,
-            nodeIndex,
-            _getBountyPaid(validatorId, currentMonth),
-            delegationController.getEffectiveDelegatedToValidator(validatorId, currentMonth),
-            delegationController.getDelegatedToValidator(validatorId, currentMonth),
-            constantsHolder,
-            nodes
-        );
+        return _calculateMaximumBountyAmount({
+            epochPoolSize: stagePoolSize,
+            effectiveDelegatedSum: _effectiveDelegatedSum.getValue(currentMonth),
+            bountyWasPaidInCurrentEpoch: _nextEpoch == currentMonth + 1 ? _bountyWasPaidInCurrentEpoch : 0,
+            nodeIndex: nodeIndex,
+            bountyPaidToTheValidator: _getBountyPaid(validatorId, currentMonth),
+            effectiveDelegated: delegationController.getEffectiveDelegatedToValidator(validatorId, currentMonth),
+            delegated: delegationController.getDelegatedToValidator(validatorId, currentMonth),
+            constantsHolder: constantsHolder,
+            nodes: nodes
+        });
     }
 
     function getNextRewardTimestamp(uint256 nodeIndex) external view override returns (uint256 timestamp) {
@@ -282,13 +282,13 @@ contract BountyV2 is Permissions, IBountyV2 {
             return 0;
         }
 
-        bounty = _calculateBountyShare(
-            epochPoolSize + bountyWasPaidInCurrentEpoch,
-            effectiveDelegated,
-            effectiveDelegatedSum,
-            delegated / constantsHolder.msr(),
-            bountyPaidToTheValidator
-        );
+        bounty = _calculateBountyShare({
+            monthBounty: epochPoolSize + bountyWasPaidInCurrentEpoch,
+            effectiveDelegated: effectiveDelegated,
+            effectiveDelegatedSum: effectiveDelegatedSum,
+            maxNodesAmount: delegated / constantsHolder.msr(),
+            paidToValidator: bountyPaidToTheValidator
+        });
 
         return bounty;
     }

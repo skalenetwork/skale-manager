@@ -231,12 +231,13 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);
 
-        uint256 delegationId = _addDelegation(
-            msg.sender,
-            validatorId,
-            amount,
-            delegationPeriod,
-            info);
+        uint256 delegationId = _addDelegation({
+            holder: msg.sender,
+            validatorId: validatorId,
+            amount: amount,
+            delegationPeriod: delegationPeriod,
+            info: info
+        });
 
         // check that there is enough money
         uint256 holderBalance = IERC777(contractManager.getSkaleToken()).balanceOf(msg.sender);
@@ -586,16 +587,16 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         returns (uint256 delegationId)
     {
         delegationId = delegations.length;
-        delegations.push(Delegation(
-            holder,
-            validatorId,
-            amount,
-            delegationPeriod,
-            block.timestamp,
-            0,
-            0,
-            info
-        ));
+        delegations.push(Delegation({
+            holder: holder,
+            validatorId: validatorId,
+            amount: amount,
+            delegationPeriod: delegationPeriod,
+            created: block.timestamp,
+            started: 0,
+            finished: 0,
+            info: info
+        }));
         delegationsByValidator[validatorId].push(delegationId);
         delegationsByHolder[holder].push(delegationId);
         _addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);

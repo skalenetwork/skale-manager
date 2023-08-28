@@ -173,13 +173,14 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
             _payBounty(bounty, validatorId);
         }
 
-        emit BountyReceived(
-            nodeIndex,
-            msg.sender,
-            0,
-            0,
-            bounty,
-            type(uint).max);
+        emit BountyReceived({
+            nodeIndex: nodeIndex,
+            owner: msg.sender,
+            averageDowntime: 0,
+            averageLatency: 0,
+            bounty: bounty,
+            previousBlockEvent: type(uint).max
+        });
 
         _refundGasByValidator(validatorId, payable(msg.sender), gasLimit);
     }

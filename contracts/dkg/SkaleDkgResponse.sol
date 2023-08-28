@@ -64,13 +64,13 @@ library SkaleDkgResponse {
             "Incorrect time for response"
         );
         require(complaints[schainHash].isResponse, "Have not submitted pre-response data");
-        uint256 badNode = _verifyDataAndSlash(
-            schainHash,
-            secretNumber,
-            multipliedShare,
-            contractManager,
-            complaints
-         );
+        uint256 badNode = _verifyDataAndSlash({
+            schainHash: schainHash,
+            secretNumber: secretNumber,
+            multipliedShare: multipliedShare,
+            contractManager: contractManager,
+            complaints: complaints
+        });
         ISkaleDKG(contractManager.getContract("SkaleDKG")).setBadNode(schainHash, badNode);
     }
 
@@ -132,11 +132,20 @@ library SkaleDkgResponse {
 
         ISkaleDKG.G2Point memory g2 = G2Operations.getG2Generator();
 
-        return Precompiled.bn256Pairing(
-            share.a, share.b,
-            g2.x.b, g2.x.a, g2.y.b, g2.y.a,
-            g1.a, g1.b,
-            tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
+        return Precompiled.bn256Pairing({
+            x1: share.a,
+            y1: share.b,
+            a1: g2.x.b,
+            b1: g2.x.a,
+            c1: g2.y.b,
+            d1: g2.y.a,
+            x2: g1.a,
+            y2: g1.b,
+            a2: tmp.x.b,
+            b2: tmp.x.a,
+            c2: tmp.y.b,
+            d2: tmp.y.a
+        });
     }
 
     function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256 timeLimit) {

@@ -70,14 +70,14 @@ library SkaleDkgComplaint {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         require(skaleDKG.isNodeBroadcasted(schainHash, fromNodeIndex), "Node has not broadcasted");
         if (skaleDKG.isNodeBroadcasted(schainHash, toNodeIndex)) {
-            _handleComplaintWhenBroadcasted(
-                schainHash,
-                fromNodeIndex,
-                toNodeIndex,
-                contractManager,
-                complaints,
-                startAlrightTimestamp
-            );
+            _handleComplaintWhenBroadcasted({
+                schainHash: schainHash,
+                fromNodeIndex: fromNodeIndex,
+                toNodeIndex: toNodeIndex,
+                contractManager: contractManager,
+                complaints: complaints,
+                startAlrightTimestamp: startAlrightTimestamp
+            });
         } else {
             // not broadcasted in 30 min
             _handleComplaintWhenNotBroadcasted(schainHash, toNodeIndex, contractManager, channels);

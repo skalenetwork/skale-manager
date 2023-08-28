@@ -87,12 +87,20 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
             "Public Key not in G2"
         );
 
-        return Precompiled.bn256Pairing(
-            signature.a, newSignB,
-            g2.x.b, g2.x.a, g2.y.b, g2.y.a,
-            hashA, hashB,
-            publicKey.x.b, publicKey.x.a, publicKey.y.b, publicKey.y.a
-        );
+        return Precompiled.bn256Pairing({
+            x1: signature.a,
+            y1: newSignB,
+            a1: g2.x.b,
+            b1: g2.x.a,
+            c1: g2.y.b,
+            d1: g2.y.a,
+            x2: hashA,
+            y2: hashB,
+            a2: publicKey.x.b,
+            b2: publicKey.x.a,
+            c2: publicKey.y.b,
+            d2: publicKey.y.a
+        });
     }
 
     function _checkHashToGroupWithHelper(

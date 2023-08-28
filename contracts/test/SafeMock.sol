@@ -120,18 +120,18 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
         uint256 _nonce
     ) public view override returns (bytes32 hash) {
         return keccak256(
-            _encodeTransactionData(
-                to,
-                value,
-                data,
-                operation,
-                safeTxGas,
-                baseGas,
-                gasPrice,
-                gasToken,
-                refundReceiver,
-                _nonce
-            )
+            _encodeTransactionData({
+                to: to,
+                value: value,
+                data: data,
+                operation: operation,
+                safeTxGas: safeTxGas,
+                baseGas: baseGas,
+                gasPrice: gasPrice,
+                gasToken: gasToken,
+                refundReceiver: refundReceiver,
+                _nonce: _nonce
+            })
         );
     }
 
@@ -162,6 +162,8 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
     ) private view returns (bytes memory transactionData) {
         bytes32 safeTxHash =
             keccak256(
+                // Named arguments cannot be used for functions that take arbitrary parameters
+                // solhint-disable-next-line func-named-parameters
                 abi.encode(
                     SAFE_TX_TYPE_HASH,
                     to,

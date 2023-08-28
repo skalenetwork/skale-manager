@@ -243,15 +243,17 @@ contract Schains is Permissions, ISchains {
                 schainHash
             );
         }
-        return skaleVerifier.verify(
-            ISkaleDKG.Fp2Point({
+        return skaleVerifier.verify({
+            signature: ISkaleDKG.Fp2Point({
                 a: signatureA,
                 b: signatureB
             }),
-            hash, counter,
-            hashA, hashB,
-            publicKey
-        );
+            hash: hash,
+            counter: counter,
+            hashA: hashA,
+            hashB: hashB,
+            publicKey: publicKey
+        });
     }
 
     function getOption(
@@ -327,7 +329,13 @@ contract Schains is Permissions, ISchains {
         }
 
         // initialize Schain
-        schainsInternal.initializeSchain(name, from, originator, lifetime, deposit);
+        schainsInternal.initializeSchain({
+            name: name,
+            from: from,
+            originator: originator,
+            lifetime: lifetime,
+            deposit: deposit
+        });
     }
 
     /**
@@ -373,38 +381,39 @@ contract Schains is Permissions, ISchains {
         }
 
         //initialize Schain
-        _initializeSchainInSchainsInternal(
-            schainParameters.name,
-            from,
-            schainParameters.originator,
-            deposit,
-            schainParameters.lifetime,
-            schainsInternal,
-            schainParameters.options
-        );
+        _initializeSchainInSchainsInternal({
+            name: schainParameters.name,
+            from: from,
+            originator: schainParameters.originator,
+            deposit: deposit,
+            lifetime: schainParameters.lifetime,
+            schainsInternal: schainsInternal,
+            options: schainParameters.options
+        });
 
         // create a group for Schain
         uint256 numberOfNodes;
         uint8 partOfNode;
         (partOfNode, numberOfNodes) = schainsInternal.getSchainType(schainParameters.typeOfSchain);
 
-        _createGroupForSchain(
-            schainParameters.name,
-            keccak256(abi.encodePacked(schainParameters.name)),
-            numberOfNodes,
-            partOfNode,
-            schainsInternal
-        );
+        _createGroupForSchain({
+            schainName: schainParameters.name,
+            schainHash: keccak256(abi.encodePacked(schainParameters.name)),
+            numberOfNodes: numberOfNodes,
+            partOfNode: partOfNode,
+            schainsInternal: schainsInternal
+        });
 
-        emit SchainCreated(
-            schainParameters.name,
-            from,
-            partOfNode,
-            schainParameters.lifetime,
-            numberOfNodes,
-            deposit,
-            schainParameters.nonce,
-            keccak256(abi.encodePacked(schainParameters.name)));
+        emit SchainCreated({
+            name: schainParameters.name,
+            owner: from,
+            partOfNode: partOfNode,
+            lifetime: schainParameters.lifetime,
+            numberOfNodes: numberOfNodes,
+            deposit: deposit,
+            nonce: schainParameters.nonce,
+            schainHash: keccak256(abi.encodePacked(schainParameters.name))
+        });
     }
 
     function _deleteSchain(string calldata name, ISchainsInternal schainsInternal) private {

@@ -132,16 +132,16 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainHash)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDkgAlright.alright(
-            schainHash,
-            fromNodeIndex,
-            contractManager,
-            channels,
-            dkgProcess,
-            complaints,
-            lastSuccessfulDKG,
-            startAlrightTimestamp
-        );
+        SkaleDkgAlright.alright({
+            schainHash: schainHash,
+            fromNodeIndex: fromNodeIndex,
+            contractManager: contractManager,
+            channels: channels,
+            dkgProcess: dkgProcess,
+            complaints: complaints,
+            lastSuccessfulDKG: lastSuccessfulDKG,
+            startAlrightTimestamp: startAlrightTimestamp
+        });
     }
 
     function broadcast(
@@ -161,16 +161,16 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainHash)
         onlyNodeOwner(nodeIndex)
     {
-        SkaleDkgBroadcast.broadcast(
-            schainHash,
-            nodeIndex,
-            verificationVector,
-            secretKeyContribution,
-            contractManager,
-            channels,
-            dkgProcess,
-            hashedData
-        );
+        SkaleDkgBroadcast.broadcast({
+            schainHash: schainHash,
+            nodeIndex: nodeIndex,
+            verificationVector: verificationVector,
+            secretKeyContribution: secretKeyContribution,
+            contractManager: contractManager,
+            channels: channels,
+            dkgProcess: dkgProcess,
+            hashedData: hashedData
+        });
     }
 
 
@@ -189,17 +189,17 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctNodeWithoutRevert(schainHash, toNodeIndex)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDkgComplaint.complaintBadData(
-            schainHash,
-            fromNodeIndex,
-            toNodeIndex,
-            contractManager,
-            complaints
-        );
+        SkaleDkgComplaint.complaintBadData({
+            schainHash: schainHash,
+            fromNodeIndex: fromNodeIndex,
+            toNodeIndex: toNodeIndex,
+            contractManager: contractManager,
+            complaints: complaints
+        });
     }
 
     function preResponse(
-        bytes32 schainId,
+        bytes32 schainHash,
         uint256 fromNodeIndex,
         ISkaleDKG.G2Point[] memory verificationVector,
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication,
@@ -208,25 +208,25 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         external
         override
         refundGasBySchain(
-            schainId,
+            schainHash,
             Context({
                 isDebt: true,
                 delta: ConstantsHolder(contractManager.getConstantsHolder()).PRE_RESPONSE_DELTA(),
                 dkgFunction: DkgFunction.PreResponse
         }))
-        correctGroup(schainId)
+        correctGroup(schainHash)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDkgPreResponse.preResponse(
-            schainId,
-            fromNodeIndex,
-            verificationVector,
-            verificationVectorMultiplication,
-            secretKeyContribution,
-            contractManager,
-            complaints,
-            hashedData
-        );
+        SkaleDkgPreResponse.preResponse({
+            schainHash: schainHash,
+            fromNodeIndex: fromNodeIndex,
+            verificationVector: verificationVector,
+            verificationVectorMultiplication: verificationVectorMultiplication,
+            secretKeyContribution: secretKeyContribution,
+            contractManager: contractManager,
+            complaints: complaints,
+            hashedData: hashedData
+        });
     }
 
     function complaint(bytes32 schainHash, uint256 fromNodeIndex, uint256 toNodeIndex)
@@ -244,15 +244,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctNodeWithoutRevert(schainHash, toNodeIndex)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDkgComplaint.complaint(
-            schainHash,
-            fromNodeIndex,
-            toNodeIndex,
-            contractManager,
-            channels,
-            complaints,
-            startAlrightTimestamp
-        );
+        SkaleDkgComplaint.complaint({
+            schainHash: schainHash,
+            fromNodeIndex: fromNodeIndex,
+            toNodeIndex: toNodeIndex,
+            contractManager: contractManager,
+            channels: channels,
+            complaints: complaints,
+            startAlrightTimestamp: startAlrightTimestamp
+        });
     }
 
     function response(
@@ -272,15 +272,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainHash)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDkgResponse.response(
-            schainHash,
-            fromNodeIndex,
-            secretNumber,
-            multipliedShare,
-            contractManager,
-            channels,
-            complaints
-        );
+        SkaleDkgResponse.response({
+            schainHash: schainHash,
+            fromNodeIndex: fromNodeIndex,
+            secretNumber: secretNumber,
+            multipliedShare: multipliedShare,
+            contractManager: contractManager,
+            channels: channels,
+            complaints: complaints
+        });
     }
 
     /**
@@ -541,6 +541,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             data = abi.encodePacked(data, secretKeyContribution[i].publicKey, secretKeyContribution[i].share);
         }
         for (uint256 i = 0; i < verificationVector.length; i++) {
+            // Named arguments cannot be used for functions that take arbitrary parameters
+            // solhint-disable-next-line func-named-parameters
             data = abi.encodePacked(
                 data,
                 verificationVector[i].x.a,

@@ -51,16 +51,16 @@ library SkaleDkgPreResponse {
         external
     {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        uint256 index = _preResponseCheck(
-            schainHash,
-            fromNodeIndex,
-            verificationVector,
-            verificationVectorMultiplication,
-            secretKeyContribution,
-            skaleDKG,
-            complaints,
-            hashedData
-        );
+        uint256 index = _preResponseCheck({
+            schainHash: schainHash,
+            fromNodeIndex: fromNodeIndex,
+            verificationVector: verificationVector,
+            verificationVectorMultiplication: verificationVectorMultiplication,
+            secretKeyContribution: secretKeyContribution,
+            skaleDKG: skaleDKG,
+            complaints: complaints,
+            hashedData: hashedData
+        });
         _processPreResponse(
             secretKeyContribution[index].share,
             schainHash,
@@ -158,14 +158,20 @@ library SkaleDkgPreResponse {
         require(G1Operations.checkRange(g1Mul), "g1Mul is not valid");
         g1Mul.b = G1Operations.negate(g1Mul.b);
         ISkaleDKG.Fp2Point memory one = G1Operations.getG1Generator();
-        return Precompiled.bn256Pairing(
-            one.a, one.b,
-            verificationVectorMultiplication.x.b, verificationVectorMultiplication.x.a,
-            verificationVectorMultiplication.y.b, verificationVectorMultiplication.y.a,
-            g1Mul.a, g1Mul.b,
-            verificationVector.x.b, verificationVector.x.a,
-            verificationVector.y.b, verificationVector.y.a
-        );
+        return Precompiled.bn256Pairing({
+            x1: one.a,
+            y1: one.b,
+            a1: verificationVectorMultiplication.x.b,
+            b1: verificationVectorMultiplication.x.a,
+            c1: verificationVectorMultiplication.y.b,
+            d1: verificationVectorMultiplication.y.a,
+            x2: g1Mul.a,
+            y2: g1Mul.b,
+            a2: verificationVector.x.b,
+            b2: verificationVector.x.a,
+            c2: verificationVector.y.b,
+            d2: verificationVector.y.a
+        });
     }
 
 }

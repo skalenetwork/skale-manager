@@ -238,12 +238,13 @@ library PartialDifferences {
         uint256 month)
         internal
     {
-        reduceValueByCoefficientAndUpdateSumIfNeeded(
-            sequence,
-            sequence,
-            reducingCoefficient,
-            month,
-            false);
+        reduceValueByCoefficientAndUpdateSumIfNeeded({
+            sequence: sequence,
+            sumSequence: sequence,
+            reducingCoefficient: reducingCoefficient,
+            month: month,
+            hasSumSequence: false
+        });
     }
 
     function reduceValueByCoefficientAndUpdateSum(
@@ -252,12 +253,13 @@ library PartialDifferences {
         FractionUtils.Fraction memory reducingCoefficient,
         uint256 month) internal
     {
-        reduceValueByCoefficientAndUpdateSumIfNeeded(
-            sequence,
-            sumSequence,
-            reducingCoefficient,
-            month,
-            true);
+        reduceValueByCoefficientAndUpdateSumIfNeeded({
+            sequence: sequence,
+            sumSequence: sumSequence,
+            reducingCoefficient: reducingCoefficient,
+            month: month,
+            hasSumSequence: true
+        });
     }
 
     function reduceValueByCoefficientAndUpdateSumIfNeeded(

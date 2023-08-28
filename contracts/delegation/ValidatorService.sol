@@ -98,16 +98,16 @@ contract ValidatorService is Permissions, IValidatorService {
         require(!validatorAddressExists(msg.sender), "Validator with such address already exists");
         require(feeRate <= 1000, "Fee rate of validator should be lower than 100%");
         validatorId = ++numberOfValidators;
-        validators[validatorId] = IValidatorService.Validator(
-            name,
-            msg.sender,
-            address(0),
-            description,
-            feeRate,
-            block.timestamp,
-            minimumDelegationAmount,
-            true
-        );
+        validators[validatorId] = IValidatorService.Validator({
+            name: name,
+            validatorAddress: msg.sender,
+            requestedAddress: address(0),
+            description: description,
+            feeRate: feeRate,
+            registrationTime: block.timestamp,
+            minimumDelegationAmount: minimumDelegationAmount,
+            acceptNewRequests: true
+        });
         _setValidatorAddress(validatorId, msg.sender);
 
         emit ValidatorRegistered(validatorId);
