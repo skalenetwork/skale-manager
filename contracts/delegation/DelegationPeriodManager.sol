@@ -66,7 +66,7 @@ contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
     /**
      * @dev Checks whether given delegation period is allowed.
      */
-    function isDelegationPeriodAllowed(uint256 monthsCount) external view override returns (bool) {
+    function isDelegationPeriodAllowed(uint256 monthsCount) external view override returns (bool allowed) {
         return stakeMultipliers[monthsCount] != 0;
     }
 }

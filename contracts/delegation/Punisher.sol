@@ -92,14 +92,14 @@ contract Punisher is Permissions, ILocker, IPunisher {
     /**
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
-    function getAndUpdateLockedAmount(address wallet) external override returns (uint256) {
+    function getAndUpdateLockedAmount(address wallet) external override returns (uint256 amount) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
     /**
      * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
-    function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint256) {
+    function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint256 amount) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
@@ -116,7 +116,7 @@ contract Punisher is Permissions, ILocker, IPunisher {
     /**
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
-    function _getAndUpdateLockedAmount(address wallet) private returns (uint256) {
+    function _getAndUpdateLockedAmount(address wallet) private returns (uint256 amount) {
         IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController"));
 

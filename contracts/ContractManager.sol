@@ -91,35 +91,35 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
      *
      * - Contract must exist.
      */
-    function getDelegationPeriodManager() external view override returns (address) {
+    function getDelegationPeriodManager() external view override returns (address delegationPeriodManager) {
         return getContract(DELEGATION_PERIOD_MANAGER);
     }
 
-    function getBounty() external view override returns (address) {
+    function getBounty() external view override returns (address bounty) {
         return getContract(BOUNTY);
     }
 
-    function getValidatorService() external view override returns (address) {
+    function getValidatorService() external view override returns (address validatorService) {
         return getContract(VALIDATOR_SERVICE);
     }
 
-    function getTimeHelpers() external view override returns (address) {
+    function getTimeHelpers() external view override returns (address timeHelpers) {
         return getContract(TIME_HELPERS);
     }
 
-    function getConstantsHolder() external view override returns (address) {
+    function getConstantsHolder() external view override returns (address constantsHolder) {
         return getContract(CONSTANTS_HOLDER);
     }
 
-    function getSkaleToken() external view override returns (address) {
+    function getSkaleToken() external view override returns (address skaleToken) {
         return getContract(SKALE_TOKEN);
     }
 
-    function getTokenState() external view override returns (address) {
+    function getTokenState() external view override returns (address tokenState) {
         return getContract(TOKEN_STATE);
     }
 
-    function getPunisher() external view override returns (address) {
+    function getPunisher() external view override returns (address punisher) {
         return getContract(PUNISHER);
     }
 

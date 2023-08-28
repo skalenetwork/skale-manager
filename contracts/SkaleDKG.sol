@@ -349,53 +349,60 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
     }
 
-    function getChannelStartedTime(bytes32 schainHash) external view override returns (uint256) {
+    function getChannelStartedTime(bytes32 schainHash) external view override returns (uint256 timestamp) {
         return channels[schainHash].startedBlockTimestamp;
     }
 
-    function getChannelStartedBlock(bytes32 schainHash) external view override returns (uint256) {
+    function getChannelStartedBlock(bytes32 schainHash) external view override returns (uint256 blockNumber) {
         return channels[schainHash].startedBlock;
     }
 
-    function getNumberOfBroadcasted(bytes32 schainHash) external view override returns (uint256) {
+    function getNumberOfBroadcasted(bytes32 schainHash) external view override returns (uint256 amount) {
         return dkgProcess[schainHash].numberOfBroadcasted;
     }
 
-    function getNumberOfCompleted(bytes32 schainHash) external view override returns (uint256) {
+    function getNumberOfCompleted(bytes32 schainHash) external view override returns (uint256 amount) {
         return dkgProcess[schainHash].numberOfCompleted;
     }
 
-    function getTimeOfLastSuccessfulDKG(bytes32 schainHash) external view override returns (uint256) {
+    function getTimeOfLastSuccessfulDKG(bytes32 schainHash) external view override returns (uint256 timestamp) {
         return lastSuccessfulDKG[schainHash];
     }
 
-    function getComplaintData(bytes32 schainHash) external view override returns (uint256, uint256) {
+    function getComplaintData(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (uint256 sourceNode, uint256 targetNode)
+    {
         return (complaints[schainHash].fromNodeToComplaint, complaints[schainHash].nodeToComplaint);
     }
 
-    function getComplaintStartedTime(bytes32 schainHash) external view override returns (uint256) {
+    function getComplaintStartedTime(bytes32 schainHash) external view override returns (uint256 timestamp) {
         return complaints[schainHash].startComplaintBlockTimestamp;
     }
 
-    function getAlrightStartedTime(bytes32 schainHash) external view override returns (uint256) {
+    function getAlrightStartedTime(bytes32 schainHash) external view override returns (uint256 timestamp) {
         return startAlrightTimestamp[schainHash];
     }
 
     /**
      * @dev Checks whether channel is opened.
      */
-    function isChannelOpened(bytes32 schainHash) external view override returns (bool) {
+    function isChannelOpened(bytes32 schainHash) external view override returns (bool opened) {
         return channels[schainHash].active;
     }
 
-    function isLastDKGSuccessful(bytes32 schainHash) external view override returns (bool) {
+    function isLastDKGSuccessful(bytes32 schainHash) external view override returns (bool successful) {
         return channels[schainHash].startedBlockTimestamp <= lastSuccessfulDKG[schainHash];
     }
 
     /**
      * @dev Checks whether broadcast is possible.
      */
-    function isBroadcastPossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool) {
+    function isBroadcastPossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool possible) {
         (uint256 index, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return channels[schainHash].active &&
             check &&
@@ -415,7 +422,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         external
         view
         override
-        returns (bool)
+        returns (bool possible)
     {
         (uint256 indexFrom, bool checkFrom) = checkAndReturnIndexInGroup(schainHash, fromNodeIndex, false);
         (uint256 indexTo, bool checkTo) = checkAndReturnIndexInGroup(schainHash, toNodeIndex, false);
@@ -452,7 +459,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     /**
      * @dev Checks whether sending Alright response is possible.
      */
-    function isAlrightPossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool) {
+    function isAlrightPossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool possible) {
         (uint256 index, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return channels[schainHash].active &&
             check &&
@@ -467,7 +474,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     /**
      * @dev Checks whether sending a pre-response is possible.
      */
-    function isPreResponsePossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool) {
+    function isPreResponsePossible(
+        bytes32 schainHash,
+        uint256 nodeIndex
+    )
+        external
+        view
+        override
+        returns (bool possible)
+    {
         (, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return channels[schainHash].active &&
             check &&
@@ -480,7 +495,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     /**
      * @dev Checks whether sending a response is possible.
      */
-    function isResponsePossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool) {
+    function isResponsePossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool possible) {
         (, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return channels[schainHash].active &&
             check &&
@@ -490,7 +505,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaints[schainHash].isResponse;
     }
 
-    function isNodeBroadcasted(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool) {
+    function isNodeBroadcasted(
+        bytes32 schainHash,
+        uint256 nodeIndex
+    )
+        external
+        view
+        override
+        returns (bool broadcasted)
+    {
         (uint256 index, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return check && dkgProcess[schainHash].broadcasted[index];
     }
@@ -498,7 +521,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      /**
      * @dev Checks whether all data has been received by node.
      */
-    function isAllDataReceived(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool) {
+    function isAllDataReceived(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool received) {
         (uint256 index, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return check && dkgProcess[schainHash].completed[index];
     }
@@ -510,7 +533,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         external
         pure
         override
-        returns (bytes32)
+        returns (bytes32 hash)
     {
         bytes memory data;
         for (uint256 i = 0; i < secretKeyContribution.length; i++) {
@@ -536,7 +559,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         public
         view
         override
-        returns (uint256, bool)
+        returns (uint256 groupIndex, bool valid)
     {
         uint256 index = ISchainsInternal(contractManager.getContract("SchainsInternal"))
             .getNodeIndexInGroup(schainHash, nodeIndex);
@@ -546,7 +569,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return (index, index < channels[schainHash].n);
     }
 
-    function isEveryoneBroadcasted(bytes32 schainHash) public view override returns (bool) {
+    function isEveryoneBroadcasted(bytes32 schainHash) public view override returns (bool broadcasted) {
         return channels[schainHash].n == dkgProcess[schainHash].numberOfBroadcasted;
     }
 
@@ -608,7 +631,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit ChannelOpened(schainHash);
     }
 
-    function _isNodeOwnedByMessageSender(uint256 nodeIndex, address from) private view returns (bool) {
+    function _isNodeOwnedByMessageSender(uint256 nodeIndex, address from) private view returns (bool owned) {
         return INodes(contractManager.getContract("Nodes")).isNodeExist(from, nodeIndex);
     }
 
@@ -616,7 +639,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(_isNodeOwnedByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
     }
 
-    function _getComplaintTimeLimit() private view returns (uint256) {
+    function _getComplaintTimeLimit() private view returns (uint256 timeLimit) {
         return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 }

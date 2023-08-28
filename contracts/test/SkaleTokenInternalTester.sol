@@ -24,7 +24,7 @@ pragma solidity 0.8.17;
 import { SkaleToken } from "../SkaleToken.sol";
 
 interface ISkaleTokenInterfaceTester {
-    function getMsgData() external view returns (bytes memory);
+    function getMsgData() external view returns (bytes memory msgData);
 }
 
 
@@ -35,7 +35,7 @@ contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
     // solhint-disable-next-line no-empty-blocks
     { }
 
-    function getMsgData() external view override returns (bytes memory) {
+    function getMsgData() external view override returns (bytes memory msgData) {
         return _msgData();
     }
 }

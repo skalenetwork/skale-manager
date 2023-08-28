@@ -135,7 +135,7 @@ contract Nodes is Permissions, INodes {
         override
         checkNodeExists(nodeIndex)
         allowTwo("NodeRotation", "SchainsInternal")
-        returns (bool)
+        returns (bool successful)
     {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
@@ -290,7 +290,7 @@ contract Nodes is Permissions, INodes {
         override
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
-        returns (bool)
+        returns (bool successful)
     {
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
 
@@ -372,7 +372,7 @@ contract Nodes is Permissions, INodes {
         override
         checkNodeExists(nodeIndex)
         allow("Bounty")
-        returns (bool)
+        returns (bool successful)
     {
         IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
@@ -478,7 +478,7 @@ contract Nodes is Permissions, INodes {
         external
         view
         override
-        returns (uint256)
+        returns (uint256 node)
     {
         uint8 place = _nodesAmountBySpace.getRandomNonZeroElementFromPlaceToLast(
             freeSpace == 0 ? 1 : freeSpace,
@@ -496,7 +496,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool timeForReward)
     {
         return IBountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= block.timestamp;
     }
@@ -513,7 +513,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bytes4)
+        returns (bytes4 ip)
     {
         require(nodeIndex < nodes.length, "Node does not exist");
         return nodes[nodeIndex].ip;
@@ -531,7 +531,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (string memory)
+        returns (string memory domainName)
     {
         return domainNames[nodeIndex];
     }
@@ -548,7 +548,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint16)
+        returns (uint16 port)
     {
         return nodes[nodeIndex].port;
     }
@@ -561,7 +561,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bytes32[2] memory)
+        returns (bytes32[2] memory publicKey)
     {
         return nodes[nodeIndex].publicKey;
     }
@@ -574,7 +574,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (address)
+        returns (address nodeAddress)
     {
         return _publicKeyToAddress(nodes[nodeIndex].publicKey);
     }
@@ -588,7 +588,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint256)
+        returns (uint256 timestamp)
     {
         return nodes[nodeIndex].finishTime;
     }
@@ -601,7 +601,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool left)
     {
         return nodes[nodeIndex].status == NodeStatus.Left;
     }
@@ -611,7 +611,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool maintenance)
     {
         return nodes[nodeIndex].status == NodeStatus.In_Maintenance;
     }
@@ -624,7 +624,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint256)
+        returns (uint256 timestamp)
     {
         return nodes[nodeIndex].lastRewardDate;
     }
@@ -637,7 +637,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint256)
+        returns (uint256 timestamp)
     {
         return IBountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex);
     }
@@ -645,7 +645,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Returns the total number of registered nodes.
      */
-    function getNumberOfNodes() external view override returns (uint256) {
+    function getNumberOfNodes() external view override returns (uint256 amount) {
         return nodes.length;
     }
 
@@ -654,7 +654,7 @@ contract Nodes is Permissions, INodes {
      *
      * Note: Online nodes are equal to the number of active plus leaving nodes.
      */
-    function getNumberOnlineNodes() external view override returns (uint256) {
+    function getNumberOnlineNodes() external view override returns (uint256 amount) {
         return numberOfActiveNodes + numberOfLeavingNodes ;
     }
 
@@ -680,7 +680,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (NodeStatus)
+        returns (NodeStatus status)
     {
         return nodes[nodeIndex].status;
     }
@@ -692,7 +692,14 @@ contract Nodes is Permissions, INodes {
      *
      * - Validator ID must exist.
      */
-    function getValidatorNodeIndexes(uint256 validatorId) external view override returns (uint256[] memory) {
+    function getValidatorNodeIndexes(
+        uint256 validatorId
+    )
+        external
+        view
+        override
+        returns (uint256[] memory validatorNodes)
+    {
         IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         return validatorToNodeIndexes[validatorId];
@@ -716,7 +723,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint256)
+        returns (uint256 id)
     {
         return nodes[nodeIndex].validatorId;
     }
@@ -729,7 +736,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool exist)
     {
         return nodeIndexes[from].isNodeExist[nodeIndex];
     }
@@ -742,7 +749,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool active)
     {
         return nodes[nodeIndex].status == NodeStatus.Active;
     }
@@ -755,7 +762,7 @@ contract Nodes is Permissions, INodes {
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool leaving)
     {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
     }
@@ -878,7 +885,13 @@ contract Nodes is Permissions, INodes {
         }
     }
 
-    function _checkValidatorPositionToMaintainNode(uint256 validatorId, uint256 position) private returns (bool) {
+    function _checkValidatorPositionToMaintainNode(
+        uint256 validatorId,
+        uint256 position
+    )
+        private
+        returns (bool enough)
+    {
         IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController")
         );
@@ -902,14 +915,14 @@ contract Nodes is Permissions, INodes {
         );
     }
 
-    function _canBeVisible(uint256 nodeIndex) private view returns (bool) {
+    function _canBeVisible(uint256 nodeIndex) private view returns (bool can) {
         return !incompliant[nodeIndex] && nodes[nodeIndex].status == NodeStatus.Active;
     }
 
     /**
      * @dev Returns the index of a given node within the validator's node index.
      */
-    function _findNode(uint256[] memory validatorNodeIndexes, uint256 nodeIndex) private pure returns (uint256) {
+    function _findNode(uint256[] memory validatorNodeIndexes, uint256 nodeIndex) private pure returns (uint256 node) {
         uint256 i;
         for (i = 0; i < validatorNodeIndexes.length; i++) {
             if (validatorNodeIndexes[i] == nodeIndex) {
@@ -919,7 +932,7 @@ contract Nodes is Permissions, INodes {
         return validatorNodeIndexes.length;
     }
 
-    function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address) {
+    function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address nodeAddress) {
         bytes32 hash = keccak256(abi.encodePacked(pubKey[0], pubKey[1]));
         bytes20 addr;
         for (uint8 i = 12; i < 32; i++) {

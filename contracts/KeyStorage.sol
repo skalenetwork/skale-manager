@@ -77,11 +77,25 @@ contract KeyStorage is Permissions, IKeyStorage {
         delete _publicKeysInProgress[schainHash];
     }
 
-    function getCommonPublicKey(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point memory) {
+    function getCommonPublicKey(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (ISkaleDKG.G2Point memory publicKey)
+    {
         return _schainsPublicKeys[schainHash];
     }
 
-    function getPreviousPublicKey(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point memory) {
+    function getPreviousPublicKey(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (ISkaleDKG.G2Point memory previousPublicKey)
+    {
         uint256 length = _previousSchainsPublicKeys[schainHash].length;
         if (length == 0) {
             return G2Operations.getG2Zero();
@@ -89,11 +103,18 @@ contract KeyStorage is Permissions, IKeyStorage {
         return _previousSchainsPublicKeys[schainHash][length - 1];
     }
 
-    function getAllPreviousPublicKeys(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point[] memory) {
+    function getAllPreviousPublicKeys(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (ISkaleDKG.G2Point[] memory previousPublicKeys)
+    {
         return _previousSchainsPublicKeys[schainHash];
     }
 
-    function _isSchainsPublicKeyZero(bytes32 schainHash) private view returns (bool) {
+    function _isSchainsPublicKeyZero(bytes32 schainHash) private view returns (bool zero) {
         return _schainsPublicKeys[schainHash].x.a == 0 &&
             _schainsPublicKeys[schainHash].x.b == 0 &&
             _schainsPublicKeys[schainHash].y.a == 0 &&

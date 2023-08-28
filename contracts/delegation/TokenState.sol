@@ -67,7 +67,7 @@ contract TokenState is Permissions, ILocker, ITokenState {
     /**
      *  @dev See {ILocker-getAndUpdateLockedAmount}.
      */
-    function getAndUpdateLockedAmount(address holder) external override returns (uint256) {
+    function getAndUpdateLockedAmount(address holder) external override returns (uint256 amount) {
         if (address(_delegationController) == address(0)) {
             _delegationController =
                 IDelegationController(contractManager.getContract("DelegationController"));

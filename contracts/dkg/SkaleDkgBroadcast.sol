@@ -102,11 +102,11 @@ library SkaleDkgBroadcast {
         );
     }
 
-    function getT(uint256 n) public pure returns (uint256) {
+    function getT(uint256 n) public pure returns (uint256 t) {
         return (n * 2 + 1) / 3;
     }
 
-    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256) {
+    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256 timeLimit) {
         return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 

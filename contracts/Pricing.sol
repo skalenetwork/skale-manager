@@ -107,7 +107,7 @@ contract Pricing is Permissions, IPricing {
     /**
      * @dev Returns the total load percentage.
      */
-    function getTotalLoadPercentage() external view override returns (uint256) {
+    function getTotalLoadPercentage() external view override returns (uint256 load) {
         return _getTotalLoad() * 100 / _getTotalCapacity();
     }
 
@@ -119,10 +119,10 @@ contract Pricing is Permissions, IPricing {
         totalNodes = numberOfActiveNodes;
     }
 
-    function _getTotalLoad() private view returns (uint256) {
+    function _getTotalLoad() private view returns (uint256 load) {
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
 
-        uint256 load = 0;
+        load = 0;
         uint256 numberOfSchains = schainsInternal.numberOfSchains();
         for (uint256 i = 0; i < numberOfSchains; i++) {
             bytes32 schain = schainsInternal.schainsAtSystem(i);
@@ -133,7 +133,7 @@ contract Pricing is Permissions, IPricing {
         return load;
     }
 
-    function _getTotalCapacity() private view returns (uint256) {
+    function _getTotalCapacity() private view returns (uint256 capacity) {
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 

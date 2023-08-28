@@ -116,7 +116,7 @@ library SkaleDkgPreResponse {
     function _calculateSum(ISkaleDKG.G2Point[] memory verificationVectorMultiplication)
         private
         view
-        returns (ISkaleDKG.G2Point memory)
+        returns (ISkaleDKG.G2Point memory result)
     {
         ISkaleDKG.G2Point memory value = G2Operations.getG2Zero();
         for (uint256 i = 0; i < verificationVectorMultiplication.length; i++) {
@@ -132,7 +132,7 @@ library SkaleDkgPreResponse {
     )
         private
         view
-        returns (bool)
+        returns (bool correct)
     {
         ISkaleDKG.Fp2Point memory value = G1Operations.getG1Generator();
         ISkaleDKG.Fp2Point memory tmp = G1Operations.getG1Generator();
@@ -152,7 +152,7 @@ library SkaleDkgPreResponse {
     )
         private
         view
-        returns (bool)
+        returns (bool valid)
     {
         require(G1Operations.checkRange(g1Mul), "g1Mul is not valid");
         g1Mul.b = G1Operations.negate(g1Mul.b);

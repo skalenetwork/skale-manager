@@ -60,7 +60,7 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
         external
         view
         override
-        returns (bool)
+        returns (bool valid)
     {
         require(G1Operations.checkRange(signature), "Signature is not valid");
         if (!_checkHashToGroupWithHelper(
@@ -100,7 +100,7 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
     )
         private
         pure
-        returns (bool)
+        returns (bool valid)
     {
         if (counter > 100) {
             return false;

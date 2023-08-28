@@ -84,7 +84,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         external
         override
         allow("SkaleManager")
-        returns (uint256)
+        returns (uint256 bounty)
     {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
@@ -107,7 +107,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         _refillEpochPool(currentMonth, timeHelpers, constantsHolder);
         _prepareBountyHistory(validatorId, currentMonth);
 
-        uint256 bounty = _calculateMaximumBountyAmount(
+        bounty = _calculateMaximumBountyAmount(
             _epochPool,
             _effectiveDelegatedSum.getAndUpdateValue(currentMonth),
             _bountyWasPaidInCurrentEpoch,
@@ -170,7 +170,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         _effectiveDelegatedSum.subtractFromValue(amount, month);
     }
 
-    function estimateBounty(uint256 nodeIndex) external view override returns (uint256) {
+    function estimateBounty(uint256 nodeIndex) external view override returns (uint256 bounty) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
@@ -197,7 +197,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         );
     }
 
-    function getNextRewardTimestamp(uint256 nodeIndex) external view override returns (uint256) {
+    function getNextRewardTimestamp(uint256 nodeIndex) external view override returns (uint256 timestamp) {
         return _getNextRewardTimestamp(
             nodeIndex,
             INodes(contractManager.getContract("Nodes")),
@@ -205,7 +205,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         );
     }
 
-    function getEffectiveDelegatedSum() external view override returns (uint256[] memory) {
+    function getEffectiveDelegatedSum() external view override returns (uint256[] memory amount) {
         return _effectiveDelegatedSum.getValues();
     }
 
@@ -261,7 +261,7 @@ contract BountyV2 is Permissions, IBountyV2 {
     )
         private
         view
-        returns (uint256)
+        returns (uint256 bounty)
     {
         if (nodes.isNodeLeft(nodeIndex)) {
             return 0;
@@ -282,7 +282,7 @@ contract BountyV2 is Permissions, IBountyV2 {
             return 0;
         }
 
-        uint256 bounty = _calculateBountyShare(
+        bounty = _calculateBountyShare(
             epochPoolSize + bountyWasPaidInCurrentEpoch,
             effectiveDelegated,
             effectiveDelegatedSum,
@@ -293,7 +293,14 @@ contract BountyV2 is Permissions, IBountyV2 {
         return bounty;
     }
 
-    function _getFirstEpoch(ITimeHelpers timeHelpers, ConstantsHolder constantsHolder) private view returns (uint256) {
+    function _getFirstEpoch(
+        ITimeHelpers timeHelpers,
+        ConstantsHolder constantsHolder
+    )
+        private
+        view
+        returns (uint256 month)
+    {
         return timeHelpers.timestampToMonth(constantsHolder.launchTimestamp());
     }
 
@@ -319,7 +326,7 @@ contract BountyV2 is Permissions, IBountyV2 {
     )
         private
         view
-        returns (uint256)
+        returns (uint256 reward)
     {
         uint256 firstEpoch = _getFirstEpoch(timeHelpers, constantsHolder);
         if (epoch < firstEpoch) {
@@ -347,7 +354,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         }
     }
 
-    function _getBountyPaid(uint256 validatorId, uint256 month) private view returns (uint256) {
+    function _getBountyPaid(uint256 validatorId, uint256 month) private view returns (uint256 amount) {
         require(_bountyHistory[validatorId].month <= month, "Can't get bounty paid");
         if (_bountyHistory[validatorId].month == month) {
             return _bountyHistory[validatorId].bountyPaid;
@@ -359,7 +366,7 @@ contract BountyV2 is Permissions, IBountyV2 {
     function _getNextRewardTimestamp(uint256 nodeIndex, INodes nodes, ITimeHelpers timeHelpers)
         private
         view
-        returns (uint256)
+        returns (uint256 timestamp)
     {
         uint256 lastRewardTimestamp = nodes.getNodeLastRewardDate(nodeIndex);
         uint256 lastRewardMonth = timeHelpers.timestampToMonth(lastRewardTimestamp);
@@ -398,7 +405,7 @@ contract BountyV2 is Permissions, IBountyV2 {
     )
         private
         pure
-        returns (uint256)
+        returns (uint256 share)
     {
         if (maxNodesAmount > 0) {
             uint256 totalBountyShare = monthBounty * effectiveDelegated / effectiveDelegatedSum;
@@ -411,7 +418,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         }
     }
 
-    function _min(uint256 a, uint256 b) private pure returns (uint256) {
+    function _min(uint256 a, uint256 b) private pure returns (uint256 min) {
         if (a < b) {
             return a;
         } else {
@@ -419,7 +426,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         }
     }
 
-    function _max(uint256 a, uint256 b) private pure returns (uint256) {
+    function _max(uint256 a, uint256 b) private pure returns (uint256 max) {
         if (a < b) {
             return b;
         } else {

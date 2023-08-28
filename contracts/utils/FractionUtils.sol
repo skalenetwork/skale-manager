@@ -29,14 +29,14 @@ library FractionUtils {
         uint256 denominator;
     }
 
-    function createFraction(uint256 numerator, uint256 denominator) internal pure returns (Fraction memory) {
+    function createFraction(uint256 numerator, uint256 denominator) internal pure returns (Fraction memory fraction) {
         require(denominator > 0, "Division by zero");
-        Fraction memory fraction = Fraction({numerator: numerator, denominator: denominator});
+        fraction = Fraction({numerator: numerator, denominator: denominator});
         reduceFraction(fraction);
         return fraction;
     }
 
-    function createFraction(uint256 value) internal pure returns (Fraction memory) {
+    function createFraction(uint256 value) internal pure returns (Fraction memory fraction) {
         return createFraction(value, 1);
     }
 
@@ -47,11 +47,11 @@ library FractionUtils {
     }
 
     // numerator - is limited by 7*10^27, we could multiply it numerator * numerator - it would less than 2^256-1
-    function multiplyFraction(Fraction memory a, Fraction memory b) internal pure returns (Fraction memory) {
+    function multiplyFraction(Fraction memory a, Fraction memory b) internal pure returns (Fraction memory fraction) {
         return createFraction(a.numerator * b.numerator, a.denominator * b.denominator);
     }
 
-    function gcd(uint256 a, uint256 b) internal pure returns (uint256) {
+    function gcd(uint256 a, uint256 b) internal pure returns (uint256 value) {
         uint256 _a = a;
         uint256 _b = b;
         if (_b > _a) {
@@ -64,7 +64,7 @@ library FractionUtils {
         return _a;
     }
 
-    function swap(uint256 a, uint256 b) internal pure returns (uint256, uint256) {
+    function swap(uint256 a, uint256 b) internal pure returns (uint256 left, uint256 right) {
         return (b, a);
     }
 }

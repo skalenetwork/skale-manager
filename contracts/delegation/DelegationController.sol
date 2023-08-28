@@ -169,14 +169,14 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     /**
      * @dev Update and return a validator's delegations.
      */
-    function getAndUpdateDelegatedToValidatorNow(uint256 validatorId) external override returns (uint256) {
+    function getAndUpdateDelegatedToValidatorNow(uint256 validatorId) external override returns (uint256 amount) {
         return _getAndUpdateDelegatedToValidator(validatorId, _getCurrentMonth());
     }
 
     /**
      * @dev Update and return the amount delegated.
      */
-    function getAndUpdateDelegatedAmount(address holder) external override returns (uint256) {
+    function getAndUpdateDelegatedAmount(address holder) external override returns (uint256 amount) {
         return _getAndUpdateDelegatedByHolder(holder);
     }
 
@@ -252,14 +252,14 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     /**
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
-    function getAndUpdateLockedAmount(address wallet) external override returns (uint256) {
+    function getAndUpdateLockedAmount(address wallet) external override returns (uint256 amount) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
     /**
      * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
-    function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint256) {
+    function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint256 amount) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
@@ -395,7 +395,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         external
         override
         allowTwo("Bounty", "Distributor")
-        returns (uint256)
+        returns (uint256 amount)
     {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
     }
@@ -407,7 +407,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     function getAndUpdateDelegatedByHolderToValidatorNow(address holder, uint256 validatorId)
         external
         override
-        returns (uint256)
+        returns (uint256 amount)
     {
         return _getAndUpdateDelegatedByHolderToValidator(holder, validatorId, _getCurrentMonth());
     }
@@ -418,7 +418,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         external
         view
         override
-        returns (uint256[] memory)
+        returns (uint256[] memory amounts)
     {
         return _effectiveDelegatedToValidator[validatorId].getValuesInSequence();
     }
@@ -430,12 +430,20 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         external
         view
         override
-        returns (uint256)
+        returns (uint256 amount)
     {
         return _effectiveDelegatedToValidator[validatorId].getValueInSequence(month);
     }
 
-    function getDelegatedToValidator(uint256 validatorId, uint256 month) external view override returns (uint256) {
+    function getDelegatedToValidator(
+        uint256 validatorId,
+        uint256 month
+    )
+        external
+        view
+        override
+        returns (uint256 amount)
+    {
         return _delegatedToValidator[validatorId].getValue(month);
     }
 
@@ -447,7 +455,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         view
         override
         checkDelegationExists(delegationId)
-        returns (Delegation memory)
+        returns (Delegation memory delegation)
     {
         return delegations[delegationId];
     }
@@ -455,21 +463,29 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     /**
      * @dev Returns the first delegation month.
      */
-    function getFirstDelegationMonth(address holder, uint256 validatorId) external view override returns(uint256) {
+    function getFirstDelegationMonth(
+        address holder,
+        uint256 validatorId
+    )
+        external
+        view
+        override
+        returns(uint256 month)
+    {
         return _firstDelegationMonth[holder].byValidator[validatorId];
     }
 
     /**
      * @dev Returns a validator's total number of delegations.
      */
-    function getDelegationsByValidatorLength(uint256 validatorId) external view override returns (uint256) {
+    function getDelegationsByValidatorLength(uint256 validatorId) external view override returns (uint256 length) {
         return delegationsByValidator[validatorId].length;
     }
 
     /**
      * @dev Returns a holder's total number of delegations.
      */
-    function getDelegationsByHolderLength(address holder) external view override returns (uint256) {
+    function getDelegationsByHolderLength(address holder) external view override returns (uint256 length) {
         return delegationsByHolder[holder].length;
     }
 
@@ -528,7 +544,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     /**
      * @dev Returns the amount of tokens in PENDING delegation state.
      */
-    function getLockedInPendingDelegations(address holder) public view override returns (uint256) {
+    function getLockedInPendingDelegations(address holder) public view override returns (uint256 amount) {
         uint256 currentMonth = _getCurrentMonth();
         if (_lockedInPendingDelegations[holder].month < currentMonth) {
             return 0;
@@ -540,7 +556,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     /**
      * @dev Checks whether there are any unprocessed slashes.
      */
-    function hasUnprocessedSlashes(address holder) public view override returns (bool) {
+    function hasUnprocessedSlashes(address holder) public view override returns (bool hasUnprocessed) {
         return _everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
     }
 
@@ -551,7 +567,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
      * to validator for a given month.
      */
     function _getAndUpdateDelegatedToValidator(uint256 validatorId, uint256 month)
-        private returns (uint256)
+        private returns (uint256 amount)
     {
         return _delegatedToValidator[validatorId].getAndUpdateValue(month);
     }
@@ -647,7 +663,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         _effectiveDelegatedByHolderToValidator[holder][validatorId].subtractFromSequence(effectiveAmount, month);
     }
 
-    function _getAndUpdateDelegatedByHolder(address holder) private returns (uint256) {
+    function _getAndUpdateDelegatedByHolder(address holder) private returns (uint256 amount) {
         uint256 currentMonth = _getCurrentMonth();
         processAllSlashes(holder);
         return _delegatedByHolder[holder].getAndUpdateValue(currentMonth);
@@ -657,7 +673,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         address holder,
         uint256 validatorId,
         uint256 month)
-        private returns (uint256)
+        private returns (uint256 amount)
     {
         return _delegatedByHolderToValidator[holder][validatorId].getAndUpdateValue(month);
     }
@@ -682,7 +698,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     /**
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
-    function _getAndUpdateLockedAmount(address wallet) private returns (uint256) {
+    function _getAndUpdateLockedAmount(address wallet) private returns (uint256 amount) {
         return _getAndUpdateDelegatedByHolder(wallet) + getLockedInPendingDelegations(wallet);
     }
 
@@ -902,21 +918,21 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         emit DelegationAccepted(delegationId);
     }
 
-    function _getCurrentMonth() private view returns (uint256) {
+    function _getCurrentMonth() private view returns (uint256 month) {
         return _getTimeHelpers().getCurrentMonth();
     }
 
     /**
      * @dev Checks whether the holder has performed a delegation.
      */
-    function _everDelegated(address holder) private view returns (bool) {
+    function _everDelegated(address holder) private view returns (bool delegated) {
         return _firstDelegationMonth[holder].value > 0;
     }
 
     /**
      * @dev Returns the month when a delegation ends.
      */
-    function _calculateDelegationEndMonth(uint256 delegationId) private view returns (uint256) {
+    function _calculateDelegationEndMonth(uint256 delegationId) private view returns (uint256 month) {
         uint256 currentMonth = _getCurrentMonth();
         uint256 started = delegations[delegationId].started;
 
@@ -931,10 +947,10 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
     /**
      * @dev Returns the delegated amount after a slashing event.
      */
-    function _calculateDelegationAmountAfterSlashing(uint256 delegationId) private view returns (uint256) {
+    function _calculateDelegationAmountAfterSlashing(uint256 delegationId) private view returns (uint256 amount) {
         uint256 startMonth = _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation;
         uint256 validatorId = delegations[delegationId].validatorId;
-        uint256 amount = delegations[delegationId].amount;
+        amount = delegations[delegationId].amount;
         if (startMonth == 0) {
             startMonth = _slashesOfValidator[validatorId].firstMonth;
             if (startMonth == 0) {
@@ -969,23 +985,23 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         );
     }
 
-    function _getDelegationPeriodManager() private view returns (IDelegationPeriodManager) {
+    function _getDelegationPeriodManager() private view returns (IDelegationPeriodManager delegationPeriodManager) {
         return IDelegationPeriodManager(contractManager.getDelegationPeriodManager());
     }
 
-    function _getBounty() private view returns (IBountyV2) {
+    function _getBounty() private view returns (IBountyV2 bountyV2) {
         return IBountyV2(contractManager.getBounty());
     }
 
-    function _getValidatorService() private view returns (IValidatorService) {
+    function _getValidatorService() private view returns (IValidatorService validatorService) {
         return IValidatorService(contractManager.getValidatorService());
     }
 
-    function _getTimeHelpers() private view returns (ITimeHelpers) {
+    function _getTimeHelpers() private view returns (ITimeHelpers timeHelpers) {
         return ITimeHelpers(contractManager.getTimeHelpers());
     }
 
-    function _getConstantsHolder() private view returns (IConstantsHolder) {
+    function _getConstantsHolder() private view returns (IConstantsHolder constantsHolder) {
         return IConstantsHolder(contractManager.getConstantsHolder());
     }
 }

@@ -27,7 +27,7 @@ interface IFieldOperationsTester {
     function add(ISkaleDKG.G2Point memory value1, ISkaleDKG.G2Point memory value2)
         external
         view
-        returns (ISkaleDKG.G2Point memory);
+        returns (ISkaleDKG.G2Point memory result);
 }
 
 
@@ -40,7 +40,7 @@ contract FieldOperationsTester is IFieldOperationsTester {
         external
         view
         override
-        returns (ISkaleDKG.G2Point memory)
+        returns (ISkaleDKG.G2Point memory result)
     {
         require(value1.isG2(), "First value not in G2");
         require(value2.isG2(), "Second value not in G2");

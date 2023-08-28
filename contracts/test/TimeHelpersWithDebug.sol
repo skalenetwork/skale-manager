@@ -55,11 +55,11 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWi
         }
     }
 
-    function timestampToMonth(uint256 timestamp) public view override returns (uint256) {
+    function timestampToMonth(uint256 timestamp) public view override returns (uint256 month) {
         return super.timestampToMonth(timestamp + _getTimeShift(timestamp));
     }
 
-    function monthToTimestamp(uint256 month) public view override returns (uint256) {
+    function monthToTimestamp(uint256 month) public view override returns (uint256 timestamp) {
         uint256 shiftedTimestamp = super.monthToTimestamp(month);
         if (_timeShift.length > 0) {
             return _findTimeBeforeTimeShift(shiftedTimestamp);
@@ -70,7 +70,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWi
 
     // private
 
-    function _getTimeShift(uint256 timestamp) private view returns (uint256) {
+    function _getTimeShift(uint256 timestamp) private view returns (uint256 timeShift) {
         if (_timeShift.length > 0) {
             if (timestamp < _timeShift[0].pointInTime) {
                 return 0;
@@ -94,7 +94,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWi
         }
     }
 
-    function _findTimeBeforeTimeShift(uint256 shiftedTimestamp) private view returns (uint256) {
+    function _findTimeBeforeTimeShift(uint256 shiftedTimestamp) private view returns (uint256 timestamp) {
         uint256 lastTimeShiftIndex = _timeShift.length - 1;
         if (_timeShift[lastTimeShiftIndex].pointInTime + _timeShift[lastTimeShiftIndex].shift < shiftedTimestamp) {
             return shiftedTimestamp - _timeShift[lastTimeShiftIndex].shift;

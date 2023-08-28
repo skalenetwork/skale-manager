@@ -92,7 +92,14 @@ contract NodeRotation is Permissions, INodeRotation {
      *
      * - A free node must exist.
      */
-    function exitFromSchain(uint256 nodeIndex) external override allow("SkaleManager") returns (bool, bool) {
+    function exitFromSchain(
+        uint256 nodeIndex
+    )
+        external
+        override
+        allow("SkaleManager")
+        returns (bool contains, bool successful)
+    {
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainHash = schainsInternal.getActiveSchain(nodeIndex);
         if (schainHash == bytes32(0)) {
@@ -137,7 +144,7 @@ contract NodeRotation is Permissions, INodeRotation {
     /**
      * @dev Returns rotation details for a given schain.
      */
-    function getRotation(bytes32 schainHash) external view override returns (INodeRotation.Rotation memory) {
+    function getRotation(bytes32 schainHash) external view override returns (INodeRotation.Rotation memory rotation) {
         return Rotation({
             nodeIndex: _rotations[schainHash].nodeIndex,
             newNodeIndex: _rotations[schainHash].newNodeIndex,
@@ -155,12 +162,12 @@ contract NodeRotation is Permissions, INodeRotation {
         external
         view
         override
-        returns (INodeRotation.LeavingHistory[] memory)
+        returns (INodeRotation.LeavingHistory[] memory history)
     {
         return leavingHistory[nodeIndex];
     }
 
-    function isRotationInProgress(bytes32 schainHash) external view override returns (bool) {
+    function isRotationInProgress(bytes32 schainHash) external view override returns (bool inProgress) {
         bool foundNewNode = isNewNodeFound(schainHash);
         return foundNewNode ?
             leavingHistory[_rotations[schainHash].nodeIndex][
@@ -174,7 +181,7 @@ contract NodeRotation is Permissions, INodeRotation {
      * If there is no previous node for given node would return an error:
      * "No previous node"
      */
-    function getPreviousNode(bytes32 schainHash, uint256 nodeIndex) external view override returns (uint256) {
+    function getPreviousNode(bytes32 schainHash, uint256 nodeIndex) external view override returns (uint256 node) {
         require(_rotations[schainHash].newNodeIndexes.contains(nodeIndex), "No previous node");
         return _rotations[schainHash].previousNodes[nodeIndex];
     }
@@ -236,7 +243,7 @@ contract NodeRotation is Permissions, INodeRotation {
         schainsInternal.setNodeInGroup(schainHash, nodeIndex);
     }
 
-    function isNewNodeFound(bytes32 schainHash) public view override returns (bool) {
+    function isNewNodeFound(bytes32 schainHash) public view override returns (bool found) {
         return _rotations[schainHash].newNodeIndexes.contains(_rotations[schainHash].newNodeIndex) &&
             _rotations[schainHash].previousNodes[_rotations[schainHash].newNodeIndex] ==
             _rotations[schainHash].nodeIndex;

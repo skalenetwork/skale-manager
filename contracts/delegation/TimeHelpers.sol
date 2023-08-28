@@ -44,32 +44,30 @@ contract TimeHelpers is ITimeHelpers {
         timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
     }
 
-    function getCurrentMonth() external view virtual override returns (uint256) {
+    function getCurrentMonth() external view virtual override returns (uint256 month) {
         return timestampToMonth(block.timestamp);
     }
 
-    function timestampToYear(uint256 timestamp) external view virtual override returns (uint256) {
-        uint256 year;
+    function timestampToYear(uint256 timestamp) external view virtual override returns (uint256 year) {
         (year, , ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
         require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
         return year - _ZERO_YEAR;
     }
 
-    function addDays(uint256 fromTimestamp, uint256 n) external pure override returns (uint256) {
+    function addDays(uint256 fromTimestamp, uint256 n) external pure override returns (uint256 result) {
         return BokkyPooBahsDateTimeLibrary.addDays(fromTimestamp, n);
     }
 
-    function addMonths(uint256 fromTimestamp, uint256 n) external pure override returns (uint256) {
+    function addMonths(uint256 fromTimestamp, uint256 n) external pure override returns (uint256 result) {
         return BokkyPooBahsDateTimeLibrary.addMonths(fromTimestamp, n);
     }
 
-    function addYears(uint256 fromTimestamp, uint256 n) external pure override returns (uint256) {
+    function addYears(uint256 fromTimestamp, uint256 n) external pure override returns (uint256 result) {
         return BokkyPooBahsDateTimeLibrary.addYears(fromTimestamp, n);
     }
 
-    function timestampToMonth(uint256 timestamp) public view virtual override returns (uint256) {
+    function timestampToMonth(uint256 timestamp) public view virtual override returns (uint256 month) {
         uint256 year;
-        uint256 month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
         require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
         month = month - 1 + (year - _ZERO_YEAR) * 12;

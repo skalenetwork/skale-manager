@@ -76,7 +76,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         override
         allow("SkaleManager")
         //onlyAuthorized
-        returns (bool)
+        returns (bool successful)
     {
         require(amount <= CAP.sub(totalSupply()), "Amount is too big");
         _mint(
@@ -92,7 +92,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     /**
      * @dev See {IDelegatableToken-getAndUpdateDelegatedAmount}.
      */
-    function getAndUpdateDelegatedAmount(address wallet) external override returns (uint256) {
+    function getAndUpdateDelegatedAmount(address wallet) external override returns (uint256 amount) {
         return IDelegationController(contractManager.getContract("DelegationController"))
             .getAndUpdateDelegatedAmount(wallet);
     }
@@ -100,14 +100,14 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     /**
      * @dev See {IDelegatableToken-getAndUpdateSlashedAmount}.
      */
-    function getAndUpdateSlashedAmount(address wallet) external override returns (uint256) {
+    function getAndUpdateSlashedAmount(address wallet) external override returns (uint256 amount) {
         return ILocker(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
     }
 
     /**
      * @dev See {IDelegatableToken-getAndUpdateLockedAmount}.
      */
-    function getAndUpdateLockedAmount(address wallet) public override returns (uint256) {
+    function getAndUpdateLockedAmount(address wallet) public override returns (uint256 amount) {
         return ILocker(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
     }
 
@@ -151,11 +151,11 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
 
     // we have to override _msgData() and _msgSender() functions because of collision in Context and ContextUpgradeable
 
-    function _msgData() internal view override(Context, ContextUpgradeable) returns (bytes calldata) {
+    function _msgData() internal view override(Context, ContextUpgradeable) returns (bytes calldata msgData) {
         return Context._msgData();
     }
 
-    function _msgSender() internal view override(Context, ContextUpgradeable) returns (address) {
+    function _msgSender() internal view override(Context, ContextUpgradeable) returns (address sender) {
         return Context._msgSender();
     }
 }

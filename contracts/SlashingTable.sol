@@ -53,8 +53,7 @@ contract SlashingTable is Permissions, ISlashingTable {
     /**
      * @dev Returns the penalty in SKL tokens for a given offense.
      */
-    function getPenalty(string calldata offense) external view override returns (uint256) {
-        uint256 penalty = _penalties[uint(keccak256(abi.encodePacked(offense)))];
-        return penalty;
+    function getPenalty(string calldata offense) external view override returns (uint256 penalty) {
+        return _penalties[uint(keccak256(abi.encodePacked(offense)))];
     }
 }

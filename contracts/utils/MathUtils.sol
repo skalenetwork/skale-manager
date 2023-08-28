@@ -31,7 +31,7 @@ library MathUtils {
         uint256 b
     );
 
-    function boundedSub(uint256 a, uint256 b) internal returns (uint256) {
+    function boundedSub(uint256 a, uint256 b) internal returns (uint256 value) {
         if (a >= b) {
             return a - b;
         } else {
@@ -40,7 +40,7 @@ library MathUtils {
         }
     }
 
-    function boundedSubWithoutEvent(uint256 a, uint256 b) internal pure returns (uint256) {
+    function boundedSubWithoutEvent(uint256 a, uint256 b) internal pure returns (uint256 value) {
         if (a >= b) {
             return a - b;
         } else {
@@ -48,12 +48,12 @@ library MathUtils {
         }
     }
 
-    function muchGreater(uint256 a, uint256 b) internal pure returns (bool) {
+    function muchGreater(uint256 a, uint256 b) internal pure returns (bool result) {
         assert(type(uint).max - _EPS > b);
         return a > b + _EPS;
     }
 
-    function approximatelyEqual(uint256 a, uint256 b) internal pure returns (bool) {
+    function approximatelyEqual(uint256 a, uint256 b) internal pure returns (bool result) {
         if (a > b) {
             return a - b < _EPS;
         } else {

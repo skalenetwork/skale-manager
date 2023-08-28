@@ -345,7 +345,7 @@ contract ValidatorService is Permissions, IValidatorService {
     function getAndUpdateBondAmount(uint256 validatorId)
         external
         override
-        returns (uint256)
+        returns (uint256 bond)
     {
         IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController")
@@ -359,14 +359,14 @@ contract ValidatorService is Permissions, IValidatorService {
     /**
      * @dev Returns node addresses linked to the msg.sender.
      */
-    function getMyNodesAddresses() external view override returns (address[] memory) {
+    function getMyNodesAddresses() external view override returns (address[] memory addresses) {
         return getNodeAddresses(getValidatorId(msg.sender));
     }
 
     /**
      * @dev Returns the list of trusted validators.
      */
-    function getTrustedValidators() external view override returns (uint256[] memory) {
+    function getTrustedValidators() external view override returns (uint256[] memory trustedValidators) {
         return trustedValidatorsList;
     }
 
@@ -377,7 +377,7 @@ contract ValidatorService is Permissions, IValidatorService {
         external
         view
         override
-        returns (bool)
+        returns (bool valid)
     {
         return getValidatorId(validatorAddress) == validatorId ? true : false;
     }
@@ -418,21 +418,21 @@ contract ValidatorService is Permissions, IValidatorService {
     /**
      * @dev Returns a validator's node addresses.
      */
-    function getNodeAddresses(uint256 validatorId) public view override returns (address[] memory) {
+    function getNodeAddresses(uint256 validatorId) public view override returns (address[] memory nodeAddresses) {
         return _nodeAddresses[validatorId];
     }
 
     /**
      * @dev Checks whether validator ID exists.
      */
-    function validatorExists(uint256 validatorId) public view override returns (bool) {
+    function validatorExists(uint256 validatorId) public view override returns (bool exist) {
         return validatorId <= numberOfValidators && validatorId != 0;
     }
 
     /**
      * @dev Checks whether validator address exists.
      */
-    function validatorAddressExists(address validatorAddress) public view override returns (bool) {
+    function validatorAddressExists(address validatorAddress) public view override returns (bool exist) {
         return _validatorAddressToId[validatorAddress] != 0;
     }
 
@@ -451,7 +451,7 @@ contract ValidatorService is Permissions, IValidatorService {
         view
         override
         checkValidatorExists(validatorId)
-        returns (IValidatorService.Validator memory)
+        returns (IValidatorService.Validator memory validator)
     {
         return validators[validatorId];
     }
@@ -459,7 +459,7 @@ contract ValidatorService is Permissions, IValidatorService {
     /**
      * @dev Returns the validator ID for the given validator address.
      */
-    function getValidatorId(address validatorAddress) public view override returns (uint256) {
+    function getValidatorId(address validatorAddress) public view override returns (uint256 id) {
         checkIfValidatorAddressExists(validatorAddress);
         return _validatorAddressToId[validatorAddress];
     }
@@ -472,7 +472,7 @@ contract ValidatorService is Permissions, IValidatorService {
         view
         override
         checkValidatorExists(validatorId)
-        returns (bool)
+        returns (bool accept)
     {
         return validators[validatorId].acceptNewRequests;
     }
@@ -482,7 +482,7 @@ contract ValidatorService is Permissions, IValidatorService {
         view
         override
         checkValidatorExists(validatorId)
-        returns (bool)
+        returns (bool authorized)
     {
         return _trustedValidators[validatorId] || !useWhitelist;
     }
@@ -524,11 +524,10 @@ contract ValidatorService is Permissions, IValidatorService {
         _nodeAddresses[validatorId].push(nodeAddress);
     }
 
-    function _find(uint256[] memory array, uint256 index) private pure returns (uint256) {
-        uint256 i;
-        for (i = 0; i < array.length; i++) {
-            if (array[i] == index) {
-                return i;
+    function _find(uint256[] memory array, uint256 value) private pure returns (uint256 index) {
+        for (index = 0; index < array.length; index++) {
+            if (array[index] == value) {
+                return index;
             }
         }
         return array.length;

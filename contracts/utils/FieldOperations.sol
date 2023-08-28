@@ -51,7 +51,7 @@ library Fp2Operations {
     function addFp2(ISkaleDKG.Fp2Point memory value1, ISkaleDKG.Fp2Point memory value2)
         internal
         pure
-        returns (ISkaleDKG.Fp2Point memory)
+        returns (ISkaleDKG.Fp2Point memory result)
     {
         return ISkaleDKG.Fp2Point({ a: addmod(value1.a, value2.a, P), b: addmod(value1.b, value2.b, P) });
     }
@@ -59,7 +59,7 @@ library Fp2Operations {
     function scalarMulFp2(ISkaleDKG.Fp2Point memory value, uint256 scalar)
         internal
         pure
-        returns (ISkaleDKG.Fp2Point memory)
+        returns (ISkaleDKG.Fp2Point memory result)
     {
         return ISkaleDKG.Fp2Point({ a: mulmod(scalar, value.a, P), b: mulmod(scalar, value.b, P) });
     }
@@ -105,7 +105,7 @@ library Fp2Operations {
             p);
     }
 
-    function squaredFp2(ISkaleDKG.Fp2Point memory value) internal pure returns (ISkaleDKG.Fp2Point memory) {
+    function squaredFp2(ISkaleDKG.Fp2Point memory value) internal pure returns (ISkaleDKG.Fp2Point memory result) {
         uint256 p = P;
         uint256 ab = mulmod(value.a, value.b, p);
         uint256 multiplication = mulmod(addmod(value.a, value.b, p), addmod(value.a, mulmod(p - 1, value.b, p), p), p);
@@ -118,7 +118,7 @@ library Fp2Operations {
     )
         internal
         pure
-        returns (bool)
+        returns (bool result)
     {
         return value1.a == value2.a && value1.b == value2.b;
     }
@@ -127,7 +127,7 @@ library Fp2Operations {
 library G1Operations {
     using Fp2Operations for ISkaleDKG.Fp2Point;
 
-    function getG1Generator() internal pure returns (ISkaleDKG.Fp2Point memory) {
+    function getG1Generator() internal pure returns (ISkaleDKG.Fp2Point memory generator) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
         return ISkaleDKG.Fp2Point({
@@ -136,21 +136,21 @@ library G1Operations {
         });
     }
 
-    function isG1Point(uint256 x, uint256 y) internal pure returns (bool) {
+    function isG1Point(uint256 x, uint256 y) internal pure returns (bool result) {
         uint256 p = Fp2Operations.P;
         return mulmod(y, y, p) ==
             addmod(mulmod(mulmod(x, x, p), x, p), 3, p);
     }
 
-    function isG1(ISkaleDKG.Fp2Point memory point) internal pure returns (bool) {
+    function isG1(ISkaleDKG.Fp2Point memory point) internal pure returns (bool result) {
         return isG1Point(point.a, point.b);
     }
 
-    function checkRange(ISkaleDKG.Fp2Point memory point) internal pure returns (bool) {
+    function checkRange(ISkaleDKG.Fp2Point memory point) internal pure returns (bool result) {
         return point.a < Fp2Operations.P && point.b < Fp2Operations.P;
     }
 
-    function negate(uint256 y) internal pure returns (uint256) {
+    function negate(uint256 y) internal pure returns (uint256 result) {
         return (Fp2Operations.P - y) % Fp2Operations.P;
     }
 
@@ -211,7 +211,7 @@ library G2Operations {
         sum.y.b = (p - sum.y.b) % p;
     }
 
-    function getTWISTB() internal pure returns (ISkaleDKG.Fp2Point memory) {
+    function getTWISTB() internal pure returns (ISkaleDKG.Fp2Point memory point) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
         return ISkaleDKG.Fp2Point({
@@ -220,7 +220,7 @@ library G2Operations {
         });
     }
 
-    function getG2Generator() internal pure returns (ISkaleDKG.G2Point memory) {
+    function getG2Generator() internal pure returns (ISkaleDKG.G2Point memory point) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
         return ISkaleDKG.G2Point({
@@ -235,7 +235,7 @@ library G2Operations {
         });
     }
 
-    function getG2Zero() internal pure returns (ISkaleDKG.G2Point memory) {
+    function getG2Zero() internal pure returns (ISkaleDKG.G2Point memory point) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
         return ISkaleDKG.G2Point({
@@ -250,7 +250,7 @@ library G2Operations {
         });
     }
 
-    function isG2Point(ISkaleDKG.Fp2Point memory x, ISkaleDKG.Fp2Point memory y) internal pure returns (bool) {
+    function isG2Point(ISkaleDKG.Fp2Point memory x, ISkaleDKG.Fp2Point memory y) internal pure returns (bool result) {
         if (isG2ZeroPoint(x, y)) {
             return true;
         }
@@ -261,7 +261,7 @@ library G2Operations {
         return res.a == 0 && res.b == 0;
     }
 
-    function isG2(ISkaleDKG.G2Point memory value) internal pure returns (bool) {
+    function isG2(ISkaleDKG.G2Point memory value) internal pure returns (bool result) {
         return isG2Point(value.x, value.y);
     }
 
@@ -271,12 +271,12 @@ library G2Operations {
     )
         internal
         pure
-        returns (bool)
+        returns (bool result)
     {
         return x.a == 0 && x.b == 0 && y.a == 1 && y.b == 0;
     }
 
-    function isG2Zero(ISkaleDKG.G2Point memory value) internal pure returns (bool) {
+    function isG2Zero(ISkaleDKG.G2Point memory value) internal pure returns (bool result) {
         return value.x.a == 0 && value.x.b == 0 && value.y.a == 1 && value.y.b == 0;
         // return isG2ZeroPoint(value.x, value.y);
     }
@@ -292,7 +292,7 @@ library G2Operations {
     )
         internal
         pure
-        returns (bool)
+        returns (bool result)
     {
         return value1.x.isEqual(value2.x) && value1.y.isEqual(value2.y);
     }

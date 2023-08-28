@@ -31,10 +31,10 @@ interface ISegmentTreeTester {
     function addToPlace(uint256 place, uint256 elem) external;
     function removeFromPlace(uint256 place, uint256 elem) external;
     function moveFromPlaceToPlace(uint256 fromPlace, uint256 toPlace, uint256 elem) external;
-    function sumFromPlaceToLast(uint256 place) external view returns (uint256);
-    function getRandomElem(uint256 place) external view returns (uint256);
-    function getElem(uint256 index) external view returns (uint256);
-    function getSize() external view returns (uint256);
+    function sumFromPlaceToLast(uint256 place) external view returns (uint256 sum);
+    function getRandomElem(uint256 place) external view returns (uint256 element);
+    function getElem(uint256 index) external view returns (uint256 element);
+    function getSize() external view returns (uint256 size);
 }
 
 
@@ -74,23 +74,23 @@ contract SegmentTreeTester is ISegmentTreeTester {
         _tree.moveFromPlaceToPlace(fromPlace, toPlace, elem);
     }
 
-    function sumFromPlaceToLast(uint256 place) external view override returns (uint256) {
+    function sumFromPlaceToLast(uint256 place) external view override returns (uint256 sum) {
         return _tree.sumFromPlaceToLast(place);
     }
 
-    function getRandomElem(uint256 place) external view override returns (uint256) {
+    function getRandomElem(uint256 place) external view override returns (uint256 element) {
         IRandom.RandomGenerator memory randomGenerator = Random.createFromEntropy(
             abi.encodePacked(uint(blockhash(block.number - 1)), place)
         );
         return _tree.getRandomNonZeroElementFromPlaceToLast(place, randomGenerator);
     }
 
-    function getElem(uint256 index) external view override returns (uint256) {
+    function getElem(uint256 index) external view override returns (uint256 element) {
         require(index < _tree.tree.length, "Incorrect index");
         return _tree.tree[index];
     }
 
-    function getSize() external view override returns (uint256) {
+    function getSize() external view override returns (uint256 size) {
         return _tree.getSize();
     }
 }

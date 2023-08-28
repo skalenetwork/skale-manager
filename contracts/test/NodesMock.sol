@@ -26,14 +26,14 @@ interface INodesMock {
     function registerNodes(uint256 amount, uint256 validatorId) external;
     function removeNode(uint256 nodeId) external;
     function changeNodeLastRewardDate(uint256 nodeId) external;
-    function getNodeLastRewardDate(uint256 nodeIndex) external view returns (uint256);
-    function isNodeLeft(uint256 nodeId) external view returns (bool);
-    function getNumberOnlineNodes() external view returns (uint256);
-    function getValidatorId(uint256 nodeId) external view returns (uint256);
+    function getNodeLastRewardDate(uint256 nodeIndex) external view returns (uint256 timestamp);
+    function isNodeLeft(uint256 nodeId) external view returns (bool left);
+    function getNumberOnlineNodes() external view returns (uint256 amount);
+    function getValidatorId(uint256 nodeId) external view returns (uint256 id);
     function checkPossibilityToMaintainNode(
         uint256 /* validatorId */,
         uint256 /* nodeIndex */
-    ) external pure returns (bool);
+    ) external pure returns (bool possible);
 }
 
 
@@ -66,24 +66,24 @@ contract NodesMock is Permissions, INodesMock {
     function changeNodeLastRewardDate(uint256 nodeId) external override {
         lastRewardDate[nodeId] = block.timestamp;
     }
-    function getNodeLastRewardDate(uint256 nodeIndex) external view override returns (uint256) {
+    function getNodeLastRewardDate(uint256 nodeIndex) external view override returns (uint256 timestamp) {
         require(nodeIndex < nodesCount, "Node does not exist");
         return lastRewardDate[nodeIndex];
     }
-    function isNodeLeft(uint256 nodeId) external view override returns (bool) {
+    function isNodeLeft(uint256 nodeId) external view override returns (bool left) {
         return nodeLeft[nodeId];
     }
-    function getNumberOnlineNodes() external view override returns (uint256) {
+    function getNumberOnlineNodes() external view override returns (uint256 amount) {
         return nodesCount - nodesLeft;
     }
-    function getValidatorId(uint256 nodeId) external view override returns (uint256) {
+    function getValidatorId(uint256 nodeId) external view override returns (uint256 id) {
         return owner[nodeId];
     }
     function checkPossibilityToMaintainNode(uint256 /* validatorId */, uint256 /* nodeIndex */)
         external
         pure
         override
-        returns (bool)
+        returns (bool possible)
     {
         return true;
     }

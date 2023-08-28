@@ -40,7 +40,7 @@ interface ISafeMock {
         address gasToken,
         address refundReceiver,
         uint256 _nonce
-    ) external view returns (bytes32);
+    ) external view returns (bytes32 hash);
 }
 
 contract SafeMock is OwnableUpgradeable, ISafeMock {
@@ -123,7 +123,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
     /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
     /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
     /// @param _nonce Transaction nonce.
-    /// @return Transaction hash.
+    /// @return hash Transaction hash.
     function getTransactionHash(
         address to,
         uint256 value,
@@ -135,7 +135,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
         address gasToken,
         address refundReceiver,
         uint256 _nonce
-    ) public view override returns (bytes32) {
+    ) public view override returns (bytes32 hash) {
         return keccak256(
             _encodeTransactionData(
                 to,
@@ -164,7 +164,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
     /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
     /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
     /// @param _nonce Transaction nonce.
-    /// @return Transaction hash bytes.
+    /// @return transactionData Transaction hash bytes.
     function _encodeTransactionData(
         address to,
         uint256 value,
@@ -176,7 +176,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
         address gasToken,
         address refundReceiver,
         uint256 _nonce
-    ) private view returns (bytes memory) {
+    ) private view returns (bytes memory transactionData) {
         bytes32 safeTxHash =
             keccak256(
                 abi.encode(
@@ -196,7 +196,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
         return abi.encodePacked(bytes1(0x19), bytes1(0x01), _domainSeparator(), safeTxHash);
     }
 
-    function _domainSeparator() private view returns (bytes32) {
+    function _domainSeparator() private view returns (bytes32 separator) {
         return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPE_HASH, block.chainid, this));
     }
 }

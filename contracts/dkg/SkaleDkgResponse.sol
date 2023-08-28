@@ -112,7 +112,7 @@ library SkaleDkgResponse {
     )
         private
         view
-        returns (bool)
+        returns (bool correct)
     {
         if (!multipliedShare.isG2()) {
             return false;
@@ -138,7 +138,7 @@ library SkaleDkgResponse {
             tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
     }
 
-    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256) {
+    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256 timeLimit) {
         return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 

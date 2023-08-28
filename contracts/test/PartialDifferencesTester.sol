@@ -27,7 +27,7 @@ interface IPartialDifferencesTester {
     function createSequence() external;
     function addToSequence(uint256 sequence, uint256 diff, uint256 month) external;
     function subtractFromSequence(uint256 sequence, uint256 diff, uint256 month) external;
-    function getAndUpdateSequenceItem(uint256 sequence, uint256 month) external returns (uint256);
+    function getAndUpdateSequenceItem(uint256 sequence, uint256 month) external returns (uint256 item);
     function reduceSequence(
         uint256 sequence,
         uint256 a,
@@ -59,7 +59,7 @@ contract PartialDifferencesTester is IPartialDifferencesTester {
         _sequences[sequence].subtractFromSequence(diff, month);
     }
 
-    function getAndUpdateSequenceItem(uint256 sequence, uint256 month) external override returns (uint256) {
+    function getAndUpdateSequenceItem(uint256 sequence, uint256 month) external override returns (uint256 item) {
         require(sequence < _sequences.length, "Sequence does not exist");
         return _sequences[sequence].getAndUpdateValueInSequence(month);
     }

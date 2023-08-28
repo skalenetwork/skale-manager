@@ -234,14 +234,14 @@ contract Wallets is Permissions, IWallets {
     /**
      * @dev Returns schain eth balance.
      */
-    function getSchainBalance(bytes32 schainHash) external view override returns (uint256) {
+    function getSchainBalance(bytes32 schainHash) external view override returns (uint256 balance) {
         return _schainWallets[schainHash];
     }
 
     /**
      * @dev Returns validator eth balance.
      */
-    function getValidatorBalance(uint256 validatorId) external view override returns (uint256) {
+    function getValidatorBalance(uint256 validatorId) external view override returns (uint256 balance) {
         return _validatorWallets[validatorId];
     }
 

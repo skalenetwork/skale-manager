@@ -118,11 +118,11 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
         _setContractManager(contractManagerAddress);
     }
 
-    function _isOwner() internal view returns (bool) {
+    function _isOwner() internal view returns (bool owner) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function _isAdmin(address account) internal view returns (bool) {
+    function _isAdmin(address account) internal view returns (bool admin) {
         address skaleManagerAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleManager")));
         if (skaleManagerAddress != address(0)) {
             AccessControlUpgradeableLegacy skaleManager = AccessControlUpgradeableLegacy(skaleManagerAddress);

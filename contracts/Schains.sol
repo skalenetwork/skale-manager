@@ -221,7 +221,7 @@ contract Schains is Permissions, ISchains {
         external
         view
         override
-        returns (bool)
+        returns (bool valid)
     {
         ISkaleVerifier skaleVerifier = ISkaleVerifier(contractManager.getContract("SkaleVerifier"));
         ISkaleDKG.G2Point memory publicKey = G2Operations.getG2Zero();
@@ -254,14 +254,22 @@ contract Schains is Permissions, ISchains {
         );
     }
 
-    function getOption(bytes32 schainHash, string calldata optionName) external view override returns (bytes memory) {
+    function getOption(
+        bytes32 schainHash,
+        string calldata optionName
+    )
+        external
+        view
+        override
+        returns (bytes memory option)
+    {
         bytes32 optionHash = keccak256(abi.encodePacked(optionName));
         ISchainsInternal schainsInternal = ISchainsInternal(
             contractManager.getContract("SchainsInternal"));
         return _getOption(schainHash, optionHash, schainsInternal);
     }
 
-    function getOptions(bytes32 schainHash) external view override returns (SchainOption[] memory) {
+    function getOptions(bytes32 schainHash) external view override returns (SchainOption[] memory option) {
         SchainOption[] memory options = new SchainOption[](_optionsIndex[schainHash].length());
         for (uint256 i = 0; i < options.length; ++i) {
             options[i] = _options[schainHash][_optionsIndex[schainHash].at(i)];
@@ -272,7 +280,7 @@ contract Schains is Permissions, ISchains {
     /**
      * @dev Returns the current price in SKL tokens for given Schain type and lifetime.
      */
-    function getSchainPrice(uint256 typeOfSchain, uint256 lifetime) public view override returns (uint256) {
+    function getSchainPrice(uint256 typeOfSchain, uint256 lifetime) public view override returns (uint256 price) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         uint256 nodeDeposit = constantsHolder.NODE_DEPOSIT();
@@ -463,7 +471,7 @@ contract Schains is Permissions, ISchains {
         private
         view
         schainExists(schainsInternal, schainHash)
-        returns (bytes memory)
+        returns (bytes memory option)
     {
         require(_optionsIndex[schainHash].contains(optionHash), "Option is not set");
         return _options[schainHash][optionHash].value;

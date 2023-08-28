@@ -166,7 +166,7 @@ library SkaleDkgComplaint {
         emit ComplaintError("Complaint sent too early");
     }
 
-    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256) {
+    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256 timeLimit) {
         return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 

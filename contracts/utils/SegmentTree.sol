@@ -208,7 +208,7 @@ library SegmentTree {
     )
         external
         view
-        returns (uint256)
+        returns (uint256 position)
     {
         require(_correctPlace(self, place), "Incorrect place");
 
@@ -276,7 +276,7 @@ library SegmentTree {
     /**
      * @dev Returns amount of elements in segment tree
      */
-    function getSize(Tree storage segmentTree) internal view returns (uint256) {
+    function getSize(Tree storage segmentTree) internal view returns (uint256 size) {
         if (segmentTree.tree.length > 0) {
             return segmentTree.tree.length / 2 + 1;
         } else {
@@ -287,28 +287,28 @@ library SegmentTree {
     /**
      * @dev Checks if `place` is valid position in segment tree
      */
-    function _correctPlace(Tree storage self, uint256 place) private view returns (bool) {
+    function _correctPlace(Tree storage self, uint256 place) private view returns (bool correct) {
         return place >= 1 && place <= getSize(self);
     }
 
     /**
      * @dev Calculates index of left child of the vertex
      */
-    function _left(uint256 vertex) private pure returns (uint256) {
+    function _left(uint256 vertex) private pure returns (uint256 index) {
         return vertex * 2;
     }
 
     /**
      * @dev Calculates index of right child of the vertex
      */
-    function _right(uint256 vertex) private pure returns (uint256) {
+    function _right(uint256 vertex) private pure returns (uint256 index) {
         return vertex * 2 + 1;
     }
 
     /**
      * @dev Calculates arithmetical mean of 2 numbers
      */
-    function _middle(uint256 left, uint256 right) private pure returns (uint256) {
+    function _middle(uint256 left, uint256 right) private pure returns (uint256 mean) {
         return (left + right) / 2;
     }
 }
