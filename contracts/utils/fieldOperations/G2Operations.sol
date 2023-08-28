@@ -3,7 +3,7 @@
 // cSpell:words twistb
 
 /*
-    FieldOperations.sol - SKALE Manager
+    G2Operations.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
 
     @author Dmytro Stebaiev
@@ -24,137 +24,9 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
-import "./Precompiled.sol";
-
-
-library Fp2Operations {
-
-    uint constant public P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
-
-    function inverseFp2(ISkaleDKG.Fp2Point memory value) internal view returns (ISkaleDKG.Fp2Point memory result) {
-        uint p = P;
-        uint t0 = mulmod(value.a, value.a, p);
-        uint t1 = mulmod(value.b, value.b, p);
-        uint t2 = mulmod(p - 1, t1, p);
-        if (t0 >= t2) {
-            t2 = addmod(t0, p - t2, p);
-        } else {
-            t2 = (p - addmod(t2, p - t0, p)) % p;
-        }
-        uint t3 = Precompiled.bigModExp(t2, p - 2, p);
-        result.a = mulmod(value.a, t3, p);
-        result.b = (p - mulmod(value.b, t3, p)) % p;
-    }
-
-    function addFp2(ISkaleDKG.Fp2Point memory value1, ISkaleDKG.Fp2Point memory value2)
-        internal
-        pure
-        returns (ISkaleDKG.Fp2Point memory)
-    {
-        return ISkaleDKG.Fp2Point({ a: addmod(value1.a, value2.a, P), b: addmod(value1.b, value2.b, P) });
-    }
-
-    function scalarMulFp2(ISkaleDKG.Fp2Point memory value, uint scalar)
-        internal
-        pure
-        returns (ISkaleDKG.Fp2Point memory)
-    {
-        return ISkaleDKG.Fp2Point({ a: mulmod(scalar, value.a, P), b: mulmod(scalar, value.b, P) });
-    }
-
-    function minusFp2(ISkaleDKG.Fp2Point memory diminished, ISkaleDKG.Fp2Point memory subtracted) internal pure
-        returns (ISkaleDKG.Fp2Point memory difference)
-    {
-        uint p = P;
-        if (diminished.a >= subtracted.a) {
-            difference.a = addmod(diminished.a, p - subtracted.a, p);
-        } else {
-            difference.a = (p - addmod(subtracted.a, p - diminished.a, p)) % p;
-        }
-        if (diminished.b >= subtracted.b) {
-            difference.b = addmod(diminished.b, p - subtracted.b, p);
-        } else {
-            difference.b = (p - addmod(subtracted.b, p - diminished.b, p)) % p;
-        }
-    }
-
-    function mulFp2(
-        ISkaleDKG.Fp2Point memory value1,
-        ISkaleDKG.Fp2Point memory value2
-    )
-        internal
-        pure
-        returns (ISkaleDKG.Fp2Point memory result)
-    {
-        uint p = P;
-        ISkaleDKG.Fp2Point memory point = ISkaleDKG.Fp2Point({
-            a: mulmod(value1.a, value2.a, p),
-            b: mulmod(value1.b, value2.b, p)});
-        result.a = addmod(
-            point.a,
-            mulmod(p - 1, point.b, p),
-            p);
-        result.b = addmod(
-            mulmod(
-                addmod(value1.a, value1.b, p),
-                addmod(value2.a, value2.b, p),
-                p),
-            p - addmod(point.a, point.b, p),
-            p);
-    }
-
-    function squaredFp2(ISkaleDKG.Fp2Point memory value) internal pure returns (ISkaleDKG.Fp2Point memory) {
-        uint p = P;
-        uint ab = mulmod(value.a, value.b, p);
-        uint multiplication = mulmod(addmod(value.a, value.b, p), addmod(value.a, mulmod(p - 1, value.b, p), p), p);
-        return ISkaleDKG.Fp2Point({ a: multiplication, b: addmod(ab, ab, p) });
-    }
-
-    function isEqual(
-        ISkaleDKG.Fp2Point memory value1,
-        ISkaleDKG.Fp2Point memory value2
-    )
-        internal
-        pure
-        returns (bool)
-    {
-        return value1.a == value2.a && value1.b == value2.b;
-    }
-}
-
-library G1Operations {
-    using Fp2Operations for ISkaleDKG.Fp2Point;
-
-    function getG1Generator() internal pure returns (ISkaleDKG.Fp2Point memory) {
-        // Current solidity version does not support Constants of non-value type
-        // so we implemented this function
-        return ISkaleDKG.Fp2Point({
-            a: 1,
-            b: 2
-        });
-    }
-
-    function isG1Point(uint x, uint y) internal pure returns (bool) {
-        uint p = Fp2Operations.P;
-        return mulmod(y, y, p) ==
-            addmod(mulmod(mulmod(x, x, p), x, p), 3, p);
-    }
-
-    function isG1(ISkaleDKG.Fp2Point memory point) internal pure returns (bool) {
-        return isG1Point(point.a, point.b);
-    }
-
-    function checkRange(ISkaleDKG.Fp2Point memory point) internal pure returns (bool) {
-        return point.a < Fp2Operations.P && point.b < Fp2Operations.P;
-    }
-
-    function negate(uint y) internal pure returns (uint) {
-        return (Fp2Operations.P - y) % Fp2Operations.P;
-    }
-
-}
+import { Fp2Operations } from "./Fp2Operations.sol";
 
 
 library G2Operations {
@@ -172,7 +44,7 @@ library G2Operations {
                 value.x.squaredFp2().scalarMulFp2(3).mulFp2(value.y.scalarMulFp2(2).inverseFp2());
             result.x = s.squaredFp2().minusFp2(value.x.addFp2(value.x));
             result.y = value.y.addFp2(s.mulFp2(result.x.minusFp2(value.x)));
-            uint p = Fp2Operations.P;
+            uint256 p = Fp2Operations.P;
             result.y.a = (p - result.y.a) % p;
             result.y.b = (p - result.y.b) % p;
         }
@@ -206,12 +78,12 @@ library G2Operations {
         ISkaleDKG.Fp2Point memory s = value2.y.minusFp2(value1.y).mulFp2(value2.x.minusFp2(value1.x).inverseFp2());
         sum.x = s.squaredFp2().minusFp2(value1.x.addFp2(value2.x));
         sum.y = value1.y.addFp2(s.mulFp2(sum.x.minusFp2(value1.x)));
-        uint p = Fp2Operations.P;
+        uint256 p = Fp2Operations.P;
         sum.y.a = (p - sum.y.a) % p;
         sum.y.b = (p - sum.y.b) % p;
     }
 
-    function getTWISTB() internal pure returns (ISkaleDKG.Fp2Point memory) {
+    function getTWISTB() internal pure returns (ISkaleDKG.Fp2Point memory point) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
         return ISkaleDKG.Fp2Point({
@@ -220,7 +92,7 @@ library G2Operations {
         });
     }
 
-    function getG2Generator() internal pure returns (ISkaleDKG.G2Point memory) {
+    function getG2Generator() internal pure returns (ISkaleDKG.G2Point memory point) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
         return ISkaleDKG.G2Point({
@@ -235,7 +107,7 @@ library G2Operations {
         });
     }
 
-    function getG2Zero() internal pure returns (ISkaleDKG.G2Point memory) {
+    function getG2Zero() internal pure returns (ISkaleDKG.G2Point memory point) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
         return ISkaleDKG.G2Point({
@@ -250,7 +122,7 @@ library G2Operations {
         });
     }
 
-    function isG2Point(ISkaleDKG.Fp2Point memory x, ISkaleDKG.Fp2Point memory y) internal pure returns (bool) {
+    function isG2Point(ISkaleDKG.Fp2Point memory x, ISkaleDKG.Fp2Point memory y) internal pure returns (bool result) {
         if (isG2ZeroPoint(x, y)) {
             return true;
         }
@@ -261,7 +133,7 @@ library G2Operations {
         return res.a == 0 && res.b == 0;
     }
 
-    function isG2(ISkaleDKG.G2Point memory value) internal pure returns (bool) {
+    function isG2(ISkaleDKG.G2Point memory value) internal pure returns (bool result) {
         return isG2Point(value.x, value.y);
     }
 
@@ -271,12 +143,12 @@ library G2Operations {
     )
         internal
         pure
-        returns (bool)
+        returns (bool result)
     {
         return x.a == 0 && x.b == 0 && y.a == 1 && y.b == 0;
     }
 
-    function isG2Zero(ISkaleDKG.G2Point memory value) internal pure returns (bool) {
+    function isG2Zero(ISkaleDKG.G2Point memory value) internal pure returns (bool result) {
         return value.x.a == 0 && value.x.b == 0 && value.y.a == 1 && value.y.b == 0;
         // return isG2ZeroPoint(value.x, value.y);
     }
@@ -292,7 +164,7 @@ library G2Operations {
     )
         internal
         pure
-        returns (bool)
+        returns (bool result)
     {
         return value1.x.isEqual(value2.x) && value1.y.isEqual(value2.y);
     }

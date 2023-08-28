@@ -21,14 +21,14 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
 
 contract LockerMock is ILocker {
-    function getAndUpdateLockedAmount(address) external pure override returns (uint) {
+    function getAndUpdateLockedAmount(address) external pure override returns (uint256 amount) {
         return 13;
     }
 
-    function getAndUpdateForbiddenForDelegationAmount(address) external pure override returns (uint) {
+    function getAndUpdateForbiddenForDelegationAmount(address) external pure override returns (uint256 amount) {
         return 13;
     }
 }

@@ -23,10 +23,12 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
-import "../utils/FieldOperations.sol";
+import { G1Operations } from "../utils/fieldOperations/G1Operations.sol";
+import { G2Operations } from "../utils/fieldOperations/G2Operations.sol";
+import { Precompiled } from "../utils/Precompiled.sol";
 
 /**
  * @title SkaleDkgPreResponse
@@ -38,27 +40,27 @@ library SkaleDkgPreResponse {
 
     function preResponse(
         bytes32 schainHash,
-        uint fromNodeIndex,
+        uint256 fromNodeIndex,
         ISkaleDKG.G2Point[] memory verificationVector,
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication,
         ISkaleDKG.KeyShare[] memory secretKeyContribution,
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
-        mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
+        mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData
     )
         external
     {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        uint index = _preResponseCheck(
-            schainHash,
-            fromNodeIndex,
-            verificationVector,
-            verificationVectorMultiplication,
-            secretKeyContribution,
-            skaleDKG,
-            complaints,
-            hashedData
-        );
+        uint256 index = _preResponseCheck({
+            schainHash: schainHash,
+            fromNodeIndex: fromNodeIndex,
+            verificationVector: verificationVector,
+            verificationVectorMultiplication: verificationVectorMultiplication,
+            secretKeyContribution: secretKeyContribution,
+            skaleDKG: skaleDKG,
+            complaints: complaints,
+            hashedData: hashedData
+        });
         _processPreResponse(
             secretKeyContribution[index].share,
             schainHash,
@@ -82,19 +84,19 @@ library SkaleDkgPreResponse {
 
     function _preResponseCheck(
         bytes32 schainHash,
-        uint fromNodeIndex,
+        uint256 fromNodeIndex,
         ISkaleDKG.G2Point[] memory verificationVector,
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication,
         ISkaleDKG.KeyShare[] memory secretKeyContribution,
         ISkaleDKG skaleDKG,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
-        mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
+        mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData
     )
         private
         view
-        returns (uint index)
+        returns (uint256 index)
     {
-        (uint indexOnSchain, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        (uint256 indexOnSchain, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
         require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(!complaints[schainHash].isResponse, "Already submitted pre response data");
         require(
@@ -115,27 +117,27 @@ library SkaleDkgPreResponse {
     function _calculateSum(ISkaleDKG.G2Point[] memory verificationVectorMultiplication)
         private
         view
-        returns (ISkaleDKG.G2Point memory)
+        returns (ISkaleDKG.G2Point memory result)
     {
         ISkaleDKG.G2Point memory value = G2Operations.getG2Zero();
-        for (uint i = 0; i < verificationVectorMultiplication.length; i++) {
+        for (uint256 i = 0; i < verificationVectorMultiplication.length; i++) {
             value = value.addG2(verificationVectorMultiplication[i]);
         }
         return value;
     }
 
     function _checkCorrectVectorMultiplication(
-        uint indexOnSchain,
+        uint256 indexOnSchain,
         ISkaleDKG.G2Point[] memory verificationVector,
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication
     )
         private
         view
-        returns (bool)
+        returns (bool correct)
     {
         ISkaleDKG.Fp2Point memory value = G1Operations.getG1Generator();
         ISkaleDKG.Fp2Point memory tmp = G1Operations.getG1Generator();
-        for (uint i = 0; i < verificationVector.length; i++) {
+        for (uint256 i = 0; i < verificationVector.length; i++) {
             (tmp.a, tmp.b) = Precompiled.bn256ScalarMul(value.a, value.b, (indexOnSchain + 1) ** i);
             if (!_checkPairing(tmp, verificationVector[i], verificationVectorMultiplication[i])) {
                 return false;
@@ -151,19 +153,25 @@ library SkaleDkgPreResponse {
     )
         private
         view
-        returns (bool)
+        returns (bool valid)
     {
         require(G1Operations.checkRange(g1Mul), "g1Mul is not valid");
         g1Mul.b = G1Operations.negate(g1Mul.b);
         ISkaleDKG.Fp2Point memory one = G1Operations.getG1Generator();
-        return Precompiled.bn256Pairing(
-            one.a, one.b,
-            verificationVectorMultiplication.x.b, verificationVectorMultiplication.x.a,
-            verificationVectorMultiplication.y.b, verificationVectorMultiplication.y.a,
-            g1Mul.a, g1Mul.b,
-            verificationVector.x.b, verificationVector.x.a,
-            verificationVector.y.b, verificationVector.y.a
-        );
+        return Precompiled.bn256Pairing({
+            x1: one.a,
+            y1: one.b,
+            a1: verificationVectorMultiplication.x.b,
+            b1: verificationVectorMultiplication.x.a,
+            c1: verificationVectorMultiplication.y.b,
+            d1: verificationVectorMultiplication.y.a,
+            x2: g1Mul.a,
+            y2: g1Mul.b,
+            a2: verificationVector.x.b,
+            b2: verificationVector.x.a,
+            c2: verificationVector.y.b,
+            d2: verificationVector.y.a
+        });
     }
 
 }

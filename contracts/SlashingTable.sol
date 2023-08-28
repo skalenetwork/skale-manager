@@ -22,26 +22,30 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
+import { ISlashingTable } from "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
 
-import "./Permissions.sol";
+import { Permissions } from "./Permissions.sol";
 
 /**
  * @title Slashing Table
  * @dev This contract manages slashing conditions and penalties.
  */
 contract SlashingTable is Permissions, ISlashingTable {
-    mapping (uint => uint) private _penalties;
+    mapping (uint256 => uint256) private _penalties;
 
     bytes32 public constant PENALTY_SETTER_ROLE = keccak256("PENALTY_SETTER_ROLE");
+
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+    }
 
     /**
      * @dev Allows the Owner to set a slashing penalty in SKL tokens for a
      * given offense.
      */
-    function setPenalty(string calldata offense, uint penalty) external override {
+    function setPenalty(string calldata offense, uint256 penalty) external override {
         require(hasRole(PENALTY_SETTER_ROLE, msg.sender), "PENALTY_SETTER_ROLE is required");
-        uint offenseHash = uint(keccak256(abi.encodePacked(offense)));
+        uint256 offenseHash = uint(keccak256(abi.encodePacked(offense)));
         _penalties[offenseHash] = penalty;
         emit PenaltyAdded(offenseHash, offense, penalty);
     }
@@ -49,12 +53,7 @@ contract SlashingTable is Permissions, ISlashingTable {
     /**
      * @dev Returns the penalty in SKL tokens for a given offense.
      */
-    function getPenalty(string calldata offense) external view override returns (uint) {
-        uint penalty = _penalties[uint(keccak256(abi.encodePacked(offense)))];
-        return penalty;
-    }
-
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
+    function getPenalty(string calldata offense) external view override returns (uint256 penalty) {
+        return _penalties[uint(keccak256(abi.encodePacked(offense)))];
     }
 }

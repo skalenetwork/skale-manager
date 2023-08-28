@@ -3,10 +3,10 @@ on:
   schedule:
     - cron:  '14 3 * * *'
 env:
-  NODE_VERSION: 16
+  NODE_VERSION: 18
   PYTHON_VERSION: 3.9
 
-jobs: 
+jobs:
   nightly-build-gas-without-node-rotation:
     runs-on: ubuntu-latest
 

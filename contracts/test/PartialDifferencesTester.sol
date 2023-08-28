@@ -21,21 +21,8 @@
 
 pragma solidity 0.8.17;
 
-import "../delegation/PartialDifferences.sol";
-
-interface IPartialDifferencesTester {
-    function createSequence() external;
-    function addToSequence(uint sequence, uint diff, uint month) external;
-    function subtractFromSequence(uint sequence, uint diff, uint month) external;
-    function getAndUpdateSequenceItem(uint sequence, uint month) external returns (uint);
-    function reduceSequence(
-        uint sequence,
-        uint a,
-        uint b,
-        uint month
-    ) external;
-    function latestSequence() external view returns (uint id);
-}
+import { FractionUtils, PartialDifferences } from "../delegation/PartialDifferences.sol";
+import { IPartialDifferencesTester } from "./interfaces/IPartialDifferencesTester.sol";
 
 
 contract PartialDifferencesTester is IPartialDifferencesTester {
@@ -49,26 +36,26 @@ contract PartialDifferencesTester is IPartialDifferencesTester {
         _sequences.push();
     }
 
-    function addToSequence(uint sequence, uint diff, uint month) external override {
+    function addToSequence(uint256 sequence, uint256 diff, uint256 month) external override {
         require(sequence < _sequences.length, "Sequence does not exist");
         _sequences[sequence].addToSequence(diff, month);
     }
 
-    function subtractFromSequence(uint sequence, uint diff, uint month) external override {
+    function subtractFromSequence(uint256 sequence, uint256 diff, uint256 month) external override {
         require(sequence < _sequences.length, "Sequence does not exist");
         _sequences[sequence].subtractFromSequence(diff, month);
     }
 
-    function getAndUpdateSequenceItem(uint sequence, uint month) external override returns (uint) {
+    function getAndUpdateSequenceItem(uint256 sequence, uint256 month) external override returns (uint256 item) {
         require(sequence < _sequences.length, "Sequence does not exist");
         return _sequences[sequence].getAndUpdateValueInSequence(month);
     }
 
     function reduceSequence(
-        uint sequence,
-        uint a,
-        uint b,
-        uint month
+        uint256 sequence,
+        uint256 a,
+        uint256 b,
+        uint256 month
     )
         external
         override
@@ -78,7 +65,7 @@ contract PartialDifferencesTester is IPartialDifferencesTester {
         return _sequences[sequence].reduceSequence(reducingCoefficient, month);
     }
 
-    function latestSequence() external view override returns (uint id) {
+    function latestSequence() external view override returns (uint256 id) {
         require(_sequences.length > 0, "There are no _sequences");
         return _sequences.length - 1;
     }

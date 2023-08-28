@@ -22,9 +22,10 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
+import { IDelegationPeriodManager }
+from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationPeriodManager.sol";
 
-import "../Permissions.sol";
+import { Permissions } from "../Permissions.sol";
 
 /**
  * @title Delegation Period Manager
@@ -34,9 +35,19 @@ import "../Permissions.sol";
  */
 contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
 
-    mapping (uint => uint) public stakeMultipliers;
+    mapping (uint256 => uint256) public stakeMultipliers;
 
     bytes32 public constant DELEGATION_PERIOD_SETTER_ROLE = keccak256("DELEGATION_PERIOD_SETTER_ROLE");
+
+    /**
+     * @dev Initial delegation period and multiplier settings.
+     */
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+        stakeMultipliers[2] = 100;  // 2 months at 100
+        // stakeMultipliers[6] = 150;  // 6 months at 150
+        // stakeMultipliers[12] = 200; // 12 months at 200
+    }
 
     /**
      * @dev Allows the Owner to create a new available delegation period and
@@ -44,7 +55,7 @@ contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
      *
      * Emits a {DelegationPeriodWasSet} event.
      */
-    function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external override {
+    function setDelegationPeriod(uint256 monthsCount, uint256 stakeMultiplier) external override {
         require(hasRole(DELEGATION_PERIOD_SETTER_ROLE, msg.sender), "DELEGATION_PERIOD_SETTER_ROLE is required");
         require(stakeMultipliers[monthsCount] == 0, "Delegation period is already set");
         stakeMultipliers[monthsCount] = stakeMultiplier;
@@ -55,17 +66,7 @@ contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
     /**
      * @dev Checks whether given delegation period is allowed.
      */
-    function isDelegationPeriodAllowed(uint monthsCount) external view override returns (bool) {
+    function isDelegationPeriodAllowed(uint256 monthsCount) external view override returns (bool allowed) {
         return stakeMultipliers[monthsCount] != 0;
-    }
-
-    /**
-     * @dev Initial delegation period and multiplier settings.
-     */
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-        stakeMultipliers[2] = 100;  // 2 months at 100
-        // stakeMultipliers[6] = 150;  // 6 months at 150
-        // stakeMultipliers[12] = 200; // 12 months at 200
     }
 }

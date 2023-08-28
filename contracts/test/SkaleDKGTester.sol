@@ -21,11 +21,9 @@
 
 pragma solidity 0.8.17;
 
-import "../SkaleDKG.sol";
+import { IKeyStorage, SkaleDKG } from "../SkaleDKG.sol";
+import { ISkaleDKGTester } from "./interfaces/ISkaleDKGTester.sol";
 
-interface ISkaleDKGTester {
-    function setSuccessfulDKGPublic(bytes32 schainHash) external;
-}
 
 contract SkaleDKGTester is SkaleDKG, ISkaleDKGTester {
     function setSuccessfulDKGPublic(bytes32 schainHash) external override {

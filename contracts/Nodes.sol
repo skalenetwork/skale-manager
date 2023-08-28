@@ -23,19 +23,19 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
+import { SafeCastUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
-import "./utils/Random.sol";
-import "./utils/SegmentTree.sol";
+import { Permissions } from "./Permissions.sol";
+import { ConstantsHolder } from "./ConstantsHolder.sol";
+import { IRandom, Random } from "./utils/Random.sol";
+import { SegmentTree } from "./utils/SegmentTree.sol";
 
-import "./NodeRotation.sol";
+import { NodeRotation } from "./NodeRotation.sol";
 
 
 /**
@@ -74,30 +74,30 @@ contract Nodes is Permissions, INodes {
     // mapping for checking is Name busy
     mapping (bytes32 => bool) public nodesNameCheck;
     // mapping for indication from Name to Index
-    mapping (bytes32 => uint) public nodesNameToIndex;
+    mapping (bytes32 => uint256) public nodesNameToIndex;
     // mapping for indication from space to Nodes
-    mapping (uint8 => uint[]) public spaceToNodes;
+    mapping (uint8 => uint256[]) public spaceToNodes;
 
-    mapping (uint => uint[]) public validatorToNodeIndexes;
+    mapping (uint256 => uint256[]) public validatorToNodeIndexes;
 
-    uint public override numberOfActiveNodes;
-    uint public numberOfLeavingNodes;
-    uint public numberOfLeftNodes;
+    uint256 public override numberOfActiveNodes;
+    uint256 public numberOfLeavingNodes;
+    uint256 public numberOfLeftNodes;
 
-    mapping (uint => string) public domainNames;
+    mapping (uint256 => string) public domainNames;
 
-    mapping (uint => bool) private _invisible;
+    mapping (uint256 => bool) private _invisible;
 
     SegmentTree.Tree private _nodesAmountBySpace;
 
-    mapping (uint => bool) public override incompliant;
+    mapping (uint256 => bool) public override incompliant;
 
-    modifier checkNodeExists(uint nodeIndex) {
+    modifier checkNodeExists(uint256 nodeIndex) {
         _checkNodeIndex(nodeIndex);
         _;
     }
 
-    modifier onlyNodeOrNodeManager(uint nodeIndex) {
+    modifier onlyNodeOrNodeManager(uint256 nodeIndex) {
         _checkNodeOrNodeManager(nodeIndex, msg.sender);
         _;
     }
@@ -113,17 +113,29 @@ contract Nodes is Permissions, INodes {
     }
 
     /**
+     * @dev constructor in Permissions approach.
+     */
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+
+        numberOfActiveNodes = 0;
+        numberOfLeavingNodes = 0;
+        numberOfLeftNodes = 0;
+        _nodesAmountBySpace.create(128);
+    }
+
+    /**
      * @dev Allows Schains and SchainsInternal contracts to occupy available
      * space on a node.
      *
      * Returns whether operation is successful.
      */
-    function removeSpaceFromNode(uint nodeIndex, uint8 space)
+    function removeSpaceFromNode(uint256 nodeIndex, uint8 space)
         external
         override
         checkNodeExists(nodeIndex)
         allowTwo("NodeRotation", "SchainsInternal")
-        returns (bool)
+        returns (bool successful)
     {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
@@ -142,7 +154,7 @@ contract Nodes is Permissions, INodes {
      *
      * Returns whether operation is successful.
      */
-    function addSpaceToNode(uint nodeIndex, uint8 space)
+    function addSpaceToNode(uint256 nodeIndex, uint8 space)
         external
         override
         checkNodeExists(nodeIndex)
@@ -159,7 +171,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Allows SkaleManager to change a node's last reward date.
      */
-    function changeNodeLastRewardDate(uint nodeIndex)
+    function changeNodeLastRewardDate(uint256 nodeIndex)
         external
         override
         checkNodeExists(nodeIndex)
@@ -171,7 +183,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Allows SkaleManager to change a node's finish time.
      */
-    function changeNodeFinishTime(uint nodeIndex, uint time)
+    function changeNodeFinishTime(uint256 nodeIndex, uint256 time)
         external
         override
         checkNodeExists(nodeIndex)
@@ -203,7 +215,7 @@ contract Nodes is Permissions, INodes {
         require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name is already registered");
         require(params.port > 0, "Port is zero");
         require(from == _publicKeyToAddress(params.publicKey), "Public Key is incorrect");
-        uint validatorId = IValidatorService(
+        uint256 validatorId = IValidatorService(
             contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
         uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
         nodes.push(Node({
@@ -218,7 +230,7 @@ contract Nodes is Permissions, INodes {
             status: NodeStatus.Active,
             validatorId: validatorId
         }));
-        uint nodeIndex = nodes.length - 1;
+        uint256 nodeIndex = nodes.length - 1;
         validatorToNodeIndexes[validatorId].push(nodeIndex);
         bytes32 nodeId = keccak256(abi.encodePacked(params.name));
         nodesIPCheck[params.ip] = true;
@@ -232,15 +244,16 @@ contract Nodes is Permissions, INodes {
             indexInSpaceMap: spaceToNodes[totalSpace].length
         }));
         _setNodeActive(nodeIndex);
-        emit NodeCreated(
-            nodeIndex,
-            from,
-            params.name,
-            params.ip,
-            params.publicIp,
-            params.port,
-            params.nonce,
-            params.domainName);
+        emit NodeCreated({
+            nodeIndex: nodeIndex,
+            owner: from,
+            name: params.name,
+            ip: params.ip,
+            publicIP: params.publicIp,
+            port: params.port,
+            nonce: params.nonce,
+            domainName: params.domainName
+        });
     }
 
     /**
@@ -250,7 +263,7 @@ contract Nodes is Permissions, INodes {
      *
      * Emits an {ExitInitialized} event.
      */
-    function initExit(uint nodeIndex)
+    function initExit(uint256 nodeIndex)
         external
         override
         checkNodeExists(nodeIndex)
@@ -273,12 +286,12 @@ contract Nodes is Permissions, INodes {
      *
      * - Node must have already initialized a node exit procedure.
      */
-    function completeExit(uint nodeIndex)
+    function completeExit(uint256 nodeIndex)
         external
         override
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
-        returns (bool)
+        returns (bool successful)
     {
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
 
@@ -295,7 +308,7 @@ contract Nodes is Permissions, INodes {
      *
      * - Validator ID must exist.
      */
-    function deleteNodeForValidator(uint validatorId, uint nodeIndex)
+    function deleteNodeForValidator(uint256 validatorId, uint256 nodeIndex)
         external
         override
         checkNodeExists(nodeIndex)
@@ -303,17 +316,17 @@ contract Nodes is Permissions, INodes {
     {
         IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
-        uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
-        uint position = _findNode(validatorNodes, nodeIndex);
+        uint256[] memory validatorNodes = validatorToNodeIndexes[validatorId];
+        uint256 position = _findNode(validatorNodes, nodeIndex);
         if (position < validatorNodes.length) {
             validatorToNodeIndexes[validatorId][position] =
                 validatorToNodeIndexes[validatorId][validatorNodes.length - 1];
         }
         validatorToNodeIndexes[validatorId].pop();
         address nodeOwner = _publicKeyToAddress(nodes[nodeIndex].publicKey);
-        uint validatorIdByNode = validatorService.getValidatorIdByNodeAddressWithoutRevert(nodeOwner);
+        uint256 validatorIdByNode = validatorService.getValidatorIdByNodeAddressWithoutRevert(nodeOwner);
         if (validatorIdByNode == validatorId || validatorIdByNode == 0) {
-            if (nodeIndexes[nodeOwner].numberOfNodes == 1 && 
+            if (nodeIndexes[nodeOwner].numberOfNodes == 1 &&
                 !validatorService.validatorAddressExists(nodeOwner) &&
                 validatorIdByNode == validatorId
             ) {
@@ -335,7 +348,7 @@ contract Nodes is Permissions, INodes {
      */
     function checkPossibilityCreatingNode(address nodeAddress) external override allow("SkaleManager") {
         IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
-        uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
+        uint256 validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
         require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
         require(
             _checkValidatorPositionToMaintainNode(validatorId, validatorToNodeIndexes[validatorId].length),
@@ -353,19 +366,19 @@ contract Nodes is Permissions, INodes {
      * - Validator ID and nodeIndex must both exist.
      */
     function checkPossibilityToMaintainNode(
-        uint validatorId,
-        uint nodeIndex
+        uint256 validatorId,
+        uint256 nodeIndex
     )
         external
         override
         checkNodeExists(nodeIndex)
         allow("Bounty")
-        returns (bool)
+        returns (bool successful)
     {
         IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
-        uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
-        uint position = _findNode(validatorNodes, nodeIndex);
+        uint256[] memory validatorNodes = validatorToNodeIndexes[validatorId];
+        uint256 position = _findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
         return _checkValidatorPositionToMaintainNode(validatorId, position);
     }
@@ -378,7 +391,7 @@ contract Nodes is Permissions, INodes {
      * - Node must already be Active.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function setNodeInMaintenance(uint nodeIndex) external override onlyNodeOrNodeManager(nodeIndex) {
+    function setNodeInMaintenance(uint256 nodeIndex) external override onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         _setNodeInMaintenance(nodeIndex);
         emit MaintenanceNode(nodeIndex, true);
@@ -392,7 +405,7 @@ contract Nodes is Permissions, INodes {
      * - Node must already be In Maintenance.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function removeNodeFromInMaintenance(uint nodeIndex) external override onlyNodeOrNodeManager(nodeIndex) {
+    function removeNodeFromInMaintenance(uint256 nodeIndex) external override onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
         _setNodeActive(nodeIndex);
         emit MaintenanceNode(nodeIndex, false);
@@ -402,7 +415,7 @@ contract Nodes is Permissions, INodes {
      * @dev Marks the node as incompliant
      *
      */
-    function setNodeIncompliant(uint nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
+    function setNodeIncompliant(uint256 nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
         if (!incompliant[nodeIndex]) {
             incompliant[nodeIndex] = true;
             _makeNodeInvisible(nodeIndex);
@@ -414,7 +427,7 @@ contract Nodes is Permissions, INodes {
      * @dev Marks the node as compliant
      *
      */
-    function setNodeCompliant(uint nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
+    function setNodeCompliant(uint256 nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
         if (incompliant[nodeIndex]) {
             incompliant[nodeIndex] = false;
             _tryToMakeNodeVisible(nodeIndex);
@@ -422,7 +435,7 @@ contract Nodes is Permissions, INodes {
         }
     }
 
-    function setDomainName(uint nodeIndex, string memory domainName)
+    function setDomainName(uint256 nodeIndex, string memory domainName)
         external
         override
         onlyNodeOrNodeManager(nodeIndex)
@@ -430,16 +443,16 @@ contract Nodes is Permissions, INodes {
         domainNames[nodeIndex] = domainName;
     }
 
-    function makeNodeVisible(uint nodeIndex) external override allow("SchainsInternal") {
+    function makeNodeVisible(uint256 nodeIndex) external override allow("SchainsInternal") {
         _tryToMakeNodeVisible(nodeIndex);
     }
 
-    function makeNodeInvisible(uint nodeIndex) external override allow("SchainsInternal") {
+    function makeNodeInvisible(uint256 nodeIndex) external override allow("SchainsInternal") {
         _makeNodeInvisible(nodeIndex);
     }
 
     function changeIP(
-        uint nodeIndex,
+        uint256 nodeIndex,
         bytes4 newIP,
         bytes4 newPublicIP
     )
@@ -466,7 +479,7 @@ contract Nodes is Permissions, INodes {
         external
         view
         override
-        returns (uint)
+        returns (uint256 node)
     {
         uint8 place = _nodesAmountBySpace.getRandomNonZeroElementFromPlaceToLast(
             freeSpace == 0 ? 1 : freeSpace,
@@ -479,12 +492,12 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Checks whether it is time for a node's reward.
      */
-    function isTimeForReward(uint nodeIndex)
+    function isTimeForReward(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool timeForReward)
     {
         return IBountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= block.timestamp;
     }
@@ -496,12 +509,12 @@ contract Nodes is Permissions, INodes {
      *
      * - Node must exist.
      */
-    function getNodeIP(uint nodeIndex)
+    function getNodeIP(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bytes4)
+        returns (bytes4 ip)
     {
         require(nodeIndex < nodes.length, "Node does not exist");
         return nodes[nodeIndex].ip;
@@ -514,12 +527,12 @@ contract Nodes is Permissions, INodes {
      *
      * - Node must exist.
      */
-    function getNodeDomainName(uint nodeIndex)
+    function getNodeDomainName(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (string memory)
+        returns (string memory domainName)
     {
         return domainNames[nodeIndex];
     }
@@ -531,12 +544,12 @@ contract Nodes is Permissions, INodes {
      *
      * - Node must exist.
      */
-    function getNodePort(uint nodeIndex)
+    function getNodePort(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint16)
+        returns (uint16 port)
     {
         return nodes[nodeIndex].port;
     }
@@ -544,12 +557,12 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Returns the public key of a given node.
      */
-    function getNodePublicKey(uint nodeIndex)
+    function getNodePublicKey(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bytes32[2] memory)
+        returns (bytes32[2] memory publicKey)
     {
         return nodes[nodeIndex].publicKey;
     }
@@ -557,12 +570,12 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Returns an address of a given node.
      */
-    function getNodeAddress(uint nodeIndex)
+    function getNodeAddress(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (address)
+        returns (address nodeAddress)
     {
         return _publicKeyToAddress(nodes[nodeIndex].publicKey);
     }
@@ -571,12 +584,12 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Returns the finish exit time of a given node.
      */
-    function getNodeFinishTime(uint nodeIndex)
+    function getNodeFinishTime(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint)
+        returns (uint256 timestamp)
     {
         return nodes[nodeIndex].finishTime;
     }
@@ -584,22 +597,22 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Checks whether a node has left the network.
      */
-    function isNodeLeft(uint nodeIndex)
+    function isNodeLeft(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool left)
     {
         return nodes[nodeIndex].status == NodeStatus.Left;
     }
 
-    function isNodeInMaintenance(uint nodeIndex)
+    function isNodeInMaintenance(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool maintenance)
     {
         return nodes[nodeIndex].status == NodeStatus.In_Maintenance;
     }
@@ -607,12 +620,12 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Returns a given node's last reward date.
      */
-    function getNodeLastRewardDate(uint nodeIndex)
+    function getNodeLastRewardDate(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint)
+        returns (uint256 timestamp)
     {
         return nodes[nodeIndex].lastRewardDate;
     }
@@ -620,12 +633,12 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Returns a given node's next reward date.
      */
-    function getNodeNextRewardDate(uint nodeIndex)
+    function getNodeNextRewardDate(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint)
+        returns (uint256 timestamp)
     {
         return IBountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex);
     }
@@ -633,7 +646,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Returns the total number of registered nodes.
      */
-    function getNumberOfNodes() external view override returns (uint) {
+    function getNumberOfNodes() external view override returns (uint256 amount) {
         return nodes.length;
     }
 
@@ -642,17 +655,17 @@ contract Nodes is Permissions, INodes {
      *
      * Note: Online nodes are equal to the number of active plus leaving nodes.
      */
-    function getNumberOnlineNodes() external view override returns (uint) {
+    function getNumberOnlineNodes() external view override returns (uint256 amount) {
         return numberOfActiveNodes + numberOfLeavingNodes ;
     }
 
     /**
      * @dev Return active node IDs.
      */
-    function getActiveNodeIds() external view override returns (uint[] memory activeNodeIds) {
-        activeNodeIds = new uint[](numberOfActiveNodes);
-        uint indexOfActiveNodeIds = 0;
-        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+    function getActiveNodeIds() external view override returns (uint256[] memory activeNodeIds) {
+        activeNodeIds = new uint256[](numberOfActiveNodes);
+        uint256 indexOfActiveNodeIds = 0;
+        for (uint256 indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
             if (isNodeActive(indexOfNodes)) {
                 activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
                 indexOfActiveNodeIds++;
@@ -663,12 +676,12 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Return a given node's current status.
      */
-    function getNodeStatus(uint nodeIndex)
+    function getNodeStatus(uint256 nodeIndex)
         external
         view
         override
         checkNodeExists(nodeIndex)
-        returns (NodeStatus)
+        returns (NodeStatus status)
     {
         return nodes[nodeIndex].status;
     }
@@ -680,7 +693,14 @@ contract Nodes is Permissions, INodes {
      *
      * - Validator ID must exist.
      */
-    function getValidatorNodeIndexes(uint validatorId) external view override returns (uint[] memory) {
+    function getValidatorNodeIndexes(
+        uint256 validatorId
+    )
+        external
+        view
+        override
+        returns (uint256[] memory validatorNodes)
+    {
         IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         return validatorToNodeIndexes[validatorId];
@@ -689,7 +709,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Returns number of nodes with available space.
      */
-    function countNodesWithFreeSpace(uint8 freeSpace) external view override returns (uint count) {
+    function countNodesWithFreeSpace(uint8 freeSpace) external view override returns (uint256 count) {
         if (freeSpace == 0) {
             return _nodesAmountBySpace.sumFromPlaceToLast(1);
         }
@@ -697,26 +717,14 @@ contract Nodes is Permissions, INodes {
     }
 
     /**
-     * @dev constructor in Permissions approach.
-     */
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-
-        numberOfActiveNodes = 0;
-        numberOfLeavingNodes = 0;
-        numberOfLeftNodes = 0;
-        _nodesAmountBySpace.create(128);
-    }
-
-    /**
      * @dev Returns the Validator ID for a given node.
      */
-    function getValidatorId(uint nodeIndex)
+    function getValidatorId(uint256 nodeIndex)
         public
         view
         override
         checkNodeExists(nodeIndex)
-        returns (uint)
+        returns (uint256 id)
     {
         return nodes[nodeIndex].validatorId;
     }
@@ -724,12 +732,12 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Checks whether a node exists for a given address.
      */
-    function isNodeExist(address from, uint nodeIndex)
+    function isNodeExist(address from, uint256 nodeIndex)
         public
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool exist)
     {
         return nodeIndexes[from].isNodeExist[nodeIndex];
     }
@@ -737,12 +745,12 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Checks whether a node's status is Active.
      */
-    function isNodeActive(uint nodeIndex)
+    function isNodeActive(uint256 nodeIndex)
         public
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool active)
     {
         return nodes[nodeIndex].status == NodeStatus.Active;
     }
@@ -750,21 +758,21 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Checks whether a node's status is Leaving.
      */
-    function isNodeLeaving(uint nodeIndex)
+    function isNodeLeaving(uint256 nodeIndex)
         public
         view
         override
         checkNodeExists(nodeIndex)
-        returns (bool)
+        returns (bool leaving)
     {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
     }
 
-    function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) internal {
-        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        uint len = spaceToNodes[space].length - 1;
+    function _removeNodeFromSpaceToNodes(uint256 nodeIndex, uint8 space) internal {
+        uint256 indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        uint256 len = spaceToNodes[space].length - 1;
         if (indexInArray < len) {
-            uint shiftedIndex = spaceToNodes[space][len];
+            uint256 shiftedIndex = spaceToNodes[space][len];
             spaceToNodes[space][indexInArray] = shiftedIndex;
             spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
         }
@@ -775,7 +783,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Moves a node to a new space mapping.
      */
-    function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
+    function _moveNodeToNewSpaceMap(uint256 nodeIndex, uint8 newSpace) private {
         if (!_invisible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _removeNodeFromTree(space);
@@ -789,7 +797,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Changes a node's status to Active.
      */
-    function _setNodeActive(uint nodeIndex) private {
+    function _setNodeActive(uint256 nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.Active;
         numberOfActiveNodes = numberOfActiveNodes + 1;
         if (_invisible[nodeIndex]) {
@@ -804,7 +812,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Changes a node's status to In_Maintenance.
      */
-    function _setNodeInMaintenance(uint nodeIndex) private {
+    function _setNodeInMaintenance(uint256 nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.In_Maintenance;
         numberOfActiveNodes = numberOfActiveNodes - 1;
         _makeNodeInvisible(nodeIndex);
@@ -813,7 +821,7 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Changes a node's status to Left.
      */
-    function _setNodeLeft(uint nodeIndex) private {
+    function _setNodeLeft(uint256 nodeIndex) private {
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
         delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
@@ -830,14 +838,14 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Changes a node's status to Leaving.
      */
-    function _setNodeLeaving(uint nodeIndex) private {
+    function _setNodeLeaving(uint256 nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.Leaving;
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
         _makeNodeInvisible(nodeIndex);
     }
 
-    function _makeNodeInvisible(uint nodeIndex) private {
+    function _makeNodeInvisible(uint256 nodeIndex) private {
         if (!_invisible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _removeNodeFromSpaceToNodes(nodeIndex, space);
@@ -846,13 +854,13 @@ contract Nodes is Permissions, INodes {
         }
     }
 
-    function _tryToMakeNodeVisible(uint nodeIndex) private {
+    function _tryToMakeNodeVisible(uint256 nodeIndex) private {
         if (_invisible[nodeIndex] && _canBeVisible(nodeIndex)) {
             _makeNodeVisible(nodeIndex);
         }
     }
 
-    function _makeNodeVisible(uint nodeIndex) private {
+    function _makeNodeVisible(uint256 nodeIndex) private {
         if (_invisible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _addNodeToSpaceToNodes(nodeIndex, space);
@@ -861,7 +869,7 @@ contract Nodes is Permissions, INodes {
         }
     }
 
-    function _addNodeToSpaceToNodes(uint nodeIndex, uint8 space) private {
+    function _addNodeToSpaceToNodes(uint256 nodeIndex, uint8 space) private {
         spaceToNodes[space].push(nodeIndex);
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length - 1;
     }
@@ -878,20 +886,26 @@ contract Nodes is Permissions, INodes {
         }
     }
 
-    function _checkValidatorPositionToMaintainNode(uint validatorId, uint position) private returns (bool) {
+    function _checkValidatorPositionToMaintainNode(
+        uint256 validatorId,
+        uint256 position
+    )
+        private
+        returns (bool enough)
+    {
         IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController")
         );
-        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint msr = IConstantsHolder(contractManager.getConstantsHolder()).msr();
+        uint256 delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
+        uint256 msr = ConstantsHolder(contractManager.getConstantsHolder()).msr();
         return (position + 1) * msr <= delegationsTotal;
     }
 
-    function _checkNodeIndex(uint nodeIndex) private view {
+    function _checkNodeIndex(uint256 nodeIndex) private view {
         require(nodeIndex < nodes.length, "Node with such index does not exist");
     }
 
-    function _checkNodeOrNodeManager(uint nodeIndex, address sender) private view {
+    function _checkNodeOrNodeManager(uint256 nodeIndex, address sender) private view {
         IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
 
         require(
@@ -902,15 +916,15 @@ contract Nodes is Permissions, INodes {
         );
     }
 
-    function _canBeVisible(uint nodeIndex) private view returns (bool) {
+    function _canBeVisible(uint256 nodeIndex) private view returns (bool can) {
         return !incompliant[nodeIndex] && nodes[nodeIndex].status == NodeStatus.Active;
     }
 
     /**
      * @dev Returns the index of a given node within the validator's node index.
      */
-    function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
-        uint i;
+    function _findNode(uint256[] memory validatorNodeIndexes, uint256 nodeIndex) private pure returns (uint256 node) {
+        uint256 i;
         for (i = 0; i < validatorNodeIndexes.length; i++) {
             if (validatorNodeIndexes[i] == nodeIndex) {
                 return i;
@@ -919,7 +933,7 @@ contract Nodes is Permissions, INodes {
         return validatorNodeIndexes.length;
     }
 
-    function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address) {
+    function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address nodeAddress) {
         bytes32 hash = keccak256(abi.encodePacked(pubKey[0], pubKey[1]));
         bytes20 addr;
         for (uint8 i = 12; i < 32; i++) {

@@ -3,16 +3,16 @@ pragma solidity 0.8.17;
 
 contract FallbackMock {
 
-    uint private _minimalGasToSpend;
-    uint private _iterator;
+    uint256 private _minimalGasToSpend;
+    uint256 private _iterator;
 
-    constructor(uint minimalGasToSpend) {
+    constructor(uint256 minimalGasToSpend) {
         _minimalGasToSpend = minimalGasToSpend;
     }
 
     // solhint-disable-next-line comprehensive-interface, no-complex-fallback
     fallback() external payable {
-        uint gasTotal = gasleft();
+        uint256 gasTotal = gasleft();
         while (gasTotal - gasleft() < _minimalGasToSpend) {
             _iterator++;
         }
