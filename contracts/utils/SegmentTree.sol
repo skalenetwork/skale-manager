@@ -22,7 +22,7 @@
 
 pragma solidity 0.8.17;
 
-import "./Random.sol";
+import { IRandom, Random } from "./Random.sol";
 
 /**
  * @title SegmentTree
@@ -61,7 +61,7 @@ library SegmentTree {
     using Random for IRandom.RandomGenerator;
 
     struct Tree {
-        uint[] tree;
+        uint256[] tree;
     }
 
     /**
@@ -72,7 +72,7 @@ library SegmentTree {
      * - `size` must be greater than 0
      * - `size` must be power of 2
      */
-    function create(Tree storage segmentTree, uint size) external {
+    function create(Tree storage segmentTree, uint256 size) external {
         require(size > 0, "Size can't be 0");
         require(size & size - 1 == 0, "Size is not power of 2");
         segmentTree.tree = new uint[](size * 2 - 1);
@@ -85,14 +85,14 @@ library SegmentTree {
      *
      * - `place` must be in range [1, size]
      */
-    function addToPlace(Tree storage self, uint place, uint delta) external {
+    function addToPlace(Tree storage self, uint256 place, uint256 delta) external {
         require(_correctPlace(self, place), "Incorrect place");
-        uint leftBound = 1;
-        uint rightBound = getSize(self);
-        uint step = 1;
+        uint256 leftBound = 1;
+        uint256 rightBound = getSize(self);
+        uint256 step = 1;
         self.tree[0] = self.tree[0] + delta;
         while(leftBound < rightBound) {
-            uint middle = (leftBound + rightBound) / 2;
+            uint256 middle = (leftBound + rightBound) / 2;
             if (place > middle) {
                 leftBound = middle + 1;
                 step = step + step + 1;
@@ -112,14 +112,14 @@ library SegmentTree {
      * - `place` must be in range [1, size]
      * - initial value of target element must be not less than `delta`
      */
-    function removeFromPlace(Tree storage self, uint place, uint delta) external {
+    function removeFromPlace(Tree storage self, uint256 place, uint256 delta) external {
         require(_correctPlace(self, place), "Incorrect place");
-        uint leftBound = 1;
-        uint rightBound = getSize(self);
-        uint step = 1;
+        uint256 leftBound = 1;
+        uint256 rightBound = getSize(self);
+        uint256 step = 1;
         self.tree[0] = self.tree[0] - delta;
         while(leftBound < rightBound) {
-            uint middle = (leftBound + rightBound) / 2;
+            uint256 middle = (leftBound + rightBound) / 2;
             if (place > middle) {
                 leftBound = middle + 1;
                 step = step + step + 1;
@@ -143,19 +143,19 @@ library SegmentTree {
      */
     function moveFromPlaceToPlace(
         Tree storage self,
-        uint fromPlace,
-        uint toPlace,
-        uint delta
+        uint256 fromPlace,
+        uint256 toPlace,
+        uint256 delta
     )
         external
     {
         require(_correctPlace(self, fromPlace) && _correctPlace(self, toPlace), "Incorrect place");
-        uint leftBound = 1;
-        uint rightBound = getSize(self);
-        uint step = 1;
-        uint middle = (leftBound + rightBound) / 2;
-        uint fromPlaceMove = fromPlace > toPlace ? toPlace : fromPlace;
-        uint toPlaceMove = fromPlace > toPlace ? fromPlace : toPlace;
+        uint256 leftBound = 1;
+        uint256 rightBound = getSize(self);
+        uint256 step = 1;
+        uint256 middle = (leftBound + rightBound) / 2;
+        uint256 fromPlaceMove = fromPlace > toPlace ? toPlace : fromPlace;
+        uint256 toPlaceMove = fromPlace > toPlace ? fromPlace : toPlace;
         while (toPlaceMove <= middle || middle < fromPlaceMove) {
             if (middle < fromPlaceMove) {
                 leftBound = middle + 1;
@@ -167,11 +167,11 @@ library SegmentTree {
             middle = (leftBound + rightBound) / 2;
         }
 
-        uint leftBoundMove = leftBound;
-        uint rightBoundMove = rightBound;
-        uint stepMove = step;
+        uint256 leftBoundMove = leftBound;
+        uint256 rightBoundMove = rightBound;
+        uint256 stepMove = step;
         while(leftBoundMove < rightBoundMove && leftBound < rightBound) {
-            uint middleMove = (leftBoundMove + rightBoundMove) / 2;
+            uint256 middleMove = (leftBoundMove + rightBoundMove) / 2;
             if (fromPlace > middleMove) {
                 leftBoundMove = middleMove + 1;
                 stepMove = stepMove + stepMove + 1;
@@ -203,20 +203,20 @@ library SegmentTree {
      */
     function getRandomNonZeroElementFromPlaceToLast(
         Tree storage self,
-        uint place,
+        uint256 place,
         IRandom.RandomGenerator memory randomGenerator
     )
         external
         view
-        returns (uint)
+        returns (uint256 position)
     {
         require(_correctPlace(self, place), "Incorrect place");
 
-        uint vertex = 1;
-        uint leftBound = 0;
-        uint rightBound = getSize(self);
-        uint currentFrom = place - 1;
-        uint currentSum = sumFromPlaceToLast(self, place);
+        uint256 vertex = 1;
+        uint256 leftBound = 0;
+        uint256 rightBound = getSize(self);
+        uint256 currentFrom = place - 1;
+        uint256 currentSum = sumFromPlaceToLast(self, place);
         if (currentSum == 0) {
             return 0;
         }
@@ -225,8 +225,8 @@ library SegmentTree {
                 vertex = _right(vertex);
                 leftBound = _middle(leftBound, rightBound);
             } else {
-                uint rightSum = self.tree[_right(vertex) - 1];
-                uint leftSum = currentSum - rightSum;
+                uint256 rightSum = self.tree[_right(vertex) - 1];
+                uint256 leftSum = currentSum - rightSum;
                 if (Random.random(randomGenerator, currentSum) < leftSum) {
                     // go left
                     vertex = _left(vertex);
@@ -251,16 +251,16 @@ library SegmentTree {
      *
      * - `place` must be in range [1, size]
      */
-    function sumFromPlaceToLast(Tree storage self, uint place) public view returns (uint sum) {
+    function sumFromPlaceToLast(Tree storage self, uint256 place) public view returns (uint256 sum) {
         require(_correctPlace(self, place), "Incorrect place");
         if (place == 1) {
             return self.tree[0];
         }
-        uint leftBound = 1;
-        uint rightBound = getSize(self);
-        uint step = 1;
+        uint256 leftBound = 1;
+        uint256 rightBound = getSize(self);
+        uint256 step = 1;
         while(leftBound < rightBound) {
-            uint middle = (leftBound + rightBound) / 2;
+            uint256 middle = (leftBound + rightBound) / 2;
             if (place > middle) {
                 leftBound = middle + 1;
                 step = step + step + 1;
@@ -276,7 +276,7 @@ library SegmentTree {
     /**
      * @dev Returns amount of elements in segment tree
      */
-    function getSize(Tree storage segmentTree) internal view returns (uint) {
+    function getSize(Tree storage segmentTree) internal view returns (uint256 size) {
         if (segmentTree.tree.length > 0) {
             return segmentTree.tree.length / 2 + 1;
         } else {
@@ -287,28 +287,28 @@ library SegmentTree {
     /**
      * @dev Checks if `place` is valid position in segment tree
      */
-    function _correctPlace(Tree storage self, uint place) private view returns (bool) {
+    function _correctPlace(Tree storage self, uint256 place) private view returns (bool correct) {
         return place >= 1 && place <= getSize(self);
     }
 
     /**
      * @dev Calculates index of left child of the vertex
      */
-    function _left(uint vertex) private pure returns (uint) {
+    function _left(uint256 vertex) private pure returns (uint256 index) {
         return vertex * 2;
     }
 
     /**
      * @dev Calculates index of right child of the vertex
      */
-    function _right(uint vertex) private pure returns (uint) {
+    function _right(uint256 vertex) private pure returns (uint256 index) {
         return vertex * 2 + 1;
     }
 
     /**
      * @dev Calculates arithmetical mean of 2 numbers
      */
-    function _middle(uint left, uint right) private pure returns (uint) {
+    function _middle(uint256 left, uint256 right) private pure returns (uint256 mean) {
         return (left + right) / 2;
     }
 }

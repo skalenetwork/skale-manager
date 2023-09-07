@@ -245,6 +245,13 @@ describe("SkaleManager", () => {
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
             });
 
+            it("should perform nodeExit if validator unlinked his node address", async () => {
+                await validatorService.connect(validator).unlinkNodeAddress(nodeAddress.address);
+                await nodesContract.initExit(0);
+                await skaleManager.connect(nodeAddress).nodeExit(0);
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
+            });
+
             it("should create and remove node from validator address", async () => {
                 (await validatorService.getValidatorIdByNodeAddress(validator.address)).should.be.equal(1);
                 await skaleManager.connect(validator).createNode(

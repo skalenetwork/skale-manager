@@ -24,15 +24,15 @@ pragma solidity 0.8.17;
 
 library Precompiled {
 
-    function bigModExp(uint base, uint power, uint modulus) internal view returns (uint) {
-        uint[6] memory inputToBigModExp;
+    function bigModExp(uint256 base, uint256 power, uint256 modulus) internal view returns (uint256 value) {
+        uint256[6] memory inputToBigModExp;
         inputToBigModExp[0] = 32;
         inputToBigModExp[1] = 32;
         inputToBigModExp[2] = 32;
         inputToBigModExp[3] = base;
         inputToBigModExp[4] = power;
         inputToBigModExp[5] = modulus;
-        uint[1] memory out;
+        uint256[1] memory out;
         bool success;
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -42,9 +42,9 @@ library Precompiled {
         return out[0];
     }
 
-    function bn256ScalarMul(uint x, uint y, uint k) internal view returns (uint , uint ) {
-        uint[3] memory inputToMul;
-        uint[2] memory output;
+    function bn256ScalarMul(uint256 x, uint256 y, uint256 k) internal view returns (uint256 xValue, uint256 yValue) {
+        uint256[3] memory inputToMul;
+        uint256[2] memory output;
         inputToMul[0] = x;
         inputToMul[1] = y;
         inputToMul[2] = k;
@@ -58,22 +58,22 @@ library Precompiled {
     }
 
     function bn256Pairing(
-        uint x1,
-        uint y1,
-        uint a1,
-        uint b1,
-        uint c1,
-        uint d1,
-        uint x2,
-        uint y2,
-        uint a2,
-        uint b2,
-        uint c2,
-        uint d2)
-        internal view returns (bool)
+        uint256 x1,
+        uint256 y1,
+        uint256 a1,
+        uint256 b1,
+        uint256 c1,
+        uint256 d1,
+        uint256 x2,
+        uint256 y2,
+        uint256 a2,
+        uint256 b2,
+        uint256 c2,
+        uint256 d2)
+        internal view returns (bool pairing)
     {
         bool success;
-        uint[12] memory inputToPairing;
+        uint256[12] memory inputToPairing;
         inputToPairing[0] = x1;
         inputToPairing[1] = y1;
         inputToPairing[2] = a1;
@@ -86,7 +86,7 @@ library Precompiled {
         inputToPairing[9] = b2;
         inputToPairing[10] = c2;
         inputToPairing[11] = d2;
-        uint[1] memory out;
+        uint256[1] memory out;
         // solhint-disable-next-line no-inline-assembly
         assembly {
             success := staticcall(not(0), 8, inputToPairing, mul(12, 0x20), out, 0x20)

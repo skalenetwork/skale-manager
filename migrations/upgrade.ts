@@ -2,7 +2,7 @@ import chalk from "chalk";
 import { contracts } from "./deploy";
 import { ethers } from "hardhat";
 import { Upgrader, AutoSubmitter } from "@skalenetwork/upgrade-tools";
-import { skaleContracts, Instance } from "@skalenetwork/skale-contracts";
+import { skaleContracts, Instance } from "@skalenetwork/skale-contracts-ethers-v5";
 import { SkaleManager } from "../typechain-types";
 
 async function getSkaleManagerInstance() {
@@ -16,7 +16,7 @@ async function getSkaleManagerInstance() {
         process.exit(1);
     }
     const network = await skaleContracts.getNetworkByProvider(ethers.provider);
-    const project = await network.getProject("skale-manager");
+    const project = network.getProject("skale-manager");
     return await project.getInstance(process.env.TARGET);
 }
 

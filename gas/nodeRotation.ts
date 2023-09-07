@@ -26,7 +26,7 @@ import { SchainType } from "../test/tools/types";
 import { applySnapshot, makeSnapshot } from "../test/tools/snapshot";
 import { deployNodes } from "../test/tools/deploy/nodes";
 import { TypedEvent } from "../typechain-types/common";
-import { SchainNodesEvent } from "../typechain-types/ISchains";
+import { SchainNodesEvent } from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
 
 function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
     if (events) {
