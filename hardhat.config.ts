@@ -1,5 +1,5 @@
 import { task, HardhatUserConfig } from "hardhat/config";
-import "@nomiclabs/hardhat-etherscan";
+import "@nomicfoundation/hardhat-verify";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import '@typechain/hardhat'
