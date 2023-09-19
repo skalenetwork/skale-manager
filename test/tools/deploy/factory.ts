@@ -1,6 +1,6 @@
 import { ethers, upgrades } from "hardhat";
 import { ContractManager } from "../../../typechain-types";
-import { deployLibraries, getLinkedContractFactory } from "@skalenetwork/upgrade-tools";
+import { deployLibraries } from "@skalenetwork/upgrade-tools";
 
 async function defaultDeploy(contractName: string,
                              contractManager: ContractManager) {
@@ -68,7 +68,7 @@ function deployWithLibraryFunctionFactory(
 ) {
     return async (contractManager: ContractManager) => {
         const libraries = await deployLibraries(libraryNames);
-        const contractFactory = await getLinkedContractFactory(contractName, libraries);
+        const contractFactory = await ethers.getContractFactory(contractName, {libraries: Object.fromEntries(libraries)});
         try {
             return contractFactory.attach(await contractManager.getContract(contractName));
         } catch (e) {
@@ -88,7 +88,7 @@ function deployWithLibraryWithConstructor(
 ) {
     return async (contractManager: ContractManager) => {
         const libraries = await deployLibraries(libraryNames);
-        const contractFactory = await getLinkedContractFactory(contractName, libraries);
+        const contractFactory = await ethers.getContractFactory(contractName, {libraries: Object.fromEntries(libraries)});
         try {
             return contractFactory.attach(await contractManager.getContract(contractName));
         } catch (e) {
