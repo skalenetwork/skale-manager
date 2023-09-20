@@ -24,7 +24,7 @@ CURRENT_NODE_VERSION=$(nvm current)
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 
-npx ganache-cli --gasLimit 8000000 --quiet &
+GANACHE_SESSION=$(npx ganache --😈 --miner.blockGasLimit 8000000)
 
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
@@ -49,4 +49,4 @@ rm -r --interactive=never $DEPLOYED_DIR
 SKALE_MANAGER_ADDRESS=$(cat data/$ABI_FILENAME | jq -r .skale_manager_address)
 ALLOW_NOT_ATOMIC_UPGRADE="OK" TARGET="$SKALE_MANAGER_ADDRESS" npx hardhat run migrations/upgrade.ts --network localhost
 
-npx kill-port 8545
+npx ganache instances stop $GANACHE_SESSION

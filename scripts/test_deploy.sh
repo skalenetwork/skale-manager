@@ -2,8 +2,8 @@
 
 set -e
 
-npx ganache-cli --gasLimit 8000000 --quiet &
+GANACHE_SESSION=$(npx ganache --😈 --miner.blockGasLimit 8000000)
 
 PRODUCTION=true npx hardhat run migrations/deploy.ts --network localhost
 
-npx kill-port 8545
+npx ganache instances stop $GANACHE_SESSION
