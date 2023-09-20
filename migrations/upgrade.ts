@@ -29,12 +29,10 @@ class SkaleManagerUpgrader extends Upgrader {
         submitter = new AutoSubmitter()) {
             super(
                 {
+                    contractNamesToUpgrade,
+                    instance,
                     name: "skale-manager",
-                    instance
-                },
-                {
-                    version: targetVersion,
-                    contractNamesToUpgrade
+                    version: targetVersion
                 },
                 submitter);
         }

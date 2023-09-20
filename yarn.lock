@@ -1845,10 +1845,10 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-2.0.0-develop.1.tgz#fde4e8a40878b890f7e1b50dd8513a76eb1d2d46"
   integrity sha512-SYm407j/RQlcTUcnIWWhPc8wK1AYxMIVhUgRSGhLblZ+4UJQuHAs2rz0aOiovvVaE5Xg2OYNwtCOd1gLW3wCDw==
 
-"@skalenetwork/upgrade-tools@3.0.0-linter.27":
-  version "3.0.0-linter.27"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-linter.27.tgz#2eb97d05a8e5019a6ba3bf6493dffa2884f58c15"
-  integrity sha512-uCOZc2whVLuepW5BDyDiU4nPq0NUivW7gSVQ7z+aUOhKLIO9jklvmaxDl1sQw7+WjdvqnphdMosduD9VToB0FA==
+"@skalenetwork/upgrade-tools@3.0.0-linter.29":
+  version "3.0.0-linter.29"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-linter.29.tgz#6df550b1b5c6114eef124aa6f85ac85a6238585c"
+  integrity sha512-cgDGJITaCZ0q3k4vGOiBMHGP2OJM6AkzMIni0+J815lsz9NY8VcGmSSF2jHaBzJBSQUCM1Bl7BXIen7/oSpHKw==
   dependencies:
     "@safe-global/api-kit" "^1.3.0"
     "@safe-global/protocol-kit" "^1.2.0"
