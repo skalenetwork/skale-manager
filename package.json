@@ -45,7 +45,7 @@
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "@openzeppelin/hardhat-upgrades": "^1.14.0",
     "@skalenetwork/skale-manager-interfaces": "2.0.0-develop.1",
-    "@skalenetwork/upgrade-tools": "3.0.0-linter.29",
+    "@skalenetwork/upgrade-tools": "^3.0.0-linter.33",
     "@typechain/hardhat": "^7.0.0",
     "dotenv": "^16.3.1",
     "ethereumjs-util": "^7.1.5",
