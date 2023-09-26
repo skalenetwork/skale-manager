@@ -24,7 +24,13 @@ CURRENT_NODE_VERSION=$(nvm current)
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 
-GANACHE_SESSION=$(npx ganache --😈 --miner.blockGasLimit 8000000)
+# Have to set --miner.blockTime 1
+# because there is a bug in ganache
+# https://github.com/trufflesuite/ganache/issues/4165
+# TODO: remove --miner.blockTime 1
+# when ganache processes pending queue correctly
+# to speed up testing process
+GANACHE_SESSION=$(npx ganache --😈 --miner.blockGasLimit 8000000 --miner.blockTime 1)
 
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
