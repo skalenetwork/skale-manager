@@ -1,9 +1,9 @@
-import { deployContractManager } from "../tools/deploy/contractManager";
-import { deployPartialDifferencesTester } from "../tools/deploy/test/partialDifferencesTester";
+import {deployContractManager} from "../tools/deploy/contractManager";
+import {deployPartialDifferencesTester} from "../tools/deploy/test/partialDifferencesTester";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { PartialDifferencesTester } from "../../typechain-types";
-import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+import {PartialDifferencesTester} from "../../typechain-types";
+import {makeSnapshot, applySnapshot} from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -61,6 +61,5 @@ describe("PartialDifferences", () => {
         await partialDifferencesTester.getAndUpdateSequenceItem(sequence, 1);
         await partialDifferencesTester.reduceSequence(sequence, 1, 2, 1);
         (await partialDifferencesTester.callStatic.getAndUpdateSequenceItem(sequence, 1)).toNumber().should.be.equal(0);
-
     });
 });

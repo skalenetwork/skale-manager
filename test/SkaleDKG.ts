@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManager,
+import {ContractManager,
          DelegationController,
          KeyStorage,
          Nodes,
@@ -12,30 +12,30 @@ import { ContractManager,
          SlashingTable,
          ValidatorService,
          SkaleManager,
-         Wallets } from "../typechain-types";
-import { skipTime, currentTime, nextMonth } from "./tools/time";
-import { privateKeys } from "./tools/private-keys";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deployKeyStorage } from "./tools/deploy/keyStorage";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deploySlashingTable } from "./tools/deploy/slashingTable";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployWallets } from "./tools/deploy/wallets";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
-import { makeSnapshot, applySnapshot } from "./tools/snapshot";
-import { BytesLike, ContractTransaction, Wallet } from "ethers";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { schainParametersType, SchainType } from "./tools/types";
+         Wallets} from "../typechain-types";
+import {skipTime, currentTime, nextMonth} from "./tools/time";
+import {privateKeys} from "./tools/private-keys";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
+import {deployKeyStorage} from "./tools/deploy/keyStorage";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleDKG} from "./tools/deploy/skaleDKG";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {deploySlashingTable} from "./tools/deploy/slashingTable";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deployWallets} from "./tools/deploy/wallets";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {assert, expect} from "chai";
+import {makeSnapshot, applySnapshot} from "./tools/snapshot";
+import {BytesLike, ContractTransaction, Wallet} from "ethers";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {schainParametersType, SchainType} from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -56,7 +56,6 @@ async function reimbursed(transaction: ContractTransaction, operation?: string) 
         if (operation !== undefined) {
             console.log(`During ${operation}`);
         }
-
     }
     balanceAfter.should.be.least(balanceBefore);
     balanceAfter.should.be.closeTo(balanceBefore, weiTolerance);
@@ -872,7 +871,6 @@ describe("SkaleDKG", () => {
                         0
                     ).should.emit(skaleDKG, "BadGuy")
                         .withArgs(0);
-
                 });
 
                 after(async () => {
@@ -1299,7 +1297,6 @@ describe("SkaleDKG", () => {
                 });
 
                 describe("when complaint successfully sent", () => {
-
                     let nodeSentBadData: number;
                     before(async () => {
                         nodeSentBadData = await makeSnapshot();
@@ -1781,7 +1778,6 @@ describe("SkaleDKG", () => {
         });
 
         it("16 nodes schain test", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,
@@ -1892,11 +1888,9 @@ describe("SkaleDKG", () => {
             assert(prevPubKey.x.b, "0");
             assert(prevPubKey.y.a, "0");
             assert(prevPubKey.y.b, "0");
-
         });
 
         it("16 nodes schain test with incorrect complaint and response", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,
@@ -2251,7 +2245,6 @@ describe("SkaleDKG", () => {
         });
 
         it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,
@@ -2333,7 +2326,6 @@ describe("SkaleDKG", () => {
         });
 
         it("16 nodes schain test with incorrect complaint and restart Schain creation", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,
@@ -2470,7 +2462,6 @@ describe("SkaleDKG", () => {
         });
 
         it("16 nodes schain test with incorrect complaint and creating new schain", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,

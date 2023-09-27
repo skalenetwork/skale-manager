@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import {ethers} from "hardhat";
 
 export async function makeSnapshot() {
     return parseInt(await ethers.provider.send("evm_snapshot", []) as string, 16);

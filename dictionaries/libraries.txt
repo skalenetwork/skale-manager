@@ -21,6 +21,7 @@ mulmod
 muln
 nbconvert
 nbformat
+nomicfoundation
 nomiclabs
 pygments
 pyplot

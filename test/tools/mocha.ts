@@ -1,4 +1,4 @@
-import { applySnapshot, makeSnapshot } from "./snapshot";
+import {applySnapshot, makeSnapshot} from "./snapshot";
 
 export function fastBeforeEach(fn: Mocha.AsyncFunc) {
     let initialState: number

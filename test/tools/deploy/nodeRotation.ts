@@ -1,8 +1,8 @@
-import { deployFunctionFactory } from "./factory";
-import { deployNodes } from "./nodes";
-import { deploySchainsInternal } from "./schainsInternal";
-import { deployConstantsHolder } from "./constantsHolder";
-import { ContractManager, NodeRotation } from "../../../typechain-types";
+import {deployFunctionFactory} from "./factory";
+import {deployNodes} from "./nodes";
+import {deploySchainsInternal} from "./schainsInternal";
+import {deployConstantsHolder} from "./constantsHolder";
+import {ContractManager, NodeRotation} from "../../../typechain-types";
 
 export const deployNodeRotation = deployFunctionFactory(
     "NodeRotation",

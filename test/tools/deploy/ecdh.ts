@@ -1,5 +1,5 @@
-import { ContractManager, ECDH } from "../../../typechain-types";
-import { deployFunctionFactory, deployWithConstructor } from "./factory";
+import {ContractManager, ECDH} from "../../../typechain-types";
+import {deployFunctionFactory, deployWithConstructor} from "./factory";
 
 export const deployECDH = deployFunctionFactory(
     "ECDH",

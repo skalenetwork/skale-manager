@@ -1,4 +1,4 @@
-import { lstatSync, promises as fs } from 'fs';
+import {lstatSync, promises as fs} from 'fs';
 
 interface SizeStatistics {
     name: string;
@@ -49,7 +49,6 @@ function format(contract: SizeStatistics) {
 }
 
 async function main() {
-
     const contracts = (await getByteCodesSizes("../artifacts/contracts/"))
         .filter(contract => contract.size > 0)
         .sort((a, b) => b.size - a.size)

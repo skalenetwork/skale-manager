@@ -1,29 +1,29 @@
-import { ConstantsHolder, ContractManager,
+import {ConstantsHolder, ContractManager,
         Nodes,
         Schains,
         SkaleDKGTester,
         SkaleManager,
         ValidatorService,
-        Wallets } from "../typechain-types";
-import { deployContractManager } from "./tools/deploy/contractManager";
+        Wallets} from "../typechain-types";
+import {deployContractManager} from "./tools/deploy/contractManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
-import { privateKeys } from "./tools/private-keys";
-import { deployWallets } from "./tools/deploy/wallets";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { SchainType } from "./tools/types";
+import {privateKeys} from "./tools/private-keys";
+import {deployWallets} from "./tools/deploy/wallets";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {SchainType} from "./tools/types";
 import chaiAlmost from "chai-almost";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { ContractTransaction, Wallet } from "ethers";
-import { makeSnapshot, applySnapshot } from "./tools/snapshot";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {ContractTransaction, Wallet} from "ethers";
+import {makeSnapshot, applySnapshot} from "./tools/snapshot";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
 
 chai.should();
 chai.use(chaiAsPromised);

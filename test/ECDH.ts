@@ -1,14 +1,14 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ECDH } from "../typechain-types";
-import { ec } from "elliptic";
+import {ECDH} from "../typechain-types";
+import {ec} from "elliptic";
 
 const secp256k1Curve = new ec("secp256k1");
 
-import { BigNumber } from "ethers";
-import { deployECDH } from "./tools/deploy/ecdh";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { fastBeforeEach } from "./tools/mocha";
+import {BigNumber} from "ethers";
+import {deployECDH} from "./tools/deploy/ecdh";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -22,7 +22,6 @@ describe("ECDH", () => {
     let ecdh: ECDH;
 
     fastBeforeEach(async () => {
-
         const contractManager = await deployContractManager();
 
         ecdh = await deployECDH(contractManager);
@@ -211,7 +210,6 @@ describe("ECDH", () => {
         const result1 = await ecdh.jMul(d, 1, result, 1);
         result1.x3.should.be.equal(1);
         result1.z3.should.be.equal(1);
-
     });
 
     it("Should Calculate inverse big number", async () => {
@@ -286,7 +284,6 @@ describe("ECDH", () => {
         y2 = y2.mul(result1).mod(n);
         x2.should.be.equal("89565891926547004231252920425935692360644145829622209833684329913297188986597");
         y2.should.be.equal("12158399299693830322967808612713398636155367887041628176798871954788371653930");
-
     });
     it("Add EC", async () => {
         const x2 = BigNumber.from("89565891926547004231252920425935692360644145829622209833684329913297188986597");
@@ -361,7 +358,6 @@ describe("ECDH", () => {
     });
 
     it("Should follow associative property", async () => {
-
         const key1 = secp256k1Curve.genKeyPair();
         const key2 = secp256k1Curve.genKeyPair();
         const d1 = BigNumber.from("0x" + key1.getPrivate().toString(16));

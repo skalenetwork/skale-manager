@@ -1,5 +1,5 @@
-import { ConstantsHolder, ContractManager } from "../../../typechain-types";
-import { deployFunctionFactory } from "./factory";
+import {ConstantsHolder, ContractManager} from "../../../typechain-types";
+import {deployFunctionFactory} from "./factory";
 
 const name = "ConstantsHolder";
 

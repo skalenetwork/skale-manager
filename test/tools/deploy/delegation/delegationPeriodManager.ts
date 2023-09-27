@@ -1,5 +1,5 @@
-import { ContractManager, DelegationPeriodManager } from "../../../../typechain-types";
-import { deployFunctionFactory } from "../factory";
+import {ContractManager, DelegationPeriodManager} from "../../../../typechain-types";
+import {deployFunctionFactory} from "../factory";
 
 const name = "DelegationPeriodManager";
 

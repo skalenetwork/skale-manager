@@ -1,5 +1,5 @@
-import { ContractManager, SyncManager } from "../../../typechain-types";
-import { deployFunctionFactory } from "./factory";
+import {ContractManager, SyncManager} from "../../../typechain-types";
+import {deployFunctionFactory} from "./factory";
 
 const name = "SyncManager";
 

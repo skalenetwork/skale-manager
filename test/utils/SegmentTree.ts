@@ -1,9 +1,9 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "../tools/deploy/contractManager";
-import { deploySegmentTreeTester } from "../tools/deploy/test/segmentTreeTester";
-import { makeSnapshot, applySnapshot } from "../tools/snapshot";
-import { SegmentTreeTester } from "../../typechain-types";
+import {deployContractManager} from "../tools/deploy/contractManager";
+import {deploySegmentTreeTester} from "../tools/deploy/test/segmentTreeTester";
+import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+import {SegmentTreeTester} from "../../typechain-types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -96,7 +96,6 @@ describe("SegmentTree", () => {
     });
 
     describe("when initialized", () => {
-
         before(async () => {
             cleanContracts = await makeSnapshot();
             await segmentTree.addElemInPlaces(128, 150);
@@ -108,7 +107,6 @@ describe("SegmentTree", () => {
         });
 
         describe("move elements", () => {
-
             it("should add elem to some place", async () => {
                 await segmentTree.addToPlace(53, 12);
                 // let index = 0;
@@ -211,7 +209,6 @@ describe("SegmentTree", () => {
         });
 
         describe("calculating sum", () => {
-
             it("should calculate correct sum", async () => {
                 (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
                 (await segmentTree.sumFromPlaceToLast(1)).toNumber().should.be.equal(150);
@@ -295,7 +292,6 @@ describe("SegmentTree", () => {
         });
 
         describe("random elem", () => {
-
             it("should return last place", async () => {
                 (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
                 (await segmentTree.getRandomElem(100)).toNumber().should.be.equal(128);
@@ -338,8 +334,6 @@ describe("SegmentTree", () => {
                 (await segmentTree.getRandomElem(127)).toNumber().should.be.equal(127);
                 await segmentTree.getRandomElem(129).should.be.rejectedWith("Incorrect place");
                 await segmentTree.getRandomElem(100000).should.be.rejectedWith("Incorrect place");
-
-
             });
 
             it("should return and remove random places", async () => {

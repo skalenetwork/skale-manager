@@ -1,21 +1,21 @@
-import { ContractManager,
+import {ContractManager,
          DelegationController,
          SkaleToken,
          ValidatorService} from "../../typechain-types";
 
-import { deployContractManager } from "../tools/deploy/contractManager";
-import { nextMonth } from "../tools/time";
+import {deployContractManager} from "../tools/deploy/contractManager";
+import {nextMonth} from "../tools/time";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { State } from "../tools/types";
-import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+import {deployDelegationController} from "../tools/deploy/delegation/delegationController";
+import {deployValidatorService} from "../tools/deploy/delegation/validatorService";
+import {deploySkaleToken} from "../tools/deploy/skaleToken";
+import {State} from "../tools/types";
+import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {makeSnapshot, applySnapshot} from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);

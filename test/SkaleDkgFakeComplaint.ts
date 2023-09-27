@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManager,
+import {ContractManager,
          DelegationController,
          Nodes,
          SchainsInternalMock,
@@ -11,30 +11,30 @@ import { ContractManager,
          ValidatorService,
          Wallets} from "../typechain-types";
 
-import { nextMonth, skipTime } from "./tools/time";
+import {nextMonth, skipTime} from "./tools/time";
 
-import { curve, ec } from "elliptic";
+import {curve, ec} from "elliptic";
 const secp256k1Curve = new ec("secp256k1");
-import { privateKeys } from "./tools/private-keys";
+import {privateKeys} from "./tools/private-keys";
 
-import { Wallet } from "ethers";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deploySlashingTable } from "./tools/deploy/slashingTable";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert } from "chai";
-import { deployWallets } from "./tools/deploy/wallets";
-import { makeSnapshot, applySnapshot } from "./tools/snapshot";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { schainParametersType, SchainType } from "./tools/types";
+import {Wallet} from "ethers";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleDKG} from "./tools/deploy/skaleDKG";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {deploySlashingTable} from "./tools/deploy/slashingTable";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {assert} from "chai";
+import {deployWallets} from "./tools/deploy/wallets";
+import {makeSnapshot, applySnapshot} from "./tools/snapshot";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {schainParametersType, SchainType} from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);

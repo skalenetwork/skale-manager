@@ -1,7 +1,8 @@
-import { ContractManager, FieldOperationsTester } from "../../../../typechain-types";
-import { deployWithLibraryWithConstructor } from "../factory";
+import {ContractManager, FieldOperationsTester} from "../../../../typechain-types";
+import {deployWithConstructor, deployWithConstructorFunctionFactory} from "../factory";
 
-export const deployFieldOperationsTester = deployWithLibraryWithConstructor(
+export const deployFieldOperationsTester = deployWithConstructorFunctionFactory(
     "FieldOperationsTester",
-    ["Fp2Operations", "G1Operations", "G2Operations"]
+    () => Promise.resolve(undefined),
+    () => deployWithConstructor("FieldOperationsTester")
 ) as (contractManager: ContractManager) => Promise<FieldOperationsTester>;

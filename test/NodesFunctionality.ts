@@ -1,26 +1,26 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManager,
+import {ContractManager,
          Nodes,
          SkaleToken,
          ValidatorService,
          DelegationController,
          ConstantsHolder} from "../typechain-types";
-import { privateKeys } from "./tools/private-keys";
-import { nextMonth } from "./tools/time";
-import { Wallet } from "ethers";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { expect } from "chai";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { fastBeforeEach } from "./tools/mocha";
+import {privateKeys} from "./tools/private-keys";
+import {nextMonth} from "./tools/time";
+import {Wallet} from "ethers";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
+import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {expect} from "chai";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {fastBeforeEach} from "./tools/mocha";
 
 
 chai.should();
@@ -69,7 +69,6 @@ describe("NodesFunctionality", () => {
 
         const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
         await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
-
     });
 
     it("should fail to create node if ip is zero", async () => {
@@ -170,7 +169,6 @@ describe("NodesFunctionality", () => {
         });
 
         it("should complete exiting", async () => {
-
             await nodes.completeExit(0)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 

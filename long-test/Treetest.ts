@@ -1,6 +1,6 @@
-import { deployContractManager } from "../test/tools/deploy/contractManager";
-import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
-import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
+import {deployContractManager} from "../test/tools/deploy/contractManager";
+import {deployValidatorService} from "../test/tools/deploy/delegation/validatorService";
+import {deploySkaleManager} from "../test/tools/deploy/skaleManager";
 import {
     ContractManager,
     Nodes,
@@ -11,21 +11,21 @@ import {
     ValidatorService,
     Wallets
 } from "../typechain-types";
-import { privateKeys } from "../test/tools/private-keys";
-import { deploySchains } from "../test/tools/deploy/schains";
-import { deploySchainsInternalMock } from "../test/tools/deploy/test/schainsInternalMock";
-import { deploySkaleDKGTester } from "../test/tools/deploy/test/skaleDKGTester";
-import { deployNodes } from "../test/tools/deploy/nodes";
-import { deployWallets } from "../test/tools/deploy/wallets";
-import { skipTime } from "../test/tools/time";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { ethers } from "hardhat";
-import { BigNumberish, BytesLike, Signer, Wallet } from "ethers";
-import { assert } from "chai";
-import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
-import { stringKeccak256 } from "../test/tools/hashes";
-import { fastBeforeEach } from "../test/tools/mocha";
-import { SchainType } from "../test/tools/types";
+import {privateKeys} from "../test/tools/private-keys";
+import {deploySchains} from "../test/tools/deploy/schains";
+import {deploySchainsInternalMock} from "../test/tools/deploy/test/schainsInternalMock";
+import {deploySkaleDKGTester} from "../test/tools/deploy/test/skaleDKGTester";
+import {deployNodes} from "../test/tools/deploy/nodes";
+import {deployWallets} from "../test/tools/deploy/wallets";
+import {skipTime} from "../test/tools/time";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {ethers} from "hardhat";
+import {BigNumberish, BytesLike, Signer, Wallet} from "ethers";
+import {assert} from "chai";
+import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
+import {stringKeccak256} from "../test/tools/hashes";
+import {fastBeforeEach} from "../test/tools/mocha";
+import {SchainType} from "../test/tools/types";
 
 async function createNode(skaleManager: SkaleManager, node: Wallet, nodeId: number) {
     await skaleManager.connect(node).createNode(

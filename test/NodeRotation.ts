@@ -1,23 +1,23 @@
-import { ethers } from "hardhat";
-import { fastBeforeEach } from "./tools/mocha";
-import { ConstantsHolder, NodeRotation, Nodes, Schains, SchainsInternal, SkaleDKGTester, SkaleManager, ValidatorService, Wallets } from "../typechain-types";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { Wallet } from "ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { deploySchains } from "./tools/deploy/schains";
-import { SchainType, schainParametersType } from "./tools/types";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { stringKeccak256 } from "./tools/hashes";
+import {ethers} from "hardhat";
+import {fastBeforeEach} from "./tools/mocha";
+import {ConstantsHolder, NodeRotation, Nodes, Schains, SchainsInternal, SkaleDKGTester, SkaleManager, ValidatorService, Wallets} from "../typechain-types";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {Wallet} from "ethers";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {deploySchains} from "./tools/deploy/schains";
+import {SchainType, schainParametersType} from "./tools/types";
+import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
+import {stringKeccak256} from "./tools/hashes";
 import _ from "underscore";
-import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { skipTime } from "./tools/time";
-import { deployWallets } from "./tools/deploy/wallets";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
+import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {skipTime} from "./tools/time";
+import {deployWallets} from "./tools/deploy/wallets";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
@@ -104,7 +104,6 @@ describe("NodeRotation", () => {
             let chainNodes: RegisteredNode[];
 
             fastBeforeEach(async () => {
-
                 const schainType = SchainType.LARGE;
                 const deposit = await schains.getSchainPrice(schainType, 5);
 
@@ -127,7 +126,7 @@ describe("NodeRotation", () => {
                 await wallets.connect(owner).rechargeSchainWallet(schainHash, {value: ethers.utils.parseEther("1")});
 
                 chainNodes = (await schainsInternal.getNodesInGroup(schainHash)).map(id => {
-                    const node = registeredNodes.find(node => node.id == id.toNumber())
+                    const node = registeredNodes.find(registeredNode => registeredNode.id == id.toNumber())
                     if (node === undefined) {
                         throw new Error(`Can't find a node with id ${id.toString()}`)
                     }
@@ -150,9 +149,9 @@ describe("NodeRotation", () => {
                     await skaleManager.nodeExit(exitingNode.id);
 
                     const newChainNodesIds = (await schainsInternal.getNodesInGroup(schainHash)).map(id => id.toNumber());
-                    const enteringNodeId = newChainNodesIds.filter(id => chainNodes.find(node => node.id == id) === undefined)[0];
+                    const enteringNodeId = newChainNodesIds.filter(id => chainNodes.find(chainNode => chainNode.id == id) === undefined)[0];
 
-                    node = registeredNodes.find(node => node.id == enteringNodeId);
+                    node = registeredNodes.find(registeredNode => registeredNode.id == enteringNodeId);
                     if (node === undefined) {
                         throw Error("Can't determine entering node");
                     }
@@ -165,13 +164,13 @@ describe("NodeRotation", () => {
                     let failingNode: RegisteredNode;
 
                     fastBeforeEach(async () => {
-                        let node = _.sample(chainNodes.filter(node => node !== exitingNode))
+                        let node = _.sample(chainNodes.filter(chainNode => chainNode !== exitingNode))
                         if (node === undefined) {
                             throw new Error("Can't pick a node");
                         }
                         failingNode = node;
 
-                        node = _.sample(chainNodes.filter(node => ![exitingNode, failingNode].includes(node)));
+                        node = _.sample(chainNodes.filter(chainNode => ![exitingNode, failingNode].includes(chainNode)));
                         if (node === undefined) {
                             throw new Error("Can't pick a node");
                         }
@@ -214,7 +213,6 @@ describe("NodeRotation", () => {
 
                     it("a node that fails DKG after node exit " +
                        "should have finish_ts 1 sec bigger than a leaving node", async () => {
-
                         const exitingNodeFinishTs = (await nodeRotation.getLeavingHistory(exitingNode.id))[0].finishedRotation.toNumber();
                         const failingNodeFinishTs = (await nodeRotation.getLeavingHistory(failingNode.id))[0].finishedRotation.toNumber();
 

@@ -1,8 +1,8 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ethers } from "hardhat"
-import { MathUtilsTester } from "../../typechain-types";
-import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+import {ethers} from "hardhat"
+import {MathUtilsTester} from "../../typechain-types";
+import {makeSnapshot, applySnapshot} from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);

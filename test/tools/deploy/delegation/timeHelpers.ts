@@ -1,6 +1,6 @@
-import { ContractManager,
-    TimeHelpers } from "../../../../typechain-types";
-import { deployWithConstructor, deployWithConstructorFunctionFactory } from "../factory";
+import {ContractManager,
+    TimeHelpers} from "../../../../typechain-types";
+import {deployWithConstructor, deployWithConstructorFunctionFactory} from "../factory";
 
 const name = "TimeHelpers";
 

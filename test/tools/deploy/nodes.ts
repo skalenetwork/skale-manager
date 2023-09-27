@@ -1,9 +1,9 @@
-import { ContractManager, Nodes } from "../../../typechain-types";
-import { deployBounty } from "./bounty";
-import { deployConstantsHolder } from "./constantsHolder";
-import { deployValidatorService } from "./delegation/validatorService";
-import { deployWithLibraryFunctionFactory } from "./factory";
-import { deployNodeRotation } from "./nodeRotation";
+import {ContractManager, Nodes} from "../../../typechain-types";
+import {deployBounty} from "./bounty";
+import {deployConstantsHolder} from "./constantsHolder";
+import {deployValidatorService} from "./delegation/validatorService";
+import {deployWithLibraryFunctionFactory} from "./factory";
+import {deployNodeRotation} from "./nodeRotation";
 
 export const deployNodes = deployWithLibraryFunctionFactory(
     "Nodes",

@@ -1,17 +1,17 @@
-import { deployContractManager } from "../test/tools/deploy/contractManager";
-import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
-import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
-import { deploySchainsInternalMock } from "../test/tools/deploy/test/schainsInternalMock";
-import { ContractManager, Schains, SkaleManager, ValidatorService, SchainsInternalMock } from "../typechain-types";
-import { privateKeys } from "../test/tools/private-keys";
-import { deploySchains } from "../test/tools/deploy/schains";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { Event, Wallet } from "ethers";
-import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
-import { SchainType } from "../test/tools/types";
-import { TypedEvent } from "../typechain-types/common";
-import { SchainNodesEvent } from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
+import {deployContractManager} from "../test/tools/deploy/contractManager";
+import {deployValidatorService} from "../test/tools/deploy/delegation/validatorService";
+import {deploySkaleManager} from "../test/tools/deploy/skaleManager";
+import {deploySchainsInternalMock} from "../test/tools/deploy/test/schainsInternalMock";
+import {ContractManager, Schains, SkaleManager, ValidatorService, SchainsInternalMock} from "../typechain-types";
+import {privateKeys} from "../test/tools/private-keys";
+import {deploySchains} from "../test/tools/deploy/schains";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {Event, Wallet} from "ethers";
+import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
+import {SchainType} from "../test/tools/types";
+import {TypedEvent} from "../typechain-types/common";
+import {SchainNodesEvent} from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
 
 function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
     if (events) {

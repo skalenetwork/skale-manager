@@ -1,7 +1,7 @@
-import { promises as fs } from 'fs';
-import { Interface } from "ethers/lib/utils";
-import { ethers, upgrades, network, run } from "hardhat";
-import { ContractManager, SkaleManager, SkaleToken } from "../typechain-types";
+import {promises as fs} from 'fs';
+import {Interface} from "ethers/lib/utils";
+import {ethers, upgrades, network, run} from "hardhat";
+import {ContractManager, SkaleManager, SkaleToken} from "../typechain-types";
 import {
     getAbi,
     getVersion,
@@ -98,10 +98,10 @@ async function main() {
     contractArtifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
     await verifyProxy(contractManagerName, contractManager.address, []);
 
-    for (const contract of contracts.filter(contract => contract != "ContractManager")) {
+    for (const contract of contracts.filter(contractName => contractName != "ContractManager")) {
         const contractFactory = await getContractFactory(contract);
         console.log("Deploy", contract);
-        const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), { unsafeAllowLinkedLibraries: true });
+        const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), {unsafeAllowLinkedLibraries: true});
         await proxy.deployTransaction.wait();
         const contractName = getNameInContractManager(contract);
         console.log("Register", contract, "as", contractName, "=>", proxy.address);
@@ -136,6 +136,17 @@ async function main() {
         await skaleToken.mint(owner.address, money, "0x", "0x");
     }
 
+    console.log("Store addresses");
+
+    const addressesOutput: {[name: string]: string} = {};
+    for (const artifact of contractArtifacts) {
+        addressesOutput[artifact.contract] = artifact.address;
+    }
+    await fs.writeFile(`data/skale-manager-${version}-${network.name}-contracts.json`, JSON.stringify(addressesOutput, null, 4));
+
+
+    // TODO: remove storing of ABIs to a file
+
     console.log("Store ABIs");
 
     const outputObject: {[k: string]: unknown} = {};
@@ -146,6 +157,7 @@ async function main() {
     }
 
     await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(outputObject, null, 4));
+
 
     console.log("Done");
 }

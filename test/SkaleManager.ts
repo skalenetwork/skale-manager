@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolder,
+import {ConstantsHolder,
          ContractManager,
          DelegationController,
          DelegationPeriodManager,
@@ -15,31 +15,31 @@ import { ConstantsHolder,
          BountyV2,
          Wallets} from "../typechain-types";
 
-import { privateKeys } from "./tools/private-keys";
+import {privateKeys} from "./tools/private-keys";
 
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
-import { deployDistributor } from "./tools/deploy/delegation/distributor";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { skipTime, currentTime, nextMonth } from "./tools/time";
-import { deployBounty } from "./tools/deploy/bounty";
-import { BigNumber, ContractTransaction, Wallet } from "ethers";
-import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { deployWallets } from "./tools/deploy/wallets";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
+import {deployDelegationPeriodManager} from "./tools/deploy/delegation/delegationPeriodManager";
+import {deployDistributor} from "./tools/deploy/delegation/distributor";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {skipTime, currentTime, nextMonth} from "./tools/time";
+import {deployBounty} from "./tools/deploy/bounty";
+import {BigNumber, ContractTransaction, Wallet} from "ethers";
+import {deployTimeHelpers} from "./tools/deploy/delegation/timeHelpers";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {deployWallets} from "./tools/deploy/wallets";
 import chaiAlmost from "chai-almost";
-import { fastBeforeEach } from "./tools/mocha";
-import { getPublicKey } from "./tools/signatures";
-import { schainParametersType, SchainType } from "./tools/types";
+import {fastBeforeEach} from "./tools/mocha";
+import {getPublicKey} from "./tools/signatures";
+import {schainParametersType, SchainType} from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -573,7 +573,6 @@ describe("SkaleManager", () => {
                 });
 
                 describe("when another schain is created", () => {
-
                     fastBeforeEach(async () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
@@ -631,7 +630,6 @@ describe("SkaleManager", () => {
             });
 
             describe("when developer has SKALE tokens", () => {
-
                 fastBeforeEach(async () => {
                     await skaleToken.transfer(developer.address, "0x3635C9ADC5DEA000000");
                 });
@@ -678,7 +676,6 @@ describe("SkaleManager", () => {
                 });
 
                 describe("when schains are created", () => {
-
                     fastBeforeEach(async () => {
                         await skaleToken.connect(developer).send(
                             skaleManager.address,
@@ -728,9 +725,7 @@ describe("SkaleManager", () => {
             });
         });
         describe("when 16 nodes are in the system", () => {
-
             it("should create 16 nodes & create & delete all types of schain", async () => {
-
                 await skaleToken.transfer(validator.address, "0x32D26D12E980B600000");
 
                 for (let i = 0; i < 16; ++i) {
