@@ -98,7 +98,7 @@ async function main() {
     contractArtifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
     await verifyProxy(contractManagerName, contractManager.address, []);
 
-    for (const contract of contracts.filter(contract => contract != "ContractManager")) {
+    for (const contract of contracts.filter(contractName => contractName != "ContractManager")) {
         const contractFactory = await getContractFactory(contract);
         console.log("Deploy", contract);
         const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), {unsafeAllowLinkedLibraries: true});

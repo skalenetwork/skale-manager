@@ -15,7 +15,7 @@ module.exports = {
     "plugins": ["@typescript-eslint"],
     "root": true,
     "rules": {
-        // "@typescript-eslint/no-shadow": "error",
+        "@typescript-eslint/no-shadow": "error",
         "lines-around-comment": [
             "error",
             {"allowBlockStart": true}
@@ -32,8 +32,6 @@ module.exports = {
         "padded-blocks": [
             "error",
             "never"
-        ],
-
-        "@typescript-eslint/no-shadow": "warn"
+        ]
     }
 };
