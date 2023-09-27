@@ -1,6 +1,6 @@
-import { createMultiSendTransaction } from "@skalenetwork/upgrade-tools";
-import { UnsignedTransaction } from "ethers";
-import { promises as fs } from "fs";
+import {createMultiSendTransaction} from "@skalenetwork/upgrade-tools";
+import {UnsignedTransaction} from "ethers";
+import {promises as fs} from "fs";
 
 async function main() {
     if (!process.env.TRANSACTIONS || !process.env.SAFE) {

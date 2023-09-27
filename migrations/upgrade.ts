@@ -1,9 +1,9 @@
 import chalk from "chalk";
-import { contracts } from "./deploy";
-import { ethers } from "hardhat";
-import { Upgrader, AutoSubmitter } from "@skalenetwork/upgrade-tools";
-import { skaleContracts, Instance } from "@skalenetwork/skale-contracts-ethers-v5";
-import { SkaleManager } from "../typechain-types";
+import {contracts} from "./deploy";
+import {ethers} from "hardhat";
+import {Upgrader, AutoSubmitter} from "@skalenetwork/upgrade-tools";
+import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v5";
+import {SkaleManager} from "../typechain-types";
 
 async function getSkaleManagerInstance() {
     if (process.env.ABI) {
@@ -21,7 +21,6 @@ async function getSkaleManagerInstance() {
 }
 
 class SkaleManagerUpgrader extends Upgrader {
-
     constructor(
         targetVersion: string,
         instance: Instance,

@@ -1,23 +1,23 @@
-import { ethers } from "hardhat";
-import { fastBeforeEach } from "./tools/mocha";
-import { ConstantsHolder, NodeRotation, Nodes, Schains, SchainsInternal, SkaleDKGTester, SkaleManager, ValidatorService, Wallets } from "../typechain-types";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { Wallet } from "ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { deploySchains } from "./tools/deploy/schains";
-import { SchainType, schainParametersType } from "./tools/types";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { stringKeccak256 } from "./tools/hashes";
+import {ethers} from "hardhat";
+import {fastBeforeEach} from "./tools/mocha";
+import {ConstantsHolder, NodeRotation, Nodes, Schains, SchainsInternal, SkaleDKGTester, SkaleManager, ValidatorService, Wallets} from "../typechain-types";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {Wallet} from "ethers";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {deploySchains} from "./tools/deploy/schains";
+import {SchainType, schainParametersType} from "./tools/types";
+import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
+import {stringKeccak256} from "./tools/hashes";
 import _ from "underscore";
-import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { skipTime } from "./tools/time";
-import { deployWallets } from "./tools/deploy/wallets";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
+import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {skipTime} from "./tools/time";
+import {deployWallets} from "./tools/deploy/wallets";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
@@ -104,7 +104,6 @@ describe("NodeRotation", () => {
             let chainNodes: RegisteredNode[];
 
             fastBeforeEach(async () => {
-
                 const schainType = SchainType.LARGE;
                 const deposit = await schains.getSchainPrice(schainType, 5);
 
@@ -214,7 +213,6 @@ describe("NodeRotation", () => {
 
                     it("a node that fails DKG after node exit " +
                        "should have finish_ts 1 sec bigger than a leaving node", async () => {
-
                         const exitingNodeFinishTs = (await nodeRotation.getLeavingHistory(exitingNode.id))[0].finishedRotation.toNumber();
                         const failingNodeFinishTs = (await nodeRotation.getLeavingHistory(failingNode.id))[0].finishedRotation.toNumber();
 

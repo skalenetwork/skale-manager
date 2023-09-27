@@ -1,5 +1,5 @@
-import { ContractManager, SlashingTable } from "../../../typechain-types";
-import { deployFunctionFactory } from "./factory";
+import {ContractManager, SlashingTable} from "../../../typechain-types";
+import {deployFunctionFactory} from "./factory";
 
 const name = "SlashingTable";
 

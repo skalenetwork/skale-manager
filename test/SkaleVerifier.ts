@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolder,
+import {ConstantsHolder,
          ContractManager,
          KeyStorage,
          Nodes,
@@ -9,28 +9,28 @@ import { ConstantsHolder,
          SkaleDKGTester,
          SkaleManager,
          SkaleVerifier,
-         ValidatorService } from "../typechain-types";
-import { privateKeys } from "./tools/private-keys";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployKeyStorage } from "./tools/deploy/keyStorage";
-import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert } from "chai";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { Wallet } from "ethers";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { fastBeforeEach } from "./tools/mocha";
-import { skipTime } from "./tools/time";
-import { schainParametersType, SchainType } from "./tools/types";
+         ValidatorService} from "../typechain-types";
+import {privateKeys} from "./tools/private-keys";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleVerifier} from "./tools/deploy/skaleVerifier";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deployKeyStorage} from "./tools/deploy/keyStorage";
+import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {assert} from "chai";
+import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
+import {Wallet} from "ethers";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {fastBeforeEach} from "./tools/mocha";
+import {skipTime} from "./tools/time";
+import {schainParametersType, SchainType} from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -84,7 +84,6 @@ describe("SkaleVerifier", () => {
     });
 
     describe("when skaleVerifier contract is activated", () => {
-
         it("should verify valid signatures with valid data", async () => {
             const isVerified = await skaleVerifier.verify(
                 {

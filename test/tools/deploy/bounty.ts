@@ -1,9 +1,9 @@
-import { deployNodes } from "./nodes";
-import { ContractManager, BountyV2 } from "../../../typechain-types";
-import { defaultDeploy, deployFunctionFactory } from "./factory";
-import { deployConstantsHolder } from "./constantsHolder";
-import { deployTimeHelpers } from "./delegation/timeHelpers";
-import { deployWallets } from "./wallets";
+import {deployNodes} from "./nodes";
+import {ContractManager, BountyV2} from "../../../typechain-types";
+import {defaultDeploy, deployFunctionFactory} from "./factory";
+import {deployConstantsHolder} from "./constantsHolder";
+import {deployTimeHelpers} from "./delegation/timeHelpers";
+import {deployWallets} from "./wallets";
 
 export const deployBounty = deployFunctionFactory(
     "BountyV2",

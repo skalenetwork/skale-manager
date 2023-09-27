@@ -1,21 +1,21 @@
 import chaiAsPromised from "chai-as-promised";
-import { ContractManager,
+import {ContractManager,
          Nodes,
          ValidatorService} from "../typechain-types";
-import { skipTime } from "./tools/time";
-import { privateKeys } from "./tools/private-keys";
+import {skipTime} from "./tools/time";
+import {privateKeys} from "./tools/private-keys";
 import chai = require("chai");
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { BigNumber, Wallet } from "ethers";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert } from "chai";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { fastBeforeEach } from "./tools/mocha";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
+import {BigNumber, Wallet} from "ethers";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {assert} from "chai";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -382,7 +382,6 @@ describe("NodesData", () => {
                 (await nodes.countNodesWithFreeSpace(1)).should.be.equal(2);
             });
         });
-
     });
 
     describe("when two nodes are added", () => {
@@ -457,9 +456,6 @@ describe("NodesData", () => {
                 const spaceAfter = nodesFillingAfter["0"];
                 parseInt(spaceBefore.toString(), 10).should.be.equal(parseInt(spaceAfter.toString(), 10));
             });
-
         });
-
     });
-
 });

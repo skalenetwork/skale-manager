@@ -1,6 +1,6 @@
-import { deployContractManager } from "../test/tools/deploy/contractManager";
-import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
-import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
+import {deployContractManager} from "../test/tools/deploy/contractManager";
+import {deployValidatorService} from "../test/tools/deploy/delegation/validatorService";
+import {deploySkaleManager} from "../test/tools/deploy/skaleManager";
 import {
     ContractManager,
     Nodes,
@@ -10,23 +10,23 @@ import {
     SkaleManager,
     ValidatorService
 } from "../typechain-types";
-import { privateKeys } from "../test/tools/private-keys";
-import { deploySchains } from "../test/tools/deploy/schains";
-import { deploySchainsInternalMock } from "../test/tools/deploy/test/schainsInternalMock";
-import { deploySkaleDKGTester } from "../test/tools/deploy/test/skaleDKGTester";
-import { skipTime } from "../test/tools/time";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { ethers } from "hardhat";
-import { Event, Wallet } from "ethers";
+import {privateKeys} from "../test/tools/private-keys";
+import {deploySchains} from "../test/tools/deploy/schains";
+import {deploySchainsInternalMock} from "../test/tools/deploy/test/schainsInternalMock";
+import {deploySkaleDKGTester} from "../test/tools/deploy/test/skaleDKGTester";
+import {skipTime} from "../test/tools/time";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {ethers} from "hardhat";
+import {Event, Wallet} from "ethers";
 import fs from 'fs';
-import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
-import { stringKeccak256 } from "../test/tools/hashes";
-import { fastBeforeEach } from "../test/tools/mocha";
-import { SchainType } from "../test/tools/types";
-import { applySnapshot, makeSnapshot } from "../test/tools/snapshot";
-import { deployNodes } from "../test/tools/deploy/nodes";
-import { TypedEvent } from "../typechain-types/common";
-import { SchainNodesEvent } from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
+import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
+import {stringKeccak256} from "../test/tools/hashes";
+import {fastBeforeEach} from "../test/tools/mocha";
+import {SchainType} from "../test/tools/types";
+import {applySnapshot, makeSnapshot} from "../test/tools/snapshot";
+import {deployNodes} from "../test/tools/deploy/nodes";
+import {TypedEvent} from "../typechain-types/common";
+import {SchainNodesEvent} from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
 
 function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
     if (events) {
@@ -76,7 +76,6 @@ describe("nodeRotation", () => {
     })
 
     describe("Tests without memory", () => {
-
         fastBeforeEach(() => Promise.resolve(undefined));
 
         it("64 node rotations on 17 nodes", async () => {

@@ -1,24 +1,24 @@
-import { ContractManager,
+import {ContractManager,
     DelegationController,
     SkaleToken,
     ValidatorService} from "../../typechain-types";
 
-import { currentTime, nextMonth, skipTime } from "../tools/time";
+import {currentTime, nextMonth, skipTime} from "../tools/time";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "../tools/deploy/contractManager";
-import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
-import { State } from "../tools/types";
-import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { expect, assert } from "chai";
-import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+import {deployContractManager} from "../tools/deploy/contractManager";
+import {deployDelegationController} from "../tools/deploy/delegation/delegationController";
+import {deployValidatorService} from "../tools/deploy/delegation/validatorService";
+import {deploySkaleToken} from "../tools/deploy/skaleToken";
+import {deployTimeHelpersWithDebug} from "../tools/deploy/test/timeHelpersWithDebug";
+import {State} from "../tools/types";
+import {deployTimeHelpers} from "../tools/deploy/delegation/timeHelpers";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
+import {expect, assert} from "chai";
+import {makeSnapshot, applySnapshot} from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -134,7 +134,6 @@ describe("DelegationController", () => {
             await delegationController.connect(holder1).delegate(validatorId, amount + 1, delegationPeriod, info);
             await delegationController.connect(holder1).delegate(validatorId, amount, delegationPeriod, info)
                 .should.be.eventually.rejectedWith("Token holder does not have enough tokens to delegate");
-
         });
 
         it("should reject canceling if delegation doesn't exist", async () => {

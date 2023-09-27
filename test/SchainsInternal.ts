@@ -1,22 +1,22 @@
-import { ContractManager,
+import {ContractManager,
          Nodes,
          SchainsInternalMock,
-         ValidatorService } from "../typechain-types";
-import { privateKeys } from "./tools/private-keys";
-import { Wallet } from "ethers";
+         ValidatorService} from "../typechain-types";
+import {privateKeys} from "./tools/private-keys";
+import {Wallet} from "ethers";
 import chai = require("chai");
 import chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { skipTime } from "./tools/time";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { expect } from "chai";
-import { fastBeforeEach } from "./tools/mocha";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {skipTime} from "./tools/time";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {expect} from "chai";
+import {fastBeforeEach} from "./tools/mocha";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -302,7 +302,6 @@ describe("SchainsInternal", () => {
             it("should return number of schains per node", async () => {
                 (await schainsInternal.checkSchainOnNode(nodeIndex, schainNameHash)).should.be.equal(true);
             });
-
         });
 
         it("should return list of schains", async () => {
@@ -396,6 +395,5 @@ describe("SchainsInternal", () => {
             resSchainType.partOfNode.should.be.equal(32);
             resSchainType.numberOfNodes.should.be.equal(16);
         });
-
     });
 });

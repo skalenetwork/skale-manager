@@ -1,32 +1,32 @@
-import { Wallet } from "ethers";
+import {Wallet} from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
-import { ContractManager,
+import {ContractManager,
          Nodes,
          Pricing,
          SchainsInternal,
          ValidatorService,
          ConstantsHolder,
-         NodeRotation } from "../typechain-types";
+         NodeRotation} from "../typechain-types";
 
-import { privateKeys } from "./tools/private-keys";
+import {privateKeys} from "./tools/private-keys";
 
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deployPricing } from "./tools/deploy/pricing";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { skipTime, currentTime } from "./tools/time";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deploySchains } from "./tools/deploy/schains";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
-import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { fastBeforeEach } from "./tools/mocha";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deployPricing} from "./tools/deploy/pricing";
+import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
+import {skipTime, currentTime} from "./tools/time";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deploySchains} from "./tools/deploy/schains";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -140,7 +140,6 @@ describe("Pricing", () => {
                     name: "elvis4",
                     domainName: "some.domain.name"
                 });
-
         });
 
         it("should increase number of schains", async () => {
@@ -159,11 +158,9 @@ describe("Pricing", () => {
             const jacobSchainHash = stringKeccak256("JacobSchain");
 
             fastBeforeEach(async () => {
-
                 await schainsInternal.createGroupForSchain(bobSchainHash, 1, 32);
                 await schainsInternal.createGroupForSchain(davidSchainHash, 1, 32);
                 await schainsInternal.createGroupForSchain(jacobSchainHash, 2, 128);
-
             });
 
             async function getLoadCoefficient() {

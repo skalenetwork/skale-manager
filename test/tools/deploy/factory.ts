@@ -1,6 +1,6 @@
-import { ethers, upgrades } from "hardhat";
-import { ContractManager } from "../../../typechain-types";
-import { deployLibraries } from "@skalenetwork/upgrade-tools";
+import {ethers, upgrades} from "hardhat";
+import {ContractManager} from "../../../typechain-types";
+import {deployLibraries} from "@skalenetwork/upgrade-tools";
 
 async function defaultDeploy(contractName: string,
                              contractManager: ContractManager) {
@@ -30,7 +30,6 @@ function deployFunctionFactory(
           return await defaultDeploy(contractName, contractManager);
         }
 ) {
-
     return async (contractManager: ContractManager) => {
             const contractFactory = await ethers.getContractFactory(contractName);
             try {
@@ -72,7 +71,7 @@ function deployWithLibraryFunctionFactory(
         try {
             return contractFactory.attach(await contractManager.getContract(contractName));
         } catch (e) {
-            const instance = await upgrades.deployProxy(contractFactory, [contractManager.address], { unsafeAllowLinkedLibraries: true });
+            const instance = await upgrades.deployProxy(contractFactory, [contractManager.address], {unsafeAllowLinkedLibraries: true});
             await contractManager.setContractsAddress(contractName, instance.address);
             await deployDependencies(contractManager);
             return instance;
@@ -92,7 +91,7 @@ function deployWithLibraryWithConstructor(
         try {
             return contractFactory.attach(await contractManager.getContract(contractName));
         } catch (e) {
-            const instance = await upgrades.deployProxy(contractFactory, { unsafeAllowLinkedLibraries: true });
+            const instance = await upgrades.deployProxy(contractFactory, {unsafeAllowLinkedLibraries: true});
             await contractManager.setContractsAddress(contractName, instance.address);
             await deployDependencies(contractManager);
             return instance;

@@ -1,4 +1,4 @@
-import { ConstantsHolder,
+import {ConstantsHolder,
     ContractManager,
     DelegationController,
     DelegationPeriodManager,
@@ -11,31 +11,31 @@ import { ConstantsHolder,
     Nodes,
     SlashingTable} from "../../typechain-types";
 
-import { currentTime, nextMonth, skipTimeToDate } from "../tools/time";
+import {currentTime, nextMonth, skipTimeToDate} from "../tools/time";
 
-import { BigNumber, Wallet } from "ethers";
+import {BigNumber, Wallet} from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
-import { deployContractManager } from "../tools/deploy/contractManager";
-import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployDelegationPeriodManager } from "../tools/deploy/delegation/delegationPeriodManager";
-import { deployDistributor } from "../tools/deploy/delegation/distributor";
-import { deployPunisher } from "../tools/deploy/delegation/punisher";
-import { deployTokenState } from "../tools/deploy/delegation/tokenState";
-import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { State } from "../tools/types";
-import { deployNodes } from "../tools/deploy/nodes";
-import { deploySlashingTable } from "../tools/deploy/slashingTable";
-import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
-import { deploySkaleManager } from "../tools/deploy/skaleManager";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { assert, expect } from "chai";
-import { getValidatorIdSignature } from "../tools/signatures";
-import { fastBeforeEach } from "../tools/mocha";
+import {deployConstantsHolder} from "../tools/deploy/constantsHolder";
+import {deployContractManager} from "../tools/deploy/contractManager";
+import {deployDelegationController} from "../tools/deploy/delegation/delegationController";
+import {deployDelegationPeriodManager} from "../tools/deploy/delegation/delegationPeriodManager";
+import {deployDistributor} from "../tools/deploy/delegation/distributor";
+import {deployPunisher} from "../tools/deploy/delegation/punisher";
+import {deployTokenState} from "../tools/deploy/delegation/tokenState";
+import {deployValidatorService} from "../tools/deploy/delegation/validatorService";
+import {deploySkaleToken} from "../tools/deploy/skaleToken";
+import {State} from "../tools/types";
+import {deployNodes} from "../tools/deploy/nodes";
+import {deploySlashingTable} from "../tools/deploy/slashingTable";
+import {deployTimeHelpersWithDebug} from "../tools/deploy/test/timeHelpersWithDebug";
+import {deploySkaleManager} from "../tools/deploy/skaleManager";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
+import {assert, expect} from "chai";
+import {getValidatorIdSignature} from "../tools/signatures";
+import {fastBeforeEach} from "../tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -272,7 +272,6 @@ describe("Delegation", () => {
                     });
 
                     describe("when delegation request is sent", () => {
-
                         fastBeforeEach(async () => {
                             await delegationController.connect(holder1).delegate(
                                 validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even");
@@ -626,7 +625,6 @@ describe("Delegation", () => {
             });
 
             describe("Slashing", () => {
-
                 it("should slash validator and lock delegators fund in proportion of delegation share", async () => {
                     // do 5 separate slashes to check aggregation
                     const slashesNumber = 5;

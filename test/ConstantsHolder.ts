@@ -1,12 +1,12 @@
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolder,
-         ContractManager } from "../typechain-types";
+import {ConstantsHolder,
+         ContractManager} from "../typechain-types";
 
 import chai = require("chai");
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -193,5 +193,4 @@ describe("ConstantsHolder", () => {
     await constantsHolder.setMinNodeBalance(minNodeBalance);
     (await constantsHolder.minNodeBalance()).should.be.equal(minNodeBalance);
   });
-
 });

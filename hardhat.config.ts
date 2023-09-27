@@ -1,16 +1,16 @@
-import { task, HardhatUserConfig } from "hardhat/config";
+import {task, HardhatUserConfig} from "hardhat/config";
 import "@nomicfoundation/hardhat-verify";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import '@typechain/hardhat'
 import "solidity-coverage";
 import * as dotenv from "dotenv"
-import { utils, Wallet } from "ethers";
-import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
+import {utils, Wallet} from "ethers";
+import {HardhatNetworkAccountUserConfig} from "hardhat/types/config";
 
 dotenv.config();
 
-task("erc1820", "Deploy ERC1820 contract", async (_, { ethers }) => {
+task("erc1820", "Deploy ERC1820 contract", async (_, {ethers}) => {
   if (await ethers.provider.getCode("0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24") === "0x") {
     console.log("Deploy ERC1820 contract");
     const [ owner,] = await ethers.getSigners();
@@ -22,7 +22,7 @@ task("erc1820", "Deploy ERC1820 contract", async (_, { ethers }) => {
 });
 
 
-task("accounts", "Prints the list of accounts", async (_, { ethers }) => {
+task("accounts", "Prints the list of accounts", async (_, {ethers}) => {
   const accounts = await ethers.getSigners();
 
    for (const account of accounts) {

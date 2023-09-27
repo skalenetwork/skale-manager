@@ -1,10 +1,10 @@
-import { ethers } from "hardhat";
-import { ContractManager, SkaleToken } from "../../../typechain-types";
-import { deployDelegationController } from "./delegation/delegationController";
-import { deployPunisher } from "./delegation/punisher";
-import { deployTokenState } from "./delegation/tokenState";
-import { deployFunctionFactory } from "./factory";
-import { deploySkaleManager } from "./skaleManager";
+import {ethers} from "hardhat";
+import {ContractManager, SkaleToken} from "../../../typechain-types";
+import {deployDelegationController} from "./delegation/delegationController";
+import {deployPunisher} from "./delegation/punisher";
+import {deployTokenState} from "./delegation/tokenState";
+import {deployFunctionFactory} from "./factory";
+import {deploySkaleManager} from "./skaleManager";
 
 const name = "SkaleToken";
 

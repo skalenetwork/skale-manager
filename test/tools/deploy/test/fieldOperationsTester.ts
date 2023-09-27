@@ -1,5 +1,5 @@
-import { ContractManager, FieldOperationsTester } from "../../../../typechain-types";
-import { deployWithConstructor, deployWithConstructorFunctionFactory } from "../factory";
+import {ContractManager, FieldOperationsTester} from "../../../../typechain-types";
+import {deployWithConstructor, deployWithConstructorFunctionFactory} from "../factory";
 
 export const deployFieldOperationsTester = deployWithConstructorFunctionFactory(
     "FieldOperationsTester",

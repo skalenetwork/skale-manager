@@ -1,11 +1,11 @@
-import { deployPunisher } from "./delegation/punisher";
-import { deployKeyStorage } from "./keyStorage";
-import { deployWithLibraryFunctionFactory } from "./factory";
-import { deployNodes } from "./nodes";
-import { deploySchainsInternal } from "./schainsInternal";
-import { deploySlashingTable } from "./slashingTable";
-import { deployNodeRotation } from "./nodeRotation";
-import { ContractManager, SkaleDKG } from "../../../typechain-types";
+import {deployPunisher} from "./delegation/punisher";
+import {deployKeyStorage} from "./keyStorage";
+import {deployWithLibraryFunctionFactory} from "./factory";
+import {deployNodes} from "./nodes";
+import {deploySchainsInternal} from "./schainsInternal";
+import {deploySlashingTable} from "./slashingTable";
+import {deployNodeRotation} from "./nodeRotation";
+import {ContractManager, SkaleDKG} from "../../../typechain-types";
 
 const libraries = [
     "SkaleDkgAlright",

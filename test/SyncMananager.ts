@@ -1,12 +1,12 @@
-import { ContractManager, SyncManager } from "../typechain-types";
-import { deployContractManager } from "./tools/deploy/contractManager";
+import {ContractManager, SyncManager} from "../typechain-types";
+import {deployContractManager} from "./tools/deploy/contractManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
-import { deploySyncManager } from "./tools/deploy/syncManager";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { expect } from "chai";
-import { fastBeforeEach } from "./tools/mocha";
+import {deploySyncManager} from "./tools/deploy/syncManager";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {expect} from "chai";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -25,7 +25,6 @@ describe("SyncManager", () => {
         syncManager = await deploySyncManager(contractManager);
 
         await syncManager.grantRole(await syncManager.SYNC_MANAGER_ROLE(), owner.address);
-
     });
 
     it("should revert addIPRange or removeIPRange if sender does not have required role", async () => {
@@ -36,7 +35,6 @@ describe("SyncManager", () => {
         await syncManager.grantRole(await syncManager.SYNC_MANAGER_ROLE(), user.address);
         await syncManager.connect(user).addIPRange("range", "0x00000001", "0x00000001");
         await syncManager.connect(user).removeIPRange("range");
-
     });
 
     it("should revert if IP range name is already taken", async () => {
@@ -63,7 +61,7 @@ describe("SyncManager", () => {
             .should.emit(syncManager, "IPRangeAdded")
             .withArgs(rangeName, newStartIP, newEndIP);
         {
-            const { startIP, endIP } = await syncManager.getIPRangeByName(rangeName);
+            const {startIP, endIP} = await syncManager.getIPRangeByName(rangeName);
             expect(startIP).to.be.equal(newStartIP);
             expect(endIP).to.be.equal(newEndIP);
         }
@@ -71,7 +69,7 @@ describe("SyncManager", () => {
             .should.emit(syncManager, "IPRangeRemoved")
             .withArgs(rangeName);
         {
-            const { startIP, endIP } = await syncManager.getIPRangeByName(rangeName);
+            const {startIP, endIP} = await syncManager.getIPRangeByName(rangeName);
             expect(startIP).to.be.equal("0x00000000");
             expect(endIP).to.be.equal("0x00000000");
         }
@@ -95,7 +93,7 @@ describe("SyncManager", () => {
         await syncManager.addIPRange(ipRanges[1].name, ipRanges[1].startIP, ipRanges[1].endIP);
         const ipRangesNumber = (await syncManager.getIPRangesNumber()).toNumber();
         for (let i = 0; i < ipRangesNumber; i++) {
-            const { startIP, endIP } = await syncManager.getIPRangeByIndex(i);
+            const {startIP, endIP} = await syncManager.getIPRangeByIndex(i);
             expect(startIP).to.be.equal(ipRanges[i].startIP);
             expect(endIP).to.be.equal(ipRanges[i].endIP);
         }

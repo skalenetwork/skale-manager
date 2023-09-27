@@ -1,8 +1,8 @@
-import { ContractManager, KeyStorage } from "../../../typechain-types";
-import { deployDecryption } from "./decryption";
-import { deployECDH } from "./ecdh";
-import { deployFunctionFactory } from "./factory";
-import { deploySchainsInternal } from "./schainsInternal";
+import {ContractManager, KeyStorage} from "../../../typechain-types";
+import {deployDecryption} from "./decryption";
+import {deployECDH} from "./ecdh";
+import {deployFunctionFactory} from "./factory";
+import {deploySchainsInternal} from "./schainsInternal";
 
 export const deployKeyStorage = deployFunctionFactory(
     "KeyStorage",

@@ -7,24 +7,24 @@ import {
     SkaleToken,
     ValidatorService
 } from "../typechain-types";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployBounty } from "./tools/deploy/bounty";
-import { currentTime, nextMonth, skipTime, skipTimeToDate } from "./tools/time";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployBounty} from "./tools/deploy/bounty";
+import {currentTime, nextMonth, skipTime, skipTimeToDate} from "./tools/time";
 import chaiAsPromised from "chai-as-promised";
 import chaiAlmost from "chai-almost";
 import * as chai from "chai";
-import { deployNodesMock } from "./tools/deploy/test/nodesMock";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
-import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { BigNumber } from "ethers";
-import { deployPunisher } from "./tools/deploy/delegation/punisher";
-import { fastBeforeEach } from "./tools/mocha";
+import {deployNodesMock} from "./tools/deploy/test/nodesMock";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployDelegationPeriodManager} from "./tools/deploy/delegation/delegationPeriodManager";
+import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {BigNumber} from "ethers";
+import {deployPunisher} from "./tools/deploy/delegation/punisher";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);

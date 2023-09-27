@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolder,
+import {ConstantsHolder,
          ContractManager,
          Nodes,
          SchainsInternal,
@@ -11,27 +11,27 @@ import { ConstantsHolder,
          ValidatorService,
          NodeRotation,
          Wallets} from "../typechain-types";
-import { BigNumber, Wallet } from "ethers";
-import { skipTime, currentTime } from "./tools/time";
-import { privateKeys } from "./tools/private-keys";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
-import { deployWallets } from "./tools/deploy/wallets";
-import { fastBeforeEach } from "./tools/mocha";
-import { stringKeccak256 } from "./tools/hashes";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { schainParametersType, SchainType } from "./tools/types";
+import {BigNumber, Wallet} from "ethers";
+import {skipTime, currentTime} from "./tools/time";
+import {privateKeys} from "./tools/private-keys";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {assert, expect} from "chai";
+import {deployWallets} from "./tools/deploy/wallets";
+import {fastBeforeEach} from "./tools/mocha";
+import {stringKeccak256} from "./tools/hashes";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {schainParametersType, SchainType} from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -566,7 +566,6 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 5).should.be.eventually.rejectedWith("No previous node");
-
             });
 
             it("should get previous nodes after DKG failure",  async () => {
@@ -748,7 +747,6 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 5).should.be.eventually.rejectedWith("No previous node");
-
             });
         });
 
@@ -1508,11 +1506,9 @@ describe("Schains", () => {
                         "D2",
                     ).should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
-
             });
 
             describe("when test schain is created", () => {
-
                 fastBeforeEach(async () => {
                     const deposit = await schains.getSchainPrice(4, 5);
                     await schains.addSchain(
@@ -1552,7 +1548,6 @@ describe("Schains", () => {
                 });
 
                 it("should be able to delete schain", async () => {
-
                     await schains.deleteSchain(
                         holder.address,
                         "D2",
@@ -1561,15 +1556,12 @@ describe("Schains", () => {
                 });
 
                 it("should fail on deleting schain if owner is wrong", async () => {
-
                     await schains.deleteSchain(
                         nodeAddress1.address,
                         "D2",
                     ).should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
-
             });
-
         });
     });
 
@@ -2242,7 +2234,6 @@ describe("Schains", () => {
     });
 
     describe("when 6 nodes, 4 schains and 2 rotations(Kavoon test)", () => {
-
         fastBeforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 6;
@@ -2332,7 +2323,6 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d4"),
             );
-
         });
 
         it("should rotate 1 node with 3 schains", async () => {
@@ -2400,7 +2390,6 @@ describe("Schains", () => {
     });
 
     describe("when 8 nodes, 4 schains and 2 rotations(Kavoon test)", () => {
-
         fastBeforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 6;
@@ -2506,7 +2495,6 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d4"),
             );
-
         });
 
         it("should rotate 1 node with 3 schains", async () => {
@@ -2745,7 +2733,6 @@ describe("Schains", () => {
             }
 
             if (!(await nodes.isNodeLeft(rotIndex))) {
-
                 while (!(await nodes.isNodeLeft(rotIndex))) {
                     await skaleManager.connect(senderAddress).nodeExit(rotIndex);
                 }
@@ -2771,12 +2758,10 @@ describe("Schains", () => {
                     (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
                 }
             }
-
         });
     });
 
     describe("when 17 nodes, 1 schain and remove schain type", () => {
-
         const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
             [
                 {

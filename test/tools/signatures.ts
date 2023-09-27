@@ -1,6 +1,6 @@
-import { BigNumberish, BytesLike, Signer, Wallet } from "ethers";
-import { ethers } from "hardhat";
-import { ec } from "elliptic";
+import {BigNumberish, BytesLike, Signer, Wallet} from "ethers";
+import {ethers} from "hardhat";
+import {ec} from "elliptic";
 
 const secp256k1EC = new ec("secp256k1");
 

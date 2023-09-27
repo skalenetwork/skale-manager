@@ -1,4 +1,4 @@
-import { ContractManager,
+import {ContractManager,
     DelegationController,
     SkaleToken,
     ValidatorService} from "../../typechain-types";
@@ -6,17 +6,17 @@ import { ContractManager,
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "../tools/deploy/contractManager";
-import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { deploySkaleManager } from "../tools/deploy/skaleManager";
-import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert } from "chai";
-import { makeSnapshot, applySnapshot } from "../tools/snapshot";
-import { getValidatorIdSignature } from "../tools/signatures";
+import {deployContractManager} from "../tools/deploy/contractManager";
+import {deployDelegationController} from "../tools/deploy/delegation/delegationController";
+import {deployValidatorService} from "../tools/deploy/delegation/validatorService";
+import {deploySkaleToken} from "../tools/deploy/skaleToken";
+import {deploySkaleManager} from "../tools/deploy/skaleManager";
+import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {assert} from "chai";
+import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+import {getValidatorIdSignature} from "../tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -111,7 +111,6 @@ describe("ValidatorService", () => {
                 500,
                 100)
                 .should.be.eventually.rejectedWith("Validator with such address already exists");
-
         });
 
         it("should reset name, description, minimum delegation amount", async () => {

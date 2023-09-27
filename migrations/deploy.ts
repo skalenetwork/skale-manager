@@ -1,7 +1,7 @@
-import { promises as fs } from 'fs';
-import { Interface } from "ethers/lib/utils";
-import { ethers, upgrades, network, run } from "hardhat";
-import { ContractManager, SkaleManager, SkaleToken } from "../typechain-types";
+import {promises as fs} from 'fs';
+import {Interface} from "ethers/lib/utils";
+import {ethers, upgrades, network, run} from "hardhat";
+import {ContractManager, SkaleManager, SkaleToken} from "../typechain-types";
 import {
     getAbi,
     getVersion,
@@ -101,7 +101,7 @@ async function main() {
     for (const contract of contracts.filter(contract => contract != "ContractManager")) {
         const contractFactory = await getContractFactory(contract);
         console.log("Deploy", contract);
-        const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), { unsafeAllowLinkedLibraries: true });
+        const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), {unsafeAllowLinkedLibraries: true});
         await proxy.deployTransaction.wait();
         const contractName = getNameInContractManager(contract);
         console.log("Register", contract, "as", contractName, "=>", proxy.address);

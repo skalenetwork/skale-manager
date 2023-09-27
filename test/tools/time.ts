@@ -1,7 +1,7 @@
-import { ethers } from "hardhat";
-import { ContractManager } from "../../typechain-types";
-import { deployTimeHelpers } from "./deploy/delegation/timeHelpers";
-import { BigNumberish } from "ethers";
+import {ethers} from "hardhat";
+import {ContractManager} from "../../typechain-types";
+import {deployTimeHelpers} from "./deploy/delegation/timeHelpers";
+import {BigNumberish} from "ethers";
 
 
 export async function skipTime(seconds: BigNumberish) {

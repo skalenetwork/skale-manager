@@ -1,9 +1,9 @@
-import { ethers } from "hardhat";
-import { ContractManager, SchainsInternal } from "../../../typechain-types";
-import { deployConstantsHolder } from "./constantsHolder";
-import { defaultDeploy, deployFunctionFactory } from "./factory";
-import { deployNodes } from "./nodes";
-import { deploySkaleDKG } from "./skaleDKG";
+import {ethers} from "hardhat";
+import {ContractManager, SchainsInternal} from "../../../typechain-types";
+import {deployConstantsHolder} from "./constantsHolder";
+import {defaultDeploy, deployFunctionFactory} from "./factory";
+import {deployNodes} from "./nodes";
+import {deploySkaleDKG} from "./skaleDKG";
 
 export const deploySchainsInternal = deployFunctionFactory(
     "SchainsInternal",

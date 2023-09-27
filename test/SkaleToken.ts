@@ -1,19 +1,19 @@
-import { BigNumber } from "ethers";
-import { ContractManager,
+import {BigNumber} from "ethers";
+import {ContractManager,
          SkaleToken,
          SkaleTokenInternalTester} from "../typechain-types";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deployReentrancyTester } from "./tools/deploy/test/reentrancyTester";
-import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { expect } from "chai";
-import { fastBeforeEach } from "./tools/mocha";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {deployReentrancyTester} from "./tools/deploy/test/reentrancyTester";
+import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {expect} from "chai";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
