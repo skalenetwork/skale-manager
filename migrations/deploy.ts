@@ -96,7 +96,6 @@ async function main() {
     console.log("Register", contractManagerName);
     await (await contractManager.setContractsAddress(contractManagerName, contractManager.address)).wait();
     contractArtifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
-    await verifyProxy(contractManagerName, contractManager.address, []);
 
     for (const contract of contracts.filter(contractName => contractName != "ContractManager")) {
         const contractFactory = await getContractFactory(contract);
@@ -108,7 +107,6 @@ async function main() {
         const transaction = await contractManager.setContractsAddress(contractName, proxy.address);
         await transaction.wait();
         contractArtifacts.push({address: proxy.address, interface: proxy.interface, contract});
-        await verifyProxy(contract, proxy.address, []);
 
         if (contract === "SkaleManager") {
             try {
@@ -128,7 +126,6 @@ async function main() {
     console.log("Register", skaleTokenName);
     await (await contractManager.setContractsAddress(skaleTokenName, skaleToken.address)).wait();
     contractArtifacts.push({address: skaleToken.address, interface: skaleToken.interface, contract: skaleTokenName});
-    await verify(skaleTokenName, skaleToken.address, [contractManager.address, []]);
 
     if (!production) {
         console.log("Do actions for non production deployment");
@@ -158,6 +155,14 @@ async function main() {
 
     await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(outputObject, null, 4));
 
+    console.log("Verify contracts");
+    for (const artifact of contractArtifacts) {
+        if (artifact.contract === skaleTokenName) {
+            await verify(skaleTokenName, skaleToken.address, [contractManager.address, []]);
+        } else {
+            await verifyProxy(artifact.contract, artifact.address, [])
+        }
+    }
 
     console.log("Done");
 }
