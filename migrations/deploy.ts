@@ -9,6 +9,8 @@ import {
     verifyProxy,
     getContractFactory,
 } from '@skalenetwork/upgrade-tools';
+import {Contract} from 'ethers';
+import {TransactionMinedTimeout} from "@openzeppelin/upgrades-core";
 
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
@@ -100,8 +102,30 @@ async function main() {
     for (const contract of contracts.filter(contractName => contractName != "ContractManager")) {
         const contractFactory = await getContractFactory(contract);
         console.log("Deploy", contract);
-        const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), {unsafeAllowLinkedLibraries: true});
-        await proxy.deployTransaction.wait();
+        let attempts = 5;
+        let proxy: Contract | undefined = undefined;
+        while (attempts --> 0 && typeof proxy === "undefined") {
+            try {
+                proxy = await upgrades.deployProxy(
+                    contractFactory,
+                    getInitializerParameters(contract, contractManager.address),
+                    {
+                        unsafeAllowLinkedLibraries: true
+                    }
+                );
+                await proxy.deployTransaction.wait();
+            } catch (e) {
+                if (e instanceof TransactionMinedTimeout) {
+                    console.log(e);
+                    console.log("Retrying");
+                } else {
+                    throw e;
+                }
+            }
+        }
+        if (!proxy) {
+            throw new Error(`Error during deployment of ${contract}`);
+        }
         const contractName = getNameInContractManager(contract);
         console.log("Register", contract, "as", contractName, "=>", proxy.address);
         const transaction = await contractManager.setContractsAddress(contractName, proxy.address);
