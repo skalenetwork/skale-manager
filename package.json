@@ -80,7 +80,7 @@
     "solidity-coverage": "^0.8.4",
     "solidity-docgen": "^0.5.17",
     "ts-generator": "^0.1.1",
-    "ts-node": "10.4.0",
+    "ts-node": "10.9.1",
     "typechain": "^8.3.1",
     "typescript": "5.2.2"
   }
