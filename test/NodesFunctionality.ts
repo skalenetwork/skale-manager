@@ -341,10 +341,11 @@ describe("NodesFunctionality", () => {
         });
 
         it("should store last change ip time", async () => {
-            const tx = await nodes.connect(owner).changeIP(0, "0x7f000003", "0x00000000");
+            const nodeIndex = 0;
+            const tx = await nodes.connect(owner).changeIP(nodeIndex, "0x7f000003", "0x00000000");
             const transactionTimestamp = await getTransactionTimestamp(tx.hash)
-            const lastChangeIpTime = (await nodes.nodes(0)).lastChangeIpTime;
-            expect(lastChangeIpTime).to.equal(transactionTimestamp)
+            const lastChangeIpTime = await nodes.getLastChangeIpTime(nodeIndex)
+            expect(lastChangeIpTime).to.equal(transactionTimestamp);
         });
     });
 

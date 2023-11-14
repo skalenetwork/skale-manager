@@ -91,6 +91,7 @@ contract Nodes is Permissions, INodes {
     SegmentTree.Tree private _nodesAmountBySpace;
 
     mapping (uint256 => bool) public override incompliant;
+    mapping (uint256 => uint256) private _nodeIndexesToLastChangeIpTime;
 
     modifier checkNodeExists(uint256 nodeIndex) {
         _checkNodeIndex(nodeIndex);
@@ -228,8 +229,7 @@ contract Nodes is Permissions, INodes {
             lastRewardDate: block.timestamp,
             finishTime: 0,
             status: NodeStatus.Active,
-            validatorId: validatorId,
-            lastChangeIpTime: 0
+            validatorId: validatorId
         }));
         uint256 nodeIndex = nodes.length - 1;
         validatorToNodeIndexes[validatorId].push(nodeIndex);
@@ -471,7 +471,7 @@ contract Nodes is Permissions, INodes {
         nodesIPCheck[newIP] = true;
         emit IPChanged(nodeIndex, nodes[nodeIndex].ip, newIP);
         nodes[nodeIndex].ip = newIP;
-        nodes[nodeIndex].lastChangeIpTime = block.timestamp;
+        _nodeIndexesToLastChangeIpTime[nodeIndex] = block.timestamp;
     }
 
     function getRandomNodeWithFreeSpace(
@@ -768,6 +768,16 @@ contract Nodes is Permissions, INodes {
         returns (bool leaving)
     {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
+    }
+
+    function getLastChangeIpTime(uint256 nodeIndex)
+        public
+        view
+        override
+        checkNodeExists(nodeIndex)
+        returns (uint256 timestamp)
+    {
+        return _nodeIndexesToLastChangeIpTime[nodeIndex];
     }
 
     function _removeNodeFromSpaceToNodes(uint256 nodeIndex, uint8 space) internal {
