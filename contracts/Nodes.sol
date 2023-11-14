@@ -719,6 +719,19 @@ contract Nodes is Permissions, INodes {
     }
 
     /**
+     * @dev Returns timestamp for latest changeIp transaction.
+     */
+    function getLastChangeIpTime(uint256 nodeIndex)
+        external
+        view
+        override
+        checkNodeExists(nodeIndex)
+        returns (uint256 timestamp)
+    {
+        return _nodeIndexesToLastChangeIpTime[nodeIndex];
+    }
+
+    /**
      * @dev Returns the Validator ID for a given node.
      */
     function getValidatorId(uint256 nodeIndex)
@@ -768,16 +781,6 @@ contract Nodes is Permissions, INodes {
         returns (bool leaving)
     {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
-    }
-
-    function getLastChangeIpTime(uint256 nodeIndex)
-        public
-        view
-        override
-        checkNodeExists(nodeIndex)
-        returns (uint256 timestamp)
-    {
-        return _nodeIndexesToLastChangeIpTime[nodeIndex];
     }
 
     function _removeNodeFromSpaceToNodes(uint256 nodeIndex, uint8 space) internal {
