@@ -1752,10 +1752,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/skale-manager-interfaces@2.0.0-store-last-change-ip-time.0":
-  version "2.0.0-store-last-change-ip-time.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-2.0.0-store-last-change-ip-time.0.tgz#776b657c9c1d33ef0792ad2840ef460dee63edf5"
-  integrity sha512-KLDDWHa7/4crhh+owlTMjhlK9b/RRoLd2dGFlO+2zfNuCRZ2fmTM5RJNolgJhWOqldz3Q+Nr7THSg4oKu1rECw==
+"@skalenetwork/skale-manager-interfaces@2.0.0-store-last-change-ip-time.2":
+  version "2.0.0-store-last-change-ip-time.2"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-2.0.0-store-last-change-ip-time.2.tgz#0f1f0297273c113d822a8e4cf279ccc8d874919c"
+  integrity sha512-dmNNMXEPdG+yJqyFvuSqhrlrT/VVg4ALok1b/P1CTr7zvbENOC2/mMaL5TEIE1eDMUTqahRsruudT1tw6CCTCg==
 
 "@skalenetwork/upgrade-tools@^2.0.1":
   version "2.0.1"
