@@ -228,7 +228,8 @@ contract Nodes is Permissions, INodes {
             lastRewardDate: block.timestamp,
             finishTime: 0,
             status: NodeStatus.Active,
-            validatorId: validatorId
+            validatorId: validatorId,
+            lastChangeIpTime: 0
         }));
         uint256 nodeIndex = nodes.length - 1;
         validatorToNodeIndexes[validatorId].push(nodeIndex);
@@ -470,6 +471,7 @@ contract Nodes is Permissions, INodes {
         nodesIPCheck[newIP] = true;
         emit IPChanged(nodeIndex, nodes[nodeIndex].ip, newIP);
         nodes[nodeIndex].ip = newIP;
+        nodes[nodeIndex].lastChangeIpTime = block.timestamp;
     }
 
     function getRandomNodeWithFreeSpace(
