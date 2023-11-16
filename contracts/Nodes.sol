@@ -92,6 +92,8 @@ contract Nodes is Permissions, INodes {
 
     mapping (uint256 => bool) public override incompliant;
 
+    mapping(uint256 => NodeExtras) public nodeExtras;
+
     modifier checkNodeExists(uint256 nodeIndex) {
         _checkNodeIndex(nodeIndex);
         _;
@@ -232,10 +234,10 @@ contract Nodes is Permissions, INodes {
         }));
         uint256 nodeIndex = nodes.length - 1;
         validatorToNodeIndexes[validatorId].push(nodeIndex);
-        bytes32 nodeId = keccak256(abi.encodePacked(params.name));
+        bytes32 nodeHashName = keccak256(abi.encodePacked(params.name));
         nodesIPCheck[params.ip] = true;
-        nodesNameCheck[nodeId] = true;
-        nodesNameToIndex[nodeId] = nodeIndex;
+        nodesNameCheck[nodeHashName] = true;
+        nodesNameToIndex[nodeHashName] = nodeIndex;
         nodeIndexes[from].isNodeExist[nodeIndex] = true;
         nodeIndexes[from].numberOfNodes++;
         domainNames[nodeIndex] = params.domainName;
@@ -470,6 +472,7 @@ contract Nodes is Permissions, INodes {
         nodesIPCheck[newIP] = true;
         emit IPChanged(nodeIndex, nodes[nodeIndex].ip, newIP);
         nodes[nodeIndex].ip = newIP;
+        nodeExtras[nodeIndex].lastChangeIpTime = block.timestamp;
     }
 
     function getRandomNodeWithFreeSpace(
@@ -714,6 +717,19 @@ contract Nodes is Permissions, INodes {
             return _nodesAmountBySpace.sumFromPlaceToLast(1);
         }
         return _nodesAmountBySpace.sumFromPlaceToLast(freeSpace);
+    }
+
+    /**
+     * @dev Returns timestamp for latest changeIp transaction.
+     */
+    function getLastChangeIpTime(uint256 nodeIndex)
+        external
+        view
+        override
+        checkNodeExists(nodeIndex)
+        returns (uint256 timestamp)
+    {
+        return nodeExtras[nodeIndex].lastChangeIpTime;
     }
 
     /**
