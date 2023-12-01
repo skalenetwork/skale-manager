@@ -376,12 +376,14 @@ describe("Schains", () => {
                 let res = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d2"), res1[0]);
                 assert.equal(res, true);
                 await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("d2"), {value: 1e20.toString()});
+                let rotation = await nodeRotation.getRotation(stringKeccak256("d2"));
                 await skaleDKG.connect(nodeAddress1).broadcast(
                     stringKeccak256("d2"),
                     res1[0],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,
+                    rotation.rotationCounter
                 );
                 res = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d2"), res1[1]);
                 assert.equal(res, true);
@@ -390,7 +392,8 @@ describe("Schains", () => {
                     res1[1],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,
+                    rotation.rotationCounter
                 );
 
                 let resO = await skaleDKG.isChannelOpened(stringKeccak256("d2"));
@@ -435,12 +438,14 @@ describe("Schains", () => {
                 assert.equal(res, true);
                 res = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d2"), res1[0]);
                 assert.equal(res, true);
+                rotation = await nodeRotation.getRotation(stringKeccak256("d2"));
                 await skaleDKG.connect(nodeAddress1).broadcast(
                     stringKeccak256("d2"),
                     res1[0],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,
+                    rotation.rotationCounter
                 );
                 res = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d2"), res1[1]);
                 assert.equal(res, true);
@@ -449,7 +454,8 @@ describe("Schains", () => {
                     res1[1],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,
+                    rotation.rotationCounter
                 );
 
                 resO = await skaleDKG.isChannelOpened(stringKeccak256("d2"));
@@ -616,13 +622,15 @@ describe("Schains", () => {
                         ]
                     }
                 ];
+                let rotation = await nodeRotation.getRotation(schainHash);
 
                 await skaleDKG.connect(nodeAddress1).broadcast(
                     schainHash,
                     0,
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,
+                    rotation.rotationCounter
                 );
 
                 await skaleDKG.connect(nodeAddress1).broadcast(
@@ -630,7 +638,8 @@ describe("Schains", () => {
                     1,
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,
+                    rotation.rotationCounter
                 );
 
                 await skaleDKG.connect(nodeAddress1).alright(
@@ -660,12 +669,14 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 3).should.be.eventually.rejectedWith("No previous node");
 
+                rotation = await nodeRotation.getRotation(schainHash);
                 await skaleDKG.connect(nodeAddress1).broadcast(
                     schainHash,
                     2,
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,
+                    rotation.rotationCounter
                 );
 
                 await skaleDKG.connect(nodeAddress1).broadcast(
@@ -673,7 +684,7 @@ describe("Schains", () => {
                     1,
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,rotation.rotationCounter
                 );
 
                 await skaleDKG.connect(nodeAddress1).alright(
@@ -704,12 +715,14 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 4).should.be.eventually.rejectedWith("No previous node");
 
+                rotation = await nodeRotation.getRotation(schainHash);
                 await skaleDKG.connect(nodeAddress1).broadcast(
                     schainHash,
                     3,
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,
+                    rotation.rotationCounter
                 );
 
                 await skaleDKG.connect(nodeAddress1).broadcast(
@@ -717,7 +730,8 @@ describe("Schains", () => {
                     1,
                     verificationVector,
                     // the last symbol is spoiled in parameter below
-                    encryptedSecretKeyContribution
+                    encryptedSecretKeyContribution,
+                    rotation.rotationCounter
                 );
 
                 await skaleDKG.connect(nodeAddress1).alright(
@@ -2149,12 +2163,14 @@ describe("Schains", () => {
             resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), res1[0]);
             assert.equal(resS, true);
             await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("d3"), {value: 1e20.toString()});
+            const rotation = await nodeRotation.getRotation(stringKeccak256("d3"));
             await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d3"),
                 res1[0],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContribution
+                encryptedSecretKeyContribution,
+                rotation.rotationCounter
             );
             // res10 = await keyStorage.getBroadcastedData(stringKeccak256("d3"), res1[1]);
             resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), res1[1]);
@@ -2164,7 +2180,8 @@ describe("Schains", () => {
                 res1[1],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContribution
+                encryptedSecretKeyContribution,
+                rotation.rotationCounter
             );
             resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), res1[2]);
             assert.equal(resS, true);
@@ -2173,14 +2190,16 @@ describe("Schains", () => {
                 res1[2],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContribution
+                encryptedSecretKeyContribution,
+                rotation.rotationCounter
             );
             await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d3"),
                 res1[3],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContribution
+                encryptedSecretKeyContribution,
+                rotation.rotationCounter
             );
 
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
@@ -2911,11 +2930,13 @@ describe("Schains", () => {
                 getPublicKey(nodeAddress1), // public key
                 "D2-fe", // name
                 "some.domain.name");
+            const rotation = await nodeRotation.getRotation(stringKeccak256("d1"));
             await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
                 1,
                 verificationVectorNew,
-                secretKeyContributions
+                secretKeyContributions,
+                rotation.rotationCounter
             );
             await skipTime(1800);
             await skaleDKG.connect(nodeAddress1).complaint(
@@ -2948,11 +2969,13 @@ describe("Schains", () => {
                 getPublicKey(nodeAddress1), // public key
                 "D2-fe", // name
                 "some.domain.name");
+            const rotation = await nodeRotation.getRotation(stringKeccak256("d1"));
             await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
                 1,
                 verificationVectorNew,
-                secretKeyContributions
+                secretKeyContributions,
+                rotation.rotationCounter
             );
             await skipTime(1800);
             await skaleDKG.connect(nodeAddress1).complaint(
@@ -2987,11 +3010,13 @@ describe("Schains", () => {
                 "D2-fe", // name
                 "some.domain.name");
 
+            const rotation = await nodeRotation.getRotation(stringKeccak256("d1"));
             await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
                 1,
                 verificationVectorNew,
-                secretKeyContributions
+                secretKeyContributions,
+                rotation.rotationCounter
             );
             await skipTime(1800);
             await skaleDKG.connect(nodeAddress1).complaint(
@@ -3066,11 +3091,13 @@ describe("Schains", () => {
                 "D2-fd", // name
                 "some.domain.name");
 
+            const rotation = await nodeRotation.getRotation(stringKeccak256("d1"));
             await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
                 2,
                 verificationVectorNew,
-                secretKeyContributions
+                secretKeyContributions,
+                rotation.rotationCounter
             );
             await skipTime(1800);
             await skaleDKG.connect(nodeAddress1).complaint(
