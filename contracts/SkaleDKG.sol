@@ -148,7 +148,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bytes32 schainHash,
         uint256 nodeIndex,
         ISkaleDKG.G2Point[] memory verificationVector,
-        KeyShare[] memory secretKeyContribution
+        KeyShare[] memory secretKeyContribution,
+        uint256 rotationCounter
     )
         external
         override
@@ -169,7 +170,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             contractManager: contractManager,
             channels: channels,
             dkgProcess: dkgProcess,
-            hashedData: hashedData
+            hashedData: hashedData,
+            rotationCounter: rotationCounter
         });
     }
 

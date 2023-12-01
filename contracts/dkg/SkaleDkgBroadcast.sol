@@ -27,6 +27,7 @@ import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol"
 import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 
 
 /**
@@ -67,11 +68,16 @@ library SkaleDkgBroadcast {
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels,
         mapping(bytes32 => ISkaleDKG.ProcessDKG) storage dkgProcess,
-        mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData
+        mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData,
+        uint256 rotationCounter
     )
         external
     {
         uint256 n = channels[schainHash].n;
+        uint256 schainRotationCounter = INodeRotation(
+            contractManager.getContract("NodeRotation")
+        ).getRotation(schainHash).rotationCounter;
+        require(schainRotationCounter == rotationCounter, "Incorrect rotation counter");
         require(verificationVector.length == getT(n), "Incorrect number of verification vectors");
         require(
             secretKeyContribution.length == n,
