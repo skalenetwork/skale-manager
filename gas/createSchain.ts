@@ -11,7 +11,7 @@ import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures"
 import { fastBeforeEach } from "../test/tools/mocha";
 import { SchainType } from "../test/tools/types";
 import { TypedEvent } from "../typechain-types/common";
-import { SchainNodesEvent } from "../typechain-types/ISchains";
+import { SchainNodesEvent } from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
 
 function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
     if (events) {

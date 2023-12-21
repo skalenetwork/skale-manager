@@ -311,8 +311,12 @@ contract Nodes is Permissions, INodes {
         }
         validatorToNodeIndexes[validatorId].pop();
         address nodeOwner = _publicKeyToAddress(nodes[nodeIndex].publicKey);
-        if (validatorService.getValidatorIdByNodeAddress(nodeOwner) == validatorId) {
-            if (nodeIndexes[nodeOwner].numberOfNodes == 1 && !validatorService.validatorAddressExists(nodeOwner)) {
+        uint validatorIdByNode = validatorService.getValidatorIdByNodeAddressWithoutRevert(nodeOwner);
+        if (validatorIdByNode == validatorId || validatorIdByNode == 0) {
+            if (nodeIndexes[nodeOwner].numberOfNodes == 1 && 
+                !validatorService.validatorAddressExists(nodeOwner) &&
+                validatorIdByNode == validatorId
+            ) {
                 validatorService.removeNodeAddress(validatorId, nodeOwner);
             }
             nodeIndexes[nodeOwner].isNodeExist[nodeIndex] = false;
