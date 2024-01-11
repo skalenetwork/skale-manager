@@ -22,20 +22,8 @@
 
 pragma solidity 0.8.17;
 
-import "../utils/SegmentTree.sol";
-
-interface ISegmentTreeTester {
-    function initTree() external;
-    function addElemInPlaces(uint place, uint elem) external;
-    function addToLast(uint elem) external;
-    function addToPlace(uint place, uint elem) external;
-    function removeFromPlace(uint place, uint elem) external;
-    function moveFromPlaceToPlace(uint fromPlace, uint toPlace, uint elem) external;
-    function sumFromPlaceToLast(uint place) external view returns (uint);
-    function getRandomElem(uint place) external view returns (uint);
-    function getElem(uint index) external view returns (uint);
-    function getSize() external view returns (uint);
-}
+import { IRandom, Random, SegmentTree } from "../utils/SegmentTree.sol";
+import { ISegmentTreeTester } from "./interfaces/ISegmentTreeTester.sol";
 
 
 contract SegmentTreeTester is ISegmentTreeTester {
@@ -44,7 +32,7 @@ contract SegmentTreeTester is ISegmentTreeTester {
 
     SegmentTree.Tree private _tree;
 
-    uint[129] private _places;
+    uint256[129] private _places;
 
     function initTree() external override {
         _tree.create(128);
@@ -54,43 +42,43 @@ contract SegmentTreeTester is ISegmentTreeTester {
         }
     }
 
-    function addElemInPlaces(uint place, uint elem) external override {
+    function addElemInPlaces(uint256 place, uint256 elem) external override {
         _places[place] = elem;
     }
 
-    function addToLast(uint elem) external override {
+    function addToLast(uint256 elem) external override {
         _tree.addToPlace(_tree.getSize(), elem);
     }
 
-    function addToPlace(uint place, uint elem) external override {
+    function addToPlace(uint256 place, uint256 elem) external override {
         _tree.addToPlace(place, elem);
     }
 
-    function removeFromPlace(uint place, uint elem) external override {
+    function removeFromPlace(uint256 place, uint256 elem) external override {
         _tree.removeFromPlace(place, elem);
     }
 
-    function moveFromPlaceToPlace(uint fromPlace, uint toPlace, uint elem) external override {
+    function moveFromPlaceToPlace(uint256 fromPlace, uint256 toPlace, uint256 elem) external override {
         _tree.moveFromPlaceToPlace(fromPlace, toPlace, elem);
     }
 
-    function sumFromPlaceToLast(uint place) external view override returns (uint) {
+    function sumFromPlaceToLast(uint256 place) external view override returns (uint256 sum) {
         return _tree.sumFromPlaceToLast(place);
     }
 
-    function getRandomElem(uint place) external view override returns (uint) {
+    function getRandomElem(uint256 place) external view override returns (uint256 element) {
         IRandom.RandomGenerator memory randomGenerator = Random.createFromEntropy(
             abi.encodePacked(uint(blockhash(block.number - 1)), place)
         );
         return _tree.getRandomNonZeroElementFromPlaceToLast(place, randomGenerator);
     }
 
-    function getElem(uint index) external view override returns (uint) {
+    function getElem(uint256 index) external view override returns (uint256 element) {
         require(index < _tree.tree.length, "Incorrect index");
         return _tree.tree[index];
     }
 
-    function getSize() external view override returns (uint) {
+    function getSize() external view override returns (uint256 size) {
         return _tree.getSize();
     }
 }

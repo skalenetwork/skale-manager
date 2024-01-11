@@ -21,9 +21,10 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
-import "@skalenetwork/skale-manager-interfaces/ISyncManager.sol";
-import "./Permissions.sol";
+import { EnumerableSetUpgradeable }
+from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { ISyncManager } from "@skalenetwork/skale-manager-interfaces/ISyncManager.sol";
+import { Permissions } from "./Permissions.sol";
 
 /**
  * @title SyncManager
@@ -42,6 +43,10 @@ contract SyncManager is Permissions, ISyncManager {
         _;
     }
 
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+    }
+
     function addIPRange(string memory name, bytes4 startIP, bytes4 endIP) external override onlySyncManager {
         require(startIP <= endIP && startIP != bytes4(0) && endIP != bytes4(0), "Invalid IP ranges provided");
         bytes32 ipRangeNameHash = keccak256(abi.encodePacked(name));
@@ -57,22 +62,17 @@ contract SyncManager is Permissions, ISyncManager {
         emit IPRangeRemoved(name);
     }
 
-    function getIPRangesNumber() external view override returns (uint) {
+    function getIPRangesNumber() external view override returns (uint256 amount) {
         return _ipRangeNames.length();
     }
 
-    function getIPRangeByIndex(uint index) external view override returns (IPRange memory) {
+    function getIPRangeByIndex(uint256 index) external view override returns (IPRange memory range) {
         bytes32 ipRangeNameHash = _ipRangeNames.at(index);
         return ipRanges[ipRangeNameHash];
     }
 
-    function getIPRangeByName(string memory name) external view override returns (IPRange memory) {
+    function getIPRangeByName(string memory name) external view override returns (IPRange memory range) {
         bytes32 ipRangeNameHash = keccak256(abi.encodePacked(name));
         return ipRanges[ipRangeNameHash];
     }
-
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
-    }
-
 }
