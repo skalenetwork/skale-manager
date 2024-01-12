@@ -1752,10 +1752,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/skale-manager-interfaces@2.0.0-add-rotation-id-check.0":
-  version "2.0.0-add-rotation-id-check.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-2.0.0-add-rotation-id-check.0.tgz#ecdeff43fe6310877bd31e3b543c4936efc1fd86"
-  integrity sha512-TJ9Yx8mO5tRJzJffRVAb7dkrp0VH3edbe7AizRWqky9pmuMo1mtO8U6RcHvV0v3hDmz3Euimo1xtM812pTQDVg==
+"@skalenetwork/skale-manager-interfaces@2.1.0-develop.0":
+  version "2.1.0-develop.0"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-2.1.0-develop.0.tgz#b762606fa45ef4c0daa481a644272dd35c77fefc"
+  integrity sha512-0RC+4yGSOSqRoYhGYza3UWwkaPyp09Xf2d+bzWrNeK0BgBXvDvRQ7KINHZLFtjfOGJ/sVy2WI22oPro2dVLw+g==
 
 "@skalenetwork/upgrade-tools@^2.0.1":
   version "2.0.1"
