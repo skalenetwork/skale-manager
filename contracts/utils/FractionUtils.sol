@@ -25,35 +25,35 @@ pragma solidity 0.8.17;
 library FractionUtils {
 
     struct Fraction {
-        uint numerator;
-        uint denominator;
+        uint256 numerator;
+        uint256 denominator;
     }
 
-    function createFraction(uint numerator, uint denominator) internal pure returns (Fraction memory) {
+    function createFraction(uint256 numerator, uint256 denominator) internal pure returns (Fraction memory fraction) {
         require(denominator > 0, "Division by zero");
-        Fraction memory fraction = Fraction({numerator: numerator, denominator: denominator});
+        fraction = Fraction({numerator: numerator, denominator: denominator});
         reduceFraction(fraction);
         return fraction;
     }
 
-    function createFraction(uint value) internal pure returns (Fraction memory) {
+    function createFraction(uint256 value) internal pure returns (Fraction memory fraction) {
         return createFraction(value, 1);
     }
 
     function reduceFraction(Fraction memory fraction) internal pure {
-        uint _gcd = gcd(fraction.numerator, fraction.denominator);
+        uint256 _gcd = gcd(fraction.numerator, fraction.denominator);
         fraction.numerator = fraction.numerator / _gcd;
         fraction.denominator = fraction.denominator / _gcd;
     }
 
     // numerator - is limited by 7*10^27, we could multiply it numerator * numerator - it would less than 2^256-1
-    function multiplyFraction(Fraction memory a, Fraction memory b) internal pure returns (Fraction memory) {
+    function multiplyFraction(Fraction memory a, Fraction memory b) internal pure returns (Fraction memory fraction) {
         return createFraction(a.numerator * b.numerator, a.denominator * b.denominator);
     }
 
-    function gcd(uint a, uint b) internal pure returns (uint) {
-        uint _a = a;
-        uint _b = b;
+    function gcd(uint256 a, uint256 b) internal pure returns (uint256 value) {
+        uint256 _a = a;
+        uint256 _b = b;
         if (_b > _a) {
             (_a, _b) = swap(_a, _b);
         }
@@ -64,7 +64,7 @@ library FractionUtils {
         return _a;
     }
 
-    function swap(uint a, uint b) internal pure returns (uint, uint) {
+    function swap(uint256 a, uint256 b) internal pure returns (uint256 left, uint256 right) {
         return (b, a);
     }
 }

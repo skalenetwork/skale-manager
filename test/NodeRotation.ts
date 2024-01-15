@@ -201,11 +201,14 @@ describe("NodeRotation", () => {
                                 ]
                             }) as {share: string, publicKey: [string, string]}[];
 
+                        const rotation = await nodeRotation.getRotation(schainHash);
                         await skaleDKG.connect(goodNode.wallet).broadcast(
                             schainHash,
                             goodNode.id,
                             verificationVector,
-                            encryptedSecretKeyContribution);
+                            encryptedSecretKeyContribution,
+                            rotation.rotationCounter
+                        );
 
                         await skipTime(await constantsHolder.complaintTimeLimit());
 

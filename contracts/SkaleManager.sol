@@ -21,23 +21,23 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import { IERC777 } from "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleManager.sol";
-import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
-import "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
-import "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
-import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
-import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+import { ISkaleManager } from "@skalenetwork/skale-manager-interfaces/ISkaleManager.sol";
+import { IMintableToken } from "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
+import { IDistributor } from "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
+import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { ISchains } from "@skalenetwork/skale-manager-interfaces/ISchains.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
-import "./Permissions.sol";
+import { Permissions } from "./Permissions.sol";
 
 /**
  * @title SkaleManager
@@ -52,12 +52,18 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    uint constant public HEADER_COSTS = 7654;
-    uint constant public CALL_PRICE = 21000;
+    uint256 constant public HEADER_COSTS = 7486;
+    uint256 constant public CALL_PRICE = 21000;
 
     string public version;
 
     bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
+
+    function initialize(address newContractsAddress) public override initializer {
+        Permissions.initialize(newContractsAddress);
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+        _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
+    }
 
     function tokensReceived(
         address, // operator
@@ -107,12 +113,12 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         nodes.createNode(msg.sender, params);
     }
 
-    function nodeExit(uint nodeIndex) external override {
-        uint gasLimit = _getGasLimit();
+    function nodeExit(uint256 nodeIndex) external override {
+        uint256 gasLimit = _getGasLimit();
         IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
-        uint validatorId = nodes.getValidatorId(nodeIndex);
+        uint256 validatorId = nodes.getValidatorId(nodeIndex);
         bool permitted = (_isOwner() || nodes.isNodeExist(msg.sender, nodeIndex));
         if (!permitted && validatorService.validatorAddressExists(msg.sender)) {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
@@ -150,8 +156,8 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         schains.deleteSchainByRoot(name);
     }
 
-    function getBounty(uint nodeIndex) external override {
-        uint gasLimit = _getGasLimit();
+    function getBounty(uint256 nodeIndex) external override {
+        uint256 gasLimit = _getGasLimit();
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
@@ -159,21 +165,22 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         require(!nodes.incompliant(nodeIndex), "The node is incompliant");
         IBountyV2 bountyContract = IBountyV2(contractManager.getContract("Bounty"));
 
-        uint bounty = bountyContract.calculateBounty(nodeIndex);
+        uint256 bounty = bountyContract.calculateBounty(nodeIndex);
 
         nodes.changeNodeLastRewardDate(nodeIndex);
-        uint validatorId = nodes.getValidatorId(nodeIndex);
+        uint256 validatorId = nodes.getValidatorId(nodeIndex);
         if (bounty > 0) {
             _payBounty(bounty, validatorId);
         }
 
-        emit BountyReceived(
-            nodeIndex,
-            msg.sender,
-            0,
-            0,
-            bounty,
-            type(uint).max);
+        emit BountyReceived({
+            nodeIndex: nodeIndex,
+            owner: msg.sender,
+            averageDowntime: 0,
+            averageLatency: 0,
+            bounty: bounty,
+            previousBlockEvent: type(uint).max
+        });
 
         _refundGasByValidator(validatorId, payable(msg.sender), gasLimit);
     }
@@ -183,13 +190,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         version = newVersion;
     }
 
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
-        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-        _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
-    }
-
-    function _payBounty(uint bounty, uint validatorId) private {
+    function _payBounty(uint256 bounty, uint256 validatorId) private {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         IDistributor distributor = IDistributor(contractManager.getContract("Distributor"));
 
@@ -199,12 +200,12 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         );
     }
 
-    function _refundGasByValidator(uint validatorId, address payable spender, uint gasLimit) private {
+    function _refundGasByValidator(uint256 validatorId, address payable spender, uint256 gasLimit) private {
         IWallets(payable(contractManager.getContract("Wallets")))
             .refundGasByValidator(validatorId, spender, gasLimit);
     }
 
-    function _getGasLimit() private view returns (uint gasLimit) {
+    function _getGasLimit() private view returns (uint256 gasLimit) {
         gasLimit = (gasleft() + HEADER_COSTS) * 64 / 63 + CALL_PRICE;
     }
 }

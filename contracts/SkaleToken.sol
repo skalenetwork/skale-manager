@@ -21,17 +21,17 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegatableToken.sol";
-import "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import { IDelegatableToken } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegatableToken.sol";
+import { IMintableToken } from "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
+import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
 
-import "./thirdparty/openzeppelin/ERC777.sol";
+import { Context, ERC777 } from "./thirdparty/openzeppelin/ERC777.sol";
 
-import "./Permissions.sol";
+import { Permissions } from "./Permissions.sol";
 
 
 /**
@@ -46,9 +46,9 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
 
     string public constant SYMBOL = "SKL";
 
-    uint public constant DECIMALS = 18;
+    uint256 public constant DECIMALS = 18;
 
-    uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
+    uint256 public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
     constructor(address contractsAddress, address[] memory defOps)
     ERC777("SKALE", "SKL", defOps)
@@ -76,7 +76,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         override
         allow("SkaleManager")
         //onlyAuthorized
-        returns (bool)
+        returns (bool successful)
     {
         require(amount <= CAP.sub(totalSupply()), "Amount is too big");
         _mint(
@@ -92,7 +92,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     /**
      * @dev See {IDelegatableToken-getAndUpdateDelegatedAmount}.
      */
-    function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
+    function getAndUpdateDelegatedAmount(address wallet) external override returns (uint256 amount) {
         return IDelegationController(contractManager.getContract("DelegationController"))
             .getAndUpdateDelegatedAmount(wallet);
     }
@@ -100,14 +100,14 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     /**
      * @dev See {IDelegatableToken-getAndUpdateSlashedAmount}.
      */
-    function getAndUpdateSlashedAmount(address wallet) external override returns (uint) {
+    function getAndUpdateSlashedAmount(address wallet) external override returns (uint256 amount) {
         return ILocker(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
     }
 
     /**
      * @dev See {IDelegatableToken-getAndUpdateLockedAmount}.
      */
-    function getAndUpdateLockedAmount(address wallet) public override returns (uint) {
+    function getAndUpdateLockedAmount(address wallet) public override returns (uint256 amount) {
         return ILocker(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
     }
 
@@ -120,7 +120,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         uint256 tokenId)
         internal override
     {
-        uint locked = getAndUpdateLockedAmount(from);
+        uint256 locked = getAndUpdateLockedAmount(from);
         if (locked > 0) {
             require(balanceOf(from) >= locked.add(tokenId), "Token should be unlocked for transferring");
         }
@@ -134,7 +134,14 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         bytes memory userData,
         bytes memory operatorData
     ) internal override nonReentrant {
-        super._callTokensToSend(operator, from, to, amount, userData, operatorData);
+        super._callTokensToSend({
+            operator: operator,
+            from: from,
+            to: to,
+            amount: amount,
+            userData: userData,
+            operatorData: operatorData
+        });
     }
 
     function _callTokensReceived(
@@ -146,16 +153,24 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         bytes memory operatorData,
         bool requireReceptionAck
     ) internal override nonReentrant {
-        super._callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
+        super._callTokensReceived({
+            operator: operator,
+            from: from,
+            to: to,
+            amount: amount,
+            userData: userData,
+            operatorData: operatorData,
+            requireReceptionAck: requireReceptionAck
+        });
     }
 
     // we have to override _msgData() and _msgSender() functions because of collision in Context and ContextUpgradeable
 
-    function _msgData() internal view override(Context, ContextUpgradeable) returns (bytes calldata) {
+    function _msgData() internal view override(Context, ContextUpgradeable) returns (bytes calldata msgData) {
         return Context._msgData();
     }
 
-    function _msgSender() internal view override(Context, ContextUpgradeable) returns (address) {
+    function _msgSender() internal view override(Context, ContextUpgradeable) returns (address sender) {
         return Context._msgSender();
     }
 }
