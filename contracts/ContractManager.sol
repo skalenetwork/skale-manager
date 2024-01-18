@@ -41,6 +41,7 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
     string public constant CONSTANTS_HOLDER = "ConstantsHolder";
     string public constant DELEGATION_PERIOD_MANAGER = "DelegationPeriodManager";
     string public constant PUNISHER = "Punisher";
+    string public constant SKALE_MANAGER = "SkaleManager";
     string public constant SKALE_TOKEN = "SkaleToken";
     string public constant TIME_HELPERS = "TimeHelpers";
     string public constant TOKEN_STATE = "TokenState";
@@ -121,6 +122,10 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
 
     function getPunisher() external view override returns (address punisher) {
         return getContract(PUNISHER);
+    }
+
+    function getSkaleManager() external view override returns (address skaleManager) {
+        return getContract(SKALE_MANAGER);
     }
 
     function getContract(string memory name) public view override returns (address contractAddress) {

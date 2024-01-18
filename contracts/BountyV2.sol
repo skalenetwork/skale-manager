@@ -83,7 +83,7 @@ contract BountyV2 is Permissions, IBountyV2 {
     function calculateBounty(uint256 nodeIndex)
         external
         override
-        allow("SkaleManager")
+        onlySkaleManager()
         returns (uint256 bounty)
     {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));

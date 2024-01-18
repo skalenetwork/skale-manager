@@ -335,14 +335,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit FailedDKG(schainHash);
 
         if (schainsInternal.isAnyFreeNode(schainHash)) {
-            schainsInternal.makeSchainNodesInvisible(schainHash);
             uint256 newNode = nodeRotation.rotateNode(
                 badNode,
                 schainHash,
                 false,
                 true
             );
-            schainsInternal.makeSchainNodesVisible(schainHash);
             emit NewGuy(newNode);
         } else {
             pendingToBeReplaced[schainHash] = badNode;
@@ -598,7 +596,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
         } else if (context.dkgFunction == DkgFunction.Response){
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal - gasleft() - context.delta, context.isDebt
+                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta, context.isDebt
             );
         } else {
             wallets.refundGasBySchain(

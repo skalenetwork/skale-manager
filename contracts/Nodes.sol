@@ -177,7 +177,7 @@ contract Nodes is Permissions, INodes {
         external
         override
         checkNodeExists(nodeIndex)
-        allow("SkaleManager")
+        onlySkaleManager()
     {
         nodes[nodeIndex].lastRewardDate = block.timestamp;
     }
@@ -189,7 +189,7 @@ contract Nodes is Permissions, INodes {
         external
         override
         checkNodeExists(nodeIndex)
-        allow("SkaleManager")
+        onlySkaleManager()
     {
         nodes[nodeIndex].finishTime = time;
     }
@@ -210,7 +210,7 @@ contract Nodes is Permissions, INodes {
     function createNode(address from, NodeCreationParams calldata params)
         external
         override
-        allow("SkaleManager")
+        onlySkaleManager()
         nonZeroIP(params.ip)
     {
         // checks that Node has correct data
@@ -292,7 +292,7 @@ contract Nodes is Permissions, INodes {
         external
         override
         checkNodeExists(nodeIndex)
-        allow("SkaleManager")
+        onlySkaleManager()
         returns (bool successful)
     {
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
@@ -314,7 +314,7 @@ contract Nodes is Permissions, INodes {
         external
         override
         checkNodeExists(nodeIndex)
-        allow("SkaleManager")
+        onlySkaleManager()
     {
         IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
@@ -348,7 +348,7 @@ contract Nodes is Permissions, INodes {
      * - Validator must be included on trusted list if trusted list is enabled.
      * - Validator must have sufficient stake to operate an additional node.
      */
-    function checkPossibilityCreatingNode(address nodeAddress) external override allow("SkaleManager") {
+    function checkPossibilityCreatingNode(address nodeAddress) external override onlySkaleManager() {
         IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
         uint256 validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
         require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
@@ -730,6 +730,26 @@ contract Nodes is Permissions, INodes {
         returns (uint256 timestamp)
     {
         return nodeExtras[nodeIndex].lastChangeIpTime;
+    }
+
+    function isNodeVisible(uint256 nodeIndex)
+        external
+        view
+        override
+        checkNodeExists(nodeIndex)
+        returns (bool visible)
+    {
+        return !_invisible[nodeIndex];
+    }
+
+    function getFreeSpace(uint256 nodeIndex)
+        external
+        view
+        override
+        checkNodeExists(nodeIndex)
+        returns (uint8 freeSpace)
+    {
+        return spaceOfNodes[nodeIndex].freeSpace;
     }
 
     /**

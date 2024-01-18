@@ -127,7 +127,7 @@ contract Wallets is Permissions, IWallets {
     )
         external
         override
-        allow("SkaleManager")
+        onlySkaleManager()
     {
         require(spender != address(0), "Spender must be specified");
         require(validatorId != 0, "ValidatorId could not be zero");

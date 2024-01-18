@@ -24,13 +24,14 @@ pragma solidity 0.8.17;
 import { EnumerableSetUpgradeable }
 from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
-import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
-import { IPruningSchainsInternal } from "./interfaces/IPruningSchainInternal.sol";
-import { Permissions } from "./Permissions.sol";
 import { ConstantsHolder } from "./ConstantsHolder.sol";
+import { IPruningSchainsInternal } from "./interfaces/IPruningSchainInternal.sol";
 import { IRandom, Random } from "./utils/Random.sol";
+import { Nodes } from "./Nodes.sol";
+import { Permissions } from "./Permissions.sol";
 
 
 /**
@@ -183,29 +184,6 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
     }
 
     /**
-     * @dev Allows Schains contract to change the Schain lifetime through
-     * an additional SKL token deposit.
-     *
-     * Requirements:
-     *
-     * - Message sender is Schains smart contract
-     * - Schain must exist
-     */
-    function changeLifetime(
-        bytes32 schainHash,
-        uint256 lifetime,
-        uint256 deposit
-    )
-        external
-        override
-        allow("Schains")
-        schainExists(schainHash)
-    {
-        schains[schainHash].deposit = schains[schainHash].deposit + deposit;
-        schains[schainHash].lifetime = schains[schainHash].lifetime + lifetime;
-    }
-
-    /**
      * @dev Allows Schains contract to remove an schain from the network.
      * Generally schains are not removed from the system; instead they are
      * simply allowed to expire.
@@ -281,7 +259,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
 
         removeSchainForNode(nodeIndex, placeOfSchainOnNode[schainHash][nodeIndex] - 1);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
-        INodes nodes = INodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(_removeAddressFromSchain(schainHash, nodes.getNodeAddress(nodeIndex)), "Incorrect node address");
         nodes.addSpaceToNode(nodeIndex, schains[schainHash].partOfNode);
     }
@@ -403,7 +381,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
         numberOfSchainTypes = newNumberOfSchainTypes;
     }
 
-    function removeNodeFromAllExceptionSchains(uint256 nodeIndex) external override allow("SkaleManager") {
+    function removeNodeFromAllExceptionSchains(uint256 nodeIndex) external override onlySkaleManager() {
         uint256 len = _nodeToLockedSchains[nodeIndex].length;
         for (uint256 i = len; i > 0; i--) {
             removeNodeFromExceptions(_nodeToLockedSchains[nodeIndex][i - 1], nodeIndex);
@@ -437,7 +415,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
         allowTwo("NodeRotation", "SkaleDKG")
         schainExists(schainHash)
     {
-        INodes nodes = INodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint256 i = 0; i < _schainToExceptionNodes[schainHash].length; i++) {
             nodes.makeNodeInvisible(_schainToExceptionNodes[schainHash][i]);
         }
@@ -755,9 +733,18 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
      * - Schain must exist
      */
     function isAnyFreeNode(bytes32 schainHash) external view override schainExists(schainHash) returns (bool free) {
-        INodes nodes = INodes(contractManager.getContract("Nodes"));
+        // TODO:
+        // Move this function to Nodes?
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainHash].partOfNode;
-        return nodes.countNodesWithFreeSpace(space) > 0;
+        uint256 numberOfCandidates = nodes.countNodesWithFreeSpace(space);
+        for (uint256 i = 0; i < _schainToExceptionNodes[schainHash].length; i++) {
+            uint256 nodeIndex = _schainToExceptionNodes[schainHash][i];
+            if (space <= nodes.getFreeSpace(nodeIndex) && nodes.isNodeVisible(nodeIndex)) {
+                --numberOfCandidates;
+            }
+        }
+        return numberOfCandidates > 0;
     }
 
     /**
@@ -979,7 +966,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
      * @dev Generates schain group using a pseudo-random generator.
      */
     function _generateGroup(bytes32 schainHash, uint256 numberOfNodes) private returns (uint256[] memory nodesInGroup) {
-        INodes nodes = INodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainHash].partOfNode;
         nodesInGroup = new uint256[](numberOfNodes);
 
@@ -1007,7 +994,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
     }
 
     function _makeSchainNodesVisible(bytes32 schainHash) private {
-        INodes nodes = INodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint256 i = 0; i < _schainToExceptionNodes[schainHash].length; i++) {
             nodes.makeNodeVisible(_schainToExceptionNodes[schainHash][i]);
         }

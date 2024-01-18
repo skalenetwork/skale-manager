@@ -82,8 +82,8 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     uint256 public constant BROADCAST_DELTA = 177490;
     uint256 public constant COMPLAINT_BAD_DATA_DELTA = 80995;
     uint256 public constant PRE_RESPONSE_DELTA = 100061;
-    uint256 public constant COMPLAINT_DELTA = 161464;
-    uint256 public constant RESPONSE_DELTA = 48132;
+    uint256 public constant COMPLAINT_DELTA = 189562;
+    uint256 public constant RESPONSE_DELTA = 40312;
 
     // MSR - Minimum staking requirement
     uint256 public msr;

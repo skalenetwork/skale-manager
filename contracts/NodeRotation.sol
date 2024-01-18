@@ -97,7 +97,7 @@ contract NodeRotation is Permissions, INodeRotation {
     )
         external
         override
-        allow("SkaleManager")
+        onlySkaleManager()
         returns (bool contains, bool successful)
     {
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
