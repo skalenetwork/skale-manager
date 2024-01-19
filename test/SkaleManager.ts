@@ -1,4 +1,5 @@
 import * as chai from "chai";
+import { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
          ContractManager,
@@ -121,14 +122,15 @@ describe("SkaleManager", () => {
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
-        await skaleManager.connect(validator).tokensReceived(
+        await expect(skaleManager.connect(validator).tokensReceived(
             hacker.address,
             validator.address,
             developer.address,
             5,
             "0x11",
             "0x11"
-        ).should.be.eventually.rejectedWith("Message sender is invalid");
+        )).to.be.revertedWithCustomError(skaleManager, "MessageSenderIsInvalid")
+            .withArgs(validator.address);
     });
 
     it("should transfer ownership", async () => {
@@ -141,8 +143,9 @@ describe("SkaleManager", () => {
     });
 
     it("should allow only owner to set a version", async () => {
-        await skaleManager.connect(hacker).setVersion("bad")
-            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await expect(skaleManager.connect(hacker).setVersion("bad"))
+            .to.be.revertedWithCustomError(skaleManager, "MessageSenderIsNotOwner")
+            .withArgs(hacker.address);
 
         await skaleManager.setVersion("good");
         (await skaleManager.version()).should.be.equal("good");
