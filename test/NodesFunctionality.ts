@@ -180,7 +180,9 @@ describe("NodesFunctionality", () => {
         });
 
         it("should change IP", async () => {
-            await nodes.connect(holder).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("Caller is not an admin");
+            await expect(nodes.connect(holder).changeIP(0, "0x7f000001", "0x00000000"))
+                .to.be.revertedWithCustomError(nodes, "MessageSenderIsNotAdmin")
+                .withArgs(holder.address);
             await nodes.connect(owner).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
             await nodes.connect(owner).changeIP(0, "0x00000000", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
             await nodes.connect(owner).changeIP(0, "0x7f000002", "0x7f000001").should.be.eventually.rejectedWith("IP address is not the same");
@@ -302,12 +304,16 @@ describe("NodesFunctionality", () => {
         });
 
         it("should change IP", async () => {
-            await nodes.connect(holder).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("Caller is not an admin");
+            await expect(nodes.connect(holder).changeIP(0, "0x7f000001", "0x00000000"))
+                .to.be.revertedWithCustomError(nodes, "MessageSenderIsNotAdmin")
+                .withArgs(holder.address);
             await nodes.connect(owner).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
             await nodes.connect(owner).changeIP(0, "0x00000000", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
             await nodes.connect(owner).changeIP(0, "0x7f000002", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
             await nodes.connect(owner).changeIP(0, "0x7f000003", "0x7f000002").should.be.eventually.rejectedWith("IP address is not the same");
-            await nodes.connect(holder).changeIP(1, "0x7f000002", "0x00000000").should.be.eventually.rejectedWith("Caller is not an admin");
+            await expect(nodes.connect(holder).changeIP(1, "0x7f000002", "0x00000000"))
+                .to.be.revertedWithCustomError(nodes, "MessageSenderIsNotAdmin")
+                .withArgs(holder.address);
             await nodes.connect(owner).changeIP(1, "0x7f000002", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
             await nodes.connect(owner).changeIP(1, "0x00000000", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
             await nodes.connect(owner).changeIP(1, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
