@@ -74,7 +74,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     )
         external
         override
-        onlySkaleManager()
+        allow("SkaleManager")
         //onlyAuthorized
         returns (bool successful)
     {

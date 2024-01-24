@@ -37,11 +37,6 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
 
     IContractManager public contractManager;
 
-    error MessageSenderIsInvalid(address sender);
-    error MessageSenderIsNotOwner(address sender);
-    error MessageSenderIsNotAdmin(address sender);
-    error MessageSenderIsNotSkaleManager(address sender);
-
     /**
      * @dev Modifier to make a function callable only when caller is the Owner.
      *
@@ -50,9 +45,7 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
      * - The caller must be the owner.
      */
     modifier onlyOwner() {
-        if(!_isOwner()) {
-            revert MessageSenderIsNotOwner(msg.sender);
-        }
+        require(_isOwner(), "Caller is not the owner");
         _;
     }
 
@@ -64,9 +57,7 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
      * - The caller must be an admin.
      */
     modifier onlyAdmin() {
-        if(!_isAdmin(msg.sender)) {
-            revert MessageSenderIsNotAdmin(msg.sender);
-        }
+        require(_isAdmin(msg.sender), "Caller is not an admin");
         _;
     }
 
@@ -79,10 +70,9 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
      * - The caller must be the owner or `contractName`.
      */
     modifier allow(string memory contractName) {
-        if(!(contractManager.getContract(contractName) == msg.sender || _isOwner()))
-        {
-            revert MessageSenderIsInvalid(msg.sender);
-        }
+        require(
+            contractManager.getContract(contractName) == msg.sender || _isOwner(),
+            "Message sender is invalid");
         _;
     }
 
@@ -95,13 +85,11 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
      * - The caller must be the owner, `contractName1`, or `contractName2`.
      */
     modifier allowTwo(string memory contractName1, string memory contractName2) {
-        if(!(
+        require(
             contractManager.getContract(contractName1) == msg.sender ||
             contractManager.getContract(contractName2) == msg.sender ||
-            _isOwner()))
-        {
-            revert MessageSenderIsInvalid(msg.sender);
-        }
+            _isOwner(),
+            "Message sender is invalid");
         _;
     }
 
@@ -115,22 +103,12 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
      * `contractName3`.
      */
     modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
-        if(!(
+        require(
             contractManager.getContract(contractName1) == msg.sender ||
             contractManager.getContract(contractName2) == msg.sender ||
             contractManager.getContract(contractName3) == msg.sender ||
-            _isOwner()))
-        {
-            revert MessageSenderIsInvalid(msg.sender);
-        }
-        _;
-    }
-
-    modifier onlySkaleManager() {
-        if(!(contractManager.getSkaleManager() == msg.sender || _isOwner()))
-        {
-            revert MessageSenderIsNotSkaleManager(msg.sender);
-        }
+            _isOwner(),
+            "Message sender is invalid");
         _;
     }
 

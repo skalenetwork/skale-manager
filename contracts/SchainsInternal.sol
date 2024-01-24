@@ -381,7 +381,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
         numberOfSchainTypes = newNumberOfSchainTypes;
     }
 
-    function removeNodeFromAllExceptionSchains(uint256 nodeIndex) external override onlySkaleManager() {
+    function removeNodeFromAllExceptionSchains(uint256 nodeIndex) external override allow("SkaleManager") {
         uint256 len = _nodeToLockedSchains[nodeIndex].length;
         for (uint256 i = len; i > 0; i--) {
             removeNodeFromExceptions(_nodeToLockedSchains[nodeIndex][i - 1], nodeIndex);

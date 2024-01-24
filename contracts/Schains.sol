@@ -83,7 +83,7 @@ contract Schains is Permissions, ISchains {
      * - There is sufficient deposit to create type of schain.
      * - If from is a smart contract originator must be specified
      */
-    function addSchain(address from, uint256 deposit, bytes calldata data) external override onlySkaleManager() {
+    function addSchain(address from, uint256 deposit, bytes calldata data) external override allow("SkaleManager") {
         SchainParameters memory schainParameters = abi.decode(data, (SchainParameters));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         uint256 schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
@@ -156,7 +156,7 @@ contract Schains is Permissions, ISchains {
      *
      * - Executed by schain owner.
      */
-    function deleteSchain(address from, string calldata name) external override onlySkaleManager() {
+    function deleteSchain(address from, string calldata name) external override allow("SkaleManager") {
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         require(
@@ -177,7 +177,7 @@ contract Schains is Permissions, ISchains {
      *
      * - Schain exists.
      */
-    function deleteSchainByRoot(string calldata name) external override onlySkaleManager() {
+    function deleteSchainByRoot(string calldata name) external override allow("SkaleManager") {
         _deleteSchain(name, ISchainsInternal(contractManager.getContract("SchainsInternal")));
     }
 
@@ -193,7 +193,7 @@ contract Schains is Permissions, ISchains {
      * - DKG failure got stuck because there were no free nodes to rotate in.
      * - A free node must be released in the network.
      */
-    function restartSchainCreation(string calldata name) external override onlySkaleManager() {
+    function restartSchainCreation(string calldata name) external override allow("SkaleManager") {
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
