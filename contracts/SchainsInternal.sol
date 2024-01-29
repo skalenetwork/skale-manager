@@ -30,7 +30,6 @@ import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol"
 import { ConstantsHolder } from "./ConstantsHolder.sol";
 import { IPruningSchainsInternal } from "./interfaces/IPruningSchainInternal.sol";
 import { IRandom, Random } from "./utils/Random.sol";
-import { Nodes } from "./Nodes.sol";
 import { Permissions } from "./Permissions.sol";
 
 
@@ -259,7 +258,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
 
         removeSchainForNode(nodeIndex, placeOfSchainOnNode[schainHash][nodeIndex] - 1);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         require(_removeAddressFromSchain(schainHash, nodes.getNodeAddress(nodeIndex)), "Incorrect node address");
         nodes.addSpaceToNode(nodeIndex, schains[schainHash].partOfNode);
     }
@@ -415,7 +414,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
         allowTwo("NodeRotation", "SkaleDKG")
         schainExists(schainHash)
     {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         for (uint256 i = 0; i < _schainToExceptionNodes[schainHash].length; i++) {
             nodes.makeNodeInvisible(_schainToExceptionNodes[schainHash][i]);
         }
@@ -735,7 +734,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
     function isAnyFreeNode(bytes32 schainHash) external view override schainExists(schainHash) returns (bool free) {
         // TODO:
         // Move this function to Nodes?
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainHash].partOfNode;
         uint256 numberOfCandidates = nodes.countNodesWithFreeSpace(space);
         for (uint256 i = 0; i < _schainToExceptionNodes[schainHash].length; i++) {
@@ -966,7 +965,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
      * @dev Generates schain group using a pseudo-random generator.
      */
     function _generateGroup(bytes32 schainHash, uint256 numberOfNodes) private returns (uint256[] memory nodesInGroup) {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainHash].partOfNode;
         nodesInGroup = new uint256[](numberOfNodes);
 
@@ -994,7 +993,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
     }
 
     function _makeSchainNodesVisible(bytes32 schainHash) private {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        INodes nodes = INodes(contractManager.getContract("Nodes"));
         for (uint256 i = 0; i < _schainToExceptionNodes[schainHash].length; i++) {
             nodes.makeNodeVisible(_schainToExceptionNodes[schainHash][i]);
         }

@@ -35,7 +35,6 @@ import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 import { Permissions } from "./Permissions.sol";
 import { ConstantsHolder } from "./ConstantsHolder.sol";
 import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
-import { SkaleDKG } from "./SkaleDKG.sol";
 
 
 /**
@@ -196,7 +195,7 @@ contract Schains is Permissions, ISchains {
     function restartSchainCreation(string calldata name) external override allow("SkaleManager") {
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
-        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         require(!skaleDKG.isLastDKGSuccessful(schainHash), "DKG success");
         ISchainsInternal schainsInternal = ISchainsInternal(
             contractManager.getContract("SchainsInternal"));

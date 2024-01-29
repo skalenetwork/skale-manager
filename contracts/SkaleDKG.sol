@@ -71,7 +71,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     mapping(bytes32 => uint256) private _badNodes;
 
-    mapping(bytes32 => uint256) public pendingToBeReplaced;
+    mapping(bytes32 => uint256) public override pendingToBeReplaced;
 
     modifier correctGroup(bytes32 schainHash) {
         require(channels[schainHash].active, "Group is not created");
