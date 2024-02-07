@@ -732,6 +732,26 @@ contract Nodes is Permissions, INodes {
         return nodeExtras[nodeIndex].lastChangeIpTime;
     }
 
+    function isNodeVisible(uint256 nodeIndex)
+        external
+        view
+        override
+        checkNodeExists(nodeIndex)
+        returns (bool visible)
+    {
+        return !_invisible[nodeIndex];
+    }
+
+    function getFreeSpace(uint256 nodeIndex)
+        external
+        view
+        override
+        checkNodeExists(nodeIndex)
+        returns (uint8 freeSpace)
+    {
+        return spaceOfNodes[nodeIndex].freeSpace;
+    }
+
     /**
      * @dev Returns the Validator ID for a given node.
      */

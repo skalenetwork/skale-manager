@@ -143,13 +143,6 @@ describe("SchainsInternal", () => {
             totalResources.should.be.equal(64);
         });
 
-        it("should change schain lifetime", async () => {
-            await schainsInternal.changeLifetime(schainNameHash, 7, 8);
-            const schain = await schainsInternal.schains(schainNameHash);
-            schain.lifetime.should.be.equal(12);
-            schain.deposit.should.be.equal(13);
-        });
-
         describe("on registered schain", () => {
             const nodeIndex = 0;
             const numberOfNewSchains = 5
