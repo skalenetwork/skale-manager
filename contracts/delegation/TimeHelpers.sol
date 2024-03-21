@@ -21,9 +21,9 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
-import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
+import { BokkyPooBahsDateTimeLibrary } from "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
 /**
  * @title TimeHelpers
@@ -33,43 +33,41 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
  */
 contract TimeHelpers is ITimeHelpers {
 
-    uint constant private _ZERO_YEAR = 2020;
+    uint256 constant private _ZERO_YEAR = 2020;
 
-    function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays)
+    function calculateProofOfUseLockEndTime(uint256 month, uint256 lockUpPeriodDays)
         external
         view
         override
-        returns (uint timestamp)
+        returns (uint256 timestamp)
     {
         timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
     }
 
-    function getCurrentMonth() external view virtual override returns (uint) {
+    function getCurrentMonth() external view virtual override returns (uint256 month) {
         return timestampToMonth(block.timestamp);
     }
 
-    function timestampToYear(uint timestamp) external view virtual override returns (uint) {
-        uint year;
+    function timestampToYear(uint256 timestamp) external view virtual override returns (uint256 year) {
         (year, , ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
         require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
         return year - _ZERO_YEAR;
     }
 
-    function addDays(uint fromTimestamp, uint n) external pure override returns (uint) {
+    function addDays(uint256 fromTimestamp, uint256 n) external pure override returns (uint256 result) {
         return BokkyPooBahsDateTimeLibrary.addDays(fromTimestamp, n);
     }
 
-    function addMonths(uint fromTimestamp, uint n) external pure override returns (uint) {
+    function addMonths(uint256 fromTimestamp, uint256 n) external pure override returns (uint256 result) {
         return BokkyPooBahsDateTimeLibrary.addMonths(fromTimestamp, n);
     }
 
-    function addYears(uint fromTimestamp, uint n) external pure override returns (uint) {
+    function addYears(uint256 fromTimestamp, uint256 n) external pure override returns (uint256 result) {
         return BokkyPooBahsDateTimeLibrary.addYears(fromTimestamp, n);
     }
 
-    function timestampToMonth(uint timestamp) public view virtual override returns (uint) {
-        uint year;
-        uint month;
+    function timestampToMonth(uint256 timestamp) public view virtual override returns (uint256 month) {
+        uint256 year;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
         require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
         month = month - 1 + (year - _ZERO_YEAR) * 12;
@@ -77,9 +75,9 @@ contract TimeHelpers is ITimeHelpers {
         return month;
     }
 
-    function monthToTimestamp(uint month) public view virtual override returns (uint timestamp) {
-        uint year = _ZERO_YEAR;
-        uint _month = month;
+    function monthToTimestamp(uint256 month) public view virtual override returns (uint256 timestamp) {
+        uint256 year = _ZERO_YEAR;
+        uint256 _month = month;
         year = year + _month / 12;
         _month = _month % 12;
         _month = _month + 1;

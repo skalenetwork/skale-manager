@@ -22,7 +22,7 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
+import { IRandom } from "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
 
 /**
  * @title Random
@@ -33,18 +33,18 @@ library Random {
     /**
      * @dev Create an instance of RandomGenerator
      */
-    function create(uint seed) internal pure returns (IRandom.RandomGenerator memory) {
+    function create(uint256 seed) internal pure returns (IRandom.RandomGenerator memory generator) {
         return IRandom.RandomGenerator({seed: seed});
     }
 
-    function createFromEntropy(bytes memory entropy) internal pure returns (IRandom.RandomGenerator memory) {
+    function createFromEntropy(bytes memory entropy) internal pure returns (IRandom.RandomGenerator memory generator) {
         return create(uint(keccak256(entropy)));
     }
 
     /**
      * @dev Generates random value
      */
-    function random(IRandom.RandomGenerator memory self) internal pure returns (uint) {
+    function random(IRandom.RandomGenerator memory self) internal pure returns (uint256 value) {
         self.seed = uint(sha256(abi.encodePacked(self.seed)));
         return self.seed;
     }
@@ -52,13 +52,13 @@ library Random {
     /**
      * @dev Generates random value in range [0, max)
      */
-    function random(IRandom.RandomGenerator memory self, uint max) internal pure returns (uint) {
+    function random(IRandom.RandomGenerator memory self, uint256 max) internal pure returns (uint256 value) {
         assert(max > 0);
-        uint maxRand = type(uint).max - type(uint).max % max;
+        uint256 maxRand = type(uint).max - type(uint).max % max;
         if (type(uint).max - maxRand == max - 1) {
             return random(self) % max;
         } else {
-            uint rand = random(self);
+            uint256 rand = random(self);
             while (rand >= maxRand) {
                 rand = random(self);
             }

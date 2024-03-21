@@ -21,11 +21,14 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { ISkaleVerifier } from "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
 
-import "./Permissions.sol";
-import "./utils/Precompiled.sol";
-import "./utils/FieldOperations.sol";
+import { Permissions } from "./Permissions.sol";
+import { Precompiled } from "./utils/Precompiled.sol";
+import { Fp2Operations } from "./utils/fieldOperations/Fp2Operations.sol";
+import { G1Operations } from "./utils/fieldOperations/G1Operations.sol";
+import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 
 /**
  * @title SkaleVerifier
@@ -34,6 +37,10 @@ import "./utils/FieldOperations.sol";
 contract SkaleVerifier is Permissions, ISkaleVerifier {
     using Fp2Operations for ISkaleDKG.Fp2Point;
     using G2Operations for ISkaleDKG.G2Point;
+
+    function initialize(address newContractsAddress) public override initializer {
+        Permissions.initialize(newContractsAddress);
+    }
 
     /**
     * @dev Verifies a BLS signature.
@@ -48,15 +55,15 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
     function verify(
         ISkaleDKG.Fp2Point calldata signature,
         bytes32 hash,
-        uint counter,
-        uint hashA,
-        uint hashB,
+        uint256 counter,
+        uint256 hashA,
+        uint256 hashB,
         ISkaleDKG.G2Point calldata publicKey
     )
         external
         view
         override
-        returns (bool)
+        returns (bool valid)
     {
         require(G1Operations.checkRange(signature), "Signature is not valid");
         if (!_checkHashToGroupWithHelper(
@@ -70,7 +77,7 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
             return false;
         }
 
-        uint newSignB = G1Operations.negate(signature.b);
+        uint256 newSignB = G1Operations.negate(signature.b);
         require(G1Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
         require(G1Operations.isG1Point(hashA, hashB), "Hash not in G1");
 
@@ -80,35 +87,39 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
             "Public Key not in G2"
         );
 
-        return Precompiled.bn256Pairing(
-            signature.a, newSignB,
-            g2.x.b, g2.x.a, g2.y.b, g2.y.a,
-            hashA, hashB,
-            publicKey.x.b, publicKey.x.a, publicKey.y.b, publicKey.y.a
-        );
-    }
-
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
+        return Precompiled.bn256Pairing({
+            x1: signature.a,
+            y1: newSignB,
+            a1: g2.x.b,
+            b1: g2.x.a,
+            c1: g2.y.b,
+            d1: g2.y.a,
+            x2: hashA,
+            y2: hashB,
+            a2: publicKey.x.b,
+            b2: publicKey.x.a,
+            c2: publicKey.y.b,
+            d2: publicKey.y.a
+        });
     }
 
     function _checkHashToGroupWithHelper(
         bytes32 hash,
-        uint counter,
-        uint hashA,
-        uint hashB
+        uint256 counter,
+        uint256 hashA,
+        uint256 hashB
     )
         private
         pure
-        returns (bool)
+        returns (bool valid)
     {
         if (counter > 100) {
             return false;
         }
-        uint xCoord = uint(hash) % Fp2Operations.P;
+        uint256 xCoord = uint(hash) % Fp2Operations.P;
         xCoord = (xCoord + counter) % Fp2Operations.P;
 
-        uint ySquared = addmod(
+        uint256 ySquared = addmod(
             mulmod(mulmod(xCoord, xCoord, Fp2Operations.P), xCoord, Fp2Operations.P),
             3,
             Fp2Operations.P

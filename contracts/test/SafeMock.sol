@@ -21,27 +21,10 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-interface ISafeMock {
-    enum Operation {Call, DelegateCall}
+import { ISafeMock } from "./interfaces/ISafeMock.sol";
 
-    function transferProxyAdminOwnership(OwnableUpgradeable proxyAdmin, address newOwner) external;
-    function destroy() external;
-    function multiSend(bytes memory transactions) external;
-    function getTransactionHash(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Operation operation,
-        uint256 safeTxGas,
-        uint256 baseGas,
-        uint256 gasPrice,
-        address gasToken,
-        address refundReceiver,
-        uint256 _nonce
-    ) external view returns (bytes32);
-}
 
 contract SafeMock is OwnableUpgradeable, ISafeMock {
 
@@ -123,7 +106,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
     /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
     /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
     /// @param _nonce Transaction nonce.
-    /// @return Transaction hash.
+    /// @return hash Transaction hash.
     function getTransactionHash(
         address to,
         uint256 value,
@@ -135,20 +118,20 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
         address gasToken,
         address refundReceiver,
         uint256 _nonce
-    ) public view override returns (bytes32) {
+    ) public view override returns (bytes32 hash) {
         return keccak256(
-            _encodeTransactionData(
-                to,
-                value,
-                data,
-                operation,
-                safeTxGas,
-                baseGas,
-                gasPrice,
-                gasToken,
-                refundReceiver,
-                _nonce
-            )
+            _encodeTransactionData({
+                to: to,
+                value: value,
+                data: data,
+                operation: operation,
+                safeTxGas: safeTxGas,
+                baseGas: baseGas,
+                gasPrice: gasPrice,
+                gasToken: gasToken,
+                refundReceiver: refundReceiver,
+                _nonce: _nonce
+            })
         );
     }
 
@@ -164,7 +147,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
     /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
     /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
     /// @param _nonce Transaction nonce.
-    /// @return Transaction hash bytes.
+    /// @return transactionData Transaction hash bytes.
     function _encodeTransactionData(
         address to,
         uint256 value,
@@ -176,9 +159,11 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
         address gasToken,
         address refundReceiver,
         uint256 _nonce
-    ) private view returns (bytes memory) {
+    ) private view returns (bytes memory transactionData) {
         bytes32 safeTxHash =
             keccak256(
+                // Named arguments cannot be used for functions that take arbitrary parameters
+                // solhint-disable-next-line func-named-parameters
                 abi.encode(
                     SAFE_TX_TYPE_HASH,
                     to,
@@ -196,7 +181,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
         return abi.encodePacked(bytes1(0x19), bytes1(0x01), _domainSeparator(), safeTxHash);
     }
 
-    function _domainSeparator() private view returns (bytes32) {
+    function _domainSeparator() private view returns (bytes32 separator) {
         return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPE_HASH, block.chainid, this));
     }
 }

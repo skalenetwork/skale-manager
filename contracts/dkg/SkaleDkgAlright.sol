@@ -23,10 +23,10 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
-import "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
-import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
 
 /**
@@ -36,25 +36,25 @@ import "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
  */
 library SkaleDkgAlright {
 
-    event AllDataReceived(bytes32 indexed schainHash, uint nodeIndex);
+    event AllDataReceived(bytes32 indexed schainHash, uint256 nodeIndex);
     event SuccessfulDKG(bytes32 indexed schainHash);
 
     function alright(
         bytes32 schainHash,
-        uint fromNodeIndex,
+        uint256 fromNodeIndex,
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels,
         mapping(bytes32 => ISkaleDKG.ProcessDKG) storage dkgProcess,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
-        mapping(bytes32 => uint) storage lastSuccessfulDKG,
-        mapping(bytes32 => uint) storage startAlrightTimestamp
+        mapping(bytes32 => uint256) storage lastSuccessfulDKG,
+        mapping(bytes32 => uint256) storage startAlrightTimestamp
 
     )
         external
     {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
-        uint numberOfParticipant = channels[schainHash].n;
+        (uint256 index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        uint256 numberOfParticipant = channels[schainHash].n;
         require(numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted, "Still Broadcasting phase");
         require(
             startAlrightTimestamp[schainHash] + _getComplaintTimeLimit(contractManager) > block.timestamp,
@@ -77,7 +77,7 @@ library SkaleDkgAlright {
         }
     }
 
-    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint) {
+    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256 timeLimit) {
         return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 

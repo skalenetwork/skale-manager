@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/IDecryption.sol";
+import { IDecryption } from "@skalenetwork/skale-manager-interfaces/IDecryption.sol";
 
 /**
  * @title Decryption
@@ -34,14 +34,14 @@ contract Decryption is IDecryption {
     /**
      * @dev Returns an encrypted text given a secret and a key.
      */
-    function encrypt(uint256 secretNumber, bytes32 key) external pure override returns (bytes32) {
+    function encrypt(uint256 secretNumber, bytes32 key) external pure override returns (bytes32 cipherText) {
         return bytes32(secretNumber) ^ key;
     }
 
     /**
      * @dev Returns a secret given an encrypted text and a key.
      */
-    function decrypt(bytes32 cipherText, bytes32 key) external pure override returns (uint256) {
+    function decrypt(bytes32 cipherText, bytes32 key) external pure override returns (uint256 secretNumber) {
         return uint256(cipherText ^ key);
     }
 }

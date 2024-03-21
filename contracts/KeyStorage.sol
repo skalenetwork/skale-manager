@@ -21,11 +21,12 @@
 
 pragma solidity 0.8.17;
 
-import "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
-import "./Permissions.sol";
-import "./utils/Precompiled.sol";
-import "./utils/FieldOperations.sol";
+import { Permissions } from "./Permissions.sol";
+import { Fp2Operations } from "./utils/fieldOperations/Fp2Operations.sol";
+import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 
 contract KeyStorage is Permissions, IKeyStorage {
     using Fp2Operations for ISkaleDKG.Fp2Point;
@@ -37,7 +38,7 @@ contract KeyStorage is Permissions, IKeyStorage {
     }
 
     // Unused variable!!
-    mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
+    mapping(bytes32 => mapping(uint256 => BroadcastedData)) private _data;
     //
 
     mapping(bytes32 => ISkaleDKG.G2Point) private _publicKeysInProgress;
@@ -48,6 +49,10 @@ contract KeyStorage is Permissions, IKeyStorage {
     //
 
     mapping(bytes32 => ISkaleDKG.G2Point[]) private _previousSchainsPublicKeys;
+
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+    }
 
     function deleteKey(bytes32 schainHash) external override allow("SkaleDKG") {
         _previousSchainsPublicKeys[schainHash].push(_schainsPublicKeys[schainHash]);
@@ -73,27 +78,44 @@ contract KeyStorage is Permissions, IKeyStorage {
         delete _publicKeysInProgress[schainHash];
     }
 
-    function getCommonPublicKey(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point memory) {
+    function getCommonPublicKey(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (ISkaleDKG.G2Point memory publicKey)
+    {
         return _schainsPublicKeys[schainHash];
     }
 
-    function getPreviousPublicKey(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point memory) {
-        uint length = _previousSchainsPublicKeys[schainHash].length;
+    function getPreviousPublicKey(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (ISkaleDKG.G2Point memory previousPublicKey)
+    {
+        uint256 length = _previousSchainsPublicKeys[schainHash].length;
         if (length == 0) {
             return G2Operations.getG2Zero();
         }
         return _previousSchainsPublicKeys[schainHash][length - 1];
     }
 
-    function getAllPreviousPublicKeys(bytes32 schainHash) external view override returns (ISkaleDKG.G2Point[] memory) {
+    function getAllPreviousPublicKeys(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (ISkaleDKG.G2Point[] memory previousPublicKeys)
+    {
         return _previousSchainsPublicKeys[schainHash];
     }
 
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-    }
-
-    function _isSchainsPublicKeyZero(bytes32 schainHash) private view returns (bool) {
+    function _isSchainsPublicKeyZero(bytes32 schainHash) private view returns (bool zero) {
         return _schainsPublicKeys[schainHash].x.a == 0 &&
             _schainsPublicKeys[schainHash].x.b == 0 &&
             _schainsPublicKeys[schainHash].y.a == 0 &&

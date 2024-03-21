@@ -3,6 +3,7 @@ on:
   pull_request:
     types: [closed]
     branches:
+      - 'v*.*.*'
       - master
       - develop
       - beta
@@ -10,6 +11,9 @@ on:
   push:
     tags:
       - 'custom-release-*'
+
+env:
+  NODE_VERSION: 18
 
 jobs:
   build:
@@ -31,15 +35,15 @@ jobs:
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
-    
+
     - name: Install NODE JS
       uses: actions/setup-node@v2
       with:
-        node-version: 16
+        node-version: ${{ env.NODE_VERSION }}
 
     - name: Install project
       run: yarn install
-    
+
     - name: Build and publish container
       run: |
         export BRANCH=${GITHUB_REF##*/}
@@ -50,7 +54,7 @@ jobs:
         ( test $BRANCH = "stable" || test $BRANCH = "master" && export PRERELEASE=false ) || export PRERELEASE=true
         echo "PRERELEASE=$PRERELEASE" >> $GITHUB_ENV
         bash ./scripts/build_and_publish.sh
-    
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
