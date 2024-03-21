@@ -24,13 +24,13 @@ pragma solidity 0.8.17;
 import { EnumerableSetUpgradeable }
 from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
-import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
-import { IPruningSchainsInternal } from "./interfaces/IPruningSchainInternal.sol";
-import { Permissions } from "./Permissions.sol";
 import { ConstantsHolder } from "./ConstantsHolder.sol";
+import { IPruningSchainsInternal } from "./interfaces/IPruningSchainInternal.sol";
 import { IRandom, Random } from "./utils/Random.sol";
+import { Permissions } from "./Permissions.sol";
 
 
 /**
@@ -180,29 +180,6 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
                 numberOfNodes * constantsHolder.TOTAL_SPACE_ON_NODE() / partOfNode;
         }
         return _generateGroup(schainHash, numberOfNodes);
-    }
-
-    /**
-     * @dev Allows Schains contract to change the Schain lifetime through
-     * an additional SKL token deposit.
-     *
-     * Requirements:
-     *
-     * - Message sender is Schains smart contract
-     * - Schain must exist
-     */
-    function changeLifetime(
-        bytes32 schainHash,
-        uint256 lifetime,
-        uint256 deposit
-    )
-        external
-        override
-        allow("Schains")
-        schainExists(schainHash)
-    {
-        schains[schainHash].deposit = schains[schainHash].deposit + deposit;
-        schains[schainHash].lifetime = schains[schainHash].lifetime + lifetime;
     }
 
     /**
@@ -755,9 +732,18 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
      * - Schain must exist
      */
     function isAnyFreeNode(bytes32 schainHash) external view override schainExists(schainHash) returns (bool free) {
+        // TODO:
+        // Move this function to Nodes?
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainHash].partOfNode;
-        return nodes.countNodesWithFreeSpace(space) > 0;
+        uint256 numberOfCandidates = nodes.countNodesWithFreeSpace(space);
+        for (uint256 i = 0; i < _schainToExceptionNodes[schainHash].length; i++) {
+            uint256 nodeIndex = _schainToExceptionNodes[schainHash][i];
+            if (space <= nodes.getFreeSpace(nodeIndex) && nodes.isNodeVisible(nodeIndex)) {
+                --numberOfCandidates;
+            }
+        }
+        return numberOfCandidates > 0;
     }
 
     /**

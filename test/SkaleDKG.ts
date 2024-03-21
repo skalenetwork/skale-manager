@@ -1409,7 +1409,7 @@ describe("SkaleDKG", () => {
                                 badEncryptedSecretKeyContributions[indexes[0]]
                             )
                         );
-                        
+
                         const response = await skaleDKG.connect(validators[0].nodeAddress).response(
                             stringKeccak256(schainName),
                             0,
@@ -1498,7 +1498,7 @@ describe("SkaleDKG", () => {
                 ),
                 "Broadcast 1"
             );
-            
+
             await reimbursed(
                 await skaleDKG.connect(validators[1].nodeAddress).broadcast(
                     stringKeccak256(schainName),
@@ -1509,7 +1509,7 @@ describe("SkaleDKG", () => {
                 ),
                 "Broadcast 2"
             );
-            
+
             const complaintBadData = await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                 stringKeccak256(schainName),
                 1,
@@ -1533,7 +1533,7 @@ describe("SkaleDKG", () => {
                 ),
                 "Pre response"
             );
-            
+
             const responseTx = await skaleDKG.connect(validators[0].nodeAddress).response(
                 stringKeccak256(schainName),
                 0,
@@ -1928,7 +1928,7 @@ describe("SkaleDKG", () => {
                     ),
                     "Alright"
                 );
-                
+
                 alrightPoss = await skaleDKG.connect(validators[index].nodeAddress).isAlrightPossible(
                     stringKeccak256("New16NodeSchain"),
                     i
@@ -2381,7 +2381,7 @@ describe("SkaleDKG", () => {
                     accusedNode
                 )
             );
-            
+
             const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
                 8,
@@ -2454,8 +2454,8 @@ describe("SkaleDKG", () => {
                     rotation.rotationCounter
                 );
             }
-            const accusedNode = "15";
-            const complaintNode = "7";
+            const accusedNode = 15;
+            const complaintNode = 7;
             await skipTime(1800);
             await reimbursed(
                 await skaleDKG.connect(validators[0].nodeAddress).complaint(
@@ -2465,7 +2465,8 @@ describe("SkaleDKG", () => {
                 )
             );
             const space = await nodes.spaceOfNodes(accusedNode);
-            space.freeSpace.should.be.equal(128);
+            // The node is still a part of schain because can't be replaced
+            space.freeSpace.should.be.equal(0);
 
             const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
@@ -2486,11 +2487,18 @@ describe("SkaleDKG", () => {
                     domainName: "some.domain.name"
                 }
             );
+            const createdNode = 16;
             await schains.restartSchainCreation("New16NodeSchain");
 
+
             rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
+
+            expect(rotation.rotationCounter).to.be.equal(1);
+            expect(rotation.nodeIndex).to.be.equal(accusedNode);
+            expect(rotation.newNodeIndex).to.be.equal(createdNode);
+
             for (let i = 0; i < 17; i++) {
-                if (i.toString() === accusedNode) {
+                if (i === accusedNode) {
                     continue;
                 }
                 let index = 0;
@@ -2507,7 +2515,7 @@ describe("SkaleDKG", () => {
             }
             let comPubKey;
             for (let i = 0; i < 17; i++) {
-                if (i.toString() === accusedNode) {
+                if (i === accusedNode) {
                     continue;
                 }
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
@@ -2605,7 +2613,7 @@ describe("SkaleDKG", () => {
                     accusedNode
                 )
             );
-            
+
             const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256("New16NodeSchain"),
                 8,
