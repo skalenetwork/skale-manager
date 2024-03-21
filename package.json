@@ -44,7 +44,7 @@
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "@openzeppelin/hardhat-upgrades": "^1.14.0",
-    "@skalenetwork/skale-manager-interfaces": "2.1.0-develop.0",
+    "@skalenetwork/skale-manager-interfaces": "3.0.0",
     "@skalenetwork/upgrade-tools": "^2.0.1",
     "@typechain/hardhat": "^7.0.0",
     "dotenv": "^16.3.1",
