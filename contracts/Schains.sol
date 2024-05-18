@@ -200,7 +200,13 @@ contract Schains is Permissions, ISchains {
         ISchainsInternal schainsInternal = ISchainsInternal(
             contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainHash), "No free Nodes for new group formation");
-        uint256 newNodeIndex = nodeRotation.selectNodeToGroup(schainHash);
+        uint256 newNodeIndex = nodeRotation.rotateNode(
+                skaleDKG.pendingToBeReplaced(schainHash),
+                schainHash,
+                false,
+                true
+            );
+        skaleDKG.resetPendingToBeReplaced(schainHash);
         skaleDKG.openChannel(schainHash);
         emit NodeAdded(schainHash, newNodeIndex);
     }
