@@ -183,6 +183,29 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
     }
 
     /**
+     * @dev Allows Schains contract to change the Schain lifetime through
+     * an additional SKL token deposit.
+     *
+     * Requirements:
+     *
+     * - Message sender is Schains smart contract
+     * - Schain must exist
+     */
+    function changeLifetime(
+        bytes32 schainHash,
+        uint256 lifetime,
+        uint256 deposit
+    )
+        external
+        override
+        allow("Schains")
+        schainExists(schainHash)
+    {
+        schains[schainHash].deposit = schains[schainHash].deposit + deposit;
+        schains[schainHash].lifetime = schains[schainHash].lifetime + lifetime;
+    }
+
+    /**
      * @dev Allows Schains contract to remove an schain from the network.
      * Generally schains are not removed from the system; instead they are
      * simply allowed to expire.
