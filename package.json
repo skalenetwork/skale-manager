@@ -42,7 +42,7 @@
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@openzeppelin/contracts": "^4.9.3",
-    "@openzeppelin/contracts-upgradeable": "^4.9.3",
+    "@openzeppelin/contracts-upgradeable": "^4.9.6",
     "@openzeppelin/hardhat-upgrades": "^1.14.0",
     "@skalenetwork/skale-manager-interfaces": "^3.0.0-develop.2",
     "@skalenetwork/upgrade-tools": "^2.0.1",
