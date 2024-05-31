@@ -1551,6 +1551,11 @@
     proper-lockfile "^4.1.1"
     solidity-ast "^0.4.15"
 
+"@quant-finance/solidity-datetime@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@quant-finance/solidity-datetime/-/solidity-datetime-2.2.0.tgz#50f2d00a571d8cc2d962257b40b70fc44450dcaa"
+  integrity sha512-iO0EnqPKTzGCgQOkI9lerpJc0XKUhMNurSjHcA7p7nlP2K2z3U4kk9OC9eQkZUrdBtltft+kIibiDdIOYWuQMg==
+
 "@resolver-engine/core@^0.3.3":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@resolver-engine/core/-/core-0.3.3.tgz#590f77d85d45bc7ecc4e06c654f41345db6ca967"
@@ -1754,6 +1759,32 @@
   integrity sha512-iQADsW4LBMISqZ6Ci1dupJL9pprqwcVFTcOsEmQOEhW+KLCVn/Y4Jrvg2k19fIHCp+iFprriYPTdRcQR8NbUPg==
   dependencies:
     "@sinonjs/commons" "^1.7.0"
+
+"@skalenetwork/ima-interfaces@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/ima-interfaces/-/ima-interfaces-2.0.0.tgz#93cb73a5200f7d9753a44c1be3e15156e7ceaf9c"
+  integrity sha512-Kqm45GHQl56H4pqdWHIcTUfFrE60LAUKI3j2CecebN0T9rKa0DDokvE42VDa3PfK2z6XIJxh7SkF+i6NsLbpjA==
+  dependencies:
+    "@skalenetwork/skale-manager-interfaces" "^0.1.2"
+
+"@skalenetwork/marionette-interfaces@^0.0.0-main.2":
+  version "0.0.0-main.2"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/marionette-interfaces/-/marionette-interfaces-0.0.0-main.2.tgz#84ec8e8387b6019f45d44d37c38b687a78240c81"
+  integrity sha512-1T8k8xvd/yPvhLX4N099JHpRZRIKD1DSegfM48FOrCjkwRGP+ub/8R4DbNbPm1oMgg/P7rrX24qkIE/Pg+CmmA==
+  dependencies:
+    "@skalenetwork/ima-interfaces" "^2.0.0"
+
+"@skalenetwork/paymaster-interfaces@^1.0.0-main.7":
+  version "1.0.0-main.7"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/paymaster-interfaces/-/paymaster-interfaces-1.0.0-main.7.tgz#744b637f14bdbe140ac7933bfdc23463307416bc"
+  integrity sha512-K9b4FsTPGTWVKGQx8Nmn5NLHHgEt5UEcW8V8vnzlypvnDt6nGhim0s4uASIYBOHdNAUzfk/uOkymOmJitv+fYA==
+  dependencies:
+    "@quant-finance/solidity-datetime" "^2.2.0"
+
+"@skalenetwork/skale-manager-interfaces@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-0.1.2.tgz#88e543c8cc298cd0cc9559892d746d2d74786da8"
+  integrity sha512-gapSQJahwWMlTB/xp/kMzB6k+9+Skx/N0fvEloiW4CUrkGkSa8+fj16YmUXX45p1hOc45W+JydiJPNgZtx32Dg==
 
 "@skalenetwork/skale-manager-interfaces@^3.0.0-develop.2":
   version "3.0.0-develop.2"
