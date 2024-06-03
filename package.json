@@ -26,7 +26,8 @@
     }
   ],
   "scripts": {
-    "compile": "npx hardhat clean && npx hardhat compile",
+    "compile": "npx hardhat compile",
+    "cleanCompile": "npx hardhat clean && yarn compile",
     "docs": "scripts/prepare-docs.sh",
     "fullCheck": "yarn lint && yarn tsc && yarn eslint && yarn cspell && yarn slither",
     "hooks": "git config core.hooksPath .githooks || true",

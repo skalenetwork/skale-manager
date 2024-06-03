@@ -3,10 +3,11 @@
   "rules": {
     "not-rely-on-time": "off",
 
+    "compiler-version": ["warn","0.8.26"],
+
     "avoid-tx-origin": "error",
     "check-send-result": "error",
     "code-complexity": "error",
-    "compiler-version": ["error","0.8.17"],
     "comprehensive-interface": "error",
     "contract-name-camelcase": "error",
     "explicit-types": "error",

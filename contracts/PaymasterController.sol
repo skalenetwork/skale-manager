@@ -21,11 +21,13 @@
 
 pragma solidity 0.8.26;
 
+import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import {Encoder} from "@skalenetwork/marionette-interfaces/Encoder.sol";
 import {IMessageProxyForMainnet} from "@skalenetwork/ima-interfaces/mainnet/IMessageProxyForMainnet.sol";
 import {IMarionette} from "@skalenetwork/marionette-interfaces/IMarionette.sol";
 import {IPaymaster} from "@skalenetwork/paymaster-interfaces/IPaymaster.sol";
 
+import {IsNotContract, RoleRequired} from "./CommonErrors.sol";
 import {Permissions} from "./Permissions.sol";
 
 
@@ -36,10 +38,14 @@ import {Permissions} from "./Permissions.sol";
  *
  */
 contract PaymasterController is Permissions {
+    using AddressUpgradeable for address;
+
+    bytes32 public constant PAYMASTER_SETTER_ROLE = keccak256("PAYMASTER_SETTER_ROLE");
+
     IMessageProxyForMainnet public ima;
     IMarionette public marionette;
     IPaymaster public paymaster;
-    bytes32 public europaChainHash;
+    bytes32 public paymasterChainHash;
 
     error MessageProxyForMainnetAddressIsNotSet();
     error MarionetteAddressIsNotSet();
@@ -56,14 +62,51 @@ contract PaymasterController is Permissions {
         if (address(paymaster) == address(0)) {
             revert PaymasterAddressIsNotSet();
         }
-        if (europaChainHash == 0) {
+        if (paymasterChainHash == 0) {
             revert EuropaChainHashIsNotSet();
         }
         _;
     }
 
+    modifier onlyPaymasterSetter() {
+        if (!hasRole(PAYMASTER_SETTER_ROLE, msg.sender)) {
+            revert RoleRequired(PAYMASTER_SETTER_ROLE);
+        }
+        _;
+    }
+
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+        _setupRole(PAYMASTER_SETTER_ROLE, msg.sender);
+    }
+
+    function setImaAddress(address imaAddress) external onlyPaymasterSetter {
+        if (!imaAddress.isContract()) {
+            revert IsNotContract(imaAddress);
+        }
+        ima = IMessageProxyForMainnet(imaAddress);
+    }
+
+    function setMarionetteAddress(address marionetteAddress) external onlyPaymasterSetter {
+        if (!marionetteAddress.isContract()) {
+            revert IsNotContract(marionetteAddress);
+        }
+        marionette = IMessageProxyForMainnet(marionetteAddress);
+    }
+
+    function setPaymasterAddress(address paymasterAddress) external onlyPaymasterSetter {
+        if (!paymasterAddress.isContract()) {
+            revert IsNotContract(paymasterAddress);
+        }
+        paymaster = IMessageProxyForMainnet(paymasterAddress);
+    }
+
+    function setPaymasterChainHash(bytes32 chainHash) external onlyPaymasterSetter {
+        paymasterChainHash = chainHash;
+    }
+
     // TODO: restrict access
-    function addSchain(string calldata name) external whenConfigured {
+    function addSchain(string calldata name) external {
         _callPaymaster(abi.encodeWithSelector(
             paymaster.addSchain.selector,
             name
@@ -72,7 +115,7 @@ contract PaymasterController is Permissions {
 
     function _callPaymaster(bytes memory data) private whenConfigured {
         ima.postOutgoingMessage(
-            europaChainHash,
+            paymasterChainHash,
             address(marionette),
             Encoder.encodeFunctionCall(
                 address(paymaster),
