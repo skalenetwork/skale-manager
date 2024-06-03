@@ -39,6 +39,7 @@ import {Permissions} from "./Permissions.sol";
  */
 contract PaymasterController is Permissions {
     using AddressUpgradeable for address;
+    using AddressUpgradeable for address payable;
 
     bytes32 public constant PAYMASTER_SETTER_ROLE = keccak256("PAYMASTER_SETTER_ROLE");
 
@@ -87,18 +88,18 @@ contract PaymasterController is Permissions {
         ima = IMessageProxyForMainnet(imaAddress);
     }
 
-    function setMarionetteAddress(address marionetteAddress) external onlyPaymasterSetter {
+    function setMarionetteAddress(address payable marionetteAddress) external onlyPaymasterSetter {
         if (!marionetteAddress.isContract()) {
             revert IsNotContract(marionetteAddress);
         }
-        marionette = IMessageProxyForMainnet(marionetteAddress);
+        marionette = IMarionette(marionetteAddress);
     }
 
     function setPaymasterAddress(address paymasterAddress) external onlyPaymasterSetter {
         if (!paymasterAddress.isContract()) {
             revert IsNotContract(paymasterAddress);
         }
-        paymaster = IMessageProxyForMainnet(paymasterAddress);
+        paymaster = IPaymaster(paymasterAddress);
     }
 
     function setPaymasterChainHash(bytes32 chainHash) external onlyPaymasterSetter {

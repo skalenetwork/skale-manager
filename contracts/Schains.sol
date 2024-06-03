@@ -24,6 +24,7 @@ pragma solidity 0.8.26;
 import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import { EnumerableSetUpgradeable }
 from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import { ISchains } from "@skalenetwork/skale-manager-interfaces/ISchains.sol";
 import { ISkaleVerifier } from "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
@@ -32,8 +33,8 @@ import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.
 import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
-import { ConstantsHolder } from "./ConstantsHolder.sol";
 import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
+import { NotEnoughFunds, RoleRequired } from "./CommonErrors.sol";
 import { PaymasterController } from "./PaymasterController.sol";
 import { Permissions } from "./Permissions.sol";
 
@@ -63,8 +64,17 @@ contract Schains is Permissions, ISchains {
 
     bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
+    error SchainDoesNotExist(bytes32 schainHash);
+    error SchainIsCreatedTooEarly();
+    error SchainLifetimeIsTooSmall();
+    error SenderIsNotTheOwnerOfTheSchain();
+    error DkgWasNotFailed();
+    error NoFreeNodes();
+
     modifier schainExists(ISchainsInternal schainsInternal, bytes32 schainHash) {
-        require(schainsInternal.isSchainExist(schainHash), "The schain does not exist");
+        if(!schainsInternal.isSchainExist(schainHash)) {
+            revert SchainDoesNotExist(schainHash);
+        }
         _;
     }
 
@@ -85,17 +95,18 @@ contract Schains is Permissions, ISchains {
      */
     function addSchain(address from, uint256 deposit, bytes calldata data) external override allow("SkaleManager") {
         SchainParameters memory schainParameters = abi.decode(data, (SchainParameters));
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
+        IConstantsHolder constantsHolder = IConstantsHolder(contractManager.getConstantsHolder());
         uint256 schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
         uint256 minSchainLifetime = constantsHolder.minimalSchainLifetime();
-        require(block.timestamp >= schainCreationTimeStamp, "It is not a time for creating Schain");
-        require(
-            schainParameters.lifetime >= minSchainLifetime,
-            "Minimal schain lifetime should be satisfied"
-        );
-        require(
-            getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit,
-            "Not enough money to create Schain");
+        if(block.timestamp < schainCreationTimeStamp) {
+            revert SchainIsCreatedTooEarly();
+        }
+        if (schainParameters.lifetime < minSchainLifetime) {
+            revert SchainLifetimeIsTooSmall();
+        }
+        if (deposit < getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime)) {
+            revert NotEnoughFunds();
+        }
         _addSchain(from, deposit, schainParameters);
     }
 
@@ -123,7 +134,9 @@ contract Schains is Permissions, ISchains {
         payable
         override
     {
-        require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schain");
+        if (!hasRole(SCHAIN_CREATOR_ROLE, msg.sender)) {
+            revert RoleRequired(SCHAIN_CREATOR_ROLE);
+        }
 
         SchainParameters memory schainParameters = SchainParameters({
             lifetime: lifetime,
@@ -159,10 +172,9 @@ contract Schains is Permissions, ISchains {
     function deleteSchain(address from, string calldata name) external override allow("SkaleManager") {
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
-        require(
-            schainsInternal.isOwnerAddress(from, schainHash),
-            "Message sender is not the owner of the Schain"
-        );
+        if (!schainsInternal.isOwnerAddress(from, schainHash)) {
+            revert SenderIsNotTheOwnerOfTheSchain();
+        }
 
         _deleteSchain(name, schainsInternal);
     }
@@ -197,10 +209,14 @@ contract Schains is Permissions, ISchains {
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        require(!skaleDKG.isLastDKGSuccessful(schainHash), "DKG success");
+        if (skaleDKG.isLastDKGSuccessful(schainHash)) {
+            revert DkgWasNotFailed();
+        }
         ISchainsInternal schainsInternal = ISchainsInternal(
             contractManager.getContract("SchainsInternal"));
-        require(schainsInternal.isAnyFreeNode(schainHash), "No free Nodes for new group formation");
+        if (!schainsInternal.isAnyFreeNode(schainHash)) {
+            revert NoFreeNodes();
+        }
         uint256 newNodeIndex = nodeRotation.rotateNode(
                 skaleDKG.pendingToBeReplaced(schainHash),
                 schainHash,
@@ -290,7 +306,7 @@ contract Schains is Permissions, ISchains {
      * @dev Returns the current price in SKL tokens for given Schain type and lifetime.
      */
     function getSchainPrice(uint256 typeOfSchain, uint256 lifetime) public view override returns (uint256 price) {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
+        IConstantsHolder constantsHolder = IConstantsHolder(contractManager.getConstantsHolder());
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
         uint256 nodeDeposit = constantsHolder.NODE_DEPOSIT();
         uint256 numberOfNodes;

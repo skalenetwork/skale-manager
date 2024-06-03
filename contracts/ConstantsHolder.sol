@@ -33,12 +33,12 @@ import { Permissions } from "./Permissions.sol";
 contract ConstantsHolder is Permissions, IConstantsHolder {
 
     // initial price for creating Node (100 SKL)
-    uint256 public constant NODE_DEPOSIT = 100 * 1e18;
+    uint256 public constant override NODE_DEPOSIT = 100 * 1e18;
 
     uint8 public constant TOTAL_SPACE_ON_NODE = 128;
 
     // part of Node for Small Skale-chain (1/128 of Node)
-    uint8 public constant SMALL_DIVISOR = 128;
+    uint8 public constant override SMALL_DIVISOR = 128;
 
     // part of Node for Medium Skale-chain (1/32 of Node)
     uint8 public constant MEDIUM_DIVISOR = 32;
@@ -59,7 +59,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     uint256 public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
 
     // number of seconds in one year
-    uint32 public constant SECONDS_TO_YEAR = 31622400;
+    uint32 public constant override SECONDS_TO_YEAR = 31622400;
 
     // initial number of monitors
     uint256 public constant NUMBER_OF_MONITORS = 24;

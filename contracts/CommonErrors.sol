@@ -23,4 +23,5 @@ pragma solidity 0.8.26;
 
 
 error IsNotContract(address account);
+error NotEnoughFunds();
 error RoleRequired(bytes32 role);
