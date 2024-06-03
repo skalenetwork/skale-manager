@@ -105,8 +105,7 @@ contract PaymasterController is Permissions {
         paymasterChainHash = chainHash;
     }
 
-    // TODO: restrict access
-    function addSchain(string calldata name) external {
+    function addSchain(string calldata name) external allow("Schains") {
         _callPaymaster(abi.encodeWithSelector(
             paymaster.addSchain.selector,
             name

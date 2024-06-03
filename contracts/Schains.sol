@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import { EnumerableSetUpgradeable }
@@ -32,9 +32,10 @@ import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.
 import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
-import { Permissions } from "./Permissions.sol";
 import { ConstantsHolder } from "./ConstantsHolder.sol";
 import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
+import { PaymasterController } from "./PaymasterController.sol";
+import { Permissions } from "./Permissions.sol";
 
 
 /**
@@ -420,6 +421,10 @@ contract Schains is Permissions, ISchains {
             nonce: schainParameters.nonce,
             schainHash: keccak256(abi.encodePacked(schainParameters.name))
         });
+
+        PaymasterController paymasterController =
+            PaymasterController(contractManager.getContract("PaymasterController"));
+        paymasterController.addSchain(schainParameters.name);
     }
 
     function _deleteSchain(string calldata name, ISchainsInternal schainsInternal) private {
