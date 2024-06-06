@@ -668,7 +668,8 @@ contract Nodes is Permissions, INodes {
     function getActiveNodeIds() external view override returns (uint256[] memory activeNodeIds) {
         activeNodeIds = new uint256[](numberOfActiveNodes);
         uint256 indexOfActiveNodeIds = 0;
-        for (uint256 indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+        uint256 nodesLength = nodes.length;
+        for (uint256 indexOfNodes = 0; indexOfNodes < nodesLength; indexOfNodes++) {
             if (isNodeActive(indexOfNodes)) {
                 activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
                 indexOfActiveNodeIds++;

@@ -29,6 +29,7 @@ import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContra
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 
+import { GroupIndexIsInvalid } from "../CommonErrors.sol";
 
 /**
  * @title SkaleDkgBroadcast
@@ -87,9 +88,12 @@ library SkaleDkgBroadcast {
             channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit(contractManager) > block.timestamp,
             "Incorrect time for broadcast"
         );
-        (uint256 index, ) = ISkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
+        (uint256 index, bool valid) = ISkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
             schainHash, nodeIndex, true
         );
+        if (!valid) {
+            revert GroupIndexIsInvalid(index);
+        }
         require(!dkgProcess[schainHash].broadcasted[index], "This node has already broadcasted");
         dkgProcess[schainHash].broadcasted[index] = true;
         dkgProcess[schainHash].numberOfBroadcasted++;

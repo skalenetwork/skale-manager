@@ -28,6 +28,7 @@ import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContra
 
 import { G1Operations } from "../utils/fieldOperations/G1Operations.sol";
 import { G2Operations } from "../utils/fieldOperations/G2Operations.sol";
+import { GroupIndexIsInvalid } from "../CommonErrors.sol";
 import { Precompiled } from "../utils/Precompiled.sol";
 
 /**
@@ -96,7 +97,10 @@ library SkaleDkgPreResponse {
         view
         returns (uint256 index)
     {
-        (uint256 indexOnSchain, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        (uint256 indexOnSchain, bool valid) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        if (!valid) {
+            revert GroupIndexIsInvalid(index);
+        }
         require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(!complaints[schainHash].isResponse, "Already submitted pre response data");
         require(
@@ -107,7 +111,14 @@ library SkaleDkgPreResponse {
             verificationVector.length == verificationVectorMultiplication.length,
             "Incorrect length of multiplied verification vector"
         );
-        (index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, complaints[schainHash].fromNodeToComplaint, true);
+        (index, valid) = skaleDKG.checkAndReturnIndexInGroup(
+            schainHash,
+            complaints[schainHash].fromNodeToComplaint,
+            true
+        );
+        if (!valid) {
+            revert GroupIndexIsInvalid(index);
+        }
         require(
             _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMultiplication),
             "Multiplied verification vector is incorrect"

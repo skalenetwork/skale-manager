@@ -49,7 +49,9 @@ contract TimeHelpers is ITimeHelpers {
     }
 
     function timestampToYear(uint256 timestamp) external view virtual override returns (uint256 year) {
-        (year, , ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
+        uint256 month;
+        uint256 day;
+        (year, month, day) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
         require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
         return year - _ZERO_YEAR;
     }
@@ -68,7 +70,8 @@ contract TimeHelpers is ITimeHelpers {
 
     function timestampToMonth(uint256 timestamp) public view virtual override returns (uint256 month) {
         uint256 year;
-        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
+        uint256 day;
+        (year, month, day) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
         require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
         month = month - 1 + (year - _ZERO_YEAR) * 12;
         require(month > 0, "Timestamp is too far in the past");

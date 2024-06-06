@@ -57,10 +57,16 @@ class SkaleManagerUpgrader extends Upgrader {
 }
 
 async function main() {
+    let contractsToUpgrade = [
+        "Schains"
+    ];
+    if (process.env.UPGRADE_ALL) {
+        contractsToUpgrade = contracts;
+    }
     const upgrader = new SkaleManagerUpgrader(
         "1.10.0",
         await getSkaleManagerAbiAndAddresses(),
-        contracts,
+        contractsToUpgrade,
     );
     await upgrader.upgrade();
 }

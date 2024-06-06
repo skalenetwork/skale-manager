@@ -88,8 +88,9 @@ library SkaleDkgResponse {
             complaints[schainHash].fromNodeToComplaint
         );
         uint256 pkX = uint(publicKey[0]);
+        uint256 pkY;
 
-        (pkX, ) = IECDH(contractManager.getContract("ECDH")).deriveKey(secretNumber, pkX, uint(publicKey[1]));
+        (pkX, pkY) = IECDH(contractManager.getContract("ECDH")).deriveKey(secretNumber, pkX, uint(publicKey[1]));
         bytes32 key = bytes32(pkX);
 
         // Decrypt secret key contribution

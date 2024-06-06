@@ -26,6 +26,7 @@ import {Encoder} from "@skalenetwork/marionette-interfaces/Encoder.sol";
 import {IMessageProxyForMainnet} from "@skalenetwork/ima-interfaces/mainnet/IMessageProxyForMainnet.sol";
 import {IMarionette} from "@skalenetwork/marionette-interfaces/IMarionette.sol";
 import {IPaymaster} from "@skalenetwork/paymaster-interfaces/IPaymaster.sol";
+import {IPaymasterController} from "@skalenetwork/skale-manager-interfaces/IPaymasterController.sol";
 
 import {IsNotContract, RoleRequired} from "./CommonErrors.sol";
 import {Permissions} from "./Permissions.sol";
@@ -37,7 +38,7 @@ import {Permissions} from "./Permissions.sol";
  * on Europa chain.
  *
  */
-contract PaymasterController is Permissions {
+contract PaymasterController is IPaymasterController, Permissions {
     using AddressUpgradeable for address;
     using AddressUpgradeable for address payable;
 
@@ -81,32 +82,32 @@ contract PaymasterController is Permissions {
         _setupRole(PAYMASTER_SETTER_ROLE, msg.sender);
     }
 
-    function setImaAddress(address imaAddress) external onlyPaymasterSetter {
+    function setImaAddress(address imaAddress) external override onlyPaymasterSetter {
         if (!imaAddress.isContract()) {
             revert IsNotContract(imaAddress);
         }
         ima = IMessageProxyForMainnet(imaAddress);
     }
 
-    function setMarionetteAddress(address payable marionetteAddress) external onlyPaymasterSetter {
+    function setMarionetteAddress(address payable marionetteAddress) external override onlyPaymasterSetter {
         if (!marionetteAddress.isContract()) {
             revert IsNotContract(marionetteAddress);
         }
         marionette = IMarionette(marionetteAddress);
     }
 
-    function setPaymasterAddress(address paymasterAddress) external onlyPaymasterSetter {
+    function setPaymasterAddress(address paymasterAddress) external override onlyPaymasterSetter {
         if (!paymasterAddress.isContract()) {
             revert IsNotContract(paymasterAddress);
         }
         paymaster = IPaymaster(paymasterAddress);
     }
 
-    function setPaymasterChainHash(bytes32 chainHash) external onlyPaymasterSetter {
+    function setPaymasterChainHash(bytes32 chainHash) external override onlyPaymasterSetter {
         paymasterChainHash = chainHash;
     }
 
-    function addSchain(string calldata name) external allow("Schains") {
+    function addSchain(string calldata name) external override allow("Schains") {
         _callPaymaster(abi.encodeWithSelector(
             paymaster.addSchain.selector,
             name

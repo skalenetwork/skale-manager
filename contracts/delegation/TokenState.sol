@@ -102,17 +102,18 @@ contract TokenState is Permissions, ILocker, ITokenState {
      */
     function removeLocker(string calldata locker) external override onlyLockerManager {
         uint256 index;
+        uint256 lockersLength = _lockers.length;
         bytes32 hash = keccak256(abi.encodePacked(locker));
-        for (index = 0; index < _lockers.length; ++index) {
+        for (index = 0; index < lockersLength; ++index) {
             if (keccak256(abi.encodePacked(_lockers[index])) == hash) {
                 break;
             }
         }
-        if (index < _lockers.length) {
-            if (index < _lockers.length - 1) {
-                _lockers[index] = _lockers[_lockers.length - 1];
+        if (index < lockersLength) {
+            if (index < lockersLength - 1) {
+                _lockers[index] = _lockers[lockersLength - 1];
             }
-            delete _lockers[_lockers.length - 1];
+            delete _lockers[lockersLength - 1];
             _lockers.pop();
             emit LockerWasRemoved(locker);
         }

@@ -19,9 +19,10 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity ^0.8.17;
 
 
+error GroupIndexIsInvalid(uint256 index);
 error IsNotContract(address account);
 error NotEnoughFunds();
 error RoleRequired(bytes32 role);

@@ -1001,7 +1001,11 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
             nodesInGroup[i] = node;
             _setException(schainHash, node);
             addSchainForNode(nodes, node, schainHash);
+            // The function makeNodeInvisible does not do external calls
+            //slither-disable-next-line reentrancy-benign
             nodes.makeNodeInvisible(node);
+            // The function removeSpaceFromNode does not do external calls
+            //slither-disable-next-line reentrancy-benign
             require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
         }
         // set generated group

@@ -28,6 +28,7 @@ import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
+import { GroupIndexIsInvalid } from "../CommonErrors.sol";
 
 /**
  * @title SkaleDkgAlright
@@ -53,7 +54,10 @@ library SkaleDkgAlright {
         external
     {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        (uint256 index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        (uint256 index, bool valid) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        if (!valid) {
+            revert GroupIndexIsInvalid(index);
+        }
         uint256 numberOfParticipant = channels[schainHash].n;
         require(numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted, "Still Broadcasting phase");
         require(
