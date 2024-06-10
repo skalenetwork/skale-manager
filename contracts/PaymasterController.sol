@@ -114,6 +114,13 @@ contract PaymasterController is IPaymasterController, Permissions {
         ));
     }
 
+    function removeSchain(bytes32 schainHash) external override allow("Schains") {
+        _callPaymaster(abi.encodeWithSelector(
+            paymaster.removeSchain.selector,
+            schainHash
+        ));
+    }
+
     function _callPaymaster(bytes memory data) private whenConfigured {
         ima.postOutgoingMessage(
             paymasterChainHash,

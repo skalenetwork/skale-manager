@@ -70,6 +70,13 @@ contract Schains is Permissions, ISchains {
     error SenderIsNotTheOwnerOfTheSchain();
     error DkgWasNotFailed();
     error NoFreeNodes();
+    error SchainNameIsNotAvailable(string schainName);
+    error OriginatorIsAContract(address originator);
+    error OriginatorIsNotProvided();
+    error NodeDoesNotContainGivenSchain(uint256 node, bytes32 schain);
+    error OptionIsAlreadySet(string optionName);
+    error OptionRemovingError(bytes32 optionHash);
+    error OptionIsNotSet(bytes32 schainHash, bytes32 optionHash);
 
     modifier schainExists(ISchainsInternal schainsInternal, bytes32 schainHash) {
         if(!schainsInternal.isSchainExist(schainHash)) {
@@ -344,7 +351,9 @@ contract Schains is Permissions, ISchains {
     )
         private
     {
-        require(schainsInternal.isSchainNameAvailable(name), "Schain name is not available");
+        if (!schainsInternal.isSchainNameAvailable(name)) {
+            revert SchainNameIsNotAvailable(name);
+        }
 
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         for (uint256 i = 0; i < options.length; ++i) {
@@ -395,10 +404,13 @@ contract Schains is Permissions, ISchains {
      */
     function _addSchain(address from, uint256 deposit, SchainParameters memory schainParameters) private {
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
-
-        require(!schainParameters.originator.isContract(), "Originator address must be not a contract");
+        if (schainParameters.originator.isContract()) {
+            revert OriginatorIsAContract(schainParameters.originator);
+        }
         if (from.isContract()) {
-            require(schainParameters.originator != address(0), "Originator address is not provided");
+            if (schainParameters.originator == address(0)) {
+                revert OriginatorIsNotProvided();
+            }
         } else {
             schainParameters.originator = address(0);
         }
@@ -447,7 +459,6 @@ contract Schains is Permissions, ISchains {
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
 
         bytes32 schainHash = keccak256(abi.encodePacked(name));
-        require(schainsInternal.isSchainExist(schainHash), "Schain does not exist");
 
         _deleteOptions(schainHash, schainsInternal);
 
@@ -456,10 +467,9 @@ contract Schains is Permissions, ISchains {
             if (schainsInternal.checkHoleForSchain(schainHash, i)) {
                 continue;
             }
-            require(
-                schainsInternal.checkSchainOnNode(nodesInGroup[i], schainHash),
-                "Some Node does not contain given Schain"
-            );
+            if (!schainsInternal.checkSchainOnNode(nodesInGroup[i], schainHash)) {
+                revert NodeDoesNotContainGivenSchain(nodesInGroup[i], schainHash);
+            }
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainHash);
         }
         schainsInternal.removeAllNodesFromSchainExceptions(schainHash);
@@ -472,6 +482,10 @@ contract Schains is Permissions, ISchains {
             payable(contractManager.getContract("Wallets"))
         ).withdrawFundsFromSchainWallet(payable(from), schainHash);
         emit SchainDeleted(from, name, schainHash);
+
+        PaymasterController paymasterController =
+            PaymasterController(contractManager.getContract("PaymasterController"));
+        paymasterController.removeSchain(schainHash);
     }
 
     function _setOption(
@@ -482,7 +496,9 @@ contract Schains is Permissions, ISchains {
     {
         bytes32 optionHash = keccak256(abi.encodePacked(option.name));
         _options[schainHash][optionHash] = option;
-        require(_optionsIndex[schainHash].add(optionHash), "The option has been set already");
+        if (!_optionsIndex[schainHash].add(optionHash)) {
+            revert OptionIsAlreadySet(option.name);
+        }
     }
 
     function _deleteOptions(
@@ -495,7 +511,9 @@ contract Schains is Permissions, ISchains {
         while (_optionsIndex[schainHash].length() > 0) {
             bytes32 optionHash = _optionsIndex[schainHash].at(0);
             delete _options[schainHash][optionHash];
-            require(_optionsIndex[schainHash].remove(optionHash), "Removing error");
+            if (!_optionsIndex[schainHash].remove(optionHash)) {
+                revert OptionRemovingError(optionHash);
+            }
         }
     }
 
@@ -509,7 +527,9 @@ contract Schains is Permissions, ISchains {
         schainExists(schainsInternal, schainHash)
         returns (bytes memory option)
     {
-        require(_optionsIndex[schainHash].contains(optionHash), "Option is not set");
+        if (!_optionsIndex[schainHash].contains(optionHash)) {
+            revert OptionIsNotSet(schainHash, optionHash);
+        }
         return _options[schainHash][optionHash].value;
     }
 }
