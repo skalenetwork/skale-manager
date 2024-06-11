@@ -22,6 +22,7 @@
 pragma solidity ^0.8.17;
 
 
+error AddressIsNotSet();
 error GroupIndexIsInvalid(uint256 index);
 error IsNotContract(address account);
 error NotEnoughFunds();

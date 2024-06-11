@@ -21,14 +21,20 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import { ECDSAUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
 import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { IPaymasterController } from "@skalenetwork/skale-manager-interfaces/IPaymasterController.sol";
 
+import {
+    AddressIsNotSet,
+    RoleRequired
+} from "../CommonErrors.sol";
 import { Permissions } from "../Permissions.sol";
+
 
 /**
  * @title ValidatorService
@@ -59,13 +65,35 @@ contract ValidatorService is Permissions, IValidatorService {
 
     bytes32 public constant VALIDATOR_MANAGER_ROLE = keccak256("VALIDATOR_MANAGER_ROLE");
 
+    error ValidatorDoesNotExist(uint256 id);
+    error AddressIsAlreadyInUse(address validatorAddress);
+    error WrongFeeValue(uint256 value);
+    error ValidatorIsAlreadyEnabled(uint256 validatorId);
+    error ValidatorIsAlreadyDisabled(uint256 validatorId);
+    error SenderHasToBeEqualToRequestedAddress(address sender, address requestedAddress);
+    error WrongSignature();
+    error NodeAddressIsAValidator(address nodeAddress, uint256 validatorId);
+    error AcceptingRequestIsAlreadyEnabled(uint256 validatorId);
+    error AcceptingRequestIsAlreadyDisabled(uint256 validatorId);
+    error NoPermissionsToUnlinkNode(uint256 validatorId, address nodeAddress);
+    error NodeAddressIsNotAssignedToValidator(address nodeAddress);
+    error ValidatorIsNotAuthorizedToAcceptDelegationRequest(uint256 validatorId);
+    error ValidatorIsNotCurrentlyAcceptingNewRequests(uint256 validatorId);
+    error AmountDoesNotMeetTheValidatorsMinimumDelegationAmount(uint256 amount, uint256 minimum);
+    error ValidatorAddressDoesNotExist(address validatorAddress);
+    error ValidatorCannotOverrideNodeAddress(uint256 validatorId, address nodeAddress);
+
     modifier onlyValidatorManager() {
-        require(hasRole(VALIDATOR_MANAGER_ROLE, msg.sender), "VALIDATOR_MANAGER_ROLE is required");
+        if (!hasRole(VALIDATOR_MANAGER_ROLE, msg.sender)) {
+            revert RoleRequired(VALIDATOR_MANAGER_ROLE);
+        }
         _;
     }
 
     modifier checkValidatorExists(uint256 validatorId) {
-        require(validatorExists(validatorId), "Validator with such ID does not exist");
+        if (!validatorExists(validatorId)) {
+            revert ValidatorDoesNotExist(validatorId);
+        }
         _;
     }
 
@@ -95,8 +123,12 @@ contract ValidatorService is Permissions, IValidatorService {
         override
         returns (uint256 validatorId)
     {
-        require(!validatorAddressExists(msg.sender), "Validator with such address already exists");
-        require(feeRate <= 1000, "Fee rate of validator should be lower than 100%");
+        if (validatorAddressExists(msg.sender)) {
+            revert AddressIsAlreadyInUse(msg.sender);
+        }
+        if (1000 < feeRate) {
+            revert WrongFeeValue(feeRate);
+        }
         validatorId = ++numberOfValidators;
         validators[validatorId] = IValidatorService.Validator({
             name: name,
@@ -111,6 +143,10 @@ contract ValidatorService is Permissions, IValidatorService {
         _setValidatorAddress(validatorId, msg.sender);
 
         emit ValidatorRegistered(validatorId);
+
+        IPaymasterController paymasterController =
+            IPaymasterController(contractManager.getContract("PaymasterController"));
+        paymasterController.addValidator(validatorId, msg.sender);
     }
 
     /**
@@ -129,7 +165,9 @@ contract ValidatorService is Permissions, IValidatorService {
         checkValidatorExists(validatorId)
         onlyValidatorManager
     {
-        require(!_trustedValidators[validatorId], "Validator is already enabled");
+        if (_trustedValidators[validatorId]) {
+            revert ValidatorIsAlreadyEnabled(validatorId);
+        }
         _trustedValidators[validatorId] = true;
         trustedValidatorsList.push(validatorId);
         emit ValidatorWasEnabled(validatorId);
@@ -151,7 +189,9 @@ contract ValidatorService is Permissions, IValidatorService {
         checkValidatorExists(validatorId)
         onlyValidatorManager
     {
-        require(_trustedValidators[validatorId], "Validator is already disabled");
+        if (!_trustedValidators[validatorId]) {
+            revert ValidatorIsAlreadyDisabled(validatorId);
+        }
         _trustedValidators[validatorId] = false;
         uint256 position = _find(trustedValidatorsList, validatorId);
         if (position < trustedValidatorsList.length) {
@@ -181,8 +221,12 @@ contract ValidatorService is Permissions, IValidatorService {
      * - New address must not be already registered as a validator.
      */
     function requestForNewAddress(address newValidatorAddress) external override {
-        require(newValidatorAddress != address(0), "New address cannot be null");
-        require(_validatorAddressToId[newValidatorAddress] == 0, "Address already registered");
+        if (newValidatorAddress == address(0)) {
+            revert AddressIsNotSet();
+        }
+        if (_validatorAddressToId[newValidatorAddress] != 0) {
+            revert AddressIsAlreadyInUse(newValidatorAddress);
+        }
         // check Validator Exist inside getValidatorId
         uint256 validatorId = getValidatorId(msg.sender);
 
@@ -204,10 +248,12 @@ contract ValidatorService is Permissions, IValidatorService {
         override
         checkValidatorExists(validatorId)
     {
-        require(
-            getValidator(validatorId).requestedAddress == msg.sender,
-            "The validator address cannot be changed because it is not the actual owner"
-        );
+        if (getValidator(validatorId).requestedAddress != msg.sender) {
+            revert SenderHasToBeEqualToRequestedAddress(
+                msg.sender,
+                getValidator(validatorId).requestedAddress
+            );
+        }
         delete validators[validatorId].requestedAddress;
         _setValidatorAddress(validatorId, msg.sender);
 
@@ -226,11 +272,12 @@ contract ValidatorService is Permissions, IValidatorService {
     function linkNodeAddress(address nodeAddress, bytes calldata sig) external override {
         // check Validator Exist inside getValidatorId
         uint256 validatorId = getValidatorId(msg.sender);
-        require(
-            keccak256(abi.encodePacked(validatorId)).toEthSignedMessageHash().recover(sig) == nodeAddress,
-            "Signature is not pass"
-        );
-        require(_validatorAddressToId[nodeAddress] == 0, "Node address is a validator");
+        if (keccak256(abi.encodePacked(validatorId)).toEthSignedMessageHash().recover(sig) != nodeAddress) {
+            revert WrongSignature();
+        }
+        if (_validatorAddressToId[nodeAddress] != 0) {
+            revert NodeAddressIsAValidator(nodeAddress, _validatorAddressToId[nodeAddress]);
+        }
 
         _addNodeAddress(validatorId, nodeAddress);
         emit NodeAddressWasAdded(validatorId, nodeAddress);
@@ -296,7 +343,9 @@ contract ValidatorService is Permissions, IValidatorService {
     function startAcceptingNewRequests() external override {
         // check Validator Exist inside getValidatorId
         uint256 validatorId = getValidatorId(msg.sender);
-        require(!isAcceptingNewRequests(validatorId), "Accepting request is already enabled");
+        if (isAcceptingNewRequests(validatorId)) {
+            revert AcceptingRequestIsAlreadyEnabled(validatorId);
+        }
 
         validators[validatorId].acceptNewRequests = true;
         emit AcceptingNewRequests(validatorId, true);
@@ -312,7 +361,9 @@ contract ValidatorService is Permissions, IValidatorService {
     function stopAcceptingNewRequests() external override {
         // check Validator Exist inside getValidatorId
         uint256 validatorId = getValidatorId(msg.sender);
-        require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
+        if (!isAcceptingNewRequests(validatorId)) {
+            revert AcceptingRequestIsAlreadyDisabled(validatorId);
+        }
 
         validators[validatorId].acceptNewRequests = false;
         emit AcceptingNewRequests(validatorId, false);
@@ -323,8 +374,9 @@ contract ValidatorService is Permissions, IValidatorService {
         override
         allowTwo("ValidatorService", "Nodes")
     {
-        require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
-            "Validator does not have permissions to unlink node");
+        if (_nodeAddressToValidatorId[nodeAddress] != validatorId) {
+            revert NoPermissionsToUnlinkNode(validatorId, nodeAddress);
+        }
         delete _nodeAddressToValidatorId[nodeAddress];
         for (uint256 i = 0; i < _nodeAddresses[validatorId].length; ++i) {
             if (_nodeAddresses[validatorId][i] == nodeAddress) {
@@ -391,7 +443,9 @@ contract ValidatorService is Permissions, IValidatorService {
      */
     function getValidatorIdByNodeAddress(address nodeAddress) external view override returns (uint256 validatorId) {
         validatorId = _nodeAddressToValidatorId[nodeAddress];
-        require(validatorId != 0, "Node address is not assigned to a validator");
+        if (validatorId == 0) {
+            revert NodeAddressIsNotAssignedToValidator(nodeAddress);
+        }
     }
 
     /**
@@ -407,12 +461,18 @@ contract ValidatorService is Permissions, IValidatorService {
     }
 
     function checkValidatorCanReceiveDelegation(uint256 validatorId, uint256 amount) external view override {
-        require(isAuthorizedValidator(validatorId), "Validator is not authorized to accept delegation request");
-        require(isAcceptingNewRequests(validatorId), "The validator is not currently accepting new requests");
-        require(
-            validators[validatorId].minimumDelegationAmount <= amount,
-            "Amount does not meet the validator's minimum delegation amount"
-        );
+        if (!isAuthorizedValidator(validatorId)) {
+            revert ValidatorIsNotAuthorizedToAcceptDelegationRequest(validatorId);
+        }
+        if (!isAcceptingNewRequests(validatorId)) {
+            revert ValidatorIsNotCurrentlyAcceptingNewRequests(validatorId);
+        }
+        if (amount < validators[validatorId].minimumDelegationAmount) {
+            revert AmountDoesNotMeetTheValidatorsMinimumDelegationAmount(
+                amount,
+                validators[validatorId].minimumDelegationAmount
+            );
+        }
     }
 
     /**
@@ -440,7 +500,9 @@ contract ValidatorService is Permissions, IValidatorService {
      * @dev Checks whether validator address exists.
      */
     function checkIfValidatorAddressExists(address validatorAddress) public view override {
-        require(validatorAddressExists(validatorAddress), "Validator address does not exist");
+        if (!validatorAddressExists(validatorAddress)) {
+            revert ValidatorAddressDoesNotExist(validatorAddress);
+        }
     }
 
     /**
@@ -500,7 +562,9 @@ contract ValidatorService is Permissions, IValidatorService {
         if (_validatorAddressToId[validatorAddress] == validatorId) {
             return;
         }
-        require(_validatorAddressToId[validatorAddress] == 0, "Address is in use by another validator");
+        if (_validatorAddressToId[validatorAddress] != 0) {
+            revert AddressIsAlreadyInUse(validatorAddress);
+        }
         address oldAddress = validators[validatorId].validatorAddress;
         delete _validatorAddressToId[oldAddress];
         _nodeAddressToValidatorId[validatorAddress] = validatorId;
@@ -519,7 +583,9 @@ contract ValidatorService is Permissions, IValidatorService {
         if (_nodeAddressToValidatorId[nodeAddress] == validatorId) {
             return;
         }
-        require(_nodeAddressToValidatorId[nodeAddress] == 0, "Validator cannot override node address");
+        if (_nodeAddressToValidatorId[nodeAddress] != 0) {
+            revert ValidatorCannotOverrideNodeAddress(validatorId, nodeAddress);
+        }
         _nodeAddressToValidatorId[nodeAddress] = validatorId;
         _nodeAddresses[validatorId].push(nodeAddress);
     }
