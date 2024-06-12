@@ -129,6 +129,21 @@ contract PaymasterController is IPaymasterController, Permissions {
         ));
     }
 
+    function setValidatorAddress(
+        uint256 validatorId,
+        address validatorAddress
+    )
+        external
+        override
+        allow("ValidatorService")
+    {
+        _callPaymaster(abi.encodeWithSelector(
+            paymaster.setValidatorAddress.selector,
+            validatorId,
+            validatorAddress
+        ));
+    }
+
     function _callPaymaster(bytes memory data) private whenConfigured {
         ima.postOutgoingMessage(
             paymasterChainHash,

@@ -258,6 +258,10 @@ contract ValidatorService is Permissions, IValidatorService {
         _setValidatorAddress(validatorId, msg.sender);
 
         emit ValidatorAddressChanged(validatorId, validators[validatorId].validatorAddress);
+
+        IPaymasterController paymasterController =
+            IPaymasterController(contractManager.getContract("PaymasterController"));
+        paymasterController.setValidatorAddress(validatorId, msg.sender);
     }
 
     /**
