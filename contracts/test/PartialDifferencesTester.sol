@@ -46,7 +46,14 @@ contract PartialDifferencesTester is IPartialDifferencesTester {
         _sequences[sequence].subtractFromSequence(diff, month);
     }
 
-    function getAndUpdateSequenceItem(uint256 sequence, uint256 month) external override returns (uint256 item) {
+    function getAndUpdateSequenceItem(
+        uint256 sequence,
+        uint256 month
+    )
+        external
+        override
+        returns (uint256 item)
+    {
         require(sequence < _sequences.length, "Sequence does not exist");
         return _sequences[sequence].getAndUpdateValueInSequence(month);
     }

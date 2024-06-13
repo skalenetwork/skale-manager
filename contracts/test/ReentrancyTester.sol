@@ -34,15 +34,22 @@ import { IReentrancyTester } from "./interfaces/IReentrancyTester.sol";
 
 contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender, IReentrancyTester {
 
-    IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry private _erc1820 =
+        IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
     bool private _reentrancyCheck = false;
     bool private _burningAttack = false;
     uint256 private _amount = 0;
 
     constructor (address contractManagerAddress) {
         Permissions.initialize(contractManagerAddress);
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensSender"), address(this));
+        _erc1820.setInterfaceImplementer(
+            address(this),
+            keccak256("ERC777TokensRecipient"), address(this)
+        );
+        _erc1820.setInterfaceImplementer(
+            address(this),
+            keccak256("ERC777TokensSender"), address(this)
+        );
     }
 
     function tokensReceived(

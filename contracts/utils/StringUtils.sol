@@ -24,7 +24,14 @@ pragma solidity 0.8.17;
 
 library StringUtils {
 
-    function strConcat(string memory a, string memory b) internal pure returns (string memory result) {
+    function strConcat(
+        string memory a,
+        string memory b
+    )
+        internal
+        pure
+        returns (string memory result)
+    {
         bytes memory _ba = bytes(a);
         bytes memory _bb = bytes(b);
 

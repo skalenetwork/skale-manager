@@ -48,7 +48,7 @@
     "@skalenetwork/ima-interfaces": "^2.0.0",
     "@skalenetwork/marionette-interfaces": "^0.0.0-main.2",
     "@skalenetwork/paymaster-interfaces": "^1.0.0-main.10",
-    "@skalenetwork/skale-manager-interfaces": "^3.0.0-paymaster.7",
+    "@skalenetwork/skale-manager-interfaces": "^3.0.0-paymaster.8",
     "@skalenetwork/upgrade-tools": "^2.0.1",
     "@typechain/hardhat": "^7.0.0",
     "dotenv": "^16.3.1",

@@ -75,7 +75,13 @@ library G2Operations {
             return sum;
         }
 
-        ISkaleDKG.Fp2Point memory s = value2.y.minusFp2(value1.y).mulFp2(value2.x.minusFp2(value1.x).inverseFp2());
+        ISkaleDKG.Fp2Point memory s = value2.y
+            .minusFp2(value1.y)
+            .mulFp2(
+                value2.x
+                    .minusFp2(value1.x)
+                    .inverseFp2()
+            );
         sum.x = s.squaredFp2().minusFp2(value1.x.addFp2(value2.x));
         sum.y = value1.y.addFp2(s.mulFp2(sum.x.minusFp2(value1.x)));
         uint256 p = Fp2Operations.P;
@@ -122,7 +128,14 @@ library G2Operations {
         });
     }
 
-    function isG2Point(ISkaleDKG.Fp2Point memory x, ISkaleDKG.Fp2Point memory y) internal pure returns (bool result) {
+    function isG2Point(
+        ISkaleDKG.Fp2Point memory x,
+        ISkaleDKG.Fp2Point memory y
+    )
+        internal
+        pure
+        returns (bool result)
+    {
         if (isG2ZeroPoint(x, y)) {
             return true;
         }

@@ -21,15 +21,21 @@
 
 pragma solidity 0.8.26;
 
-import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import {Encoder} from "@skalenetwork/marionette-interfaces/Encoder.sol";
-import {IMessageProxyForMainnet} from "@skalenetwork/ima-interfaces/mainnet/IMessageProxyForMainnet.sol";
-import {IMarionette} from "@skalenetwork/marionette-interfaces/IMarionette.sol";
-import {IPaymaster} from "@skalenetwork/paymaster-interfaces/IPaymaster.sol";
-import {IPaymasterController} from "@skalenetwork/skale-manager-interfaces/IPaymasterController.sol";
+import {
+    AddressUpgradeable
+} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { Encoder } from "@skalenetwork/marionette-interfaces/Encoder.sol";
+import {
+    IMessageProxyForMainnet
+} from "@skalenetwork/ima-interfaces/mainnet/IMessageProxyForMainnet.sol";
+import { IMarionette } from "@skalenetwork/marionette-interfaces/IMarionette.sol";
+import { IPaymaster } from "@skalenetwork/paymaster-interfaces/IPaymaster.sol";
+import {
+    IPaymasterController
+} from "@skalenetwork/skale-manager-interfaces/IPaymasterController.sol";
 
-import {IsNotContract, RoleRequired} from "./CommonErrors.sol";
-import {Permissions} from "./Permissions.sol";
+import { IsNotContract, RoleRequired } from "./CommonErrors.sol";
+import { Permissions } from "./Permissions.sol";
 
 
 /**
@@ -89,7 +95,13 @@ contract PaymasterController is IPaymasterController, Permissions {
         ima = IMessageProxyForMainnet(imaAddress);
     }
 
-    function setMarionetteAddress(address payable marionetteAddress) external override onlyPaymasterSetter {
+    function setMarionetteAddress(
+        address payable marionetteAddress
+    )
+        external
+        override
+        onlyPaymasterSetter
+    {
         if (!marionetteAddress.isContract()) {
             revert IsNotContract(marionetteAddress);
         }
@@ -121,7 +133,14 @@ contract PaymasterController is IPaymasterController, Permissions {
         ));
     }
 
-    function addValidator(uint256 validatorId, address validatorAddress) external override allow("ValidatorService") {
+    function addValidator(
+        uint256 validatorId,
+        address validatorAddress
+    )
+        external
+        override
+        allow("ValidatorService")
+    {
         _callPaymaster(abi.encodeWithSelector(
             paymaster.addValidator.selector,
             validatorId,
@@ -141,6 +160,21 @@ contract PaymasterController is IPaymasterController, Permissions {
             paymaster.setValidatorAddress.selector,
             validatorId,
             validatorAddress
+        ));
+    }
+
+    function setNodesAmount(
+        uint256 validatorId,
+        uint256 nodesAmount
+    )
+        external
+        override
+        allow("Nodes")
+    {
+        _callPaymaster(abi.encodeWithSelector(
+            paymaster.setNodesAmount.selector,
+            validatorId,
+            nodesAmount
         ));
     }
 

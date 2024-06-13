@@ -58,7 +58,14 @@ contract SegmentTreeTester is ISegmentTreeTester {
         _tree.removeFromPlace(place, elem);
     }
 
-    function moveFromPlaceToPlace(uint256 fromPlace, uint256 toPlace, uint256 elem) external override {
+    function moveFromPlaceToPlace(
+        uint256 fromPlace,
+        uint256 toPlace,
+        uint256 elem
+    )
+        external
+        override
+    {
         _tree.moveFromPlaceToPlace(fromPlace, toPlace, elem);
     }
 

@@ -22,7 +22,9 @@
 pragma solidity 0.8.17;
 
 import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
-import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import {
+    IDelegationController
+} from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 
@@ -51,7 +53,8 @@ contract BountyV2 is Permissions, IBountyV2 {
     uint256 public constant SECONDS_PER_DAY = 24 * 60 * 60;
     uint256 public constant BOUNTY_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
 
-    bytes32 public constant BOUNTY_REDUCTION_MANAGER_ROLE = keccak256("BOUNTY_REDUCTION_MANAGER_ROLE");
+    bytes32 public constant BOUNTY_REDUCTION_MANAGER_ROLE =
+        keccak256("BOUNTY_REDUCTION_MANAGER_ROLE");
 
     uint256 private _nextEpoch;
     uint256 private _epochPool;
@@ -67,7 +70,10 @@ contract BountyV2 is Permissions, IBountyV2 {
     mapping (uint256 => BountyHistory) private _bountyHistory;
 
     modifier onlyBountyReductionManager() {
-        require(hasRole(BOUNTY_REDUCTION_MANAGER_ROLE, msg.sender), "BOUNTY_REDUCTION_MANAGER_ROLE is required");
+        require(
+            hasRole(BOUNTY_REDUCTION_MANAGER_ROLE, msg.sender),
+            "BOUNTY_REDUCTION_MANAGER_ROLE is required"
+        );
         _;
     }
 
@@ -86,12 +92,12 @@ contract BountyV2 is Permissions, IBountyV2 {
         allow("SkaleManager")
         returns (uint256 bounty)
     {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constantsHolder =
+            ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
-        IDelegationController delegationController = IDelegationController(
-            contractManager.getContract("DelegationController")
-        );
+        IDelegationController delegationController =
+            IDelegationController(contractManager.getContract("DelegationController"));
 
         require(
             _getNextRewardTimestamp(nodeIndex, nodes, timeHelpers) <= block.timestamp,
@@ -171,7 +177,8 @@ contract BountyV2 is Permissions, IBountyV2 {
     }
 
     function estimateBounty(uint256 nodeIndex) external view override returns (uint256 bounty) {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constantsHolder =
+            ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         ITimeHelpers timeHelpers = ITimeHelpers(contractManager.getContract("TimeHelpers"));
         IDelegationController delegationController = IDelegationController(
@@ -187,17 +194,28 @@ contract BountyV2 is Permissions, IBountyV2 {
         return _calculateMaximumBountyAmount({
             epochPoolSize: stagePoolSize,
             effectiveDelegatedSum: _effectiveDelegatedSum.getValue(currentMonth),
-            bountyWasPaidInCurrentEpoch: _nextEpoch == currentMonth + 1 ? _bountyWasPaidInCurrentEpoch : 0,
+            bountyWasPaidInCurrentEpoch: _nextEpoch == currentMonth + 1 ?
+                _bountyWasPaidInCurrentEpoch :
+                0,
             nodeIndex: nodeIndex,
             bountyPaidToTheValidator: _getBountyPaid(validatorId, currentMonth),
-            effectiveDelegated: delegationController.getEffectiveDelegatedToValidator(validatorId, currentMonth),
+            effectiveDelegated: delegationController.getEffectiveDelegatedToValidator(
+                validatorId, currentMonth
+            ),
             delegated: delegationController.getDelegatedToValidator(validatorId, currentMonth),
             constantsHolder: constantsHolder,
             nodes: nodes
         });
     }
 
-    function getNextRewardTimestamp(uint256 nodeIndex) external view override returns (uint256 timestamp) {
+    function getNextRewardTimestamp(
+        uint256 nodeIndex
+    )
+        external
+        view
+        override
+        returns (uint256 timestamp)
+    {
         return _getNextRewardTimestamp(
             nodeIndex,
             INodes(contractManager.getContract("Nodes")),
@@ -211,7 +229,13 @@ contract BountyV2 is Permissions, IBountyV2 {
 
     // private
 
-    function _refillEpochPool(uint256 currentMonth, ITimeHelpers timeHelpers, ConstantsHolder constantsHolder) private {
+    function _refillEpochPool(
+        uint256 currentMonth,
+        ITimeHelpers timeHelpers,
+        ConstantsHolder constantsHolder
+    )
+        private
+    {
         uint256 epochPool;
         uint256 nextEpoch;
         (epochPool, nextEpoch) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
@@ -354,7 +378,14 @@ contract BountyV2 is Permissions, IBountyV2 {
         }
     }
 
-    function _getBountyPaid(uint256 validatorId, uint256 month) private view returns (uint256 amount) {
+    function _getBountyPaid(
+        uint256 validatorId,
+        uint256 month
+    )
+        private
+        view
+        returns (uint256 amount)
+    {
         require(_bountyHistory[validatorId].month <= month, "Can't get bounty paid");
         if (_bountyHistory[validatorId].month == month) {
             return _bountyHistory[validatorId].bountyPaid;
@@ -381,7 +412,10 @@ contract BountyV2 is Permissions, IBountyV2 {
             if (lastRewardTimestamp < lastRewardMonthStart + nodeCreationWindowSeconds) {
                 return nextMonthStart - BOUNTY_WINDOW_SECONDS;
             } else {
-                return _min(nextMonthStart + timePassedAfterMonthStart, nextMonthFinish - BOUNTY_WINDOW_SECONDS);
+                return _min(
+                    nextMonthStart + timePassedAfterMonthStart,
+                    nextMonthFinish - BOUNTY_WINDOW_SECONDS
+                );
             }
         } else if (lastRewardMonth + 1 == currentMonth) {
             uint256 currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);

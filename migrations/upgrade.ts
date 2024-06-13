@@ -58,6 +58,7 @@ class SkaleManagerUpgrader extends Upgrader {
 
 async function main() {
     let contractsToUpgrade = [
+        "Nodes",
         "Schains",
         "ValidatorService"
     ];

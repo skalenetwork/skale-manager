@@ -15,6 +15,7 @@
     "func-named-parameters": "error",
     "func-visibility": ["error", {"ignoreConstructors": true}],
     "function-max-lines": "error",
+    "max-line-length": ["error", 100],
     "max-states-count": ["error", 20],
     "named-return-values": "error",
     "no-empty-blocks": "error",
