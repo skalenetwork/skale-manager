@@ -70,7 +70,7 @@
     "bignumber.js": "^9.1.2",
     "chai": "^4.3.8",
     "chai-almost": "^1.0.1",
-    "chai-as-promised": "^7.1.1",
+    "chai-as-promised": "^8.0.0",
     "cspell": "^7.3.8",
     "elliptic": "^6.5.3",
     "eslint": "^8.50.0",
