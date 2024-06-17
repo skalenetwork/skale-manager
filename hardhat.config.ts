@@ -1,6 +1,6 @@
 import {task, HardhatUserConfig} from "hardhat/config";
-import "@nomicfoundation/hardhat-verify";
-import "@nomiclabs/hardhat-waffle";
+import "@nomicfoundation/hardhat-chai-matchers";
+import "@nomiclabs/hardhat-etherscan";
 import "@openzeppelin/hardhat-upgrades";
 import '@typechain/hardhat'
 import "solidity-coverage";
@@ -78,7 +78,7 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer:{
             enabled: true,
-            runs: 200
+            runs: 100
           }
         }
       }

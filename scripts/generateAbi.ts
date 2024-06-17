@@ -6,7 +6,7 @@ import {ContractFactory} from 'ethers';
 import {Libraries} from '@nomiclabs/hardhat-ethers/types';
 
 async function main() {
-    const allContracts = contracts.concat(["ContractManager", "TimeHelpersWithDebug"])
+    const allContracts = contracts.concat(["SkaleToken", "TimeHelpersWithDebug"])
     const abi: {[name: string]: []} = {};
     const librariesRequirements: {[name: string]: string[]} = {
         "Nodes": [

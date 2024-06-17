@@ -198,7 +198,7 @@ contract NodeRotation is Permissions, INodeRotation {
     )
         public
         override
-        allowTwo("SkaleDKG", "SkaleManager")
+        allowThree("SkaleDKG", "SkaleManager", "Schains")
         returns (uint256 newNode)
     {
         ISchainsInternal schainsInternal = ISchainsInternal(contractManager.getContract("SchainsInternal"));
@@ -297,6 +297,7 @@ contract NodeRotation is Permissions, INodeRotation {
         }
         leavingHistory[nodeIndex].push(LeavingHistory({schainHash: schainHash, finishedRotation: finishTimestamp}));
         require(_rotations[schainHash].newNodeIndexes.add(newNodeIndex), "New node was already added");
+        _rotations[schainHash].nodeIndex = nodeIndex;
         _rotations[schainHash].newNodeIndex = newNodeIndex;
         _rotations[schainHash].rotationCounter++;
         _rotations[schainHash].previousNodes[newNodeIndex] = nodeIndex;

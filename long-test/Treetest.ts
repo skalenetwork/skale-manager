@@ -3,6 +3,7 @@ import {deployValidatorService} from "../test/tools/deploy/delegation/validatorS
 import {deploySkaleManager} from "../test/tools/deploy/skaleManager";
 import {
     ContractManager,
+    NodeRotation,
     Nodes,
     Schains,
     SchainsInternalMock,
@@ -26,6 +27,7 @@ import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
 import {stringKeccak256} from "../test/tools/hashes";
 import {fastBeforeEach} from "../test/tools/mocha";
 import {SchainType} from "../test/tools/types";
+import {deployNodeRotation} from "../test/tools/deploy/nodeRotation";
 
 async function createNode(skaleManager: SkaleManager, node: Wallet, nodeId: number) {
     await skaleManager.connect(node).createNode(
@@ -155,7 +157,7 @@ async function getNumberOfNodesInGroup(schainsInternal: SchainsInternalMock, nam
     return (await schainsInternal.getNumberOfNodesInGroup(stringKeccak256(name))).toString();
 }
 
-async function rotateOnDKG(schainsInternal: SchainsInternalMock, name: string, skaleDKG: SkaleDKGTester, node: Wallet, skipNode = "") {
+async function rotateOnDKG(nodeRotation: NodeRotation, schainsInternal: SchainsInternalMock, name: string, skaleDKG: SkaleDKGTester, node: Wallet, skipNode = "") {
     let randomNode1 = await getRandomNodeInSchain(schainsInternal, name, []);
     let randomNode2 = await getRandomNodeInSchain(schainsInternal, name, [randomNode1]);
     if (skipNode !== "") {
@@ -168,11 +170,13 @@ async function rotateOnDKG(schainsInternal: SchainsInternalMock, name: string, s
     }
     const n = await getNumberOfNodesInGroup(schainsInternal, name);
     const t = (parseInt(n, 10) * 2 + 1) / 3;
+    const rotation = await nodeRotation.getRotation(stringKeccak256(name));
     await skaleDKG.connect(node).broadcast(
         stringKeccak256(name),
         randomNode1,
         getRandomVerificationVector(t),
-        getRandomSecretKeyContribution(parseInt(n, 10))
+        getRandomSecretKeyContribution(parseInt(n, 10)),
+        rotation.rotationCounter
     );
     await skipTime(1800);
     await skaleDKG.connect(node).complaint(
@@ -223,6 +227,7 @@ describe("Tree test", () => {
     let schainsInternal: SchainsInternalMock;
     let skaleDKG: SkaleDKGTester;
     let wallets: Wallets;
+    let nodeRotation: NodeRotation;
 
     fastBeforeEach(async () => {
         [owner, validator] = await ethers.getSigners();
@@ -243,6 +248,7 @@ describe("Tree test", () => {
         validatorService = await deployValidatorService(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
+        nodeRotation = await deployNodeRotation(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
@@ -304,7 +310,7 @@ describe("Tree test", () => {
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await setNodeInMaintenance(nodes, node, "0");
                 await rechargeSchainWallet(wallets, "A", owner);
-                await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "1");
+                await rotateOnDKG(nodeRotation, schainsInternal, "A", skaleDKG, node, "1");
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await createNode(skaleManager, node, 16);
                 await deleteSchain(skaleManager, "A", owner);
@@ -319,7 +325,7 @@ describe("Tree test", () => {
                 await createSchain(schains, SchainType.SMALL, "A", owner);
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await rechargeSchainWallet(wallets, "A", owner);
-                await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "10");
+                await rotateOnDKG(nodeRotation, schainsInternal, "A", skaleDKG, node, "10");
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await createNode(skaleManager, node, 16);
                 await deleteSchain(skaleManager, "A", owner);
@@ -334,7 +340,7 @@ describe("Tree test", () => {
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await setNodeInMaintenance(nodes, node, "10");
                 await rechargeSchainWallet(wallets, "A", owner);
-                await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "10");
+                await rotateOnDKG(nodeRotation, schainsInternal, "A", skaleDKG, node, "10");
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await createNode(skaleManager, node, 16);
                 await deleteSchain(skaleManager, "A", owner);
@@ -349,7 +355,7 @@ describe("Tree test", () => {
                 await createSchain(schains, SchainType.SMALL, "A", owner);
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await rechargeSchainWallet(wallets, "A", owner);
-                await rotateOnDKG(schainsInternal, "A", skaleDKG, node, "10");
+                await rotateOnDKG(nodeRotation, schainsInternal, "A", skaleDKG, node, "10");
                 console.log(await getNodesInSchain(schainsInternal, "A"));
                 await createNode(skaleManager, node, 16);
                 await deleteSchain(skaleManager, "A", owner);
@@ -367,7 +373,7 @@ describe("Tree test", () => {
                 it("successful schain creation after rotation", async () => {
                     await createSchain(schains, SchainType.SMALL, "A", owner);
                     await rechargeSchainWallet(wallets, "A", owner);
-                    await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                    await rotateOnDKG(nodeRotation, schainsInternal, "A", skaleDKG, node);
                     await finishDKG(skaleDKG, "A");
                     await checkTreeAndSpaceToNodes(nodes);
                 });
@@ -375,7 +381,7 @@ describe("Tree test", () => {
                 it("successful schain creation after unsuccessful creation", async () => {
                     await createSchain(schains, SchainType.SMALL, "A", owner);
                     await rechargeSchainWallet(wallets, "A", owner);
-                    await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                    await rotateOnDKG(nodeRotation, schainsInternal, "A", skaleDKG, node);
                     await createSchain(schains, SchainType.SMALL, "B", owner);
                     await finishDKG(skaleDKG, "B");
                     await checkTreeAndSpaceToNodes(nodes);
@@ -392,7 +398,7 @@ describe("Tree test", () => {
                         await createSchain(schains, SchainType.SMALL, "A", owner);
                         await rechargeSchainWallet(wallets, "A", owner);
                         console.log(await getNodesInSchain(schainsInternal, "A"));
-                        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                        await rotateOnDKG(nodeRotation, schainsInternal, "A", skaleDKG, node);
                         console.log(await getNodesInSchain(schainsInternal, "A"));
                         await removeNodeFromInMaintenance(nodes, node, "0");
                         await removeNodeFromInMaintenance(nodes, node, "1");
@@ -405,16 +411,16 @@ describe("Tree test", () => {
                         await createSchain(schains, SchainType.SMALL, "A", owner);
                         await rechargeSchainWallet(wallets, "A", owner);
                         console.log(await getNodesInSchain(schainsInternal, "A"));
-                        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                        await rotateOnDKG(nodeRotation, schainsInternal, "A", skaleDKG, node);
                         console.log(await getNodesInSchain(schainsInternal, "A"));
-                        await rotateOnDKG(schainsInternal, "A", skaleDKG, node);
+                        await rotateOnDKG(nodeRotation, schainsInternal, "A", skaleDKG, node);
                         console.log(await getNodesInSchain(schainsInternal, "A"));
                         await setNodeInMaintenance(nodes, node, "0");
                         await setNodeInMaintenance(nodes, node, "1");
                         await createSchain(schains, SchainType.SMALL, "B", owner);
                         await rechargeSchainWallet(wallets, "B", owner);
                         console.log(await getNodesInSchain(schainsInternal, "B"));
-                        await rotateOnDKG(schainsInternal, "B", skaleDKG, node);
+                        await rotateOnDKG(nodeRotation, schainsInternal, "B", skaleDKG, node);
                         console.log(await getNodesInSchain(schainsInternal, "B"));
                         await removeNodeFromInMaintenance(nodes, node, "0");
                         await createSchain(schains, SchainType.SMALL, "C", owner);
@@ -423,7 +429,7 @@ describe("Tree test", () => {
                         await createSchain(schains, SchainType.SMALL, "D", owner);
                         await rechargeSchainWallet(wallets, "D", owner);
                         console.log(await getNodesInSchain(schainsInternal, "D"));
-                        await rotateOnDKG(schainsInternal, "D", skaleDKG, node);
+                        await rotateOnDKG(nodeRotation, schainsInternal, "D", skaleDKG, node);
                         console.log(await getNodesInSchain(schainsInternal, "D"));
                         await removeNodeFromInMaintenance(nodes, node, "1");
                         await createSchain(schains, SchainType.SMALL, "E", owner);

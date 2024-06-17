@@ -9,7 +9,8 @@ import {ContractManager,
          SkaleToken,
          SlashingTable,
          ValidatorService,
-         Wallets} from "../typechain-types";
+         Wallets,
+         NodeRotation} from "../typechain-types";
 
 import {nextMonth, skipTime} from "./tools/time";
 
@@ -35,6 +36,7 @@ import {makeSnapshot, applySnapshot} from "./tools/snapshot";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {schainParametersType, SchainType} from "./tools/types";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -56,6 +58,7 @@ describe("SkaleDkgFakeComplaint", () => {
     let delegationController: DelegationController;
     let nodes: Nodes;
     let wallets: Wallets;
+    let nodeRotation: NodeRotation;
 
     const failedDkgPenalty = 5;
 
@@ -582,6 +585,7 @@ describe("SkaleDkgFakeComplaint", () => {
         slashingTable = await deploySlashingTable(contractManager);
         delegationController = await deployDelegationController(contractManager);
         wallets = await deployWallets(contractManager);
+        nodeRotation = await deployNodeRotation(contractManager);
 
         await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
 
@@ -690,12 +694,15 @@ describe("SkaleDkgFakeComplaint", () => {
         describe("when correct broadcasts sent", () => {
             const nodesCount = 4;
             it("should not revert after successful complaint", async () => {
+                const rotation = await nodeRotation.getRotation(stringKeccak256("schainName"));
                 for (let i = 0; i < nodesCount; ++i) {
                     await skaleDKG.connect(validators[i % 2].nodeAddress).broadcast(
                         stringKeccak256(schainName),
                         i,
                         verificationVectors[i],
-                        encryptedSecretKeyContributions[i]);
+                        encryptedSecretKeyContributions[i],
+                        rotation.rotationCounter
+                    );
                 }
 
                 for (let i = 0; i < nodesCount; ++i) {
@@ -731,12 +738,14 @@ describe("SkaleDkgFakeComplaint", () => {
             });
 
             it("should proceed response", async () => {
+                const rotation = await nodeRotation.getRotation(stringKeccak256("schainName"));
                 for (let i = 0; i < nodesCount; ++i) {
                     await skaleDKG.connect(validators[i % 2].nodeAddress).broadcast(
                         stringKeccak256(schainName),
                         i,
                         verificationVectors[i],
-                        encryptedSecretKeyContributions[i]
+                        encryptedSecretKeyContributions[i],
+                        rotation.rotationCounter
                     );
                 }
 

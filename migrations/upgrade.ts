@@ -97,7 +97,7 @@ async function prepareContractsList(instance: Instance) {
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
     const upgrader = new SkaleManagerUpgrader(
-        "1.9.3",
+        "1.10.0",
         skaleManager,
         await prepareContractsList(skaleManager)
     );

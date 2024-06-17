@@ -38,3 +38,10 @@ export async function nextMonth(contractManager: ContractManager, monthsAmount =
     const currentEpoch = await timeHelpers.getCurrentMonth();
     await skipTime((await timeHelpers.monthToTimestamp(currentEpoch.add(monthsAmount))).toNumber() - await currentTime())
 }
+
+export async function getTransactionTimestamp(transactionHash: string) {
+    const receipt = await ethers.provider.getTransactionReceipt(transactionHash);
+    const blockNumber = receipt.blockNumber;
+    const block = await ethers.provider.getBlock(blockNumber);
+    return block.timestamp;
+}

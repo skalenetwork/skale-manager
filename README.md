@@ -1,6 +1,8 @@
 # SKALE Manager
 
-[![Discord](https://img.shields.io/discord/534485763354787851.svg)](https://discord.gg/vvUtWJB) [![Build Status](https://travis-ci.com/skalenetwork/skale-manager.svg?branch=develop)](https://travis-ci.com/skalenetwork/skale-manager) [![codecov](https://codecov.io/gh/skalenetwork/skale-manager/branch/develop/graph/badge.svg)](https://codecov.io/gh/skalenetwork/skale-manager)
+[![Discord](https://img.shields.io/discord/534485763354787851.svg)](https://discord.gg/vvUtWJB)
+[![Build Status](https://github.com/skalenetwork/skale-manager/actions/workflows/test.yml/badge.svg)](https://github.com/skalenetwork/skale-manager/actions)
+[![codecov](https://codecov.io/gh/skalenetwork/skale-manager/branch/develop/graph/badge.svg)](https://codecov.io/gh/skalenetwork/skale-manager)
 
 A smart contract system that orchestrates and operates the SKALE Network.
 
@@ -10,14 +12,10 @@ SKALE Manager controls Nodes, Validators, and SKALE chains. It also contains con
 
 ## Upgradeability
 
-This system is upgradeable and uses the Separate Data and Functionality approach.
-
-1) ContractManager: main contract of Separate Data and Functionality approach. It stores all contract's addresses in the SKALE Manager system.
-2) Permissions: connectable contract to every SKALE Manager contract except ContractManager. It stores address of ContractManager and a modifier that forbids calls only from the given contract
+This system is upgradeable and uses the transparent proxy approach.
 
 ## Structure
 
-All interaction with this system is possible only through SKALE Manager. For all statuses and data, see Data contracts.
 The main purpose of this system:
 
 1) Control Nodes in the system:
@@ -36,23 +34,28 @@ The main purpose of this system:
 
 ## Deployment
 
-To create your network, see examples in `truffle-config.js`
-
 Create a `.env` file with following data:
 
-    ENDPOINT="your endpoint"
-    PRIVATE_KEY="your private key"
-    NETWORK="your created network"
+```.env
+ENDPOINT="{your endpoint}"
+PRIVATE_KEY="{your private key}"
+GASPRICE={gas price in wei} # optional
+ETHERSCAN={etherscan API key to verify contracts} # optional
+```
 
--   deploy:
+deploy:
 
-    truffle migrate --network 
+```bash
+npx hardhat run migrations/deploy.ts --network custom
+```
 
 ## Test
 
-_Need to deploy the system first_
+The is no need to deploy the system first
 
-    yarn test
+```bash
+yarn test
+```
 
 ## License
 

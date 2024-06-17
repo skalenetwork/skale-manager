@@ -71,6 +71,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     mapping(bytes32 => uint256) private _badNodes;
 
+    mapping(bytes32 => uint256) public override pendingToBeReplaced;
+
     modifier correctGroup(bytes32 schainHash) {
         require(channels[schainHash].active, "Group is not created");
         _;
@@ -148,7 +150,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bytes32 schainHash,
         uint256 nodeIndex,
         ISkaleDKG.G2Point[] memory verificationVector,
-        KeyShare[] memory secretKeyContribution
+        KeyShare[] memory secretKeyContribution,
+        uint256 rotationCounter
     )
         external
         override
@@ -169,7 +172,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             contractManager: contractManager,
             channels: channels,
             dkgProcess: dkgProcess,
-            hashedData: hashedData
+            hashedData: hashedData,
+            rotationCounter: rotationCounter
         });
     }
 
@@ -318,6 +322,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _badNodes[schainHash] = nodeIndex;
     }
 
+    function resetPendingToBeReplaced(bytes32 schainHash) external override allow("Schains") {
+        delete pendingToBeReplaced[schainHash];
+    }
+
     function finalizeSlashing(bytes32 schainHash, uint256 badNode) external override allow("SkaleDKG") {
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         ISchainsInternal schainsInternal = ISchainsInternal(
@@ -326,7 +334,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit BadGuy(badNode);
         emit FailedDKG(schainHash);
 
-        schainsInternal.makeSchainNodesInvisible(schainHash);
         if (schainsInternal.isAnyFreeNode(schainHash)) {
             uint256 newNode = nodeRotation.rotateNode(
                 badNode,
@@ -336,14 +343,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
             emit NewGuy(newNode);
         } else {
+            pendingToBeReplaced[schainHash] = badNode;
             _openChannel(schainHash);
-            schainsInternal.removeNodeFromSchain(
-                badNode,
-                schainHash
-            );
             channels[schainHash].active = false;
         }
-        schainsInternal.makeSchainNodesVisible(schainHash);
         IPunisher(contractManager.getPunisher()).slash(
             INodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
             ISlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
@@ -593,7 +596,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
         } else if (context.dkgFunction == DkgFunction.Response){
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal - gasleft() - context.delta, context.isDebt
+                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta, context.isDebt
             );
         } else {
             wallets.refundGasBySchain(

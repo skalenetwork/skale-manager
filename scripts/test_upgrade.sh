@@ -19,7 +19,7 @@ DEPLOYED_TAG=$(cat $GITHUB_WORKSPACE/DEPLOYED)
 DEPLOYED_VERSION=$(echo $DEPLOYED_TAG | xargs ) # trim
 DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
-DEPLOYED_WITH_NODE_VERSION="lts/fermium"
+DEPLOYED_WITH_NODE_VERSION="lts/hydrogen"
 CURRENT_NODE_VERSION=$(nvm current)
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR

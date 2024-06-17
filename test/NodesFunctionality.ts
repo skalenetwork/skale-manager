@@ -7,7 +7,7 @@ import {ContractManager,
          DelegationController,
          ConstantsHolder} from "../typechain-types";
 import {privateKeys} from "./tools/private-keys";
-import {nextMonth} from "./tools/time";
+import {getTransactionTimestamp, nextMonth} from "./tools/time";
 import {Wallet} from "ethers";
 import {deployContractManager} from "./tools/deploy/contractManager";
 import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
@@ -336,6 +336,14 @@ describe("NodesFunctionality", () => {
             expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(false);
             expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
             expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(true);
+        });
+
+        it("should store last change ip time", async () => {
+            const nodeIndex = 0;
+            const tx = await nodes.connect(owner).changeIP(nodeIndex, "0x7f000003", "0x00000000");
+            const transactionTimestamp = await getTransactionTimestamp(tx.hash);
+            const lastChangeIpTime = await nodes.getLastChangeIpTime(nodeIndex);
+            expect(lastChangeIpTime).to.equal(transactionTimestamp);
         });
     });
 
