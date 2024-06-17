@@ -39,6 +39,36 @@ import {
 import {AddressIsNotSet, RoleRequired} from "../CommonErrors.sol";
 import {Permissions} from "../Permissions.sol";
 
+
+error ValidatorDoesNotExist(uint256 id);
+error AddressIsAlreadyInUse(address validatorAddress);
+error WrongFeeValue(uint256 value);
+error ValidatorIsAlreadyEnabled(uint256 validatorId);
+error ValidatorIsAlreadyDisabled(uint256 validatorId);
+error SenderHasToBeEqualToRequestedAddress(
+    address sender,
+    address requestedAddress
+);
+error WrongSignature();
+error NodeAddressIsAValidator(address nodeAddress, uint256 validatorId);
+error AcceptingRequestIsAlreadyEnabled(uint256 validatorId);
+error AcceptingRequestIsAlreadyDisabled(uint256 validatorId);
+error NoPermissionsToUnlinkNode(uint256 validatorId, address nodeAddress);
+error NodeAddressIsNotAssignedToValidator(address nodeAddress);
+error ValidatorIsNotAuthorized(
+    uint256 validatorId
+);
+error ValidatorIsNotCurrentlyAcceptingNewRequests(uint256 validatorId);
+error AmountDoesNotMeetTheValidatorsMinimumDelegationAmount(
+    uint256 amount,
+    uint256 minimum
+);
+error ValidatorAddressDoesNotExist(address validatorAddress);
+error ValidatorCannotOverrideNodeAddress(
+    uint256 validatorId,
+    address nodeAddress
+);
+
 /**
  * @title ValidatorService
  * @dev This contract handles all validator operations including registration,
@@ -67,35 +97,6 @@ contract ValidatorService is Permissions, IValidatorService {
 
     bytes32 public constant VALIDATOR_MANAGER_ROLE =
         keccak256("VALIDATOR_MANAGER_ROLE");
-
-    error ValidatorDoesNotExist(uint256 id);
-    error AddressIsAlreadyInUse(address validatorAddress);
-    error WrongFeeValue(uint256 value);
-    error ValidatorIsAlreadyEnabled(uint256 validatorId);
-    error ValidatorIsAlreadyDisabled(uint256 validatorId);
-    error SenderHasToBeEqualToRequestedAddress(
-        address sender,
-        address requestedAddress
-    );
-    error WrongSignature();
-    error NodeAddressIsAValidator(address nodeAddress, uint256 validatorId);
-    error AcceptingRequestIsAlreadyEnabled(uint256 validatorId);
-    error AcceptingRequestIsAlreadyDisabled(uint256 validatorId);
-    error NoPermissionsToUnlinkNode(uint256 validatorId, address nodeAddress);
-    error NodeAddressIsNotAssignedToValidator(address nodeAddress);
-    error ValidatorIsNotAuthorizedToAcceptDelegationRequest(
-        uint256 validatorId
-    );
-    error ValidatorIsNotCurrentlyAcceptingNewRequests(uint256 validatorId);
-    error AmountDoesNotMeetTheValidatorsMinimumDelegationAmount(
-        uint256 amount,
-        uint256 minimum
-    );
-    error ValidatorAddressDoesNotExist(address validatorAddress);
-    error ValidatorCannotOverrideNodeAddress(
-        uint256 validatorId,
-        address nodeAddress
-    );
 
     modifier onlyValidatorManager() {
         if (!hasRole(VALIDATOR_MANAGER_ROLE, msg.sender)) {
@@ -512,7 +513,7 @@ contract ValidatorService is Permissions, IValidatorService {
         uint256 amount
     ) external view override {
         if (!isAuthorizedValidator(validatorId)) {
-            revert ValidatorIsNotAuthorizedToAcceptDelegationRequest(
+            revert ValidatorIsNotAuthorized(
                 validatorId
             );
         }

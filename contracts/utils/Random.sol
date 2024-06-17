@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SegmentTree.sol - SKALE Manager
+    Random.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
     @author Dmytro Stebaiev
@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
 import { IRandom } from "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
 

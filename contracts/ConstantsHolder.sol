@@ -35,7 +35,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     // initial price for creating Node (100 SKL)
     uint256 public constant override NODE_DEPOSIT = 100 * 1e18;
 
-    uint8 public constant TOTAL_SPACE_ON_NODE = 128;
+    uint8 public constant override TOTAL_SPACE_ON_NODE = 128;
 
     // part of Node for Small Skale-chain (1/128 of Node)
     uint8 public constant override SMALL_DIVISOR = 128;
