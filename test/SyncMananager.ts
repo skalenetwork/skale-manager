@@ -4,7 +4,7 @@ import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
 import {deploySyncManager} from "./tools/deploy/syncManager";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {expect} from "chai";
 import {fastBeforeEach} from "./tools/mocha";
 

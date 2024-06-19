@@ -17,7 +17,7 @@ import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
 import {SchainType} from "./tools/types";
 import chaiAlmost from "chai-almost";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {ContractTransaction, Wallet} from "ethers";
 import {makeSnapshot, applySnapshot} from "./tools/snapshot";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";

@@ -22,7 +22,7 @@ import {deploySkaleManager} from "./tools/deploy/skaleManager";
 import {deployKeyStorage} from "./tools/deploy/keyStorage";
 import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert} from "chai";
 import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
 import {Wallet} from "ethers";

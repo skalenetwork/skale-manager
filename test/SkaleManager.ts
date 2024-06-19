@@ -34,7 +34,7 @@ import {deployBounty} from "./tools/deploy/bounty";
 import {BigNumber, ContractTransaction, Wallet} from "ethers";
 import {deployTimeHelpers} from "./tools/deploy/delegation/timeHelpers";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {deployWallets} from "./tools/deploy/wallets";
 import chaiAlmost from "chai-almost";
 import {fastBeforeEach} from "./tools/mocha";

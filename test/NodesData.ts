@@ -11,7 +11,7 @@ import {deployValidatorService} from "./tools/deploy/delegation/validatorService
 import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
 import {BigNumber, Wallet} from "ethers";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert} from "chai";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";

@@ -31,7 +31,7 @@ import {deploySlashingTable} from "../tools/deploy/slashingTable";
 import {deployTimeHelpersWithDebug} from "../tools/deploy/test/timeHelpersWithDebug";
 import {deploySkaleManager} from "../tools/deploy/skaleManager";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
 import {assert, expect} from "chai";
 import {getValidatorIdSignature} from "../tools/signatures";

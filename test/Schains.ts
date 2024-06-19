@@ -25,7 +25,7 @@ import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
 import {deploySkaleManager} from "./tools/deploy/skaleManager";
 import {deployNodeRotation} from "./tools/deploy/nodeRotation";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert, expect} from "chai";
 import {deployWallets} from "./tools/deploy/wallets";
 import {fastBeforeEach} from "./tools/mocha";

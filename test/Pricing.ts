@@ -23,7 +23,7 @@ import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
 import {deployNodeRotation} from "./tools/deploy/nodeRotation";
 import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {fastBeforeEach} from "./tools/mocha";

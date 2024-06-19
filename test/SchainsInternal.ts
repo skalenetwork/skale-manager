@@ -12,7 +12,7 @@ import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock
 import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
 import {skipTime} from "./tools/time";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {expect} from "chai";
 import {fastBeforeEach} from "./tools/mocha";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";

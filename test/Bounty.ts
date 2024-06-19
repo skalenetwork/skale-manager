@@ -21,10 +21,10 @@ import {deployValidatorService} from "./tools/deploy/delegation/validatorService
 import {deployDelegationPeriodManager} from "./tools/deploy/delegation/delegationPeriodManager";
 import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import {BigNumber} from "ethers";
 import {deployPunisher} from "./tools/deploy/delegation/punisher";
 import {fastBeforeEach} from "./tools/mocha";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 
 chai.should();
 chai.use(chaiAsPromised);

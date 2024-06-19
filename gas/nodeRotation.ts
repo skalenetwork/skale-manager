@@ -15,7 +15,7 @@ import {deploySchains} from "../test/tools/deploy/schains";
 import {deploySchainsInternalMock} from "../test/tools/deploy/test/schainsInternalMock";
 import {deploySkaleDKGTester} from "../test/tools/deploy/test/skaleDKGTester";
 import {skipTime} from "../test/tools/time";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {ethers} from "hardhat";
 import {Event, Wallet} from "ethers";
 import fs from 'fs';

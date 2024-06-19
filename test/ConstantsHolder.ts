@@ -6,7 +6,7 @@ import chai = require("chai");
 import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
 import {deployContractManager} from "./tools/deploy/contractManager";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 
 chai.should();
 chai.use(chaiAsPromised);

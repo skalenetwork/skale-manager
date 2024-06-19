@@ -5,7 +5,7 @@ import {ContractManager, Schains, SkaleManager, ValidatorService} from "../typec
 import {deploySchains} from "../test/tools/deploy/schains";
 import fs from 'fs';
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {Event, Wallet} from "ethers";
 import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
 import {fastBeforeEach} from "../test/tools/mocha";

@@ -11,7 +11,7 @@ import {deploySkaleToken} from "./tools/deploy/skaleToken";
 import {deployReentrancyTester} from "./tools/deploy/test/reentrancyTester";
 import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {expect} from "chai";
 import {fastBeforeEach} from "./tools/mocha";
 

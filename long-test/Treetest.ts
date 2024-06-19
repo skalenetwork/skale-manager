@@ -19,7 +19,7 @@ import {deploySkaleDKGTester} from "../test/tools/deploy/test/skaleDKGTester";
 import {deployNodes} from "../test/tools/deploy/nodes";
 import {deployWallets} from "../test/tools/deploy/wallets";
 import {skipTime} from "../test/tools/time";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {ethers} from "hardhat";
 import {BigNumberish, BytesLike, Signer, Wallet} from "ethers";
 import {assert} from "chai";

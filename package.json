@@ -40,23 +40,23 @@
     "cspell": "npx cspell \"**/*\""
   },
   "dependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.6",
-    "@openzeppelin/hardhat-upgrades": "^1.14.0",
+    "@openzeppelin/hardhat-upgrades": "^2.1.0",
     "@skalenetwork/skale-manager-interfaces": "^3.0.0-develop.2",
     "@skalenetwork/upgrade-tools": "^3.0.0-linter.34",
     "@typechain/hardhat": "^7.0.0",
     "dotenv": "^16.3.1",
     "ethereumjs-util": "^7.1.5",
-    "ethers": "^5.7.2",
-    "hardhat": "2.11.0 - 2.16.1"
+    "ethers": "^6.13.1",
+    "hardhat": "^2.22.5"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-chai-matchers": "<2.0.0",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.8",
     "@nomiclabs/hardhat-etherscan": "^3.1.8",
-    "@typechain/ethers-v5": "^11.1.1",
+    "@typechain/ethers-v6": "^0.5.1",
     "@types/chai": "^4.3.6",
     "@types/chai-almost": "^1.0.1",
     "@types/chai-as-promised": "^7.1.6",

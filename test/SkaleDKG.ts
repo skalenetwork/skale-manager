@@ -29,7 +29,7 @@ import {deployNodeRotation} from "./tools/deploy/nodeRotation";
 import {deploySkaleManager} from "./tools/deploy/skaleManager";
 import {deployWallets} from "./tools/deploy/wallets";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert, expect} from "chai";
 import {makeSnapshot, applySnapshot} from "./tools/snapshot";
 import {BytesLike, ContractTransaction, Wallet} from "ethers";

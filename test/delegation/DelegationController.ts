@@ -15,7 +15,7 @@ import {deployTimeHelpersWithDebug} from "../tools/deploy/test/timeHelpersWithDe
 import {State} from "../tools/types";
 import {deployTimeHelpers} from "../tools/deploy/delegation/timeHelpers";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
 import {expect, assert} from "chai";
 import {makeSnapshot, applySnapshot} from "../tools/snapshot";

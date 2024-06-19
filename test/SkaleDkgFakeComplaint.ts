@@ -29,7 +29,7 @@ import {deploySkaleDKG} from "./tools/deploy/skaleDKG";
 import {deploySkaleToken} from "./tools/deploy/skaleToken";
 import {deploySlashingTable} from "./tools/deploy/slashingTable";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert} from "chai";
 import {deployWallets} from "./tools/deploy/wallets";
 import {makeSnapshot, applySnapshot} from "./tools/snapshot";

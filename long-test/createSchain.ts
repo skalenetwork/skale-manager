@@ -6,7 +6,7 @@ import {ContractManager, Schains, SkaleManager, ValidatorService, SchainsInterna
 import {privateKeys} from "../test/tools/private-keys";
 import {deploySchains} from "../test/tools/deploy/schains";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {Event, Wallet} from "ethers";
 import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
 import {SchainType} from "../test/tools/types";

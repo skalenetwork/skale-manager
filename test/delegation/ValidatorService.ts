@@ -13,7 +13,7 @@ import {deploySkaleToken} from "../tools/deploy/skaleToken";
 import {deploySkaleManager} from "../tools/deploy/skaleManager";
 import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
 import {ethers} from "hardhat";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert} from "chai";
 import {makeSnapshot, applySnapshot} from "../tools/snapshot";
 import {getValidatorIdSignature} from "../tools/signatures";
