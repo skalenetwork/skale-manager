@@ -40,7 +40,7 @@ describe("Schain creation test", () => {
     beforeEach(async () => {
         [owner, validator] = await ethers.getSigners();
         nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
         contractManager = await deployContractManager();
 
         schainsInternal = await deploySchainsInternalMock(contractManager);
@@ -74,7 +74,7 @@ describe("Schain creation test", () => {
             const type = SchainType.MEDIUM;
             console.log(type);
             for (let try1 = 0; try1 < 32; try1++) {
-                const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}${try1}`, owner.address, ethers.constants.AddressZero, [])).wait();
+                const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}${try1}`, owner.address, ethers.ZeroAddress, [])).wait();
                 const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
                 const setOfNodes = new Set();
                 for (const nodeOfSchain of nodeInGroup) {
@@ -119,7 +119,7 @@ describe("Schain creation test", () => {
         for(let tries = 0; tries < 200; tries++) {
             const type = Math.floor(Math.random() * 2) + 1;
             console.log(type);
-            const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}`, owner.address, ethers.constants.AddressZero, [])).wait();
+            const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}`, owner.address, ethers.ZeroAddress, [])).wait();
             const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
             const setOfNodes = new Set();
             for (const nodeOfSchain of nodeInGroup) {

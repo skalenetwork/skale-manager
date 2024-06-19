@@ -36,7 +36,7 @@ describe("SchainsInternal", () => {
         [owner, holder] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[1])).connect(ethers.provider);
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
@@ -58,7 +58,7 @@ describe("SchainsInternal", () => {
     });
 
     it("should initialize schain", async () => {
-        await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.constants.AddressZero, 5, 5);
+        await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.ZeroAddress, 5, 5);
 
         const schain = await schainsInternal.schains(stringKeccak256("TestSchain"));
         schain.name.should.be.equal("TestSchain");
@@ -91,13 +91,13 @@ describe("SchainsInternal", () => {
         const generation1Name = "Generation 1";
         const generation0Hash = stringKeccak256(generation0Name);
         const generation1Hash = stringKeccak256(generation1Name);
-        await schainsInternal.initializeSchain(generation0Name, holder.address, ethers.constants.AddressZero, 5, 5);
+        await schainsInternal.initializeSchain(generation0Name, holder.address, ethers.ZeroAddress, 5, 5);
         (await schainsInternal.getGeneration(generation0Hash)).should.be.equal(generation);
 
         await schainsInternal.newGeneration();
         generation = generation.add(1);
 
-        await schainsInternal.initializeSchain(generation1Name, holder.address, ethers.constants.AddressZero, 5, 5);
+        await schainsInternal.initializeSchain(generation1Name, holder.address, ethers.ZeroAddress, 5, 5);
         (await schainsInternal.getGeneration(generation1Hash)).should.be.equal(generation);
     });
 
@@ -110,7 +110,7 @@ describe("SchainsInternal", () => {
         const schainNameHash = stringKeccak256("TestSchain");
 
         fastBeforeEach(async () => {
-            await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.constants.AddressZero, 5, 5);
+            await schainsInternal.initializeSchain("TestSchain", holder.address, ethers.ZeroAddress, 5, 5);
             await nodes.createNode(nodeAddress.address,
                 {
                     port: 8545,
@@ -160,7 +160,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.createGroupForSchain(schainNameHash, 1, 2);
 
                 for (const schainName of newSchainNames) {
-                    await schainsInternal.initializeSchain(schainName, owner.address, ethers.constants.AddressZero, 5, 5);
+                    await schainsInternal.initializeSchain(schainName, owner.address, ethers.ZeroAddress, 5, 5);
                 }
             });
 

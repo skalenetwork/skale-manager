@@ -46,8 +46,8 @@ describe("NodesFunctionality", () => {
         nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);

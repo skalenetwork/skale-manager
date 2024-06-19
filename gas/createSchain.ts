@@ -6,24 +6,19 @@ import {deploySchains} from "../test/tools/deploy/schains";
 import fs from 'fs';
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
-import {Event, Wallet} from "ethers";
+import {ContractTransactionReceipt, EventLog, HDNodeWallet, Wallet} from "ethers";
 import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
 import {fastBeforeEach} from "../test/tools/mocha";
 import {SchainType} from "../test/tools/types";
-import {TypedEvent} from "../typechain-types/common";
-import {SchainNodesEvent} from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
 
-function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
-    if (events) {
-        const target = events.find((event) => event.event === eventName);
-        if (target) {
-            return target as TargetEvent;
-        } else {
-            throw new Error("Event was not emitted");
+function findEvent(receipt: ContractTransactionReceipt | null, eventName: string) {
+    if (receipt) {
+        const log = receipt.logs.find((event) => event instanceof EventLog && event.eventName === eventName);
+        if (log) {
+            return log as EventLog;
         }
-    } else {
-        throw new Error("Event was not emitted");
     }
+    throw new Error("Event was not emitted");
 }
 
 describe("createSchains", () => {
@@ -50,8 +45,8 @@ describe("createSchains", () => {
         const validatorId = await validatorService.getValidatorId(validator.address);
         await validatorService.disableWhitelist();
         const maxNodesAmount = 1000;
-        const etherAmount = ethers.utils.parseEther("10");
-        const nodeAddresses: Wallet[] = [];
+        const etherAmount = ethers.parseEther("10");
+        const nodeAddresses: HDNodeWallet[] = [];
         await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
 
         const gasLimit = 12e6;
@@ -72,8 +67,11 @@ describe("createSchains", () => {
 
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
-                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${nodeId}`, owner.address, ethers.constants.AddressZero, [])).wait();
-                const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
+                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${nodeId}`, owner.address, ethers.ZeroAddress, [])).wait();
+                if (!result) {
+                    throw new Error("addSchainByFoundation was not mined");
+                }
+                const nodeInGroup = findEvent(result, "SchainNodes").args?.nodesInGroup;
                 console.log("Nodes in Schain:");
                 const setOfNodes = new Set();
                 for (const nodeOfSchain of nodeInGroup) {
@@ -87,8 +85,8 @@ describe("createSchains", () => {
                 }
 
                 measurements.push({nodesAmount, gasUsed: result.gasUsed});
-                console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
-                if (result.gasUsed.toNumber() > gasLimit) {
+                console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+                if (result.gasUsed > gasLimit) {
                     break;
                 }
             }

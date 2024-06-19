@@ -81,8 +81,8 @@ describe("SkaleManager", () => {
 
         validator = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress = new Wallet(String(privateKeys[4])).connect(ethers.provider);
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: validator.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
+        await owner.sendTransaction({to: validator.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
@@ -224,7 +224,7 @@ describe("SkaleManager", () => {
                     getPublicKey(nodeAddress), // public key
                     "d2", // name
                     "some.domain.name");
-                await wallets.rechargeValidatorWallet(validatorId, {value: ethers.utils.parseEther('5.0')});
+                await wallets.rechargeValidatorWallet(validatorId, {value: ethers.parseEther('5.0')});
             });
 
             it("should fail to init exiting of someone else's node", async () => {
@@ -459,7 +459,7 @@ describe("SkaleManager", () => {
                                 typeOfSchain: SchainType.LARGE,
                                 nonce: 0,
                                 name: "d2",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         ));
@@ -482,7 +482,7 @@ describe("SkaleManager", () => {
                                 typeOfSchain: SchainType.LARGE,
                                 nonce: 0,
                                 name: "d2",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         )
@@ -499,7 +499,7 @@ describe("SkaleManager", () => {
                                 typeOfSchain: SchainType.LARGE,
                                 nonce: 0,
                                 name: "d2",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         )
@@ -523,7 +523,7 @@ describe("SkaleManager", () => {
                                 typeOfSchain: SchainType.LARGE,
                                 nonce: 0,
                                 name: "d2",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         )
@@ -542,7 +542,7 @@ describe("SkaleManager", () => {
                                     typeOfSchain: SchainType.LARGE,
                                     nonce: 0,
                                     name: "d2",
-                                    originator: ethers.constants.AddressZero,
+                                    originator: ethers.ZeroAddress,
                                     options: []
                                 }]
                             )
@@ -584,7 +584,7 @@ describe("SkaleManager", () => {
                                     typeOfSchain: SchainType.LARGE,
                                     nonce: 0,
                                     name: "d3",
-                                    originator: ethers.constants.AddressZero,
+                                    originator: ethers.ZeroAddress,
                                     options: []
                                 }]
                             )
@@ -646,7 +646,7 @@ describe("SkaleManager", () => {
                                 typeOfSchain: SchainType.LARGE,
                                 nonce: 0,
                                 name: "d2",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         )
@@ -665,7 +665,7 @@ describe("SkaleManager", () => {
                                 typeOfSchain: SchainType.LARGE,
                                 nonce: 0,
                                 name: "d3",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         )
@@ -687,7 +687,7 @@ describe("SkaleManager", () => {
                                     typeOfSchain: SchainType.LARGE,
                                     nonce: 0,
                                     name: "d2",
-                                    originator: ethers.constants.AddressZero,
+                                    originator: ethers.ZeroAddress,
                                     options: []
                                 }]
                             )
@@ -703,7 +703,7 @@ describe("SkaleManager", () => {
                                     typeOfSchain: SchainType.LARGE,
                                     nonce: 0,
                                     name: "d3",
-                                    originator: ethers.constants.AddressZero,
+                                    originator: ethers.ZeroAddress,
                                     options: []
                                 }]
                             )
@@ -752,7 +752,7 @@ describe("SkaleManager", () => {
                             typeOfSchain: SchainType.SMALL,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -776,7 +776,7 @@ describe("SkaleManager", () => {
                             typeOfSchain: SchainType.MEDIUM,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -799,7 +799,7 @@ describe("SkaleManager", () => {
                             typeOfSchain: SchainType.LARGE,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -822,7 +822,7 @@ describe("SkaleManager", () => {
                             typeOfSchain: SchainType.TEST,
                             nonce: 0,
                             name: "d5",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -845,7 +845,7 @@ describe("SkaleManager", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d6",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )

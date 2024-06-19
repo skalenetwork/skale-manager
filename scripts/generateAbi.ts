@@ -26,7 +26,7 @@ async function main() {
         if (Object.keys(librariesRequirements).includes(contractName)) {
             const libraries: Libraries = {};
             for(const library of librariesRequirements[contractName]) {
-                libraries[library] = ethers.constants.AddressZero;
+                libraries[library] = ethers.ZeroAddress;
             }
             factory = await ethers.getContractFactory(contractName, {libraries});
         } else {

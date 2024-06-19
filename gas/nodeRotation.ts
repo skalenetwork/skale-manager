@@ -57,7 +57,7 @@ describe("nodeRotation", () => {
     before(async () => {
         [owner, validator] = await ethers.getSigners();
             node = new Wallet(String(privateKeys[3])).connect(ethers.provider);
-            await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});
+            await owner.sendTransaction({value: ethers.parseEther("1"), to: node.address});
 
             contractManager = await deployContractManager();
             schainsInternal = await deploySchainsInternalMock(contractManager);
@@ -101,7 +101,7 @@ describe("nodeRotation", () => {
 
             const numberOfSchains = 64;
             for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
-                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${schainNumber}`, owner.address, ethers.constants.AddressZero, [])).wait();
+                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${schainNumber}`, owner.address, ethers.ZeroAddress, [])).wait();
                 await skaleDKG.setSuccessfulDKGPublic(stringKeccak256(`schain-${schainNumber}`));
                 console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
             }
@@ -173,7 +173,7 @@ describe("nodeRotation", () => {
             }
 
             for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
-                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${schainNumber}`, owner.address, ethers.constants.AddressZero, [])).wait();
+                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${schainNumber}`, owner.address, ethers.ZeroAddress, [])).wait();
                 const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
                     console.log("Nodes in Schain:");
                     const setOfNodes = new Set();
@@ -206,8 +206,8 @@ describe("nodeRotation", () => {
 
         for(let test = 1; test <= numberOfSchains; ++test) {
             it(`should exit schain #${test}`, async () => {
-                if ((await node.getBalance()).lt(ethers.utils.parseEther("0.1"))) {
-                    await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});
+                if ((await node.getBalance()).lt(ethers.parseEther("0.1"))) {
+                    await owner.sendTransaction({value: ethers.parseEther("1"), to: node.address});
                 }
 
                 const estimatedGas = await skaleManager.estimateGas.nodeExit(leavingNode);
@@ -255,8 +255,8 @@ describe("nodeRotation", () => {
         });
 
         beforeEach(async () => {
-            if ((await node.getBalance()).lt(ethers.utils.parseEther("0.1"))) {
-                await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});
+            if ((await node.getBalance()).lt(ethers.parseEther("0.1"))) {
+                await owner.sendTransaction({value: ethers.parseEther("1"), to: node.address});
             }
 
             await skaleManager.connect(node).createNode(
@@ -273,7 +273,7 @@ describe("nodeRotation", () => {
             ++nodeId;
             nodesAmount = nodeId;
             if (nodesAmount >= 16) {
-                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${nodeId}`, owner.address, ethers.constants.AddressZero, [])).wait();
+                const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${nodeId}`, owner.address, ethers.ZeroAddress, [])).wait();
                 await skaleDKG.setSuccessfulDKGPublic(stringKeccak256(`schain-${nodeId}`));
                 console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
 
@@ -297,8 +297,8 @@ describe("nodeRotation", () => {
                     const gas = [];
                     await nodes.initExit(leavingNode);
                     for (let i = 0; i < schainHashes.length; i++) {
-                        if ((await node.getBalance()).lt(ethers.utils.parseEther("0.1"))) {
-                            await owner.sendTransaction({value: ethers.utils.parseEther("1"), to: node.address});
+                        if ((await node.getBalance()).lt(ethers.parseEther("0.1"))) {
+                            await owner.sendTransaction({value: ethers.parseEther("1"), to: node.address});
                         }
                         const estimatedGas = await skaleManager.connect(node).estimateGas.nodeExit(leavingNode);
                         console.log("Estimated gas on nodeExit", estimatedGas.toString());

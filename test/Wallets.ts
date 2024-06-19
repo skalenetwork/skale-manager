@@ -76,10 +76,10 @@ describe("Wallets", () => {
         const balanceRichGuy2 = await richGuy2.getBalance();
         const balanceRichGuy3 = await richGuy3.getBalance();
         const balanceRichGuy4 = await richGuy4.getBalance();
-        await richGuy1.sendTransaction({to: nodeAddress1.address, value: balanceRichGuy1.sub(ethers.utils.parseEther("1"))});
-        await richGuy2.sendTransaction({to: nodeAddress2.address, value: balanceRichGuy2.sub(ethers.utils.parseEther("1"))});
-        await richGuy3.sendTransaction({to: nodeAddress3.address, value: balanceRichGuy3.sub(ethers.utils.parseEther("1"))});
-        await richGuy4.sendTransaction({to: nodeAddress4.address, value: balanceRichGuy4.sub(ethers.utils.parseEther("1"))});
+        await richGuy1.sendTransaction({to: nodeAddress1.address, value: balanceRichGuy1.sub(ethers.parseEther("1"))});
+        await richGuy2.sendTransaction({to: nodeAddress2.address, value: balanceRichGuy2.sub(ethers.parseEther("1"))});
+        await richGuy3.sendTransaction({to: nodeAddress3.address, value: balanceRichGuy3.sub(ethers.parseEther("1"))});
+        await richGuy4.sendTransaction({to: nodeAddress4.address, value: balanceRichGuy4.sub(ethers.parseEther("1"))});
 
         contractManager = await deployContractManager();
         wallets = await deployWallets(contractManager);
@@ -109,10 +109,10 @@ describe("Wallets", () => {
         const balanceNode2 = await nodeAddress2.getBalance();
         const balanceNode3 = await nodeAddress3.getBalance();
         const balanceNode4 = await nodeAddress4.getBalance();
-        await nodeAddress1.sendTransaction({to: richGuy1.address, value: balanceNode1.sub(ethers.utils.parseEther("1"))});
-        await nodeAddress2.sendTransaction({to: richGuy2.address, value: balanceNode2.sub(ethers.utils.parseEther("1"))});
-        await nodeAddress3.sendTransaction({to: richGuy2.address, value: balanceNode3.sub(ethers.utils.parseEther("1"))});
-        await nodeAddress4.sendTransaction({to: richGuy2.address, value: balanceNode4.sub(ethers.utils.parseEther("1"))});
+        await nodeAddress1.sendTransaction({to: richGuy1.address, value: balanceNode1.sub(ethers.parseEther("1"))});
+        await nodeAddress2.sendTransaction({to: richGuy2.address, value: balanceNode2.sub(ethers.parseEther("1"))});
+        await nodeAddress3.sendTransaction({to: richGuy2.address, value: balanceNode3.sub(ethers.parseEther("1"))});
+        await nodeAddress4.sendTransaction({to: richGuy2.address, value: balanceNode4.sub(ethers.parseEther("1"))});
     });
 
     beforeEach(async () => {
@@ -124,13 +124,13 @@ describe("Wallets", () => {
     });
 
     it("should revert if someone sends ETH to contract Wallets", async() => {
-        const amount = ethers.utils.parseEther("1.0");
+        const amount = ethers.parseEther("1.0");
         await owner.sendTransaction({to: wallets.address, value: amount})
         .should.be.eventually.rejectedWith("Validator address does not exist");
     });
 
     it("should recharge validator wallet sending ETH to contract Wallets", async() => {
-        const amount = ethers.utils.parseEther("1.0");
+        const amount = ethers.parseEther("1.0");
         (await wallets.getValidatorBalance(validator1Id)).toNumber().should.be.equal(0);
         await validator1.sendTransaction({to: wallets.address, value: amount});
         (await wallets.getValidatorBalance(validator1Id)).should.be.equal(amount);
@@ -217,10 +217,10 @@ describe("Wallets", () => {
 
             await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address)
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address, ethers.constants.AddressZero, []);
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address, ethers.ZeroAddress, []);
             await skaleDKG.setSuccessfulDKGPublic(schain1Id);
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address, ethers.constants.AddressZero, []);
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address, ethers.ZeroAddress, []);
             await skaleDKG.setSuccessfulDKGPublic(schain2Id);
         });
 
@@ -230,7 +230,7 @@ describe("Wallets", () => {
 
         it("should automatically recharge wallet after creating schain by foundation", async () => {
             const amount = 1e9;
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, ethers.constants.AddressZero, [], {value: amount.toString()});
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, ethers.ZeroAddress, [], {value: amount.toString()});
             const schainBalance = await wallets.getSchainBalance(stringKeccak256("schain-3"));
             amount.should.be.equal(schainBalance.toNumber());
         });
@@ -246,14 +246,14 @@ describe("Wallets", () => {
         });
 
         it("should recharge schain wallet sending ETH to contract Wallets", async() => {
-            const amount = ethers.utils.parseEther("1.0");
+            const amount = ethers.parseEther("1.0");
             (await wallets.getSchainBalance(schain1Id)).toNumber().should.be.equal(0);
             await validator1.sendTransaction({to: wallets.address, value: amount});
             (await wallets.getSchainBalance(schain1Id)).should.be.equal(amount);
         });
 
         describe("when validators and schains wallets are recharged", () => {
-            const initialBalance = ethers.utils.parseEther("1");
+            const initialBalance = ethers.parseEther("1");
 
             let snapshotWithNodesAndSchains: number;
 
@@ -298,7 +298,7 @@ describe("Wallets", () => {
 
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);
                 initialBalance.sub(spentValue).sub(validatorBalance).toNumber()
-                    .should.be.almost(0, ethers.utils.parseEther(tolerance.toString()).toNumber());
+                    .should.be.almost(0, ethers.parseEther(tolerance.toString()).toNumber());
             });
         });
     });

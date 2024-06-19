@@ -560,8 +560,8 @@ describe("SkaleDkgFakeComplaint", () => {
         nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.parseEther("10000")});
 
         validators = [
             {
@@ -655,7 +655,7 @@ describe("SkaleDkgFakeComplaint", () => {
                         typeOfSchain: SchainType.MEDIUM_TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -678,7 +678,7 @@ describe("SkaleDkgFakeComplaint", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: schainName,
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     ));

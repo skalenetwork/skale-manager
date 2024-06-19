@@ -86,7 +86,7 @@ async function checkTreeAndSpaceToNodes(nodes: Nodes) {
 }
 
 async function createSchain(schains: Schains, typeOfSchain: SchainType, name: string, owner: Signer) {
-    await schains.addSchainByFoundation(0, typeOfSchain, 0, name, await owner.getAddress(), ethers.constants.AddressZero, []);
+    await schains.addSchainByFoundation(0, typeOfSchain, 0, name, await owner.getAddress(), ethers.ZeroAddress, []);
     console.log("Schain", name, "with type", typeOfSchain, "created");
 }
 
@@ -234,7 +234,7 @@ describe("Tree test", () => {
 
         node = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: node.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: node.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
 

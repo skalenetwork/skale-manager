@@ -55,7 +55,7 @@ describe("SkaleVerifier", () => {
         [validator1, owner] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[0])).connect(ethers.provider);
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
         constantsHolder = await deployConstantsHolder(contractManager);
@@ -260,7 +260,7 @@ describe("SkaleVerifier", () => {
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "Bob",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -327,7 +327,7 @@ describe("SkaleVerifier", () => {
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "Bob",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));

@@ -75,7 +75,7 @@ describe("NodeRotation", () => {
 
         const totalNumberOfNodes = 20;
         const registeredNodes: RegisteredNode[] = [];
-        const nodeBalance = ethers.utils.parseEther("10000");
+        const nodeBalance = ethers.parseEther("10000");
 
         fastBeforeEach(async () => {
             for (const index of Array.from(Array(totalNumberOfNodes).keys())) {
@@ -117,13 +117,13 @@ describe("NodeRotation", () => {
                             typeOfSchain: schainType,
                             nonce: 0,
                             name: schainName,
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
                 );
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
-                await wallets.connect(owner).rechargeSchainWallet(schainHash, {value: ethers.utils.parseEther("1")});
+                await wallets.connect(owner).rechargeSchainWallet(schainHash, {value: ethers.parseEther("1")});
 
                 chainNodes = (await schainsInternal.getNodesInGroup(schainHash)).map(id => {
                     const node = registeredNodes.find(registeredNode => registeredNode.id == id.toNumber())

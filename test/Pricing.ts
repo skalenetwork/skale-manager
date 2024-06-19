@@ -90,9 +90,9 @@ describe("Pricing", () => {
 
     describe("on initialized contracts", () => {
         fastBeforeEach(async () => {
-            await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.constants.AddressZero, 10, 2);
-            await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.constants.AddressZero, 10, 4);
-            await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.constants.AddressZero, 10, 8);
+            await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.ZeroAddress, 10, 2);
+            await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.ZeroAddress, 10, 4);
+            await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.ZeroAddress, 10, 8);
             await nodes.createNode(
                 nodeAddress1.address,
                 {

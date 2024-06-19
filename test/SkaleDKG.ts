@@ -40,7 +40,7 @@ import {schainParametersType, SchainType} from "./tools/types";
 chai.should();
 chai.use(chaiAsPromised);
 
-const weiTolerance = ethers.utils.parseEther("0.002").toNumber();
+const weiTolerance = ethers.parseEther("0.002").toNumber();
 
 async function reimbursed(transaction: ContractTransaction, operation?: string) {
     const receipt = await transaction.wait();
@@ -91,8 +91,8 @@ describe("SkaleDKG", () => {
         nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.parseEther("10000")});
 
         validators = [
             {
@@ -376,7 +376,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ))).wait();
@@ -398,7 +398,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -419,7 +419,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -448,7 +448,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -471,7 +471,7 @@ describe("SkaleDKG", () => {
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: schainName,
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         ));
@@ -1440,7 +1440,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -1462,7 +1462,7 @@ describe("SkaleDKG", () => {
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: schainName,
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         ));
@@ -1625,7 +1625,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -1647,7 +1647,7 @@ describe("SkaleDKG", () => {
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: schainName,
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         ));
@@ -1857,7 +1857,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.LARGE,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -1972,7 +1972,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.LARGE,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -2328,7 +2328,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.LARGE,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -2411,7 +2411,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.LARGE,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -2559,7 +2559,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -2634,7 +2634,7 @@ describe("SkaleDKG", () => {
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "New16NodeSchain1",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )

@@ -69,10 +69,10 @@ describe("Schains", () => {
         nodeAddress3 = new Wallet(String(privateKeys[5])).connect(ethers.provider);
         nodeAddress4 = new Wallet(String(privateKeys[0])).connect(ethers.provider);
 
-        await richGuy1.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
-        await richGuy2.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
-        await richGuy3.sendTransaction({to: nodeAddress3.address, value: ethers.utils.parseEther("10000")});
-        await richGuy4.sendTransaction({to: nodeAddress4.address, value: ethers.utils.parseEther("10000")});
+        await richGuy1.sendTransaction({to: nodeAddress1.address, value: ethers.parseEther("10000")});
+        await richGuy2.sendTransaction({to: nodeAddress2.address, value: ethers.parseEther("10000")});
+        await richGuy3.sendTransaction({to: nodeAddress3.address, value: ethers.parseEther("10000")});
+        await richGuy4.sendTransaction({to: nodeAddress4.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
@@ -123,7 +123,7 @@ describe("Schains", () => {
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -131,7 +131,7 @@ describe("Schains", () => {
         });
 
         it("should not allow everyone to create schains as the foundation", async () => {
-            await schains.addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, [])
+            await schains.addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, [])
                 .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
         })
 
@@ -146,7 +146,7 @@ describe("Schains", () => {
                         typeOfSchain: 6, // wrong type
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -173,7 +173,7 @@ describe("Schains", () => {
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "Mainnet", // wrong name
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -192,7 +192,7 @@ describe("Schains", () => {
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "", // wrong name
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -211,7 +211,7 @@ describe("Schains", () => {
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -245,7 +245,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -261,7 +261,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -304,7 +304,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -367,7 +367,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -793,7 +793,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -822,7 +822,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -844,7 +844,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -870,7 +870,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -892,7 +892,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -910,7 +910,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -949,7 +949,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -971,7 +971,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -993,7 +993,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1015,7 +1015,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d5",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1041,7 +1041,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: [
                                 {
                                     name: "one",
@@ -1085,7 +1085,7 @@ describe("Schains", () => {
             it("should allow the foundation to create schain without tokens", async () => {
                 const schainCreator = holder;
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), schainCreator.address);
-                await schains.connect(schainCreator).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
+                await schains.connect(schainCreator).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1111,7 +1111,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", holder.address, ethers.constants.AddressZero, []);
+                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", holder.address, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1167,7 +1167,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.LARGE,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1190,7 +1190,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.LARGE,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1206,7 +1206,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.LARGE,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1215,7 +1215,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create small schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1226,7 +1226,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create medium schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1237,7 +1237,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create large schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.LARGE, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.LARGE, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1282,7 +1282,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "D2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1307,7 +1307,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "D2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1364,7 +1364,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.SMALL,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1399,7 +1399,7 @@ describe("Schains", () => {
                             typeOfSchain: 6,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1434,7 +1434,7 @@ describe("Schains", () => {
                             typeOfSchain: 6,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1468,7 +1468,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.SMALL,
                             nonce: 0,
                             name: "D2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1487,7 +1487,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.SMALL,
                             nonce: 0,
                             name: "D2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1535,7 +1535,7 @@ describe("Schains", () => {
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: "D2",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         )
@@ -1554,7 +1554,7 @@ describe("Schains", () => {
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: "D2",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         )
@@ -1650,7 +1650,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1669,7 +1669,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1953,7 +1953,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1970,7 +1970,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1987,7 +1987,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2277,7 +2277,7 @@ describe("Schains", () => {
                         typeOfSchain: SchainType.MEDIUM_TEST,
                         nonce: 0,
                         name: "d1",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -2296,7 +2296,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2315,7 +2315,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2334,7 +2334,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2449,7 +2449,7 @@ describe("Schains", () => {
                         typeOfSchain: SchainType.MEDIUM_TEST,
                         nonce: 0,
                         name: "d1",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -2468,7 +2468,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2487,7 +2487,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2506,7 +2506,7 @@ describe("Schains", () => {
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2872,7 +2872,7 @@ describe("Schains", () => {
                         typeOfSchain: schainType,
                         nonce: 0,
                         name: schainName,
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -3042,7 +3042,7 @@ describe("Schains", () => {
                             typeOfSchain: 6,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -3142,7 +3142,7 @@ describe("Schains", () => {
                         typeOfSchain: schainType,
                         nonce: 0,
                         name: schain2Name,
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -3161,7 +3161,7 @@ describe("Schains", () => {
                         typeOfSchain: schainType,
                         nonce: 0,
                         name: schain3Name,
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )

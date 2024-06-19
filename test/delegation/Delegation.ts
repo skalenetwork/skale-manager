@@ -62,7 +62,7 @@ describe("Delegation", () => {
     let punisher: Punisher;
     let nodes: Nodes;
 
-    const defaultAmount = ethers.utils.parseEther("100");
+    const defaultAmount = ethers.parseEther("100");
     const month = 60 * 60 * 24 * 31;
 
     interface IValidator {
@@ -139,7 +139,7 @@ describe("Delegation", () => {
                 account: Wallet.createRandom().connect(ethers.provider)
             });
         }
-        const etherAmount = ethers.utils.parseEther("5000");
+        const etherAmount = ethers.parseEther("5000");
         for (const newValidator of validators) {
             await holder1.sendTransaction({to: newValidator.account.address, value: etherAmount});
             await validatorService.connect(newValidator.account).registerValidator("Validator", "Good Validator", 150, 0);
@@ -189,7 +189,7 @@ describe("Delegation", () => {
                 account: Wallet.createRandom().connect(ethers.provider)
             });
         }
-        const etherAmount = ethers.utils.parseEther("5000");
+        const etherAmount = ethers.parseEther("5000");
         for (const newValidator of validators) {
             await holder1.sendTransaction({to: newValidator.account.address, value: etherAmount});
             await validatorService.connect(newValidator.account).registerValidator("Validator", "Good Validator", 150, 0);
@@ -435,26 +435,26 @@ describe("Delegation", () => {
         it("should not pay bounty for slashed tokens", async () => {
             const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
             await contractManager.setContractsAddress("TimeHelpers", timeHelpersWithDebug.address);
-            await skaleToken.mint(holder1.address, ethers.utils.parseEther("10000"), "0x", "0x");
-            await skaleToken.mint(holder2.address, ethers.utils.parseEther("10000"), "0x", "0x");
+            await skaleToken.mint(holder1.address, ethers.parseEther("10000"), "0x", "0x");
+            await skaleToken.mint(holder2.address, ethers.parseEther("10000"), "0x", "0x");
 
-            await constantsHolder.setMSR(ethers.utils.parseEther("2000"));
+            await constantsHolder.setMSR(ethers.parseEther("2000"));
 
             const slashingTable: SlashingTable = await deploySlashingTable(contractManager);
             const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
             await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
-            await slashingTable.setPenalty("FailedDKG", ethers.utils.parseEther("10000"));
+            await slashingTable.setPenalty("FailedDKG", ethers.parseEther("10000"));
 
             await constantsHolder.setLaunchTimestamp((await currentTime()) - 4 * month);
 
-            await delegationController.connect(holder1).delegate(validatorId, ethers.utils.parseEther("10000"), 2, "First delegation");
+            await delegationController.connect(holder1).delegate(validatorId, ethers.parseEther("10000"), 2, "First delegation");
             const delegationId1 = 0;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId1);
 
             await timeHelpersWithDebug.skipTime(month);
             (await delegationController.getState(delegationId1)).should.be.equal(State.DELEGATED);
 
-            const bounty = ethers.utils.parseEther("1");
+            const bounty = ethers.parseEther("1");
             for (let i = 0; i < 5; ++i) {
                 await skaleManagerMock.payBounty(validatorId, bounty);
             }
@@ -466,14 +466,14 @@ describe("Delegation", () => {
             balance.should.be.equal(bounty.mul(5).mul(85).div(100));
             await skaleToken.connect(bountyAddress).transfer(holder1.address, balance);
 
-            await punisher.slash(validatorId, ethers.utils.parseEther("10000"));
+            await punisher.slash(validatorId, ethers.parseEther("10000"));
 
             (await skaleToken.callStatic.getAndUpdateSlashedAmount(holder1.address)).toString()
-                .should.be.equal(ethers.utils.parseEther("10000"));
+                .should.be.equal(ethers.parseEther("10000"));
             (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toString()
                 .should.be.equal("0");
 
-            await delegationController.connect(holder2).delegate(validatorId, ethers.utils.parseEther("10000"), 2, "Second delegation");
+            await delegationController.connect(holder2).delegate(validatorId, ethers.parseEther("10000"), 2, "Second delegation");
             const delegationId2 = 1;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId2);
 
@@ -508,7 +508,7 @@ describe("Delegation", () => {
             for (let i = 0; i < holdersAmount; ++i) {
                 holders.push(Wallet.createRandom().connect(ethers.provider));
             }
-            const etherAmount = ethers.utils.parseEther("5000");
+            const etherAmount = ethers.parseEther("5000");
 
             await constantsHolder.setLaunchTimestamp(0);
 

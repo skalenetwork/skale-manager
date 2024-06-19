@@ -1,4 +1,4 @@
-import {BigNumberish, BytesLike, Signer, Wallet} from "ethers";
+import {BigNumberish, BytesLike, Signer, BaseWallet} from "ethers";
 import {ethers} from "hardhat";
 import {ec} from "elliptic";
 
@@ -15,9 +15,9 @@ export async function getValidatorIdSignature(validatorId: BigNumberish, signer:
     );
 }
 
-export function getPublicKey(wallet: Wallet): [BytesLike, BytesLike] {
+export function getPublicKey(wallet: BaseWallet): [BytesLike, BytesLike] {
     const publicKey = secp256k1EC.keyFromPrivate(wallet.privateKey.slice(2)).getPublic();
-    const pubA = ethers.utils.hexZeroPad(ethers.utils.hexlify(publicKey.getX().toBuffer()), 32);
-    const pubB = ethers.utils.hexZeroPad(ethers.utils.hexlify(publicKey.getY().toBuffer()), 32);
+    const pubA = ethers.utils.hexZeroPad(ethers.hexlify(publicKey.getX().toBuffer()), 32);
+    const pubB = ethers.utils.hexZeroPad(ethers.hexlify(publicKey.getY().toBuffer()), 32);
     return [pubA, pubB];
 }
