@@ -1,5 +1,4 @@
 import {promises as fs} from 'fs';
-import {Interface} from "ethers/lib/utils";
 import {ethers, upgrades, network, run} from "hardhat";
 import {ContractManager, SkaleManager, SkaleToken} from "../typechain-types";
 import {
@@ -9,11 +8,11 @@ import {
     verifyProxy,
     getContractFactory,
 } from '@skalenetwork/upgrade-tools';
-import {Contract} from 'ethers';
+import {AddressLike, Contract, Interface} from 'ethers';
 import {TransactionMinedTimeout} from "@openzeppelin/upgrades-core";
 
 
-function getInitializerParameters(contract: string, contractManagerAddress: string) {
+function getInitializerParameters(contract: string, contractManagerAddress: AddressLike) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
         return undefined;
     } else if (["TimeHelpersWithDebug"].includes(contract)) {
@@ -93,11 +92,11 @@ async function main() {
     const contractManagerName = "ContractManager";
     console.log("Deploy", contractManagerName);
     const contractManagerFactory = await ethers.getContractFactory(contractManagerName);
-    const contractManager = (await upgrades.deployProxy(contractManagerFactory, [])) as ContractManager;
-    await contractManager.deployTransaction.wait();
+    const contractManager = await upgrades.deployProxy(contractManagerFactory, []);
+    await contractManager.waitForDeployment();
     console.log("Register", contractManagerName);
-    await (await contractManager.setContractsAddress(contractManagerName, contractManager.address)).wait();
-    contractArtifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
+    await (await contractManager.setContractsAddress(contractManagerName, contractManager)).wait();
+    contractArtifacts.push({address: await contractManager.getAddress(), interface: contractManager.interface, contract: contractManagerName})
 
     for (const contract of contracts.filter(contractName => contractName != "ContractManager")) {
         const contractFactory = await getContractFactory(contract);
@@ -108,12 +107,12 @@ async function main() {
             try {
                 proxy = await upgrades.deployProxy(
                     contractFactory,
-                    getInitializerParameters(contract, contractManager.address),
+                    getInitializerParameters(contract, contractManager),
                     {
                         unsafeAllowLinkedLibraries: true
                     }
                 );
-                await proxy.deployTransaction.wait();
+                await proxy.waitForDeployment();
             } catch (e) {
                 if (e instanceof TransactionMinedTimeout) {
                     console.log(e);
@@ -130,12 +129,12 @@ async function main() {
         console.log("Register", contract, "as", contractName, "=>", proxy.address);
         const transaction = await contractManager.setContractsAddress(contractName, proxy.address);
         await transaction.wait();
-        contractArtifacts.push({address: proxy.address, interface: proxy.interface, contract});
+        contractArtifacts.push({address: await proxy.getAddress(), interface: proxy.interface, contract});
 
         if (contract === "SkaleManager") {
             try {
                 console.log(`Set version ${version}`)
-                await (await (proxy as SkaleManager).setVersion(version)).wait();
+                await (await proxy.setVersion(version)).wait();
             } catch {
                 console.log("Failed to set skale-manager version");
             }
@@ -145,11 +144,11 @@ async function main() {
     const skaleTokenName = "SkaleToken";
     console.log("Deploy", skaleTokenName);
     const skaleTokenFactory = await ethers.getContractFactory(skaleTokenName);
-    const skaleToken = await skaleTokenFactory.deploy(contractManager.address, []) as SkaleToken;
-    await skaleToken.deployTransaction.wait();
+    const skaleToken = await skaleTokenFactory.deploy(contractManager.address, []);
+    await skaleToken.waitForDeployment();
     console.log("Register", skaleTokenName);
     await (await contractManager.setContractsAddress(skaleTokenName, skaleToken.address)).wait();
-    contractArtifacts.push({address: skaleToken.address, interface: skaleToken.interface, contract: skaleTokenName});
+    contractArtifacts.push({address: await skaleToken.getAddress(), interface: skaleToken.interface, contract: skaleTokenName});
 
     if (!production) {
         console.log("Do actions for non production deployment");
@@ -182,7 +181,7 @@ async function main() {
     console.log("Verify contracts");
     for (const artifact of contractArtifacts) {
         if (artifact.contract === skaleTokenName) {
-            await verify(skaleTokenName, skaleToken.address, [contractManager.address, []]);
+            await verify(skaleTokenName, await skaleToken.getAddress(), [contractManager.address, []]);
         } else {
             await verifyProxy(artifact.contract, artifact.address, [])
         }

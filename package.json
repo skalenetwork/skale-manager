@@ -43,7 +43,7 @@
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.6",
-    "@openzeppelin/hardhat-upgrades": "^2.1.0",
+    "@openzeppelin/hardhat-upgrades": "^3.1.1",
     "@skalenetwork/skale-manager-interfaces": "^3.0.0-develop.2",
     "@skalenetwork/upgrade-tools": "^3.0.0-linter.34",
     "@typechain/hardhat": "^7.0.0",
