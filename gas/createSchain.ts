@@ -11,7 +11,7 @@ import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
 import {fastBeforeEach} from "../test/tools/mocha";
 import {SchainType} from "../test/tools/types";
 
-function findEvent(receipt: ContractTransactionReceipt | null, eventName: string) {
+export function findEvent(receipt: ContractTransactionReceipt | null, eventName: string) {
     if (receipt) {
         const log = receipt.logs.find((event) => event instanceof EventLog && event.eventName === eventName);
         if (log) {

@@ -17,7 +17,7 @@ import {deploySkaleDKGTester} from "../test/tools/deploy/test/skaleDKGTester";
 import {skipTime} from "../test/tools/time";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {ethers} from "hardhat";
-import {Event, Wallet} from "ethers";
+import {Wallet} from "ethers";
 import fs from 'fs';
 import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
 import {stringKeccak256} from "../test/tools/hashes";
@@ -25,21 +25,8 @@ import {fastBeforeEach} from "../test/tools/mocha";
 import {SchainType} from "../test/tools/types";
 import {applySnapshot, makeSnapshot} from "../test/tools/snapshot";
 import {deployNodes} from "../test/tools/deploy/nodes";
-import {TypedEvent} from "../typechain-types/common";
-import {SchainNodesEvent} from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
+import {findEvent} from "./createSchain";
 
-function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
-    if (events) {
-        const target = events.find((event) => event.event === eventName);
-        if (target) {
-            return target as TargetEvent;
-        } else {
-            throw new Error("Event was not emitted");
-        }
-    } else {
-        throw new Error("Event was not emitted");
-    }
-}
 
 describe("nodeRotation", () => {
     let owner: SignerWithAddress;
@@ -61,14 +48,14 @@ describe("nodeRotation", () => {
 
             contractManager = await deployContractManager();
             schainsInternal = await deploySchainsInternalMock(contractManager);
-            await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+            await contractManager.setContractsAddress("SchainsInternal", schainsInternal.getAddress());
             skaleDKG = await deploySkaleDKGTester(contractManager);
 
             validatorService = await deployValidatorService(contractManager);
             skaleManager = await deploySkaleManager(contractManager);
             schains = await deploySchains(contractManager);
             nodes = await deployNodes(contractManager);
-            await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+            await contractManager.setContractsAddress("SkaleDKG", skaleDKG.getAddress());
 
             await validatorService.grantRole(await validatorService.VALIDATOR_MANAGER_ROLE(), owner.address);
             await nodes.grantRole(await nodes.NODE_MANAGER_ROLE(), owner.address);
@@ -103,7 +90,7 @@ describe("nodeRotation", () => {
             for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
                 const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${schainNumber}`, owner.address, ethers.ZeroAddress, [])).wait();
                 await skaleDKG.setSuccessfulDKGPublic(stringKeccak256(`schain-${schainNumber}`));
-                console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
+                console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result?.gasUsed, "gu");
             }
 
             await skaleManager.connect(node).createNode(
@@ -124,16 +111,19 @@ describe("nodeRotation", () => {
             const gas = [];
             await nodes.initExit(rotIndex);
             for (let i = 0; i < schainHashes.length; i++) {
-                const estimatedGas = await skaleManager.connect(node).estimateGas.nodeExit(rotIndex);
+                const estimatedGas = await skaleManager.connect(node).nodeExit.estimateGas(rotIndex);
                 console.log("Estimated gas on nodeExit", estimatedGas.toString());
                 const overrides = {
                     gasLimit: estimatedGas
                 }
                 const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
+                if (!result) {
+                    throw new Error();
+                }
                 // console.log("Gas limit was:", result);
-                console.log(`${i + 1}`, "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
-                gas.push(result.gasUsed.toNumber());
-                if (result.gasUsed.toNumber() > gasLimit) {
+                console.log(`${i + 1}`, "Rotation on", nodesAmount, "nodes:\t", result?.gasUsed, "gu");
+                gas.push(result?.gasUsed);
+                if (result?.gasUsed > gasLimit) {
                     break;
                 }
                 await skaleDKG.setSuccessfulDKGPublic(
@@ -174,7 +164,7 @@ describe("nodeRotation", () => {
 
             for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
                 const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${schainNumber}`, owner.address, ethers.ZeroAddress, [])).wait();
-                const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
+                const nodeInGroup = findEvent(result, "SchainNodes").args?.nodesInGroup;
                     console.log("Nodes in Schain:");
                     const setOfNodes = new Set();
                     for (const nodeOfSchain of nodeInGroup) {
@@ -187,7 +177,7 @@ describe("nodeRotation", () => {
                         console.log(nodeOfSchain.toNumber());
                     }
                 await skaleDKG.setSuccessfulDKGPublic(stringKeccak256(`schain-${schainNumber}`));
-                console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
+                console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result?.gasUsed, "gu");
             }
 
             await skaleManager.connect(node).createNode(
@@ -206,20 +196,23 @@ describe("nodeRotation", () => {
 
         for(let test = 1; test <= numberOfSchains; ++test) {
             it(`should exit schain #${test}`, async () => {
-                if ((await node.getBalance()).lt(ethers.parseEther("0.1"))) {
+                if (await ethers.provider.getBalance(node) < ethers.parseEther("0.1")) {
                     await owner.sendTransaction({value: ethers.parseEther("1"), to: node.address});
                 }
 
-                const estimatedGas = await skaleManager.estimateGas.nodeExit(leavingNode);
+                const estimatedGas = await skaleManager.nodeExit.estimateGas(leavingNode);
                 const overrides = {
-                    gasLimit: Math.ceil(estimatedGas.toNumber() * 1.1)
+                    gasLimit: estimatedGas * 11n / 10n
                 }
                 console.log("Estimated gas on nodeExit", overrides.gasLimit);
                 const result = await (await skaleManager.connect(node).nodeExit(leavingNode, overrides)).wait();
+                if (!result) {
+                    throw new Error();
+                }
                 // console.log("Gas limit was:", result);
-                console.log(`${test}`, "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
-                gas.push(result.gasUsed.toNumber());
-                if (result.gasUsed.toNumber() > gasLimit) {
+                console.log(`${test}`, "Rotation on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+                gas.push(result.gasUsed);
+                if (result.gasUsed > gasLimit) {
                     return;
                 }
                 await skaleDKG.setSuccessfulDKGPublic(
@@ -238,7 +231,7 @@ describe("nodeRotation", () => {
 
         const maxNodesAmount = 200;
         const gasLimit = 12e6;
-        const measurementsSchainCreation: {nodesAmount: number, gasUsed:number}[] = [];
+        const measurementsSchainCreation: {nodesAmount: number, gasUsed: bigint}[] = [];
         const measurementsRotation = [];
         const activeNodes: number[] = [];
 
@@ -255,7 +248,7 @@ describe("nodeRotation", () => {
         });
 
         beforeEach(async () => {
-            if ((await node.getBalance()).lt(ethers.parseEther("0.1"))) {
+            if (await ethers.provider.getBalance(node) < ethers.parseEther("0.1")) {
                 await owner.sendTransaction({value: ethers.parseEther("1"), to: node.address});
             }
 
@@ -274,11 +267,14 @@ describe("nodeRotation", () => {
             nodesAmount = nodeId;
             if (nodesAmount >= 16) {
                 const result = await (await schains.addSchainByFoundation(0, SchainType.SMALL, 0, `schain-${nodeId}`, owner.address, ethers.ZeroAddress, [])).wait();
+                if (!result) {
+                    throw new Error();
+                }
                 await skaleDKG.setSuccessfulDKGPublic(stringKeccak256(`schain-${nodeId}`));
-                console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
+                console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
 
-                measurementsSchainCreation.push({nodesAmount, gasUsed: result.gasUsed.toNumber()});
-                if (result.gasUsed.toNumber() > gasLimit) {
+                measurementsSchainCreation.push({nodesAmount, gasUsed: result.gasUsed});
+                if (result.gasUsed > gasLimit) {
                     return;
                 }
             }
@@ -297,19 +293,22 @@ describe("nodeRotation", () => {
                     const gas = [];
                     await nodes.initExit(leavingNode);
                     for (let i = 0; i < schainHashes.length; i++) {
-                        if ((await node.getBalance()).lt(ethers.parseEther("0.1"))) {
+                        if (await ethers.provider.getBalance(node) < ethers.parseEther("0.1")) {
                             await owner.sendTransaction({value: ethers.parseEther("1"), to: node.address});
                         }
-                        const estimatedGas = await skaleManager.connect(node).estimateGas.nodeExit(leavingNode);
+                        const estimatedGas = await skaleManager.connect(node).nodeExit.estimateGas(leavingNode);
                         console.log("Estimated gas on nodeExit", estimatedGas.toString());
                         const overrides = {
                             gasLimit: estimatedGas
                         }
                         const result = await (await skaleManager.connect(node).nodeExit(leavingNode, overrides)).wait();
+                        if (!result) {
+                            throw new Error();
+                        }
                         // console.log("Gas limit was:", result);
-                        console.log(`${i + 1}`, "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
-                        gas.push(result.gasUsed.toNumber());
-                        if (result.gasUsed.toNumber() > gasLimit) {
+                        console.log(`${i + 1}`, "Rotation on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+                        gas.push(result.gasUsed);
+                        if (result.gasUsed > gasLimit) {
                             break;
                         }
                         await skaleDKG.setSuccessfulDKGPublic(
