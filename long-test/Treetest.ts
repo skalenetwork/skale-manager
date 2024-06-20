@@ -52,11 +52,11 @@ async function getIndexInSpaceMap(nodes: Nodes, nodeId: number) {
     return res.indexInSpaceMap.toString();
 }
 
-async function getSpaceToNodes(nodes: Nodes, space: number, index: number) {
-    return (await nodes.spaceToNodes(space.toString(), index.toString())).toString();
+async function getSpaceToNodes(nodes: Nodes, space: bigint, index: number) {
+    return (await nodes.spaceToNodes(space, index)).toString();
 }
 
-async function checkSpaceToNodes(nodes: Nodes, space: number, length: number) {
+async function checkSpaceToNodes(nodes: Nodes, space: bigint, length: bigint) {
     for (let i = 0; i < length; i++) {
         const posNode = await getSpaceToNodes(nodes, space, i);
         const freeSpace = await getFreeSpaceOfNode(nodes, parseInt(posNode, 10));
@@ -66,21 +66,21 @@ async function checkSpaceToNodes(nodes: Nodes, space: number, length: number) {
     }
 }
 
-async function countNodesWithFreeSpace(nodes: Nodes, freeSpace: number) {
-    return (await nodes.countNodesWithFreeSpace(freeSpace.toString())).toString();
+async function countNodesWithFreeSpace(nodes: Nodes, freeSpace: bigint) {
+    return await nodes.countNodesWithFreeSpace(freeSpace);
 }
 
-async function checkTreeAndSpaceToNodesPart(nodes: Nodes, space: number) {
+async function checkTreeAndSpaceToNodesPart(nodes: Nodes, space: bigint) {
     const countNodes = await countNodesWithFreeSpace(nodes, space);
-    const countNodesPlus = (space === 128 ? "0" : await countNodesWithFreeSpace(nodes, space + 1));
-    await checkSpaceToNodes(nodes, space, parseInt(countNodes, 10) - parseInt(countNodesPlus, 10));
+    const countNodesPlus = (space === 128n ? 0n : await countNodesWithFreeSpace(nodes, space + 1n));
+    await checkSpaceToNodes(nodes, space, countNodes - countNodesPlus);
 }
 
 async function checkTreeAndSpaceToNodes(nodes: Nodes) {
-    const numberOfActiveNodes = (await nodes.numberOfActiveNodes()).toString();
-    const nodesInTree = await countNodesWithFreeSpace(nodes, 0);
+    const numberOfActiveNodes = await nodes.numberOfActiveNodes();
+    const nodesInTree = await countNodesWithFreeSpace(nodes, 0n);
     assert(numberOfActiveNodes === nodesInTree, "Incorrect number of active nodes and nodes in tree");
-    for (let i = 0; i <= 128; i++) {
+    for (let i = 0n; i <= 128; i++) {
         await checkTreeAndSpaceToNodesPart(nodes, i);
     }
 }
@@ -240,7 +240,7 @@ describe("Tree test", () => {
 
         contractManager = await deployContractManager();
         schainsInternal = await deploySchainsInternalMock(contractManager);
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
         skaleDKG = await deploySkaleDKGTester(contractManager);
 
         nodes = await deployNodes(contractManager);
@@ -249,7 +249,7 @@ describe("Tree test", () => {
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
