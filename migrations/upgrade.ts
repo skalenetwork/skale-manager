@@ -2,9 +2,10 @@ import chalk from "chalk";
 import {contracts} from "./deploy";
 import {ethers} from "hardhat";
 import {Upgrader, AutoSubmitter} from "@skalenetwork/upgrade-tools";
-import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v5";
+import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
 import {SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
+import {Transaction} from "ethers";
 
 async function getSkaleManagerInstance() {
     if (process.env.ABI) {
@@ -52,10 +53,10 @@ class SkaleManagerUpgrader extends Upgrader {
 
     setVersion = async (newVersion: string) => {
         const skaleManager = await this.getSkaleManager();
-        this.transactions.push({
-            to: skaleManager.address,
+        this.transactions.push(Transaction.from({
+            to: await skaleManager.getAddress(),
             data: skaleManager.interface.encodeFunctionData("setVersion", [newVersion])
-        });
+        }));
     }
 
     // deployNewContracts = () => { };
