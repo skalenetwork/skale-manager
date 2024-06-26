@@ -3,7 +3,7 @@ import {contracts} from "../migrations/deploy";
 import {ethers} from "hardhat";
 import {getAbi, getVersion} from '@skalenetwork/upgrade-tools';
 import {ContractFactory} from 'ethers';
-import {Libraries} from '@nomiclabs/hardhat-ethers/types';
+import {Libraries} from '@nomicfoundation/hardhat-ethers/types'
 
 async function main() {
     const allContracts = contracts.concat(["SkaleToken", "TimeHelpersWithDebug"])
