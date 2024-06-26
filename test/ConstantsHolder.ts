@@ -105,19 +105,19 @@ describe("ConstantsHolder", () => {
     await constantsHolder.connect(user).setRotationDelay(13)
       .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setRotationDelay(13);
-    (await constantsHolder.rotationDelay()).toNumber()
+    (await constantsHolder.rotationDelay())
       .should.be.equal(13);
   });
 
   it("should set proof-of-use lockup period", async () => {
     await constantsHolder.setProofOfUseLockUpPeriod(13);
-    (await constantsHolder.proofOfUseLockUpPeriodDays()).toNumber()
+    (await constantsHolder.proofOfUseLockUpPeriodDays())
       .should.be.equal(13);
   });
 
   it("should set proof-of-use delegation percentage", async () => {
     await constantsHolder.setProofOfUseDelegationPercentage(13);
-    (await constantsHolder.proofOfUseDelegationPercentage()).toNumber()
+    (await constantsHolder.proofOfUseDelegationPercentage())
       .should.be.equal(13);
   });
 
