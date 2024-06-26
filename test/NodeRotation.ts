@@ -3,8 +3,8 @@ import {fastBeforeEach} from "./tools/mocha";
 import {ConstantsHolder, NodeRotation, Nodes, Schains, SchainsInternal, SkaleDKGTester, SkaleManager, ValidatorService, Wallets} from "../typechain-types";
 import {deployNodes} from "./tools/deploy/nodes";
 import {deployContractManager} from "./tools/deploy/contractManager";
-import {Wallet} from "ethers";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
+import {HDNodeWallet, Wallet} from "ethers";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {deploySkaleManager} from "./tools/deploy/skaleManager";
 import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
 import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
@@ -28,7 +28,7 @@ describe("NodeRotation", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
 
-    let validatorId: number;
+    let validatorId: bigint;
 
     let constantsHolder: ConstantsHolder;
     let nodeRotation: NodeRotation;
@@ -48,29 +48,29 @@ describe("NodeRotation", () => {
         nodeRotation = await deployNodeRotation(contractManager);
         nodes = await deployNodes(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
         wallets = await deployWallets(contractManager);
 
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
-        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner);
         const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
-        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
+        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner);
         const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
-        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner);
 
         await validatorService.connect(validator).registerValidator("D2", "D2 is even", 0, 0);
-        validatorId = (await validatorService.getValidatorId(validator.address)).toNumber();
+        validatorId = await validatorService.getValidatorId(validator);
         await validatorService.enableValidator(validatorId);
         await constantsHolder.setMSR(0);
     })
 
     describe("when nodes are registered", () => {
         type RegisteredNode = {
-            id: number;
-            wallet: Wallet;
+            id: bigint;
+            wallet: HDNodeWallet;
         }
 
         const totalNumberOfNodes = 20;
@@ -80,10 +80,10 @@ describe("NodeRotation", () => {
         fastBeforeEach(async () => {
             for (const index of Array.from(Array(totalNumberOfNodes).keys())) {
                 const nodeWallet = Wallet.createRandom().connect(ethers.provider);
-                await owner.sendTransaction({to: nodeWallet.address, value: nodeBalance});
+                await owner.sendTransaction({to: nodeWallet, value: nodeBalance});
 
                 const signature = await getValidatorIdSignature(validatorId, nodeWallet);
-                await validatorService.connect(validator).linkNodeAddress(nodeWallet.address, signature);
+                await validatorService.connect(validator).linkNodeAddress(nodeWallet, signature);
 
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
                 await skaleManager.connect(nodeWallet).createNode(
@@ -94,7 +94,7 @@ describe("NodeRotation", () => {
                     getPublicKey(nodeWallet), // public key
                     "D2-" + hexIndex, // name
                     "some.domain.name");
-                registeredNodes.push({id: index, wallet: nodeWallet})
+                registeredNodes.push({id: BigInt(index), wallet: nodeWallet})
             }
         })
 
@@ -108,9 +108,9 @@ describe("NodeRotation", () => {
                 const deposit = await schains.getSchainPrice(schainType, 5);
 
                 await schains.addSchain(
-                    owner.address,
+                    owner,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
@@ -126,7 +126,7 @@ describe("NodeRotation", () => {
                 await wallets.connect(owner).rechargeSchainWallet(schainHash, {value: ethers.parseEther("1")});
 
                 chainNodes = (await schainsInternal.getNodesInGroup(schainHash)).map(id => {
-                    const node = registeredNodes.find(registeredNode => registeredNode.id == id.toNumber())
+                    const node = registeredNodes.find(registeredNode => registeredNode.id == id)
                     if (node === undefined) {
                         throw new Error(`Can't find a node with id ${id.toString()}`)
                     }
@@ -148,7 +148,7 @@ describe("NodeRotation", () => {
                     await nodes.initExit(exitingNode.id);
                     await skaleManager.nodeExit(exitingNode.id);
 
-                    const newChainNodesIds = (await schainsInternal.getNodesInGroup(schainHash)).map(id => id.toNumber());
+                    const newChainNodesIds = (await schainsInternal.getNodesInGroup(schainHash)).map(id => id);
                     const enteringNodeId = newChainNodesIds.filter(id => chainNodes.find(chainNode => chainNode.id == id) === undefined)[0];
 
                     node = registeredNodes.find(registeredNode => registeredNode.id == enteringNodeId);
@@ -216,10 +216,10 @@ describe("NodeRotation", () => {
 
                     it("a node that fails DKG after node exit " +
                        "should have finish_ts 1 sec bigger than a leaving node", async () => {
-                        const exitingNodeFinishTs = (await nodeRotation.getLeavingHistory(exitingNode.id))[0].finishedRotation.toNumber();
-                        const failingNodeFinishTs = (await nodeRotation.getLeavingHistory(failingNode.id))[0].finishedRotation.toNumber();
+                        const exitingNodeFinishTs = (await nodeRotation.getLeavingHistory(exitingNode.id))[0].finishedRotation;
+                        const failingNodeFinishTs = (await nodeRotation.getLeavingHistory(failingNode.id))[0].finishedRotation;
 
-                        failingNodeFinishTs.should.be.equal(exitingNodeFinishTs + 1);
+                        failingNodeFinishTs.should.be.equal(exitingNodeFinishTs + 1n);
                     })
                 });
             })
