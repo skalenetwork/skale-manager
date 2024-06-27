@@ -69,8 +69,8 @@ describe("SkaleVerifier", () => {
         await deploySchainsInternal(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
 
         await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
@@ -253,7 +253,7 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -320,7 +320,7 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -414,9 +414,9 @@ describe("SkaleVerifier", () => {
 
             const rotDelay = await constantsHolder.rotationDelay();
 
-            const tenSecDelta = 10;
+            const tenSecDelta = 10n;
 
-            await skipTime(rotDelay.toNumber() - tenSecDelta);
+            await skipTime(rotDelay - tenSecDelta);
 
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
