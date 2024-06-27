@@ -70,7 +70,7 @@ describe("Pricing", () => {
         nodeRotation = await deployNodeRotation(contractManager);
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
-        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
@@ -164,25 +164,25 @@ describe("Pricing", () => {
             });
 
             async function getLoadCoefficient() {
-                const numberOfNodes = (await nodes.getNumberOfNodes()).toNumber();
-                let sumNode = 0;
+                const numberOfNodes = await nodes.getNumberOfNodes();
+                let sumNode = 0n;
                 for (let i = 0; i < numberOfNodes; i++) {
                     if (await nodes.isNodeActive(i)) {
                         const getActiveSchains = await schainsInternal.getActiveSchains(i);
                         for (const schain of getActiveSchains) {
                             const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                             const isNodeLeft = await nodes.isNodeLeft(i);
-                            if (partOfNode !== 0  && !isNodeLeft) {
+                            if (partOfNode !== 0n  && !isNodeLeft) {
                                 sumNode += partOfNode;
                             }
                         }
                     }
                 }
-                return sumNode / (128 * (await nodes.getNumberOnlineNodes()).toNumber());
+                return sumNode / (128n * await nodes.getNumberOnlineNodes());
             }
 
             it("should check load percentage of network", async () => {
-                const newLoadPercentage = Math.floor(await getLoadCoefficient() * 100);
+                const newLoadPercentage = await getLoadCoefficient() * 100n;
                 const loadPercentage = await pricing.getTotalLoadPercentage();
                 loadPercentage.should.be.equal(newLoadPercentage);
             });
@@ -207,27 +207,27 @@ describe("Pricing", () => {
             });
 
             describe("change price when changing the number of nodes", () => {
-                let oldPrice: number;
-                let lastUpdated: number;
+                let oldPrice: bigint;
+                let lastUpdated: bigint;
 
                 fastBeforeEach(async () => {
                     await pricing.initNodes();
-                    oldPrice = (await pricing.price()).toNumber();
-                    lastUpdated = (await pricing.lastUpdated()).toNumber()
+                    oldPrice = await pricing.price();
+                    lastUpdated = await pricing.lastUpdated();
                 });
 
-                async function getPrice(secondSincePreviousUpdate: number) {
-                    const MIN_PRICE = (await constants.MIN_PRICE()).toNumber();
-                    const ADJUSTMENT_SPEED = (await constants.ADJUSTMENT_SPEED()).toNumber();
-                    const OPTIMAL_LOAD_PERCENTAGE = (await constants.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
-                    const COOLDOWN_TIME = (await constants.COOLDOWN_TIME()).toNumber();
+                async function getPrice(secondSincePreviousUpdate: bigint) {
+                    const MIN_PRICE = await constants.MIN_PRICE();
+                    const ADJUSTMENT_SPEED = await constants.ADJUSTMENT_SPEED();
+                    const OPTIMAL_LOAD_PERCENTAGE = await constants.OPTIMAL_LOAD_PERCENTAGE();
+                    const COOLDOWN_TIME = await constants.COOLDOWN_TIME();
 
-                    const priceChangeSpeed = ADJUSTMENT_SPEED * (oldPrice / MIN_PRICE) * (await getLoadCoefficient() * 100 - OPTIMAL_LOAD_PERCENTAGE);
+                    const priceChangeSpeed = ADJUSTMENT_SPEED * (oldPrice / MIN_PRICE) * (await getLoadCoefficient() * 100n - OPTIMAL_LOAD_PERCENTAGE);
                     let price = oldPrice + priceChangeSpeed * secondSincePreviousUpdate / COOLDOWN_TIME;
                     if (price < MIN_PRICE) {
                         price = MIN_PRICE;
                     }
-                    return Math.floor(price);
+                    return price;
                 }
 
                 it("should change price when new active node has been added", async () => {
@@ -242,13 +242,13 @@ describe("Pricing", () => {
                             name: "vadim",
                             domainName: "some.domain.name"
                         });
-                    const MINUTES_PASSED = 2;
-                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
+                    const MINUTES_PASSED = 2n;
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60n - BigInt(await currentTime()));
 
                     await pricing.adjustPrice();
-                    const receivedPrice = (await pricing.price()).toNumber();
+                    const receivedPrice = await pricing.price();
 
-                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+                    const correctPrice = await getPrice(await pricing.lastUpdated() - lastUpdated);
 
                     receivedPrice.should.be.equal(correctPrice);
                     oldPrice.should.be.above(receivedPrice);
@@ -258,10 +258,10 @@ describe("Pricing", () => {
                     // search non full node to rotate
                     let nodeToExit = -1;
                     let numberOfSchains = 0;
-                    for (let i = 0; i < (await nodes.getNumberOfNodes()).toNumber(); i++) {
+                    for (let i = 0; i < await nodes.getNumberOfNodes(); i++) {
                         if (await nodes.isNodeActive(i)) {
                             const getActiveSchains = await schainsInternal.getActiveSchains(i);
-                            let totalPartOfNode = 0;
+                            let totalPartOfNode = 0n;
                             numberOfSchains = 0;
                             for (const schain of getActiveSchains) {
                                 const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
@@ -281,13 +281,13 @@ describe("Pricing", () => {
                     }
                     await nodes.completeExit(nodeToExit);
 
-                    const MINUTES_PASSED = 2;
-                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
+                    const MINUTES_PASSED = 2n;
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60n - BigInt(await currentTime()));
 
                     await pricing.adjustPrice();
-                    const receivedPrice = (await pricing.price()).toNumber();
+                    const receivedPrice = await pricing.price();
 
-                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+                    const correctPrice = await getPrice(await pricing.lastUpdated() - lastUpdated);
 
                     receivedPrice.should.be.equal(correctPrice);
                     oldPrice.should.be.below(receivedPrice);
@@ -306,13 +306,13 @@ describe("Pricing", () => {
                             domainName: "some.domain.name"
                         });
 
-                    const MINUTES_PASSED = 30;
-                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
+                    const MINUTES_PASSED = 30n;
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60n - BigInt(await currentTime()));
 
                     await pricing.adjustPrice();
-                    const receivedPrice = (await pricing.price()).toNumber();
+                    const receivedPrice = await pricing.price();
 
-                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+                    const correctPrice = await getPrice(await pricing.lastUpdated() - lastUpdated);
 
                     receivedPrice.should.be.equal(correctPrice);
                     oldPrice.should.be.above(receivedPrice);
