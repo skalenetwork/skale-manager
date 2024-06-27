@@ -32,7 +32,7 @@ import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert, expect} from "chai";
 import {makeSnapshot, applySnapshot} from "./tools/snapshot";
-import {BytesLike, ContractTransaction, Wallet} from "ethers";
+import {BytesLike, ContractTransaction, ContractTransactionResponse, Wallet} from "ethers";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {schainParametersType, SchainType} from "./tools/types";
@@ -40,16 +40,19 @@ import {schainParametersType, SchainType} from "./tools/types";
 chai.should();
 chai.use(chaiAsPromised);
 
-const weiTolerance = ethers.parseEther("0.002").toNumber();
+const weiTolerance = ethers.parseEther("0.002");
 
-async function reimbursed(transaction: ContractTransaction, operation?: string) {
+async function reimbursed(transaction: ContractTransactionResponse, operation?: string) {
     const receipt = await transaction.wait();
+    if (!receipt) {
+        throw new Error();
+    }
     const sender = transaction.from;
     const balanceBefore = await ethers.provider.getBalance(sender, receipt.blockNumber - 1);
     const balanceAfter = await ethers.provider.getBalance(sender, receipt.blockNumber);
-    if (balanceAfter.lt(balanceBefore)) {
-        const shortageEth = balanceBefore.sub(balanceAfter);
-        const shortageGas = shortageEth.div(receipt.effectiveGasPrice);
+    if (balanceAfter < balanceBefore) {
+        const shortageEth = balanceBefore - balanceAfter;
+        const shortageGas = shortageEth / receipt.gasPrice;
 
         console.log("Reimbursement failed.")
         console.log(`${shortageGas.toString()} gas units was not reimbursed`);
@@ -117,7 +120,7 @@ describe("SkaleDKG", () => {
         skaleManager = await deploySkaleManager(contractManager);
         wallets = await deployWallets(contractManager);
 
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
 
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
@@ -369,7 +372,7 @@ describe("SkaleDKG", () => {
             const res = await (await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -382,7 +385,7 @@ describe("SkaleDKG", () => {
                 ))).wait();
 
             assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
-            (await skaleDKG.getChannelStartedBlock(stringKeccak256("d2"))).should.be.equal(res.blockNumber);
+            (await skaleDKG.getChannelStartedBlock(stringKeccak256("d2"))).should.be.equal(res?.blockNumber);
         });
 
         it("should create schain and reopen a DKG channel", async () => {
@@ -391,7 +394,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -412,7 +415,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -441,7 +444,7 @@ describe("SkaleDKG", () => {
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -457,14 +460,14 @@ describe("SkaleDKG", () => {
                 schainName = "d2";
                 await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 let index = 3;
-                while (nodesInGroup[0].eq(1)) {
+                while (nodesInGroup[0] == 1n) {
                     await schains.deleteSchainByRoot(schainName);
                     schainName = `d${index}`;
                     index++;
                     await schains.addSchain(
                         validator1.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
@@ -1225,11 +1228,11 @@ describe("SkaleDKG", () => {
 
                         await reimbursed(response);
 
-                        (await skaleToken.callStatic.getAndUpdateLockedAmount(validator2.address)).toNumber()
+                        (await skaleToken.getAndUpdateLockedAmount.staticCall(validator2.address))
                             .should.be.equal(delegatedAmount);
-                        (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator2.address)).toNumber()
+                        (await skaleToken.getAndUpdateDelegatedAmount.staticCall(validator2.address))
                             .should.be.equal(delegatedAmount - failedDkgPenalty);
-                        (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator2.address)).toNumber()
+                        (await skaleToken.getAndUpdateSlashedAmount.staticCall(validator2.address))
                             .should.be.equal(failedDkgPenalty);
                     });
 
@@ -1385,14 +1388,14 @@ describe("SkaleDKG", () => {
                         await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
                         await reimbursed(response);
 
-                        const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
-                        assert.equal(await currentTime(), leavingTimeOfNode);
+                        const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation;
+                        assert.equal(BigInt(await currentTime()), leavingTimeOfNode);
 
-                        (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateLockedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount);
-                        (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateDelegatedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount - failedDkgPenalty);
-                        (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateSlashedAmount.staticCall(validator1.address))
                             .should.be.equal(failedDkgPenalty);
                     });
 
@@ -1416,11 +1419,11 @@ describe("SkaleDKG", () => {
                         await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
                         await reimbursed(response);
 
-                        (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateLockedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount);
-                        (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateDelegatedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount - failedDkgPenalty);
-                        (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateSlashedAmount.staticCall(validator1.address))
                             .should.be.equal(failedDkgPenalty);
                     });
                 });
@@ -1433,7 +1436,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -1448,14 +1451,14 @@ describe("SkaleDKG", () => {
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
             let index = 3;
-            while (nodesInGroup[0].eq(1)) {
+            while (nodesInGroup[0] == 1n) {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
@@ -1513,11 +1516,14 @@ describe("SkaleDKG", () => {
                 0
             );
             const resComplaint = await complaintBadData.wait();
+            if(!resComplaint) {
+                throw new Error();
+            }
             await reimbursed(complaintBadData, "Complaint bad data");
 
             assert(
                 await skaleDKG.getComplaintStartedTime(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(resComplaint.blockNumber)).timestamp.toString()
+                (await ethers.provider.getBlock(resComplaint.blockNumber))?.timestamp.toString()
             );
 
             await reimbursed(
@@ -1543,11 +1549,15 @@ describe("SkaleDKG", () => {
             await responseTx.should.emit(skaleDKG, "NewGuy").withArgs(2);
             await responseTx.should.emit(skaleDKG, "FailedDKG").withArgs(stringKeccak256(schainName));
 
-            const blockNumber = (await responseTx.wait()).blockNumber;
-            const timestamp = (await ethers.provider.getBlock(blockNumber)).timestamp;
+            const receipt = await responseTx.wait()
+            if (!receipt) {
+                throw new Error();
+            }
+            const blockNumber = receipt.blockNumber;
+            const timestamp = (await ethers.provider.getBlock(blockNumber))?.timestamp;
 
             assert.equal((await skaleDKG.getNumberOfBroadcasted(stringKeccak256(schainName))).toString(), "0");
-            assert.equal((await skaleDKG.getChannelStartedTime(stringKeccak256(schainName))).toString(), timestamp.toString());
+            assert.equal((await skaleDKG.getChannelStartedTime(stringKeccak256(schainName))).toString(), timestamp?.toString());
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
@@ -1618,7 +1628,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -1633,14 +1643,14 @@ describe("SkaleDKG", () => {
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
             let index = 3;
-            while (nodesInGroup[0].eq(1)) {
+            while (nodesInGroup[0] === 1n) {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
@@ -1685,9 +1695,10 @@ describe("SkaleDKG", () => {
                 encryptedSecretKeyContributions[indexes[1]],
                 rotCounter.rotationCounter
                 )).wait();
+            assert(res);
             assert(
                 await skaleDKG.getAlrightStartedTime(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(res.blockNumber)).timestamp.toString()
+                (await ethers.provider.getBlock(res.blockNumber))?.timestamp.toString()
             );
             let numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
             assert(numOfCompleted, "0");
@@ -1704,13 +1715,14 @@ describe("SkaleDKG", () => {
                 stringKeccak256(schainName),
                 1
             )).wait();
+            assert(resSuccess);
 
             numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
             assert(numOfCompleted, "2");
 
             assert(
                 await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(resSuccess.blockNumber)).timestamp.toString()
+                (await ethers.provider.getBlock(resSuccess.blockNumber))?.timestamp.toString()
             );
 
             const comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256(schainName));
@@ -1767,7 +1779,7 @@ describe("SkaleDKG", () => {
 
             assert(
                 await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(resSuccess.blockNumber)).timestamp.toString()
+                (await ethers.provider.getBlock(resSuccess.blockNumber))?.timestamp.toString()
             );
 
             await skaleDKG.connect(validators[0].nodeAddress).alright(
@@ -1850,7 +1862,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -1965,7 +1977,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -2265,7 +2277,7 @@ describe("SkaleDKG", () => {
             await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("One complaint is already sent");
             await reimbursed(complaint);
 
-            if (accusedNode.eq(1)) {
+            if (accusedNode === 1n) {
                 indexToSend = 1;
             } else {
                 indexToSend = 0;
@@ -2291,14 +2303,17 @@ describe("SkaleDKG", () => {
                 verificationVectorMultiplicationNew,
                 secretKeyContributions
             )).wait();
+            assert(resPreResp);
             const responseTx = await skaleDKG.connect(validators[indexToSend].nodeAddress).response(
                 stringKeccak256("New16NodeSchain"),
                 accusedNode,
                 secretNumbers[indexes[indexToSend]],
                 multipliedShares[indexes[indexToSend]]
             );
+            const receipt = await responseTx.wait();
+            assert(receipt);
             await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(accusedNode);
-            assert.isAtMost((await responseTx.wait()).gasUsed.toNumber() + resPreResp.gasUsed.toNumber(), 10000000);
+            assert(receipt.gasUsed + resPreResp.gasUsed >= 10000000);
         });
 
         it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
@@ -2321,7 +2336,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -2404,7 +2419,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -2552,7 +2567,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -2627,7 +2642,7 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
