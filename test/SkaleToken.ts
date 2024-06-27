@@ -1,4 +1,3 @@
-import {BigNumber} from "ethers";
 import {ContractManager,
          SkaleToken,
          SkaleTokenInternalTester} from "../typechain-types";
@@ -40,7 +39,7 @@ describe("SkaleToken", () => {
     skaleToken = await deploySkaleToken(contractManager);
 
     const skaleManagerMock = await deploySkaleManagerMock(contractManager);
-    await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+    await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
 
     const premined = "5000000000000000000000000000"; // 5e9 * 1e18
     await skaleToken.mint(owner.address, premined, "0x", "0x");
@@ -58,12 +57,12 @@ describe("SkaleToken", () => {
 
   it("should have the correct decimal level", async () => {
     const decimals = await skaleToken.DECIMALS();
-    expect(decimals.toNumber()).to.be.equal(18);
+    expect(decimals).to.be.equal(18);
   });
 
   it("should return the capitalization of tokens for the Contract", async () => {
     const cap = await skaleToken.CAP();
-    toWei(TOKEN_CAP).should.be.equal(cap);
+    ethers.parseEther(TOKEN_CAP.toString()).should.be.equal(cap);
   });
 
   it("owner should be equal owner", async () => {
@@ -72,24 +71,24 @@ describe("SkaleToken", () => {
 
   it("the owner should have all the tokens when the Contract is created", async () => {
     const balance = await skaleToken.balanceOf(owner.address);
-    balance.should.be.equal(toWei(TOTAL_SUPPLY));
+    balance.should.be.equal(ethers.parseEther(TOTAL_SUPPLY.toString()));
   });
 
   it("should return the total supply of tokens for the Contract", async () => {
     const supply = await skaleToken.totalSupply();
-    supply.should.be.equal(toWei(TOTAL_SUPPLY));
+    supply.should.be.equal(ethers.parseEther(TOTAL_SUPPLY.toString()));
   });
 
   it("any account should have the tokens transferred to it", async () => {
-    const amount = toWei(10);
+    const amount = ethers.parseEther("10");
     await skaleToken.transfer(holder.address, amount);
     const balance = await skaleToken.balanceOf(holder.address);
     balance.should.be.equal(amount);
   });
 
   it("should not let someone transfer tokens they do not have", async () => {
-    await skaleToken.transfer(holder.address, toWei(10));
-    await skaleToken.connect(holder).transfer(receiver.address, toWei(20)).should.be.eventually.rejected;
+    await skaleToken.transfer(holder.address, ethers.parseEther("10"));
+    await skaleToken.connect(holder).transfer(receiver.address, ethers.parseEther("20")).should.be.eventually.rejected;
   });
 
   it("an address that has no tokens should return a balance of zero", async () => {
@@ -99,11 +98,11 @@ describe("SkaleToken", () => {
 
   it("an owner address should have more than 0 tokens", async () => {
     const balance = await skaleToken.balanceOf(owner.address);
-    balance.should.be.equal(toWei(5000000000));
+    balance.should.be.equal(ethers.parseEther("5000000000"));
   });
 
   it("should emit a Transfer Event", async () => {
-    const amount = toWei(10);
+    const amount = ethers.parseEther("10");
     await expect(
       skaleToken.transfer(holder.address, amount)
     ).to.emit(skaleToken, 'Transfer')
@@ -111,14 +110,14 @@ describe("SkaleToken", () => {
   });
 
   it("allowance should return the amount I allow them to transfer", async () => {
-    const amount = toWei(99);
+    const amount = ethers.parseEther("99");
     await skaleToken.approve(holder.address, amount);
     const remaining = await skaleToken.allowance(owner.address, holder.address);
     amount.should.be.equal(remaining);
   });
 
   it("allowance should return the amount another allows a third account to transfer", async () => {
-    const amount = toWei(98);
+    const amount = ethers.parseEther("98");
     await skaleToken.connect(holder).approve(receiver.address, amount);
     const remaining = await skaleToken.allowance(holder.address, receiver.address);
     amount.should.be.equal(remaining);
@@ -130,7 +129,7 @@ describe("SkaleToken", () => {
   });
 
   it("should emit an Approval event when the approve method is successfully called", async () => {
-    const amount = toWei(97);
+    const amount = ethers.parseEther("97");
     await expect(skaleToken.approve(holder.address, amount))
       .to.emit(skaleToken, 'Approval')
       .withArgs(owner.address, holder.address, amount);
@@ -150,11 +149,11 @@ describe("SkaleToken", () => {
   });
 
   it("the account funds are being transferred from should have sufficient funds", async () => {
-    const balance99 = toWei(99);
+    const balance99 = ethers.parseEther("99");
     await skaleToken.transfer(accountWith99.address, balance99);
     const balance = await skaleToken.balanceOf(accountWith99.address);
     balance99.should.be.equal(balance);
-    const amount = toWei(100);
+    const amount = ethers.parseEther("100");
 
     await skaleToken.connect(accountWith99).approve(receiver.address, amount);
     await skaleToken.connect(receiver).transferFrom(accountWith99.address, receiver.address, amount).should.be.eventually.rejected;
@@ -165,24 +164,24 @@ describe("SkaleToken", () => {
     remaining.should.be.equal(0);
     const holderBalance = await skaleToken.balanceOf(holder.address);
     holderBalance.should.be.equal(0);
-    const amount = toWei(101);
+    const amount = ethers.parseEther("101");
 
     await skaleToken.connect(nilAddress).transferFrom(owner.address, nilAddress.address, amount).should.be.eventually.rejected;
   });
 
   it("an authorized accounts allowance should go down when transferFrom is called", async () => {
-    const amount = toWei(15);
+    const amount = ethers.parseEther("15");
     await skaleToken.approve(holder.address, amount);
     let allowance = await skaleToken.allowance(owner.address, holder.address);
     amount.should.be.equal(allowance);
-    await skaleToken.connect(holder).transferFrom(owner.address, holder.address, toWei(7));
+    await skaleToken.connect(holder).transferFrom(owner.address, holder.address, ethers.parseEther("7"));
 
     allowance = await skaleToken.allowance(owner.address, holder.address);
-    toWei(8).should.be.equal(allowance);
+    ethers.parseEther("8").should.be.equal(allowance);
   });
 
   it("should emit a Transfer event when transferFrom is called", async () => {
-    const amount = toWei(17);
+    const amount = ethers.parseEther("17");
     await skaleToken.approve(holder.address, amount);
 
     await expect(skaleToken.connect(holder).transferFrom(owner.address, holder.address, amount))
@@ -191,14 +190,14 @@ describe("SkaleToken", () => {
   });
 
   it("should emit a Minted Event", async () => {
-    const amount = toWei(10);
+    const amount = ethers.parseEther("10");
     await expect(skaleToken.mint(owner.address, amount, "0x", "0x"))
       .to.emit(skaleToken, "Minted")
       .withArgs(owner.address, owner.address, amount, "0x", "0x");
   });
 
   it("should emit a Burned Event", async () => {
-    const amount = toWei(10);
+    const amount = ethers.parseEther("10");
     await expect(skaleToken.burn(amount, "0x"))
       .to.emit(skaleToken, "Burned")
       .withArgs(owner.address, owner.address, amount, "0x", "0x");
@@ -211,11 +210,11 @@ describe("SkaleToken", () => {
     const reentrancyTester = await deployReentrancyTester(contractManager);
     await reentrancyTester.prepareToReentrancyCheck();
 
-    await skaleToken.connect(holder).transfer(reentrancyTester.address, amount)
+    await skaleToken.connect(holder).transfer(reentrancyTester, amount)
       .should.be.eventually.rejectedWith("ReentrancyGuard: reentrant call");
 
-    (await skaleToken.balanceOf(holder.address)).toNumber().should.be.equal(amount);
-    (await skaleToken.balanceOf(skaleToken.address)).toNumber().should.be.equal(0);
+    (await skaleToken.balanceOf(holder.address)).should.be.equal(amount);
+    (await skaleToken.balanceOf(skaleToken)).should.be.equal(0);
   });
 
   it("should not allow to delegate burned tokens", async () => {
@@ -230,19 +229,15 @@ describe("SkaleToken", () => {
     await validatorService.enableValidator(validatorId);
 
     await reentrancyTester.prepareToBurningAttack();
-    const amount = toWei(1);
-    await skaleToken.mint(reentrancyTester.address, amount, "0x", "0x");
+    const amount = ethers.parseEther("1");
+    await skaleToken.mint(reentrancyTester, amount, "0x", "0x");
     await reentrancyTester.burningAttack()
       .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
   });
 
   it("should parse call data correctly", async () => {
     const skaleTokenInternalTesterFactory = await ethers.getContractFactory("SkaleTokenInternalTester");
-    const skaleTokenInternalTester = await skaleTokenInternalTesterFactory.deploy(contractManager.address, []) as SkaleTokenInternalTester;
+    const skaleTokenInternalTester = await skaleTokenInternalTesterFactory.deploy(contractManager, []);
     await skaleTokenInternalTester.getMsgData().should.be.eventually.equal(skaleTokenInternalTester.interface.encodeFunctionData("getMsgData"));
   });
 });
-
-function toWei(count: number): BigNumber {
-  return BigNumber.from(count).mul(BigNumber.from(10).pow(18));
-}
