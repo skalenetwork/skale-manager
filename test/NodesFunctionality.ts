@@ -57,7 +57,7 @@ describe("NodesFunctionality", () => {
         delegationController = await deployDelegationController(contractManager);
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
-        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
         // await contractManager.setContractsAddress("Nodes", nodes.address);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
