@@ -44,9 +44,9 @@ describe("SchainsInternal", () => {
         validatorService = await deployValidatorService(contractManager);
 
         // contract must be set in contractManager for proper work of allow modifier
-        await contractManager.setContractsAddress("Schains", nodes.address);
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
-        await contractManager.setContractsAddress("SkaleManager", nodes.address);
+        await contractManager.setContractsAddress("Schains", nodes);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
+        await contractManager.setContractsAddress("SkaleManager", nodes);
 
         await validatorService.connect(holder).registerValidator("D2", "D2 is even", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
@@ -75,7 +75,7 @@ describe("SchainsInternal", () => {
 
         const generationAfter = await schainsInternal.currentGeneration();
 
-        generationBefore.add(1).should.be.equal(generationAfter);
+        (generationBefore + 1n).should.be.equal(generationAfter);
     });
 
     it("should allow to switch generation only to generation manager", async () => {
@@ -95,7 +95,7 @@ describe("SchainsInternal", () => {
         (await schainsInternal.getGeneration(generation0Hash)).should.be.equal(generation);
 
         await schainsInternal.newGeneration();
-        generation = generation.add(1);
+        generation = generation + 1n;
 
         await schainsInternal.initializeSchain(generation1Name, holder.address, ethers.ZeroAddress, 5, 5);
         (await schainsInternal.getGeneration(generation1Hash)).should.be.equal(generation);
@@ -131,7 +131,7 @@ describe("SchainsInternal", () => {
         });
 
         it("should be able to add schain to node", async () => {
-            await schainsInternal.addSchainForNode(nodes.address, 0, schainNameHash);
+            await schainsInternal.addSchainForNode(nodes, 0, schainNameHash);
             await schainsInternal.getSchainHashesForNode(0).should.eventually.deep.equal([schainNameHash]);
         });
 
@@ -182,7 +182,7 @@ describe("SchainsInternal", () => {
             it("should check group", async () => {
                 const res = await schainsInternal.getNodesInGroup(schainNameHash);
                 res.length.should.be.equal(1);
-                res[0].toNumber().should.be.equal(0);
+                res[0].should.be.equal(0);
             });
 
             it("should delete group", async () => {
@@ -198,24 +198,24 @@ describe("SchainsInternal", () => {
             });
 
             it("should add another schain to the node and remove first correctly", async () => {
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[0]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[0]);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[1]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[1]);
                 await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
                     [newSchainHashes[1], newSchainHashes[0]],
                 );
             });
 
             it("should add a hole after deleting", async () => {
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[0]);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[1]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[0]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[1]);
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 (await schainsInternal.holesForNodes(nodeIndex, 0)).should.be.equal(1);
             });
 
             it("should add another hole after deleting", async () => {
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[0]);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[1]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[0]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[1]);
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 (await schainsInternal.holesForNodes(nodeIndex, 0)).should.be.equal(0);
@@ -223,8 +223,8 @@ describe("SchainsInternal", () => {
             });
 
             it("should add another hole after deleting different order", async () => {
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[0]);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[1]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[0]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[1]);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 (await schainsInternal.holesForNodes(nodeIndex, 0)).should.be.equal(0);
@@ -232,11 +232,11 @@ describe("SchainsInternal", () => {
             });
 
             it("should add schain in a hole", async () => {
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[0]);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[1]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[0]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[1]);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[2]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[2]);
                 (await schainsInternal.holesForNodes(nodeIndex, 0)).should.be.equal(0);
                 await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
@@ -248,12 +248,12 @@ describe("SchainsInternal", () => {
             });
 
             it("should add second schain in a hole", async () => {
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[0]);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[1]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[0]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[1]);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[2]);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[3]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[2]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[3]);
                 await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         newSchainHashes[3],
@@ -264,13 +264,13 @@ describe("SchainsInternal", () => {
             });
 
             it("should add third schain like new", async () => {
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[0]);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[1]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[0]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[1]);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[2]);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[3]);
-                await schainsInternal.addSchainForNode(nodes.address, nodeIndex, newSchainHashes[4]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[2]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[3]);
+                await schainsInternal.addSchainForNode(nodes, nodeIndex, newSchainHashes[4]);
                 await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         newSchainHashes[3],
