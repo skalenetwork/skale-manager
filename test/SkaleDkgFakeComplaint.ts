@@ -587,7 +587,7 @@ describe("SkaleDkgFakeComplaint", () => {
         wallets = await deployWallets(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
 
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
 
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
         await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
@@ -648,7 +648,7 @@ describe("SkaleDkgFakeComplaint", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
@@ -664,14 +664,14 @@ describe("SkaleDkgFakeComplaint", () => {
             schainName = "d2";
             await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 let index = 3;
-            while (!(nodesInGroup[0].eq(0) && nodesInGroup[1].eq(1) && nodesInGroup[2].eq(2))) {
+            while (!(nodesInGroup[0] === 0n && nodesInGroup[1] === 1n && nodesInGroup[2] === 2n)) {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
