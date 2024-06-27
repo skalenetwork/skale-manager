@@ -91,7 +91,7 @@ describe("SyncManager", () => {
 
         await syncManager.addIPRange(ipRanges[0].name, ipRanges[0].startIP, ipRanges[0].endIP);
         await syncManager.addIPRange(ipRanges[1].name, ipRanges[1].startIP, ipRanges[1].endIP);
-        const ipRangesNumber = (await syncManager.getIPRangesNumber()).toNumber();
+        const ipRangesNumber = await syncManager.getIPRangesNumber();
         for (let i = 0; i < ipRangesNumber; i++) {
             const {startIP, endIP} = await syncManager.getIPRangeByIndex(i);
             expect(startIP).to.be.equal(ipRanges[i].startIP);
