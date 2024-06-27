@@ -31,7 +31,7 @@ import {deploySkaleManager} from "./tools/deploy/skaleManager";
 import {deploySkaleToken} from "./tools/deploy/skaleToken";
 import {skipTime, currentTime, nextMonth} from "./tools/time";
 import {deployBounty} from "./tools/deploy/bounty";
-import {BigNumber, ContractTransaction, Wallet} from "ethers";
+import {ContractTransactionResponse, Wallet} from "ethers";
 import {deployTimeHelpers} from "./tools/deploy/delegation/timeHelpers";
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
@@ -44,10 +44,13 @@ import {schainParametersType, SchainType} from "./tools/types";
 chai.should();
 chai.use(chaiAsPromised);
 
-async function ethSpent(response: ContractTransaction) {
+async function ethSpent(response: ContractTransactionResponse) {
     const receipt = await response.wait();
-    if (receipt.effectiveGasPrice) {
-        return receipt.effectiveGasPrice.mul(receipt.gasUsed);
+    if(!receipt) {
+        throw new Error();
+    }
+    if (receipt.gasPrice) {
+        return receipt.gasPrice * receipt.gasUsed;
     } else {
         throw new ReferenceError("gasPrice is undefined");
     }
@@ -97,8 +100,8 @@ describe("SkaleManager", () => {
         delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         distributor = await deployDistributor(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
         bountyContract = await deployBounty(contractManager);
         wallets = await deployWallets(contractManager);
 
@@ -150,18 +153,16 @@ describe("SkaleManager", () => {
 
     describe("when validator has delegated SKALE tokens", () => {
         const validatorId = 1;
-        const day = 60 * 60 * 24;
+        const day = BigInt(60 * 60 * 24);
         const delegatedAmount = 1e7;
 
         fastBeforeEach(async () => {
             await validatorService.connect(validator).registerValidator("D2", "D2 is even", 150, 0);
             const validatorIndex = await validatorService.getValidatorId(validator.address);
             const signature = await nodeAddress.signMessage(
-                ethers.utils.arrayify(
-                    ethers.utils.solidityKeccak256(
-                        ["uint"],
-                        [validatorIndex]
-                    )
+                ethers.solidityPackedKeccak256(
+                    ["uint"],
+                    [validatorIndex]
                 )
             );
             await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature);
@@ -274,27 +275,27 @@ describe("SkaleManager", () => {
                 const minNodeBalance = await constantsHolder.minNodeBalance();
                 await nodeAddress.sendTransaction({
                     to: owner.address,
-                    value: (await nodeAddress.getBalance()).sub(minNodeBalance)
+                    value: await ethers.provider.getBalance(nodeAddress) - minNodeBalance
                 });
                 await nextMonth(contractManager);
-                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber());
+                await skipTime(await bountyContract.nodeCreationWindowSeconds());
                 const spentValue = await ethSpent(await skaleManager.connect(nodeAddress).getBounty(0, {gasLimit: 2e6}));
-                const balance = await nodeAddress.getBalance();
-                balance.add(spentValue).should.be.least(minNodeBalance);
-                balance.add(spentValue).should.be.closeTo(minNodeBalance, 1e13);
+                const balance = await ethers.provider.getBalance(nodeAddress);
+                (balance + spentValue).should.be.least(minNodeBalance);
+                (balance + spentValue).should.be.closeTo(minNodeBalance, 1e13);
             });
 
             it("should pay bounty if Node is In Leaving state", async () => {
                 await nodesContract.initExit(0);
                 await nextMonth(contractManager);
-                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
+                await skipTime(await bountyContract.nodeCreationWindowSeconds())
                 await skaleManager.connect(nodeAddress).getBounty(0);
             });
 
             it("should pay bounty if Node is In Maintenance state", async () => {
                 await nodesContract.connect(validator).setNodeInMaintenance(0);
                 await nextMonth(contractManager);
-                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
+                await skipTime(await bountyContract.nodeCreationWindowSeconds())
                 await skaleManager.connect(nodeAddress).getBounty(0);
             });
 
@@ -302,7 +303,7 @@ describe("SkaleManager", () => {
                 await nodesContract.initExit(0);
                 await nodesContract.completeExit(0);
                 await nextMonth(contractManager);
-                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
+                await skipTime(await bountyContract.nodeCreationWindowSeconds())
                 await skaleManager.connect(nodeAddress).getBounty(0).should.be.eventually.rejectedWith("The node must not be in Left state");
             });
 
@@ -312,7 +313,7 @@ describe("SkaleManager", () => {
                 await nodesContract.setNodeIncompliant(nodeIndex);
 
                 await nextMonth(contractManager);
-                await skipTime((await bountyContract.nodeCreationWindowSeconds()).toNumber())
+                await skipTime(await bountyContract.nodeCreationWindowSeconds())
                 await skaleManager.connect(nodeAddress).getBounty(nodeIndex).should.be.eventually.rejectedWith("The node is incompliant");
             });
 
@@ -324,38 +325,44 @@ describe("SkaleManager", () => {
 
                 const timeLimit = 300 * 1000;
                 const start = Date.now();
-                const launch = (await constantsHolder.launchTimestamp()).toNumber();
-                const launchMonth = (await timeHelpers.timestampToMonth(launch)).toNumber();
-                const ten18 = BigNumber.from(10).pow(18);
+                const launch = await constantsHolder.launchTimestamp();
+                const launchMonth = await timeHelpers.timestampToMonth(launch);
 
                 const schedule = [
-                    385000000,
-                    346500000,
-                    308000000,
-                    269500000,
-                    231000000,
-                    192500000
+                    385000000n,
+                    346500000n,
+                    308000000n,
+                    269500000n,
+                    231000000n,
+                    192500000n
                 ]
-                for (let bounty = schedule[schedule.length - 1] / 2; bounty > 1; bounty /= 2) {
+                for (let bounty = schedule[schedule.length - 1] / 2n; bounty > 1; bounty /= 2n) {
                     for (let i = 0; i < 3; ++i) {
                         schedule.push(bounty);
                     }
                 }
 
-                let mustBePaid = BigNumber.from(0);
+                let mustBePaid = 0n;
                 await nextMonth(contractManager);
                 for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timeLimit; ++year) {
-                    for (let monthIndex = 0; monthIndex < 12; ++monthIndex) {
-                        const monthEnd = (await timeHelpers.monthToTimestamp(launchMonth + 12 * year + monthIndex + 1)).toNumber();
+                    for (let monthIndex = 0n; monthIndex < 12; ++monthIndex) {
+                        const monthEnd = await timeHelpers.monthToTimestamp(launchMonth + BigInt(12 * year) + monthIndex + 1n);
                         if (await currentTime() < monthEnd) {
                             await skipTime(monthEnd - await currentTime() - day);
                             await skaleManager.connect(nodeAddress).getBounty(0);
                         }
                     }
-                    const bountyWasPaid = await skaleToken.balanceOf(distributor.address);
-                    mustBePaid = mustBePaid.add(Math.floor(schedule[year]));
+                    const bountyWasPaid = await skaleToken.balanceOf(distributor);
+                    mustBePaid = mustBePaid + schedule[year];
 
-                    bountyWasPaid.div(ten18).sub(mustBePaid).abs().toNumber().should.be.lessThan(35); // 35 because of rounding errors in JS
+                    const abs = (value: bigint) => {
+                        if (value < 0) {
+                            return - value;
+                        }
+                        return value;
+                    }
+
+                    abs(BigInt(ethers.formatEther(bountyWasPaid)) - mustBePaid).should.be.lessThan(35); // 35 because of rounding errors in JS
                 }
             });
         });
@@ -425,7 +432,7 @@ describe("SkaleManager", () => {
                         "some.domain.name");
                 }
 
-                const schainHash = ethers.utils.solidityKeccak256(["string"], ["d2"]);
+                const schainHash = ethers.solidityPackedKeccak256(["string"], ["d2"]);
                 if (schainHash) {
                     d2SchainHash = schainHash;
                 }
@@ -450,9 +457,9 @@ describe("SkaleManager", () => {
 
                 it("should create schain", async () => {
                     await skaleToken.connect(developer).send(
-                        skaleManager.address,
+                        skaleManager,
                         "0x1cc2d6d04a2ca",
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
@@ -473,9 +480,9 @@ describe("SkaleManager", () => {
                     await constantsHolder.setMinimalSchainLifetime(SECONDS_TO_YEAR);
 
                     await skaleToken.connect(developer).send(
-                        skaleManager.address,
+                        skaleManager,
                         "0x1cc2d6d04a2ca",
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
@@ -490,9 +497,9 @@ describe("SkaleManager", () => {
 
                     await constantsHolder.setMinimalSchainLifetime(4);
                     await skaleToken.connect(developer).send(
-                        skaleManager.address,
+                        skaleManager,
                         "0x1cc2d6d04a2ca",
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
@@ -511,12 +518,12 @@ describe("SkaleManager", () => {
 
 
                 it("should not allow to create schain if certain date has not reached", async () => {
-                    const unreachableDate = BigNumber.from(2).pow(256).sub(1);
+                    const unreachableDate = 2n ** 256n - 1n;
                     await constantsHolder.setSchainCreationTimeStamp(unreachableDate);
                     await skaleToken.connect(developer).send(
-                        skaleManager.address,
+                        skaleManager,
                         "0x1cc2d6d04a2ca",
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 4,
@@ -533,9 +540,9 @@ describe("SkaleManager", () => {
                 describe("when schain is created", () => {
                     fastBeforeEach(async () => {
                         await skaleToken.connect(developer).send(
-                            skaleManager.address,
+                            skaleManager,
                             "0x1cc2d6d04a2ca",
-                            ethers.utils.defaultAbiCoder.encode(
+                            ethers.AbiCoder.defaultAbiCoder().encode(
                                 [schainParametersType],
                                 [{
                                     lifetime: 5,
@@ -575,9 +582,9 @@ describe("SkaleManager", () => {
                 describe("when another schain is created", () => {
                     fastBeforeEach(async () => {
                         await skaleToken.connect(developer).send(
-                            skaleManager.address,
+                            skaleManager,
                             "0x1cc2d6d04a2ca",
-                            ethers.utils.defaultAbiCoder.encode(
+                            ethers.AbiCoder.defaultAbiCoder().encode(
                                 [schainParametersType],
                                 [{
                                     lifetime: 5,
@@ -625,8 +632,8 @@ describe("SkaleManager", () => {
                         "some.domain.name");
                 }
 
-                d2SchainHash = ethers.utils.solidityKeccak256(["string"], ["d2"]);
-                d3SchainHash = ethers.utils.solidityKeccak256(["string"], ["d3"]);
+                d2SchainHash = ethers.solidityPackedKeccak256(["string"], ["d2"]);
+                d3SchainHash = ethers.solidityPackedKeccak256(["string"], ["d3"]);
             });
 
             describe("when developer has SKALE tokens", () => {
@@ -637,9 +644,9 @@ describe("SkaleManager", () => {
                 it("should create 2 medium schains", async () => {
                     const price = await schains.getSchainPrice(3, 5)
                     await skaleToken.connect(developer).send(
-                        skaleManager.address,
+                        skaleManager,
                         price,
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
@@ -656,9 +663,9 @@ describe("SkaleManager", () => {
                     schain1[0].should.be.equal("d2");
 
                     await skaleToken.connect(developer).send(
-                        skaleManager.address,
+                        skaleManager,
                         price,
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
@@ -678,9 +685,9 @@ describe("SkaleManager", () => {
                 describe("when schains are created", () => {
                     fastBeforeEach(async () => {
                         await skaleToken.connect(developer).send(
-                            skaleManager.address,
+                            skaleManager,
                             "0x1cc2d6d04a2ca",
-                            ethers.utils.defaultAbiCoder.encode(
+                            ethers.AbiCoder.defaultAbiCoder().encode(
                                 [schainParametersType],
                                 [{
                                     lifetime: 5,
@@ -694,9 +701,9 @@ describe("SkaleManager", () => {
                         );
 
                         await skaleToken.connect(developer).send(
-                            skaleManager.address,
+                            skaleManager,
                             "0x1cc2d6d04a2ca",
-                            ethers.utils.defaultAbiCoder.encode(
+                            ethers.AbiCoder.defaultAbiCoder().encode(
                                 [schainParametersType],
                                 [{
                                     lifetime: 5,
@@ -743,9 +750,9 @@ describe("SkaleManager", () => {
 
                 let price = await schains.getSchainPrice(1, 5);
                 await skaleToken.connect(developer).send(
-                    skaleManager.address,
+                    skaleManager,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
@@ -758,7 +765,7 @@ describe("SkaleManager", () => {
                     )
                 );
 
-                let schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d2"]));
+                let schain1 = await schainsInternal.schains(ethers.solidityPackedKeccak256(["string"], ["d2"]));
                 schain1[0].should.be.equal("d2");
 
                 await skaleManager.connect(developer).deleteSchain("d2");
@@ -767,9 +774,9 @@ describe("SkaleManager", () => {
                 price = await schains.getSchainPrice(2, 5);
 
                 await skaleToken.connect(developer).send(
-                    skaleManager.address,
+                    skaleManager,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
@@ -782,7 +789,7 @@ describe("SkaleManager", () => {
                     )
                 );
 
-                schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d3"]));
+                schain1 = await schainsInternal.schains(ethers.solidityPackedKeccak256(["string"], ["d3"]));
                 schain1[0].should.be.equal("d3");
 
                 await skaleManager.connect(developer).deleteSchain("d3");
@@ -790,9 +797,9 @@ describe("SkaleManager", () => {
                 (await schainsInternal.numberOfSchains()).should.be.equal(0);
                 price = await schains.getSchainPrice(3, 5);
                 await skaleToken.connect(developer).send(
-                    skaleManager.address,
+                    skaleManager,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
@@ -805,7 +812,7 @@ describe("SkaleManager", () => {
                     )
                 );
 
-                schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d4"]));
+                schain1 = await schainsInternal.schains(ethers.solidityPackedKeccak256(["string"], ["d4"]));
                 schain1[0].should.be.equal("d4");
 
                 await skaleManager.connect(developer).deleteSchain("d4");
@@ -813,9 +820,9 @@ describe("SkaleManager", () => {
                 (await schainsInternal.numberOfSchains()).should.be.equal(0);
                 price = await schains.getSchainPrice(4, 5);
                 await skaleToken.connect(developer).send(
-                    skaleManager.address,
+                    skaleManager,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
@@ -828,7 +835,7 @@ describe("SkaleManager", () => {
                     )
                 );
 
-                schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d5"]));
+                schain1 = await schainsInternal.schains(ethers.solidityPackedKeccak256(["string"], ["d5"]));
                 schain1[0].should.be.equal("d5");
 
                 await skaleManager.connect(developer).deleteSchain("d5");
@@ -836,9 +843,9 @@ describe("SkaleManager", () => {
                 (await schainsInternal.numberOfSchains()).should.be.equal(0);
                 price = await schains.getSchainPrice(5, 5);
                 await skaleToken.connect(developer).send(
-                    skaleManager.address,
+                    skaleManager,
                     price.toString(),
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
@@ -851,7 +858,7 @@ describe("SkaleManager", () => {
                     )
                 );
 
-                schain1 = await schainsInternal.schains(ethers.utils.solidityKeccak256(["string"], ["d6"]));
+                schain1 = await schainsInternal.schains(ethers.solidityPackedKeccak256(["string"], ["d6"]));
                 schain1[0].should.be.equal("d6");
 
                 await skaleManager.connect(developer).deleteSchain("d6");

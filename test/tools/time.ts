@@ -22,7 +22,11 @@ export async function skipTimeToDate(day: number, monthIndex: number) {
 }
 
 export async function currentTime() {
-    return (await ethers.provider.getBlock("latest")).timestamp;
+    const latestBlock = await ethers.provider.getBlock("latest");
+    if (latestBlock) {
+        return BigInt(latestBlock.timestamp);
+    }
+    throw new Error("Can't get latest block");
 }
 
 export const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
