@@ -2,6 +2,7 @@ import {ethers} from "hardhat";
 import {ContractManager} from "../../typechain-types";
 import {deployTimeHelpers} from "./deploy/delegation/timeHelpers";
 import {BigNumberish} from "ethers";
+import { assert } from "console";
 
 
 export async function skipTime(seconds: BigNumberish) {
@@ -11,7 +12,11 @@ export async function skipTime(seconds: BigNumberish) {
 }
 
 export async function skipTimeToDate(day: number, monthIndex: number) {
-    const timestamp = (await ethers.provider.getBlock("latest")).timestamp;
+    const block = await ethers.provider.getBlock("latest");
+    if (!block) {
+        throw new Error();
+    }
+    const timestamp = block.timestamp;
     const now = new Date(timestamp * 1000);
     const targetTime = new Date(Date.UTC(now.getFullYear(), monthIndex, day));
     while (targetTime < now) {
@@ -32,20 +37,26 @@ export async function currentTime() {
 export const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
 export async function isLeapYear() {
-    const timestamp = await currentTime();
+    const timestamp = Number(await currentTime());
     const now = new Date(timestamp * 1000);
     return now.getFullYear() % 4 === 0;
 }
 
-export async function nextMonth(contractManager: ContractManager, monthsAmount = 1) {
+export async function nextMonth(contractManager: ContractManager, monthsAmount: BigNumberish = 1) {
     const timeHelpers = await deployTimeHelpers(contractManager);
     const currentEpoch = await timeHelpers.getCurrentMonth();
-    await skipTime((await timeHelpers.monthToTimestamp(currentEpoch.add(monthsAmount))).toNumber() - await currentTime())
+    await skipTime(await timeHelpers.monthToTimestamp(currentEpoch + BigInt(monthsAmount)) - await currentTime());
 }
 
 export async function getTransactionTimestamp(transactionHash: string) {
     const receipt = await ethers.provider.getTransactionReceipt(transactionHash);
+    if (!receipt) {
+        throw new Error();
+    }
     const blockNumber = receipt.blockNumber;
     const block = await ethers.provider.getBlock(blockNumber);
+    if (!block) {
+        throw new Error();
+    }
     return block.timestamp;
 }
