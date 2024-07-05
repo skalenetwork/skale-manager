@@ -12,7 +12,7 @@ describe("MathUtils", () => {
     let snapshot: number;
     before(async () => {
         const MathUtils = await ethers.getContractFactory("MathUtilsTester");
-        mathUtils = (await MathUtils.deploy()) as MathUtilsTester;
+        mathUtils = (await MathUtils.deploy()) as unknown as MathUtilsTester;
     });
 
     beforeEach(async () => {
@@ -25,15 +25,15 @@ describe("MathUtils", () => {
 
     describe("in transaction", () => {
         it("should subtract normally if reduced is greater than subtracted", async () => {
-            (await mathUtils.callStatic.boundedSub(5, 3)).toNumber().should.be.equal(2);
-            (await mathUtils.boundedSubWithoutEvent(5, 3)).toNumber().should.be.equal(2);
+            (await mathUtils.boundedSub.staticCall(5, 3)).should.be.equal(2);
+            (await mathUtils.boundedSubWithoutEvent(5, 3)).should.be.equal(2);
         });
 
         it("should return 0 if reduced is less than subtracted and emit event", async () => {
-            (await mathUtils.callStatic.boundedSub(3, 5)).toNumber().should.be.equal(0);
+            (await mathUtils.boundedSub.staticCall(3, 5)).should.be.equal(0);
 
             const factory = await ethers.getContractFactory("MathUtils");
-            const mathUtilsLib = factory.attach(mathUtils.address);
+            const mathUtilsLib = factory.attach(mathUtils);
             await mathUtils.boundedSub(3, 5)
                 .should.emit(mathUtilsLib, "UnderflowError")
                 .withArgs(3, 5);
@@ -42,11 +42,11 @@ describe("MathUtils", () => {
 
     describe("in call", () => {
         it("should subtract normally if reduced is greater than subtracted", async () => {
-            (await mathUtils.boundedSubWithoutEvent(5, 3)).toNumber().should.be.equal(2);
+            (await mathUtils.boundedSubWithoutEvent(5, 3)).should.be.equal(2);
         });
 
         it("should return 0 if reduced is less than subtracted ", async () => {
-            (await mathUtils.boundedSubWithoutEvent(3, 5)).toNumber().should.be.equal(0);
+            (await mathUtils.boundedSubWithoutEvent(3, 5)).should.be.equal(0);
         });
     });
 
