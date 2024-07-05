@@ -1,6 +1,5 @@
 import {promises as fs} from 'fs';
 import {ethers, upgrades, network, run} from "hardhat";
-import {ContractManager, SkaleManager, SkaleToken} from "../typechain-types";
 import {
     getAbi,
     getVersion,

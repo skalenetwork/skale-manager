@@ -16,6 +16,7 @@ module.exports = {
     "root": true,
     "rules": {
         "@typescript-eslint/no-shadow": "error",
+        "@typescript-eslint/no-unused-vars": "error",
         "lines-around-comment": [
             "error",
             {"allowBlockStart": true}

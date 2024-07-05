@@ -1,6 +1,6 @@
 import {ContractManager,
-         SkaleToken,
-         SkaleTokenInternalTester} from "../typechain-types";
+    SkaleToken,
+} from "../typechain-types";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";

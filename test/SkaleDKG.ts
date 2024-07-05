@@ -32,7 +32,7 @@ import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert, expect} from "chai";
 import {makeSnapshot, applySnapshot} from "./tools/snapshot";
-import {BytesLike, ContractTransaction, ContractTransactionResponse, Wallet} from "ethers";
+import {BytesLike, ContractTransactionResponse, Wallet} from "ethers";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {schainParametersType, SchainType} from "./tools/types";

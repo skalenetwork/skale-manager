@@ -1,4 +1,4 @@
-import {ContractManager, SegmentTreeTester} from "../../../../typechain-types";
+import {SegmentTreeTester} from "../../../../typechain-types";
 import {deployWithLibraryWithConstructor} from "../factory";
 
 export const deploySegmentTreeTester = deployWithLibraryWithConstructor<SegmentTreeTester>(
