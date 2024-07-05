@@ -43,7 +43,7 @@ describe("ValidatorService", () => {
         delegationController = await deployDelegationController(contractManager);
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
-        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
     });
@@ -67,8 +67,8 @@ describe("ValidatorService", () => {
         assert.equal(validator.name, "ValidatorName");
         assert.equal(validator.validatorAddress, validator1.address);
         assert.equal(validator.description, "Really good validator");
-        assert.equal(validator.feeRate.toNumber(), 500);
-        assert.equal(validator.minimumDelegationAmount.toNumber(), 100);
+        assert.equal(validator.feeRate, 500n);
+        assert.equal(validator.minimumDelegationAmount, 100n);
         assert.isTrue(await validatorService.checkValidatorAddressToId(validator1.address, validatorId));
     });
 
