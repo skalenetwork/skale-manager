@@ -1,14 +1,14 @@
 import {deployFunctionFactory} from "../factory";
 import {ethers} from "hardhat";
-import {ContractManager, TimeHelpersWithDebug} from "../../../../typechain-types";
+import {TimeHelpersWithDebug} from "../../../../typechain-types";
 
-export const deployTimeHelpersWithDebug = deployFunctionFactory(
+export const deployTimeHelpersWithDebug = deployFunctionFactory<TimeHelpersWithDebug>(
     "TimeHelpersWithDebug",
     undefined,
     async () => {
         const factory = await ethers.getContractFactory("TimeHelpersWithDebug");
-        const instance = await factory.deploy() as TimeHelpersWithDebug;
+        const instance = await factory.deploy() as unknown as TimeHelpersWithDebug;
         await instance.initialize();
         return instance;
     }
-) as (contractManager: ContractManager) => Promise<TimeHelpersWithDebug>;
+);

@@ -5,7 +5,7 @@ import {deployValidatorService} from "./delegation/validatorService";
 import {deployWithLibraryFunctionFactory} from "./factory";
 import {deployNodeRotation} from "./nodeRotation";
 
-export const deployNodes = deployWithLibraryFunctionFactory(
+export const deployNodes = deployWithLibraryFunctionFactory<Nodes>(
     "Nodes",
     ["SegmentTree"],
     async (contractManager: ContractManager) => {
@@ -14,4 +14,4 @@ export const deployNodes = deployWithLibraryFunctionFactory(
         await deployBounty(contractManager);
         await deployNodeRotation(contractManager);
     }
-) as (contractManager: ContractManager) => Promise<Nodes>;
+);

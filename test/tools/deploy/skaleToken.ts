@@ -10,7 +10,7 @@ const name = "SkaleToken";
 
 async function deploy(contractManager: ContractManager) {
     const factory = await ethers.getContractFactory(name);
-    return await factory.deploy(contractManager.address, []);
+    return await factory.deploy(contractManager, []) as unknown as SkaleToken;
 }
 
 async function deployDependencies(contractManager: ContractManager) {
@@ -20,8 +20,8 @@ async function deployDependencies(contractManager: ContractManager) {
     await deploySkaleManager(contractManager);
 }
 
-export const deploySkaleToken = deployFunctionFactory(
+export const deploySkaleToken = deployFunctionFactory<SkaleToken>(
     name,
     deployDependencies,
     deploy
-) as (contractManager: ContractManager) => Promise<SkaleToken>;
+);

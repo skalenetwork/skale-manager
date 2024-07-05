@@ -6,7 +6,7 @@ import {deploySkaleVerifier} from "./skaleVerifier";
 import {deployNodeRotation} from "./nodeRotation";
 import {ContractManager, Schains} from "../../../typechain-types";
 
-export const deploySchains = deployFunctionFactory(
+export const deploySchains = deployFunctionFactory<Schains>(
     "Schains",
     async (contractManager: ContractManager) => {
         await deploySchainsInternal(contractManager);
@@ -16,4 +16,4 @@ export const deploySchains = deployFunctionFactory(
         await deploySkaleVerifier(contractManager);
         await deployNodeRotation(contractManager);
     }
-) as (contractManager: ContractManager) => Promise<Schains>;
+);
