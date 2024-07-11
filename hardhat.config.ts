@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-chai-matchers";
 import "@nomiclabs/hardhat-etherscan";
 import "@openzeppelin/hardhat-upgrades";
 import '@typechain/hardhat'
+import "hardhat-dependency-compiler";
 import "solidity-coverage";
 import * as dotenv from "dotenv"
 import {Wallet, parseEther} from "ethers";
@@ -107,6 +108,12 @@ const config: HardhatUserConfig = {
       'node_modules/@openzeppelin/upgrades-core/artifacts/ProxyAdmin.json'
     ],
     target: "ethers-v6"
+  },
+  dependencyCompiler: {
+    paths: [
+      '@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol',
+    ],
+    keep: true,
   }
 };
 
