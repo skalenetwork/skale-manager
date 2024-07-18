@@ -29,12 +29,12 @@ chai.should();
 chai.use(chaiAsPromised);
 
 function getBountyForEpoch(epoch: number) {
-    const bountyForFirst6Years = [385000000n, 346500000n, 308000000n, 269500000n, 231000000n, 192500000n];
+    const bountyForFirst6Years = [385000000, 346500000, 308000000, 269500000, 231000000, 192500000];
     const year = Math.floor(epoch / 12);
     if (year < 6) {
-        return bountyForFirst6Years[year] / 12n;
+        return bountyForFirst6Years[year] / 12;
     } else {
-        return bountyForFirst6Years[5] / 2n ** BigInt(Math.floor((year - 6) / 3) + 1);
+        return bountyForFirst6Years[5] / 2 ** (Math.floor((year - 6) / 3) + 1);
     }
 }
 
@@ -109,8 +109,8 @@ describe("Bounty", () => {
         });
 
         async function calculateBounty(nodeId: number) {
-            const estimate = BigInt(ethers.formatEther(await bountyContract.estimateBounty(nodeId)));
-            const bounty = BigInt(ethers.formatEther(await bountyContract.calculateBounty.staticCall(nodeId)));
+            const estimate = Number.parseFloat(ethers.formatEther(await bountyContract.estimateBounty(nodeId)));
+            const bounty = Number.parseFloat(ethers.formatEther(await bountyContract.calculateBounty.staticCall(nodeId)));
             bounty.should.be.almost(estimate);
             await bountyContract.calculateBounty(nodeId);
             await nodes.changeNodeLastRewardDate(nodeId);
@@ -148,15 +148,15 @@ describe("Bounty", () => {
                 const bounty0 = await calculateBounty(0) + await calculateBounty(1);
                 const bounty1 = await calculateBounty(2);
                 bounty0.should.be.equal(bounty1);
-                bounty0.should.be.almost(getBountyForEpoch(0) / 2n);
+                bounty0.should.be.almost(getBountyForEpoch(0) / 2);
             });
 
             it("should process nodes adding and removing, delegation and undelegation and slashing", async () => {
-                await skaleToken.mint(validator, ethers.parseEther("10e6"), "0x", "0x");
-                await skaleToken.mint(validator2, ethers.parseEther("10e6"), "0x", "0x");
+                await skaleToken.mint(validator, ethers.parseEther("10000000"), "0x", "0x");
+                await skaleToken.mint(validator2, ethers.parseEther("10000000"), "0x", "0x");
                 const punisher = await deployPunisher(contractManager);
                 await contractManager.setContractsAddress("SkaleDKG", contractManager); // for testing
-                const million = ethers.parseEther("1e6");
+                const million = ethers.parseEther("1000000");
 
                 // Jan 1st
                 // console.log("ts: current", new Date(await currentTime() * 1000));
@@ -274,7 +274,7 @@ describe("Bounty", () => {
                 await delegationController.connect(validator).delegate(validatorId, million, 2, "");
                 await delegationController.connect(validator).acceptPendingDelegation(4);
 
-                await constantsHolder.setMSR(ethers.parseEther("1.5e6").toString());
+                await constantsHolder.setMSR(ethers.parseEther("1500000").toString());
                 let bounty = await calculateBounty(0);
                 bounty.should.be.almost(getBountyForEpoch(0) + getBountyForEpoch(1));
 
@@ -348,9 +348,9 @@ describe("Bounty", () => {
                 await delegationController.connect(validator).delegate(validatorId, million, 2, "");
                 await delegationController.connect(validator).acceptPendingDelegation(5);
 
-                let effectiveDelegated1 = BigInt(0.5e6 * 100 + 0.5e6 * 200);
-                let effectiveDelegated2 = BigInt(1e6 * 100 + 0.5e6 * 200);
-                let totalBounty = 0n;
+                let effectiveDelegated1 = 0.5e6 * 100 + 0.5e6 * 200;
+                let effectiveDelegated2 = 1e6 * 100 + 0.5e6 * 200;
+                let totalBounty = 0;
                 let bountyLeft = getBountyForEpoch(2);
 
                 bounty = await calculateBounty(0);
@@ -439,9 +439,9 @@ describe("Bounty", () => {
                 await delegationController.connect(validator2).delegate(validator2Id, million, 2, "");
                 await delegationController.connect(validator2).acceptPendingDelegation(6);
 
-                effectiveDelegated1 = BigInt(1.5e6 * 100 + 0.5e6 * 200);
+                effectiveDelegated1 = 1.5e6 * 100 + 0.5e6 * 200;
                 bountyLeft += getBountyForEpoch(3) - totalBounty;
-                totalBounty = 0n;
+                totalBounty = 0;
 
                 bounty = await calculateBounty(0);
                 bounty.should.be.almost(bountyLeft * effectiveDelegated2 / (effectiveDelegated1 + effectiveDelegated2));
@@ -512,18 +512,22 @@ describe("Bounty", () => {
 
                 await delegationController.connect(validator2).requestUndelegation(1);
 
-                effectiveDelegated2 = BigInt(2e6 * 100 + 0.5e6 * 200);
+                effectiveDelegated2 = 2e6 * 100 + 0.5e6 * 200;
                 bountyLeft += getBountyForEpoch(4) - totalBounty;
-                totalBounty = 0n;
+                totalBounty = 0;
 
                 effectiveDelegated1.should.be.almost(
-                    ethers.formatEther(
-                        (await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0]
+                    Number.parseFloat(
+                        ethers.formatEther(
+                            (await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0]
+                        )
                     )
                 );
                 effectiveDelegated2.should.be.almost(
-                    ethers.formatEther(
-                        (await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[1]
+                    Number.parseFloat(
+                        ethers.formatEther(
+                            (await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[1]
+                        )
                     )
                 );
 
@@ -561,17 +565,21 @@ describe("Bounty", () => {
                 //         0: Apr 28th
                 //         3: May 1st
 
-                await punisher.slash(validator2Id, ethers.parseEther("1.25e6"));
-                effectiveDelegated2 = BigInt(1e6 * 100 + 0.25e6 * 200);
+                await punisher.slash(validator2Id, ethers.parseEther("1250000"));
+                effectiveDelegated2 = 1e6 * 100 + 0.25e6 * 200;
 
                 effectiveDelegated1.should.be.almost(
-                    ethers.formatEther(
-                        (await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0]
+                    Number.parseFloat(
+                        ethers.formatEther(
+                            (await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0]
+                        )
                     )
                 );
                 effectiveDelegated2.should.be.almost(
-                    ethers.formatEther(
-                        (await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[0]
+                    Number.parseFloat(
+                        ethers.formatEther(
+                            (await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[0]
+                        )
                     )
                 );
 
@@ -615,7 +623,7 @@ describe("Bounty", () => {
                 //         3: May 29th
 
                 bountyLeft += getBountyForEpoch(5) - totalBounty;
-                totalBounty = 0n;
+                totalBounty = 0;
                 await nodes.removeNode(0);
 
                 await bountyContract.calculateBounty(1)
@@ -685,9 +693,9 @@ describe("Bounty", () => {
                 //     nodes:
                 //         3: May 29th
 
-                effectiveDelegated2 = BigInt(0.5e6 * 100 + 0.25e6 * 200);
+                effectiveDelegated2 = 0.5e6 * 100 + 0.25e6 * 200;
                 bountyLeft += getBountyForEpoch(5) - totalBounty;
-                totalBounty = 0n;
+                totalBounty = 0;
 
                 bounty = await calculateBounty(1);
                 bounty.should.be.almost(bountyLeft * effectiveDelegated1 / (effectiveDelegated1 + effectiveDelegated2), 3);
