@@ -61,6 +61,8 @@ jobs:
       run: npx hardhat run scripts/generateAbi.ts
 
     - name: Run tests
+      env:
+        NODE_OPTIONS: --max-old-space-size=8192
       run: npx hardhat coverage --solcoverjs .solcover.js
 
     - name: Upload coverage to Codecov
