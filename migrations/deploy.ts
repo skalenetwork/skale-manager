@@ -8,7 +8,7 @@ import {
     getContractFactory,
 } from '@skalenetwork/upgrade-tools';
 import {Contract, Interface, resolveAddress} from 'ethers';
-import {TransactionMinedTimeout} from "@openzeppelin/upgrades-core";
+import {Manifest, TransactionMinedTimeout} from "@openzeppelin/upgrades-core";
 
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
@@ -140,6 +140,10 @@ async function main() {
             }
         }
     }
+
+    // TODO: remove debug output
+    const manifest = await Manifest.forNetwork(ethers.provider);
+    console.log("ProxyAdmin:", await manifest.getAdmin());
 
     const skaleTokenName = "SkaleToken";
     console.log("Deploy", skaleTokenName);
