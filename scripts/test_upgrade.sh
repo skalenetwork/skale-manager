@@ -46,6 +46,10 @@ CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
 ABI_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-abi.json"
 cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data"
 
+# TODO: remove debug output
+echo "Show manifest file"
+cat $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
+
 cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
