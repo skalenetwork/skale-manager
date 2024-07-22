@@ -39,6 +39,12 @@ yarn install
 
 PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost
 rm $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json || true
+
+# TODO: remove debug output
+echo "Show manifest file"
+cat .openzeppelin/unknown-*.json
+echo "Done"
+
 cp .openzeppelin/unknown-*.json $GITHUB_WORKSPACE/.openzeppelin
 CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
 # TODO: copy contracts.json file when deployed version starts supporting it
@@ -49,6 +55,7 @@ cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data"
 # TODO: remove debug output
 echo "Show manifest file"
 cat $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
+echo "Done"
 
 cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
