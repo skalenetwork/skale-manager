@@ -23,9 +23,17 @@ fi
 
 git fetch --tags > /dev/null
 
+KNOWN_BRANCHES=('stable' 'release-candidate' 'beta')
+# Everything else will be marked as 'develop'
+
 declare -A SUFFIXES=(
     ['release-candidate']='rc'
 )
+
+if [[ ! "${KNOWN_BRANCHES[@]}" =~ "$BRANCH" ]]
+then
+    BRANCH='develop'
+fi
 
 SUFFIX=$BRANCH
 if [[ -n "${SUFFIXES[$BRANCH]}" ]]
