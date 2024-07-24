@@ -23,9 +23,19 @@ fi
 
 git fetch --tags > /dev/null
 
+declare -A SUFFIXES=(
+    ['release-candidate']='rc'
+)
+
+SUFFIX=$BRANCH
+if [[ -n "${SUFFIXES[$BRANCH]}" ]]
+then
+    SUFFIX="${SUFFIXES[$BRANCH]}"
+fi
+
 for (( NUMBER=0; ; NUMBER++ ))
 do
-    FULL_VERSION="$VERSION-$BRANCH.$NUMBER"
+    FULL_VERSION="$VERSION-$SUFFIX.$NUMBER"
     if ! [[ $(git tag -l | grep $FULL_VERSION) ]]; then
         echo "$FULL_VERSION" | tr / -
         break
