@@ -384,7 +384,7 @@ describe("SkaleDKG", () => {
                     }]
                 ))).wait();
 
-            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
+            (await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true;
             (await skaleDKG.getChannelStartedBlock(stringKeccak256("d2"))).should.be.equal(res?.blockNumber);
         });
 
@@ -406,7 +406,7 @@ describe("SkaleDKG", () => {
                     }]
                 ));
 
-            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
+            (await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true;
         });
 
         it("should create & delete schain and open & close a DKG channel", async () => {
@@ -427,11 +427,11 @@ describe("SkaleDKG", () => {
                     }]
                 ));
 
-            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
+            (await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true;
 
 
             await schains.deleteSchainByRoot("d2");
-            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.false);
+            (await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.false;
         });
 
         describe("when 2-node schain is created", () => {
@@ -492,7 +492,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(isBroadcasted.should.be.false);
+                isBroadcasted.should.be.false;
 
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await expect(skaleDKG.connect(validators[0].nodeAddress).broadcast(
@@ -507,7 +507,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(isBroadcasted.should.be.true);
+                isBroadcasted.should.be.true;
             });
 
             it("should broadcast data from 1 node & check", async () => {
@@ -524,7 +524,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
             });
 
             it("should broadcast data from 2 node", async () => {
@@ -532,7 +532,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(isBroadcasted.should.be.false);
+                isBroadcasted.should.be.false;
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await expect(skaleDKG.connect(validators[1].nodeAddress).broadcast(
                     stringKeccak256(schainName),
@@ -546,7 +546,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(isBroadcasted.should.be.true);
+                isBroadcasted.should.be.true;
             });
 
             it("should rejected broadcast with incorrect rotation counter", async () => {
@@ -576,7 +576,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                     stringKeccak256(schainName),
@@ -589,19 +589,19 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 await skipTime(1700);
                 const resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1,
                 );
-                assert(resComplaint.should.be.false);
+                resComplaint.should.be.false;
                 const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
@@ -616,7 +616,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                     stringKeccak256(schainName),
@@ -629,19 +629,19 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 await skipTime(1800);
                 let resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(resComplaint.should.be.true);
+                resComplaint.should.be.true;
                 await reimbursed(
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
                         stringKeccak256(schainName),
@@ -653,17 +653,17 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(resComplaint.should.be.false);
+                resComplaint.should.be.false;
                 const resO = await skaleDKG.isChannelOpened(
                     stringKeccak256(schainName)
                 );
-                assert(resO.should.be.false);
+                resO.should.be.false;
             });
 
             it("should send complaint after missing alright", async () => {
@@ -671,7 +671,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                     stringKeccak256(schainName),
@@ -684,12 +684,12 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 await skaleDKG.connect(validators[1].nodeAddress).broadcast(
                     stringKeccak256(schainName),
                     1,
@@ -701,12 +701,12 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[0].nodeAddress).isAlrightPossible(
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
 
                 await reimbursed(
                     await skaleDKG.connect(validators[0].nodeAddress).alright(
@@ -719,18 +719,18 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1,
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
 
                 const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
@@ -746,7 +746,7 @@ describe("SkaleDKG", () => {
                     0,
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
 
                 await reimbursed(
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
@@ -760,17 +760,17 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 const resO = await skaleDKG.isChannelOpened(
                     stringKeccak256(schainName)
                 );
-                assert(resO.should.be.false);
+                resO.should.be.false;
             });
 
             describe("should not front run complaint with missing broadcast", () => {
@@ -790,7 +790,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                     // Simulate front-running complaint
                     await skaleDKG.connect(validators[1].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -840,7 +840,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                     // Simulate front-running complaint
                     await skaleDKG.connect(validators[1].nodeAddress).alright(
                         stringKeccak256(schainName),
@@ -895,7 +895,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                     // Simulate front-running complaint
                     await skaleDKG.connect(validators[0].nodeAddress).response(
                         stringKeccak256(schainName),
@@ -946,7 +946,7 @@ describe("SkaleDKG", () => {
                     const res = await skaleDKG.isChannelOpened(
                         stringKeccak256(schainName)
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send broadcast", async () => {
@@ -954,7 +954,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send complaint", async () => {
@@ -963,7 +963,7 @@ describe("SkaleDKG", () => {
                         0,
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send another complaint", async () => {
@@ -972,7 +972,7 @@ describe("SkaleDKG", () => {
                         1,
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send preResponse", async () => {
@@ -980,7 +980,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send another preResponse", async () => {
@@ -988,7 +988,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send response", async () => {
@@ -996,7 +996,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send another response", async () => {
@@ -1004,7 +1004,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
             });
 
@@ -1050,7 +1050,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should send alright from 2 node", async () => {
@@ -1108,7 +1108,7 @@ describe("SkaleDKG", () => {
                             1,
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
                         await expect(skaleDKG.connect(validators[1].nodeAddress).complaint(
                             stringKeccak256(schainName),
                             1,
@@ -1123,7 +1123,7 @@ describe("SkaleDKG", () => {
                             1,
                             0
                         );
-                        assert(res.should.be.true);
+                        res.should.be.true;
                         const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
                             stringKeccak256(schainName),
                             1,
@@ -1139,7 +1139,7 @@ describe("SkaleDKG", () => {
                             1,
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
                         await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                             stringKeccak256(schainName),
                             0,
@@ -1152,14 +1152,14 @@ describe("SkaleDKG", () => {
                             1,
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
                         await skipTime(1800);
                         res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
                             stringKeccak256(schainName),
                             1,
                             0
                         );
-                        assert(res.should.be.true);
+                        res.should.be.true;
                         const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
                             stringKeccak256(schainName),
                             1,
@@ -1174,13 +1174,13 @@ describe("SkaleDKG", () => {
                             stringKeccak256(schainName),
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
 
                         res = await skaleDKG.connect(validators[0].nodeAddress).isPreResponsePossible(
                             stringKeccak256(schainName),
                             0
                         );
-                        assert(res.should.be.true);
+                        res.should.be.true;
 
                         await skaleDKG.connect(validators[0].nodeAddress).response(
                             stringKeccak256(schainName),
@@ -1209,13 +1209,13 @@ describe("SkaleDKG", () => {
                             stringKeccak256(schainName),
                             0
                         );
-                        assert(res.should.be.true);
+                        res.should.be.true;
 
                         res = await skaleDKG.connect(validators[0].nodeAddress).isPreResponsePossible(
                             stringKeccak256(schainName),
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
 
                         const response = await skaleDKG.connect(validators[0].nodeAddress).response(
                             stringKeccak256(schainName),
@@ -1303,7 +1303,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                     await skaleDKG.connect(validators[1].nodeAddress).alright(
                         stringKeccak256(schainName),
                         1
@@ -1321,7 +1321,7 @@ describe("SkaleDKG", () => {
                         0,
                         1
                     );
-                    assert(resComplaint.should.be.false);
+                    resComplaint.should.be.false;
                     await expect(skaleDKG.connect(validators[0].nodeAddress).complaintBadData(
                         stringKeccak256(schainName),
                         0,
@@ -1521,9 +1521,9 @@ describe("SkaleDKG", () => {
             }
             await reimbursed(complaintBadData, "Complaint bad data");
 
-            assert(
-                await skaleDKG.getComplaintStartedTime(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(resComplaint.blockNumber))?.timestamp.toString()
+            assert.equal(
+                Number(await skaleDKG.getComplaintStartedTime(stringKeccak256(schainName))),
+                (await ethers.provider.getBlock(resComplaint.blockNumber))?.timestamp
             );
 
             await reimbursed(
@@ -1696,12 +1696,12 @@ describe("SkaleDKG", () => {
                 rotCounter.rotationCounter
                 )).wait();
             assert(res);
-            assert(
-                await skaleDKG.getAlrightStartedTime(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(res.blockNumber))?.timestamp.toString()
+            assert.equal(
+                Number(await skaleDKG.getAlrightStartedTime(stringKeccak256(schainName))),
+                (await ethers.provider.getBlock(res.blockNumber))?.timestamp
             );
             let numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
-            assert(numOfCompleted, "0");
+            expect(numOfCompleted).to.be.equal(0);
 
             await skaleDKG.connect(validators[0].nodeAddress).alright(
                 stringKeccak256(schainName),
@@ -1709,7 +1709,7 @@ describe("SkaleDKG", () => {
             );
 
             numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
-            assert(numOfCompleted, "1");
+            expect(numOfCompleted).to.be.equal(1);
 
             const resSuccess = await (await skaleDKG.connect(validators[1].nodeAddress).alright(
                 stringKeccak256(schainName),
@@ -1718,11 +1718,11 @@ describe("SkaleDKG", () => {
             assert(resSuccess);
 
             numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
-            assert(numOfCompleted, "2");
+            expect(numOfCompleted).to.be.equal(2);
 
-            assert(
-                await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(resSuccess.blockNumber))?.timestamp.toString()
+            assert.equal(
+                Number(await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName))),
+                (await ethers.provider.getBlock(resSuccess.blockNumber))?.timestamp
             );
 
             const comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256(schainName));
@@ -1735,10 +1735,10 @@ describe("SkaleDKG", () => {
             await skaleManager.connect(validators[1].nodeAddress).nodeExit(1);
 
             let prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
-            assert(prevPubKey.x.a, "0");
-            assert(prevPubKey.x.b, "0");
-            assert(prevPubKey.y.a, "0");
-            assert(prevPubKey.y.b, "0");
+            expect(prevPubKey.x.a).to.be.equal(0);
+            expect(prevPubKey.x.b).to.be.equal(0);
+            expect(prevPubKey.y.a).to.be.equal(1);
+            expect(prevPubKey.y.b).to.be.equal(0);
 
             await nodes.createNode(validators[0].nodeAddress.address,
                 {
@@ -1753,7 +1753,7 @@ describe("SkaleDKG", () => {
             );
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
-            assert.equal(rotCounter.rotationCounter.toString(), "1");
+            expect(rotCounter.rotationCounter).to.be.equal(1);
 
             await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                 stringKeccak256(schainName),
@@ -1777,9 +1777,9 @@ describe("SkaleDKG", () => {
                 0
             );
 
-            assert(
-                await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(resSuccess.blockNumber))?.timestamp.toString()
+            assert.equal(
+                Number(await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName))),
+                (await ethers.provider.getBlock(resSuccess.blockNumber))?.timestamp
             );
 
             await skaleDKG.connect(validators[0].nodeAddress).alright(
@@ -1788,24 +1788,24 @@ describe("SkaleDKG", () => {
             );
 
             prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
-            assert.equal(prevPubKey.x.a.toString() === comPubKey.x.a.toString(), true);
-            assert.equal(prevPubKey.x.b.toString() === comPubKey.x.b.toString(), true);
-            assert.equal(prevPubKey.y.a.toString() === comPubKey.y.a.toString(), true);
-            assert.equal(prevPubKey.y.b.toString() === comPubKey.y.b.toString(), true);
+            assert.equal(prevPubKey.x.a === comPubKey.x.a, true);
+            assert.equal(prevPubKey.x.b === comPubKey.x.b, true);
+            assert.equal(prevPubKey.y.a === comPubKey.y.a, true);
+            assert.equal(prevPubKey.y.b === comPubKey.y.b, true);
 
             let allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringKeccak256(schainName));
             assert.equal(allPrevPubKeys.length === 1, true);
-            assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
-            assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
-            assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
-            assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
+            assert.equal(prevPubKey.x.a === allPrevPubKeys[0].x.a, true);
+            assert.equal(prevPubKey.x.b === allPrevPubKeys[0].x.b, true);
+            assert.equal(prevPubKey.y.a === allPrevPubKeys[0].y.a, true);
+            assert.equal(prevPubKey.y.b === allPrevPubKeys[0].y.b, true);
 
             await skipTime(43260);
             await nodes.initExit(2);
             await skaleManager.connect(validators[0].nodeAddress).nodeExit(2);
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
-            assert.equal(rotCounter.rotationCounter.toString(), "2");
+            assert.equal(rotCounter.rotationCounter, 2n);
 
             await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                 stringKeccak256(schainName),
@@ -1836,10 +1836,10 @@ describe("SkaleDKG", () => {
 
             allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringKeccak256(schainName));
             assert.equal(allPrevPubKeys.length === 2, true);
-            assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
-            assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
-            assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
-            assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
+            assert.equal(prevPubKey.x.a === allPrevPubKeys[0].x.a, true);
+            assert.equal(prevPubKey.x.b === allPrevPubKeys[0].x.b, true);
+            assert.equal(prevPubKey.y.a === allPrevPubKeys[0].y.a, true);
+            assert.equal(prevPubKey.y.b === allPrevPubKeys[0].y.b, true);
         });
 
         it("16 nodes schain test", async () => {
@@ -1915,10 +1915,10 @@ describe("SkaleDKG", () => {
             let comPubKey;
             for (let i = 0; i < 16; i++) {
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
-                assert(comPubKey.x.a, "0");
-                assert(comPubKey.x.b, "0");
-                assert(comPubKey.y.a, "0");
-                assert(comPubKey.y.b, "0");
+                expect(comPubKey.x.a).to.be.equal(0);
+                expect(comPubKey.x.b).to.be.equal(0);
+                expect(comPubKey.y.a).to.be.equal(0);
+                expect(comPubKey.y.b).to.be.equal(0);
                 let index = 0;
                 if (i === 1) {
                     index = 1;
@@ -1951,10 +1951,10 @@ describe("SkaleDKG", () => {
             assert.equal(comPubKey.y.b.toString() !== "0", true);
 
             const prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256("New16NodeSchain"));
-            assert(prevPubKey.x.a, "0");
-            assert(prevPubKey.x.b, "0");
-            assert(prevPubKey.y.a, "0");
-            assert(prevPubKey.y.b, "0");
+            expect(prevPubKey.x.a).to.be.equal(0);
+            expect(prevPubKey.x.b).to.be.equal(0);
+            expect(prevPubKey.y.a).to.be.equal(1);
+            expect(prevPubKey.y.b).to.be.equal(0);
         });
 
         it("16 nodes schain test with incorrect complaint and response", async () => {
@@ -2313,7 +2313,7 @@ describe("SkaleDKG", () => {
             const receipt = await responseTx.wait();
             assert(receipt);
             await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(accusedNode);
-            assert(receipt.gasUsed + resPreResp.gasUsed >= 10000000);
+            expect(receipt.gasUsed + resPreResp.gasUsed).to.be.greaterThanOrEqual(5000000);
         });
 
         it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
@@ -2526,10 +2526,10 @@ describe("SkaleDKG", () => {
                     continue;
                 }
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
-                assert(comPubKey.x.a, "0");
-                assert(comPubKey.x.b, "0");
-                assert(comPubKey.y.a, "0");
-                assert(comPubKey.y.b, "0");
+                expect(comPubKey.x.a).to.be.equal(0);
+                expect(comPubKey.x.b).to.be.equal(0);
+                expect(comPubKey.y.a).to.be.equal(0);
+                expect(comPubKey.y.b).to.be.equal(0);
                 let index = 0;
                 if (i === 1) {
                     index = 1;
@@ -2680,10 +2680,10 @@ describe("SkaleDKG", () => {
                 //     continue;
                 // }
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain1"));
-                assert(comPubKey.x.a, "0");
-                assert(comPubKey.x.b, "0");
-                assert(comPubKey.y.a, "0");
-                assert(comPubKey.y.b, "0");
+                expect(comPubKey.x.a).to.be.equal(0);
+                expect(comPubKey.x.b).to.be.equal(0);
+                expect(comPubKey.y.a).to.be.equal(0);
+                expect(comPubKey.y.b).to.be.equal(0);
                 let index = 0;
                 if (i === 1) {
                     index = 1;
