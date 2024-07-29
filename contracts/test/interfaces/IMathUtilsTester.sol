@@ -23,6 +23,11 @@ pragma solidity 0.8.17;
 
 
 interface IMathUtilsTester {
+    event UnderflowError(
+        uint256 a,
+        uint256 b
+    );
+
     function boundedSub(uint256 a, uint256 b) external returns (uint256 result);
     function boundedSubWithoutEvent(uint256 a, uint256 b) external pure returns (uint256 result);
     function muchGreater(uint256 a, uint256 b) external pure returns (bool greater);

@@ -1,4 +1,4 @@
-import chai from "chai";
+import chai, {expect} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {ethers} from "hardhat"
 import {MathUtilsTester} from "../../typechain-types";
@@ -32,10 +32,8 @@ describe("MathUtils", () => {
         it("should return 0 if reduced is less than subtracted and emit event", async () => {
             (await mathUtils.boundedSub.staticCall(3, 5)).should.be.equal(0);
 
-            const factory = await ethers.getContractFactory("MathUtils");
-            const mathUtilsLib = factory.attach(mathUtils);
-            await mathUtils.boundedSub(3, 5)
-                .should.emit(mathUtilsLib, "UnderflowError")
+            await expect(mathUtils.boundedSub(3, 5))
+                .to.emit(mathUtils, "UnderflowError")
                 .withArgs(3, 5);
         });
     });
