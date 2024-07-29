@@ -58,7 +58,7 @@ class SkaleManagerUpgrader extends Upgrader {
 
 async function main() {
     const upgrader = new SkaleManagerUpgrader(
-        "1.10.0",
+        "1.11.0",
         await getSkaleManagerAbiAndAddresses(),
         contracts,
     );
