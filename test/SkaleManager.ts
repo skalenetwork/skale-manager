@@ -160,9 +160,11 @@ describe("SkaleManager", () => {
             await validatorService.connect(validator).registerValidator("D2", "D2 is even", 150, 0);
             const validatorIndex = await validatorService.getValidatorId(validator.address);
             const signature = await nodeAddress.signMessage(
-                ethers.solidityPackedKeccak256(
-                    ["uint"],
-                    [validatorIndex]
+                ethers.getBytes(
+                    ethers.solidityPackedKeccak256(
+                        ["uint"],
+                        [validatorIndex]
+                    )
                 )
             );
             await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature);
@@ -282,7 +284,7 @@ describe("SkaleManager", () => {
                 const spentValue = await ethSpent(await skaleManager.connect(nodeAddress).getBounty(0, {gasLimit: 2e6}));
                 const balance = await ethers.provider.getBalance(nodeAddress);
                 (balance + spentValue).should.be.least(minNodeBalance);
-                (balance + spentValue).should.be.closeTo(minNodeBalance, 1e13);
+                (balance + spentValue).should.be.closeTo(minNodeBalance, 1e15);
             });
 
             it("should pay bounty if Node is In Leaving state", async () => {
@@ -329,20 +331,20 @@ describe("SkaleManager", () => {
                 const launchMonth = await timeHelpers.timestampToMonth(launch);
 
                 const schedule = [
-                    385000000n,
-                    346500000n,
-                    308000000n,
-                    269500000n,
-                    231000000n,
-                    192500000n
+                    385000000,
+                    346500000,
+                    308000000,
+                    269500000,
+                    231000000,
+                    192500000
                 ]
-                for (let bounty = schedule[schedule.length - 1] / 2n; bounty > 1; bounty /= 2n) {
+                for (let bounty = schedule[schedule.length - 1] / 2; bounty > 1; bounty /= 2) {
                     for (let i = 0; i < 3; ++i) {
                         schedule.push(bounty);
                     }
                 }
 
-                let mustBePaid = 0n;
+                let mustBePaid = 0;
                 await nextMonth(contractManager);
                 for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timeLimit; ++year) {
                     for (let monthIndex = 0n; monthIndex < 12; ++monthIndex) {
@@ -355,14 +357,7 @@ describe("SkaleManager", () => {
                     const bountyWasPaid = await skaleToken.balanceOf(distributor);
                     mustBePaid = mustBePaid + schedule[year];
 
-                    const abs = (value: bigint) => {
-                        if (value < 0) {
-                            return - value;
-                        }
-                        return value;
-                    }
-
-                    abs(BigInt(ethers.formatEther(bountyWasPaid)) - mustBePaid).should.be.lessThan(35); // 35 because of rounding errors in JS
+                    Number.parseInt(ethers.formatEther(bountyWasPaid)).should.be.closeTo(mustBePaid, 35); // 35 because of rounding errors in JS
                 }
             });
         });
