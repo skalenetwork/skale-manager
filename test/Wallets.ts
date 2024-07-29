@@ -297,8 +297,8 @@ describe("Wallets", () => {
                 (balance + spentValue).should.be.closeTo(minNodeBalance, 1e13);
 
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);
-                (initialBalance - spentValue - validatorBalance)
-                    .should.be.almost(0, Number(ethers.parseEther(tolerance.toString())));
+                (initialBalance - validatorBalance)
+                    .should.be.closeTo(spentValue, Number(ethers.parseEther(tolerance.toString())));
             });
         });
     });
