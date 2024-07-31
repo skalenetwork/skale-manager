@@ -4,9 +4,9 @@ on:
     types: [closed]
     branches:
       - 'v*.*.*'
-      - master
       - develop
       - beta
+      - release-candidate
       - stable
   push:
     tags:
