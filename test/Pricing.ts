@@ -291,7 +291,7 @@ describe("Pricing", () => {
                     const correctPrice = await getPrice(await pricing.lastUpdated() - lastUpdated);
 
                     receivedPrice.should.be.equal(correctPrice);
-                    // oldPrice.should.be.below(receivedPrice);
+                    oldPrice.should.be.below(receivedPrice);
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
