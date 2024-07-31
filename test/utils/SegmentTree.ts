@@ -109,14 +109,6 @@ describe("SegmentTree", () => {
         describe("move elements", () => {
             it("should add elem to some place", async () => {
                 await segmentTree.addToPlace(53, 12);
-                // let index = 0;
-                // for (let i = 1; i <= 8; i++) {
-                //     let str = "";
-                //     for (index; index <= 2 ** i - 2; index++) {
-                //         str += (await segmentTree.getElem(index)).toString() + " ";
-                //     }
-                //     console.log(str);
-                // }
                 (await segmentTree.getElem(0)).should.be.equal(162);
                 let lastLeaf = 180;
                 while (lastLeaf > 1) {
@@ -344,8 +336,6 @@ describe("SegmentTree", () => {
                 for(let i = 0; i < 180; i++) {
                     const place = (await segmentTree.getRandomElem(78));
                     await segmentTree.removeFromPlace(place, 1);
-                    // console.log("Place found!!!!!!!!!!!!")
-                    // console.log(place);
                 }
                 (await segmentTree.getRandomElem(78)).should.be.equal(0);
                 (await segmentTree.getRandomElem(77)).should.be.equal(77);
@@ -356,10 +346,8 @@ describe("SegmentTree", () => {
                 await segmentTree.removeFromPlace(128, 100); // make 50 nodes
                 for(let i = 0; i < 200; i++) { // 200 times we could repeat removing
                     const place = (await segmentTree.getRandomElem(schainPlace));
-                    // console.log("New place ", place);
                     await segmentTree.removeFromPlace(place, 1);
                     if (place - schainPlace > 0) {
-                        // console.log(place - schainPlace);
                         await segmentTree.addToPlace(place - schainPlace, 1);
                     }
                 }
@@ -372,9 +360,7 @@ describe("SegmentTree", () => {
                 await segmentTree.removeFromPlace(128, 100); // make 50 nodes
                 for(let i = 0; i < 200; i++) { // 200 times we could repeat removing
                     const place = (await segmentTree.getRandomElem(schainPlace));
-                    // console.log("New place ", place);
                     if (place - schainPlace > 0) {
-                        // console.log(place - schainPlace);
                         await segmentTree.moveFromPlaceToPlace(place, place - schainPlace, 1);
                     } else {
                         await segmentTree.removeFromPlace(place, 1);

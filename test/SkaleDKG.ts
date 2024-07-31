@@ -2676,9 +2676,6 @@ describe("SkaleDKG", () => {
             }
             let comPubKey;
             for (let i = 0; i < 16; i++) {
-                // if (i.toString() === accusedNode) {
-                //     continue;
-                // }
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain1"));
                 expect(comPubKey.x.a).to.be.equal(0);
                 expect(comPubKey.x.b).to.be.equal(0);
