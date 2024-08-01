@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolder,
+import {ConstantsHolder,
          ContractManager,
          Nodes,
          SchainsInternal,
@@ -11,27 +11,27 @@ import { ConstantsHolder,
          ValidatorService,
          NodeRotation,
          Wallets} from "../typechain-types";
-import { BigNumber, Wallet } from "ethers";
-import { skipTime, currentTime } from "./tools/time";
-import { privateKeys } from "./tools/private-keys";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
-import { deployWallets } from "./tools/deploy/wallets";
-import { fastBeforeEach } from "./tools/mocha";
-import { stringKeccak256 } from "./tools/hashes";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { schainParametersType, SchainType } from "./tools/types";
+import {Wallet} from "ethers";
+import {skipTime, currentTime} from "./tools/time";
+import {privateKeys} from "./tools/private-keys";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {assert, expect} from "chai";
+import {deployWallets} from "./tools/deploy/wallets";
+import {fastBeforeEach} from "./tools/mocha";
+import {stringKeccak256} from "./tools/hashes";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {schainParametersType, SchainType} from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -69,10 +69,10 @@ describe("Schains", () => {
         nodeAddress3 = new Wallet(String(privateKeys[5])).connect(ethers.provider);
         nodeAddress4 = new Wallet(String(privateKeys[0])).connect(ethers.provider);
 
-        await richGuy1.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
-        await richGuy2.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
-        await richGuy3.sendTransaction({to: nodeAddress3.address, value: ethers.utils.parseEther("10000")});
-        await richGuy4.sendTransaction({to: nodeAddress4.address, value: ethers.utils.parseEther("10000")});
+        await richGuy1.sendTransaction({to: nodeAddress1.address, value: ethers.parseEther("10000")});
+        await richGuy2.sendTransaction({to: nodeAddress2.address, value: ethers.parseEther("10000")});
+        await richGuy3.sendTransaction({to: nodeAddress3.address, value: ethers.parseEther("10000")});
+        await richGuy4.sendTransaction({to: nodeAddress4.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
@@ -81,11 +81,11 @@ describe("Schains", () => {
         // await contractManager.setContractsAddress("Nodes", nodes.address);
         schainsInternal = await deploySchainsInternalMock(contractManager);
         schainsInternal2 = await deploySchainsInternal(contractManager);
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
         schains = await deploySchains(contractManager);
         validatorService = await deployValidatorService(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
         skaleManager = await deploySkaleManager(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
         wallets = await deployWallets(contractManager);
@@ -116,14 +116,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 5,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -131,7 +131,7 @@ describe("Schains", () => {
         });
 
         it("should not allow everyone to create schains as the foundation", async () => {
-            await schains.addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, [])
+            await schains.addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, [])
                 .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
         })
 
@@ -139,14 +139,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 5,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: 6, // wrong type
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -157,7 +157,7 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 5,
-                ethers.utils.defaultAbiCoder.encode(["uint", "uint8", "uint16"], [5, 6, 0])
+                ethers.AbiCoder.defaultAbiCoder().encode(["uint", "uint8", "uint16"], [5, 6, 0])
             ).should.be.eventually.rejected;
         });
 
@@ -166,14 +166,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 price.toString(),
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "Mainnet", // wrong name
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -185,14 +185,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 price.toString(),
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "", // wrong name
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -204,14 +204,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 price.toString(),
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -238,14 +238,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     owner.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -254,14 +254,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     owner.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -297,14 +297,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -360,14 +360,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     owner.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -502,9 +502,9 @@ describe("Schains", () => {
                 }
 
                 const schainName = "d2";
-                const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
+                const schainHash = ethers.solidityPackedKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains.address, owner.address, []);
+                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains, owner.address, []);
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
 
                 await skaleManager.connect(nodeAddress1).createNode(
@@ -572,7 +572,6 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 5).should.be.eventually.rejectedWith("No previous node");
-
             });
 
             it("should get previous nodes after DKG failure",  async () => {
@@ -590,9 +589,9 @@ describe("Schains", () => {
                 }
 
                 const schainName = "d2";
-                const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
+                const schainHash = ethers.solidityPackedKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains.address, owner.address, []);
+                await schains.addSchainByFoundation(5, SchainType.TEST, 0, schainName, schains, owner.address, []);
                 await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("d2"), {value: 1e20.toString()});
 
                 const verificationVector = [{
@@ -762,7 +761,6 @@ describe("Schains", () => {
                 await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
                 await nodeRotation.getPreviousNode(schainHash, 5).should.be.eventually.rejectedWith("No previous node");
-
             });
         });
 
@@ -788,14 +786,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -817,14 +815,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -839,14 +837,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -865,14 +863,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -887,14 +885,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -905,14 +903,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -944,14 +942,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -966,14 +964,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -988,14 +986,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1010,14 +1008,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d5",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1036,14 +1034,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: [
                                 {
                                     name: "one",
@@ -1087,7 +1085,7 @@ describe("Schains", () => {
             it("should allow the foundation to create schain without tokens", async () => {
                 const schainCreator = holder;
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), schainCreator.address);
-                await schains.connect(schainCreator).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
+                await schains.connect(schainCreator).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1104,16 +1102,16 @@ describe("Schains", () => {
                 const fallbackMock = await (await ethers.getContractFactory("FallbackMock")).deploy(fallbackGasUsage);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
                 await skaleManager.grantRole(await skaleManager.SCHAIN_REMOVAL_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, fallbackMock.address, holder.address, []);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, fallbackMock, holder.address, []);
                 await wallets.rechargeSchainWallet(schainHash, {value: amountInWei})
-                await ethers.provider.getBalance(fallbackMock.address).should.be.eventually.equal(0);
+                await ethers.provider.getBalance(fallbackMock).should.be.eventually.equal(0);
                 await skaleManager.connect(holder).deleteSchainByRoot(schainName);
-                await ethers.provider.getBalance(fallbackMock.address).should.be.eventually.equal(amountInWei);
+                await ethers.provider.getBalance(fallbackMock).should.be.eventually.equal(amountInWei);
             });
 
             it("should assign schain creator on different address", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", holder.address, ethers.constants.AddressZero, []);
+                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, "d2", holder.address, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1124,15 +1122,15 @@ describe("Schains", () => {
 
             it("should store originator address if schain owner is a smart contract", async () => {
                 const schainName = "d2";
-                const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
+                const schainHash = ethers.solidityPackedKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
-                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, schains.address, owner.address, []);
+                await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, schains, owner.address, []);
                 await schainsInternal.getSchainOriginator(schainHash).should.be.eventually.equal(owner.address);
             });
 
             it("should not store originator address if schain owner is not a smart contract", async () => {
                 const schainName = "d2";
-                const schainHash = ethers.utils.solidityKeccak256(["string"], [schainName]);
+                const schainHash = ethers.solidityPackedKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
                 await schains.addSchainByFoundation(5, SchainType.MEDIUM_TEST, 0, schainName, owner.address, owner.address, []);
                 await schainsInternal.getSchainOriginator(schainHash)
@@ -1162,14 +1160,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.LARGE,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1185,14 +1183,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.LARGE,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1201,14 +1199,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.LARGE,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1217,7 +1215,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create small schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1228,7 +1226,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create medium schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.MEDIUM, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1239,7 +1237,7 @@ describe("Schains", () => {
 
             it("should assign schain creator on different address and create large schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, SchainType.LARGE, 0, "d2", ethers.constants.AddressZero, ethers.constants.AddressZero, []);
+                await schains.connect(holder).addSchainByFoundation(5, SchainType.LARGE, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, []);
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -1269,7 +1267,7 @@ describe("Schains", () => {
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
-                await contractManager.setContractsAddress("SchainsInternal", schainsInternal2.address);
+                await contractManager.setContractsAddress("SchainsInternal", schainsInternal2);
             });
 
             it("should check node addresses after schain creation", async () => {
@@ -1277,14 +1275,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "D2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1302,14 +1300,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "D2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1359,14 +1357,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.SMALL,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1394,14 +1392,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: 6,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1429,14 +1427,14 @@ describe("Schains", () => {
                 await schains.addSchain(
                     holder.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: 6,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1463,14 +1461,14 @@ describe("Schains", () => {
                     await schains.addSchain(
                         holder.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.SMALL,
                             nonce: 0,
                             name: "D2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1482,14 +1480,14 @@ describe("Schains", () => {
                     await schains.addSchain(
                         holder.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.SMALL,
                             nonce: 0,
                             name: "D2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1522,24 +1520,22 @@ describe("Schains", () => {
                         "D2",
                     ).should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
-
             });
 
             describe("when test schain is created", () => {
-
                 fastBeforeEach(async () => {
                     const deposit = await schains.getSchainPrice(4, 5);
                     await schains.addSchain(
                         holder.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: "D2",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         )
@@ -1551,14 +1547,14 @@ describe("Schains", () => {
                     await schains.addSchain(
                         holder.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: "D2",
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         )
@@ -1566,7 +1562,6 @@ describe("Schains", () => {
                 });
 
                 it("should be able to delete schain", async () => {
-
                     await schains.deleteSchain(
                         holder.address,
                         "D2",
@@ -1575,15 +1570,12 @@ describe("Schains", () => {
                 });
 
                 it("should fail on deleting schain if owner is wrong", async () => {
-
                     await schains.deleteSchain(
                         nodeAddress1.address,
                         "D2",
                     ).should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
-
             });
-
         });
     });
 
@@ -1611,7 +1603,7 @@ describe("Schains", () => {
 
         it("of test schain", async () => {
             const price = await schains.getSchainPrice(4, 5);
-            const correctPrice = BigNumber.from("1000000000000000000");
+            const correctPrice = 1000000000000000000n;
 
             price.should.be.equal(correctPrice);
         });
@@ -1629,9 +1621,9 @@ describe("Schains", () => {
     });
 
     describe("when 4 nodes, 2 schains and 2 additional nodes created", () => {
-        const ACTIVE = 0;
-        const LEAVING = 1;
-        const LEFT = 2;
+        const ACTIVE = 0n;
+        const LEAVING = 1n;
+        const LEFT = 2n;
         let nodeStatus;
 
         fastBeforeEach(async () => {
@@ -1651,14 +1643,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1670,14 +1662,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1713,9 +1705,9 @@ describe("Schains", () => {
             await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
             await nodes.initExit(0);
             await skaleManager.connect(nodeAddress1).nodeExit(0);
-            const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
-            const _12hours = 43200;
-            assert.equal(await currentTime(), leavingTimeOfNode-_12hours);
+            const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation;
+            const _12hours = 43200n;
+            assert.equal(BigInt(await currentTime()), leavingTimeOfNode -_12hours);
             const rotatedSchain = (await nodeRotation.getLeavingHistory(0))[0].schainHash;
             const rotationForRotatedSchain = await nodeRotation.getRotation(rotatedSchain);
             rotationForRotatedSchain.newNodeIndex.should.be.not.equal(0);
@@ -1780,7 +1772,7 @@ describe("Schains", () => {
             let zeroPositionD3 = 0;
             let iter = 0;
             for (const nodeIndex of arrayD3) {
-                if (nodeIndex.toNumber() === 0) {
+                if (nodeIndex === 0n) {
                     zeroPositionD3 = iter;
                 }
                 iter++;
@@ -1789,18 +1781,18 @@ describe("Schains", () => {
             let exist5 = false;
             iter = 0;
             for (const nodeIndex of newArrayD3) {
-                if (nodeIndex.toNumber() === 4) {
+                if (nodeIndex === 4n) {
                     exist4 = true;
                 }
-                if (nodeIndex.toNumber() === 5) {
+                if (nodeIndex === 5n) {
                     exist5 = true;
                 }
                 iter++;
             }
             assert.equal(exist4 && exist5, false);
             assert.equal(
-                (exist5 && newArrayD3[zeroPositionD3].toNumber() === 5) ||
-                (exist4 && newArrayD3[zeroPositionD3].toNumber() === 4),
+                (exist5 && newArrayD3[zeroPositionD3] === 5n) ||
+                (exist4 && newArrayD3[zeroPositionD3] === 4n),
                 true
             );
             await skaleDKG.setSuccessfulDKGPublic(
@@ -1811,7 +1803,7 @@ describe("Schains", () => {
             let zeroPositionD2 = 0;
             iter = 0;
             for (const nodeIndex of arrayD2) {
-                if (nodeIndex.toNumber() === 0) {
+                if (nodeIndex === 0n) {
                     zeroPositionD2 = iter;
                 }
                 iter++;
@@ -1820,18 +1812,18 @@ describe("Schains", () => {
             exist5 = false;
             iter = 0;
             for (const nodeIndex of newArrayD2) {
-                if (nodeIndex.toNumber() === 4) {
+                if (nodeIndex === 4n) {
                     exist4 = true;
                 }
-                if (nodeIndex.toNumber() === 5) {
+                if (nodeIndex === 5n) {
                     exist5 = true;
                 }
                 iter++;
             }
             assert.equal(exist4 && exist5, false);
             assert.equal(
-                (exist5 && newArrayD2[zeroPositionD2].toNumber() === 5) ||
-                (exist4 && newArrayD2[zeroPositionD2].toNumber() === 4),
+                (exist5 && newArrayD2[zeroPositionD2] === 5n) ||
+                (exist4 && newArrayD2[zeroPositionD2] === 4n),
                 true
             );
             await skaleDKG.setSuccessfulDKGPublic(
@@ -1844,7 +1836,7 @@ describe("Schains", () => {
             let onePositionD3 = 0;
             iter = 0;
             for (const nodeIndex of arrayD3) {
-                if (nodeIndex.toNumber() === 1) {
+                if (nodeIndex === 1n) {
                     onePositionD3 = iter;
                 }
                 iter++;
@@ -1853,18 +1845,18 @@ describe("Schains", () => {
             exist5 = false;
             iter = 0;
             for (const nodeIndex of newNewArrayD3) {
-                if (nodeIndex.toNumber() === 4 && iter !== zeroPositionD3) {
+                if (nodeIndex === 4n && iter !== zeroPositionD3) {
                     exist4 = true;
                 }
-                if (nodeIndex.toNumber() === 5 && iter !== zeroPositionD3) {
+                if (nodeIndex === 5n && iter !== zeroPositionD3) {
                     exist5 = true;
                 }
                 iter++;
             }
             assert.equal(exist4 && exist5, false);
             assert.equal(
-                (exist5 && newNewArrayD3[onePositionD3].toNumber() === 5) ||
-                (exist4 && newNewArrayD3[onePositionD3].toNumber() === 4),
+                (exist5 && newNewArrayD3[onePositionD3] === 5n) ||
+                (exist4 && newNewArrayD3[onePositionD3] === 4n),
                 true
             );
             await skaleDKG.setSuccessfulDKGPublic(
@@ -1875,7 +1867,7 @@ describe("Schains", () => {
             let onePositionD2 = 0;
             iter = 0;
             for (const nodeIndex of arrayD2) {
-                if (nodeIndex.toNumber() === 1) {
+                if (nodeIndex === 1n) {
                     onePositionD2 = iter;
                 }
                 iter++;
@@ -1884,18 +1876,18 @@ describe("Schains", () => {
             exist5 = false;
             iter = 0;
             for (const nodeIndex of newNewArrayD2) {
-                if (nodeIndex.toNumber() === 4 && iter !== zeroPositionD2) {
+                if (nodeIndex === 4n && iter !== zeroPositionD2) {
                     exist4 = true;
                 }
-                if (nodeIndex.toNumber() === 5 && iter !== zeroPositionD2) {
+                if (nodeIndex === 5n && iter !== zeroPositionD2) {
                     exist5 = true;
                 }
                 iter++;
             }
             assert.equal(exist4 && exist5, false);
             assert.equal(
-                (exist5 && newNewArrayD2[onePositionD2].toNumber() === 5) ||
-                (exist4 && newNewArrayD2[onePositionD2].toNumber() === 4),
+                (exist5 && newNewArrayD2[onePositionD2] === 5n) ||
+                (exist4 && newNewArrayD2[onePositionD2] === 4n),
                 true
             );
             await skaleDKG.setSuccessfulDKGPublic(
@@ -1954,14 +1946,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1971,14 +1963,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -1988,14 +1980,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2004,7 +1996,7 @@ describe("Schains", () => {
                 stringKeccak256("d4"),
             );
             const nodesInGroupBN = await schainsInternal.getNodesInGroup(stringKeccak256("d4"));
-            const nodeInGroup = nodesInGroupBN.map((value: BigNumber) => value.toNumber())[0];
+            const nodeInGroup = nodesInGroupBN.map((value: bigint) => value)[0];
             await nodes.initExit(nodeInGroup);
             await skaleManager.connect(nodeAddress1).nodeExit(nodeInGroup);
         });
@@ -2261,7 +2253,6 @@ describe("Schains", () => {
     });
 
     describe("when 6 nodes, 4 schains and 2 rotations(Kavoon test)", () => {
-
         fastBeforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 6;
@@ -2279,14 +2270,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.MEDIUM_TEST,
                         nonce: 0,
                         name: "d1",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -2298,14 +2289,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2317,14 +2308,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2336,14 +2327,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2351,7 +2342,6 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d4"),
             );
-
         });
 
         it("should rotate 1 node with 3 schains", async () => {
@@ -2419,7 +2409,6 @@ describe("Schains", () => {
     });
 
     describe("when 8 nodes, 4 schains and 2 rotations(Kavoon test)", () => {
-
         fastBeforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 6;
@@ -2453,14 +2442,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.MEDIUM_TEST,
                         nonce: 0,
                         name: "d1",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -2472,14 +2461,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2491,14 +2480,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d3",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2510,14 +2499,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: "d4",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -2525,7 +2514,6 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d4"),
             );
-
         });
 
         it("should rotate 1 node with 3 schains", async () => {
@@ -2726,16 +2714,16 @@ describe("Schains", () => {
             }
 
             const rotDelay = await constantsHolder.rotationDelay();
-            const tenSecDelta = 10;
+            const tenSecDelta = 10n;
 
-            await skipTime(rotDelay.toNumber() - tenSecDelta);
+            await skipTime(rotDelay - tenSecDelta);
 
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 (await nodeRotation.isRotationInProgress(schainHash)).should.be.true;
                 (await nodeRotation.isNewNodeFound(schainHash)).should.be.false;
             }
 
-            await skipTime(tenSecDelta + 1);
+            await skipTime(tenSecDelta + 1n);
 
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
@@ -2757,14 +2745,13 @@ describe("Schains", () => {
                 }
             }
 
-            await skipTime(rotDelay.toNumber() + 1);
+            await skipTime(rotDelay + 1n);
 
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
             }
 
             if (!(await nodes.isNodeLeft(rotIndex))) {
-
                 while (!(await nodes.isNodeLeft(rotIndex))) {
                     await skaleManager.connect(senderAddress).nodeExit(rotIndex);
                 }
@@ -2784,18 +2771,16 @@ describe("Schains", () => {
                     }
                 }
 
-                await skipTime(rotDelay.toNumber() + 1);
+                await skipTime(rotDelay + 1n);
 
                 for (const schainHash of Array.from(schainHashes).reverse()) {
                     (await nodeRotation.isRotationInProgress(schainHash)).should.be.false;
                 }
             }
-
         });
     });
 
     describe("when 17 nodes, 1 schain and remove schain type", () => {
-
         const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
             [
                 {
@@ -2880,14 +2865,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: schainType,
                         nonce: 0,
                         name: schainName,
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -3050,14 +3035,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: 6,
                             nonce: 0,
                             name: "d2",
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
@@ -3076,7 +3061,7 @@ describe("Schains", () => {
                 "some.domain.name");
             const rotIndex2 = 1;
             await nodes.initExit(rotIndex2);
-            while(await nodes.getNodeStatus(rotIndex2) !== 2) {
+            while(await nodes.getNodeStatus(rotIndex2) !== 2n) {
                 await skaleManager.connect(nodeAddress1).nodeExit(rotIndex2);
             }
             await skaleDKG.setSuccessfulDKGPublic(
@@ -3128,7 +3113,7 @@ describe("Schains", () => {
 
             await nodes.isNodeLeft(leavingNodeIndex).should.eventually.be.true;
 
-            const numberOfNodes = (await nodes.getNumberOfNodes()).toNumber();
+            const numberOfNodes = (await nodes.getNumberOfNodes());
             for(let i = 0; i < numberOfNodes; i++) {
                 if (i !== leavingNodeIndex) {
                     expect((await nodes.spaceOfNodes(i)).freeSpace).to.be.equal(128);
@@ -3150,14 +3135,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: lifetime,
                         typeOfSchain: schainType,
                         nonce: 0,
                         name: schain2Name,
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -3169,14 +3154,14 @@ describe("Schains", () => {
             await schains.addSchain(
                 holder.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: lifetime,
                         typeOfSchain: schainType,
                         nonce: 0,
                         name: schain3Name,
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -3214,11 +3199,11 @@ describe("Schains", () => {
 
             const [ slots ] = await schainsInternal.schainTypes(schainType);
 
-            const numberOfNodes = (await nodes.getNumberOfNodes()).toNumber();
+            const numberOfNodes = await nodes.getNumberOfNodes();
             for(let i = 0; i < numberOfNodes; i++) {
                 if (i !== leavingNodeIndex) {
-                    const numberOfSchains = (await schainsInternal.getActiveSchains(i)).length;
-                    expect((await nodes.spaceOfNodes(i)).freeSpace).to.be.equal(128 - numberOfSchains * slots);
+                    const numberOfSchains = BigInt((await schainsInternal.getActiveSchains(i)).length);
+                    expect((await nodes.spaceOfNodes(i)).freeSpace).to.be.equal(128n - numberOfSchains * slots);
                 }
             }
         });

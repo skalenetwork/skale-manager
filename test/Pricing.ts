@@ -1,32 +1,32 @@
-import { Wallet } from "ethers";
+import {Wallet} from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
-import { ContractManager,
+import {ContractManager,
          Nodes,
          Pricing,
          SchainsInternal,
          ValidatorService,
          ConstantsHolder,
-         NodeRotation } from "../typechain-types";
+         NodeRotation} from "../typechain-types";
 
-import { privateKeys } from "./tools/private-keys";
+import {privateKeys} from "./tools/private-keys";
 
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deployPricing } from "./tools/deploy/pricing";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { skipTime, currentTime } from "./tools/time";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deploySchains } from "./tools/deploy/schains";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
-import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { fastBeforeEach } from "./tools/mocha";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deployPricing} from "./tools/deploy/pricing";
+import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
+import {skipTime, currentTime} from "./tools/time";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deploySchains} from "./tools/deploy/schains";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -70,7 +70,7 @@ describe("Pricing", () => {
         nodeRotation = await deployNodeRotation(contractManager);
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
-        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
@@ -90,9 +90,9 @@ describe("Pricing", () => {
 
     describe("on initialized contracts", () => {
         fastBeforeEach(async () => {
-            await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.constants.AddressZero, 10, 2);
-            await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.constants.AddressZero, 10, 4);
-            await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.constants.AddressZero, 10, 8);
+            await schainsInternal.initializeSchain("BobSchain", holder.address, ethers.ZeroAddress, 10, 2);
+            await schainsInternal.initializeSchain("DavidSchain", holder.address, ethers.ZeroAddress, 10, 4);
+            await schainsInternal.initializeSchain("JacobSchain", holder.address, ethers.ZeroAddress, 10, 8);
             await nodes.createNode(
                 nodeAddress1.address,
                 {
@@ -140,7 +140,6 @@ describe("Pricing", () => {
                     name: "elvis4",
                     domainName: "some.domain.name"
                 });
-
         });
 
         it("should increase number of schains", async () => {
@@ -159,15 +158,13 @@ describe("Pricing", () => {
             const jacobSchainHash = stringKeccak256("JacobSchain");
 
             fastBeforeEach(async () => {
-
                 await schainsInternal.createGroupForSchain(bobSchainHash, 1, 32);
                 await schainsInternal.createGroupForSchain(davidSchainHash, 1, 32);
                 await schainsInternal.createGroupForSchain(jacobSchainHash, 2, 128);
-
             });
 
             async function getLoadCoefficient() {
-                const numberOfNodes = (await nodes.getNumberOfNodes()).toNumber();
+                const numberOfNodes = await nodes.getNumberOfNodes();
                 let sumNode = 0;
                 for (let i = 0; i < numberOfNodes; i++) {
                     if (await nodes.isNodeActive(i)) {
@@ -175,13 +172,13 @@ describe("Pricing", () => {
                         for (const schain of getActiveSchains) {
                             const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                             const isNodeLeft = await nodes.isNodeLeft(i);
-                            if (partOfNode !== 0  && !isNodeLeft) {
-                                sumNode += partOfNode;
+                            if (partOfNode !== 0n  && !isNodeLeft) {
+                                sumNode += Number(partOfNode);
                             }
                         }
                     }
                 }
-                return sumNode / (128 * (await nodes.getNumberOnlineNodes()).toNumber());
+                return sumNode / (128 * Number(await nodes.getNumberOnlineNodes()));
             }
 
             it("should check load percentage of network", async () => {
@@ -210,27 +207,28 @@ describe("Pricing", () => {
             });
 
             describe("change price when changing the number of nodes", () => {
-                let oldPrice: number;
-                let lastUpdated: number;
+                let oldPrice: bigint;
+                let lastUpdated: bigint;
 
                 fastBeforeEach(async () => {
                     await pricing.initNodes();
-                    oldPrice = (await pricing.price()).toNumber();
-                    lastUpdated = (await pricing.lastUpdated()).toNumber()
+                    oldPrice = await pricing.price();
+                    lastUpdated = await pricing.lastUpdated();
                 });
 
-                async function getPrice(secondSincePreviousUpdate: number) {
-                    const MIN_PRICE = (await constants.MIN_PRICE()).toNumber();
-                    const ADJUSTMENT_SPEED = (await constants.ADJUSTMENT_SPEED()).toNumber();
-                    const OPTIMAL_LOAD_PERCENTAGE = (await constants.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
-                    const COOLDOWN_TIME = (await constants.COOLDOWN_TIME()).toNumber();
+                async function getPrice(secondSincePreviousUpdate: bigint) {
+                    const MIN_PRICE = Number(await constants.MIN_PRICE());
+                    const ADJUSTMENT_SPEED = Number(await constants.ADJUSTMENT_SPEED());
+                    const OPTIMAL_LOAD_PERCENTAGE = Number(await constants.OPTIMAL_LOAD_PERCENTAGE());
+                    const COOLDOWN_TIME = Number(await constants.COOLDOWN_TIME());
 
-                    const priceChangeSpeed = ADJUSTMENT_SPEED * (oldPrice / MIN_PRICE) * (await getLoadCoefficient() * 100 - OPTIMAL_LOAD_PERCENTAGE);
-                    let price = oldPrice + priceChangeSpeed * secondSincePreviousUpdate / COOLDOWN_TIME;
+                    const priceChangeSpeed = ADJUSTMENT_SPEED * Number(oldPrice) / MIN_PRICE *
+                        (await getLoadCoefficient() * 100 - OPTIMAL_LOAD_PERCENTAGE);
+                    let price = Number(oldPrice) + priceChangeSpeed * Number(secondSincePreviousUpdate) / COOLDOWN_TIME;
                     if (price < MIN_PRICE) {
                         price = MIN_PRICE;
                     }
-                    return Math.floor(price);
+                    return BigInt(Math.floor(price));
                 }
 
                 it("should change price when new active node has been added", async () => {
@@ -245,13 +243,13 @@ describe("Pricing", () => {
                             name: "vadim",
                             domainName: "some.domain.name"
                         });
-                    const MINUTES_PASSED = 2;
-                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
+                    const MINUTES_PASSED = 2n;
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60n - BigInt(await currentTime()));
 
                     await pricing.adjustPrice();
-                    const receivedPrice = (await pricing.price()).toNumber();
+                    const receivedPrice = await pricing.price();
 
-                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+                    const correctPrice = await getPrice(await pricing.lastUpdated() - lastUpdated);
 
                     receivedPrice.should.be.equal(correctPrice);
                     oldPrice.should.be.above(receivedPrice);
@@ -261,10 +259,10 @@ describe("Pricing", () => {
                     // search non full node to rotate
                     let nodeToExit = -1;
                     let numberOfSchains = 0;
-                    for (let i = 0; i < (await nodes.getNumberOfNodes()).toNumber(); i++) {
+                    for (let i = 0; i < await nodes.getNumberOfNodes(); i++) {
                         if (await nodes.isNodeActive(i)) {
                             const getActiveSchains = await schainsInternal.getActiveSchains(i);
-                            let totalPartOfNode = 0;
+                            let totalPartOfNode = 0n;
                             numberOfSchains = 0;
                             for (const schain of getActiveSchains) {
                                 const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
@@ -284,13 +282,13 @@ describe("Pricing", () => {
                     }
                     await nodes.completeExit(nodeToExit);
 
-                    const MINUTES_PASSED = 2;
-                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
+                    const MINUTES_PASSED = 2n;
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60n - BigInt(await currentTime()));
 
                     await pricing.adjustPrice();
-                    const receivedPrice = (await pricing.price()).toNumber();
+                    const receivedPrice = await pricing.price();
 
-                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+                    const correctPrice = await getPrice(await pricing.lastUpdated() - lastUpdated);
 
                     receivedPrice.should.be.equal(correctPrice);
                     oldPrice.should.be.below(receivedPrice);
@@ -309,13 +307,13 @@ describe("Pricing", () => {
                             domainName: "some.domain.name"
                         });
 
-                    const MINUTES_PASSED = 30;
-                    await skipTime(lastUpdated + MINUTES_PASSED * 60 - await currentTime());
+                    const MINUTES_PASSED = 30n;
+                    await skipTime(lastUpdated + MINUTES_PASSED * 60n - BigInt(await currentTime()));
 
                     await pricing.adjustPrice();
-                    const receivedPrice = (await pricing.price()).toNumber();
+                    const receivedPrice = await pricing.price();
 
-                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+                    const correctPrice = await getPrice(await pricing.lastUpdated() - lastUpdated);
 
                     receivedPrice.should.be.equal(correctPrice);
                     oldPrice.should.be.above(receivedPrice);

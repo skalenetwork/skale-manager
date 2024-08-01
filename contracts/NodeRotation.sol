@@ -233,7 +233,7 @@ contract NodeRotation is Permissions, INodeRotation {
         schainsInternal.makeSchainNodesInvisible(schainHash);
         require(schainsInternal.isAnyFreeNode(schainHash), "No free Nodes available for rotation");
         IRandom.RandomGenerator memory randomGenerator = Random.createFromEntropy(
-            abi.encodePacked(uint(blockhash(block.number - 1)), schainHash)
+            abi.encodePacked(uint256(blockhash(block.number - 1)), schainHash)
         );
         nodeIndex = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
         require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");

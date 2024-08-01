@@ -1,26 +1,26 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManager,
+import {ContractManager,
          Nodes,
          SkaleToken,
          ValidatorService,
          DelegationController,
          ConstantsHolder} from "../typechain-types";
-import { privateKeys } from "./tools/private-keys";
-import { getTransactionTimestamp, nextMonth } from "./tools/time";
-import { Wallet } from "ethers";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { expect } from "chai";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { fastBeforeEach } from "./tools/mocha";
+import {privateKeys} from "./tools/private-keys";
+import {getTransactionTimestamp, nextMonth} from "./tools/time";
+import {Wallet} from "ethers";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
+import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {expect} from "chai";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {fastBeforeEach} from "./tools/mocha";
 
 
 chai.should();
@@ -46,8 +46,8 @@ describe("NodesFunctionality", () => {
         nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
@@ -57,8 +57,7 @@ describe("NodesFunctionality", () => {
         delegationController = await deployDelegationController(contractManager);
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
-        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
-        // await contractManager.setContractsAddress("Nodes", nodes.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
@@ -69,7 +68,6 @@ describe("NodesFunctionality", () => {
 
         const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
         await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
-
     });
 
     it("should fail to create node if ip is zero", async () => {
@@ -170,7 +168,6 @@ describe("NodesFunctionality", () => {
         });
 
         it("should complete exiting", async () => {
-
             await nodes.completeExit(0)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 

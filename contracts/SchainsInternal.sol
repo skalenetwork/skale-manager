@@ -994,7 +994,7 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
 
         require(nodes.countNodesWithFreeSpace(space) >= nodesInGroup.length, "Not enough nodes to create Schain");
         IRandom.RandomGenerator memory randomGenerator = Random.createFromEntropy(
-            abi.encodePacked(uint(blockhash(block.number - 1)), schainHash)
+            abi.encodePacked(uint256(blockhash(block.number - 1)), schainHash)
         );
         for (uint256 i = 0; i < numberOfNodes; i++) {
             uint256 node = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);

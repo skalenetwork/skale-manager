@@ -1,6 +1,6 @@
-import { deployContractManager } from "../test/tools/deploy/contractManager";
-import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
-import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
+import {deployContractManager} from "../test/tools/deploy/contractManager";
+import {deployValidatorService} from "../test/tools/deploy/delegation/validatorService";
+import {deploySkaleManager} from "../test/tools/deploy/skaleManager";
 import {
     ContractManager,
     NodeRotation,
@@ -12,22 +12,22 @@ import {
     ValidatorService,
     Wallets
 } from "../typechain-types";
-import { privateKeys } from "../test/tools/private-keys";
-import { deploySchains } from "../test/tools/deploy/schains";
-import { deploySchainsInternalMock } from "../test/tools/deploy/test/schainsInternalMock";
-import { deploySkaleDKGTester } from "../test/tools/deploy/test/skaleDKGTester";
-import { deployNodes } from "../test/tools/deploy/nodes";
-import { deployWallets } from "../test/tools/deploy/wallets";
-import { skipTime } from "../test/tools/time";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { ethers } from "hardhat";
-import { BigNumberish, BytesLike, Signer, Wallet } from "ethers";
-import { assert } from "chai";
-import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
-import { stringKeccak256 } from "../test/tools/hashes";
-import { fastBeforeEach } from "../test/tools/mocha";
-import { SchainType } from "../test/tools/types";
-import { deployNodeRotation } from "../test/tools/deploy/nodeRotation";
+import {privateKeys} from "../test/tools/private-keys";
+import {deploySchains} from "../test/tools/deploy/schains";
+import {deploySchainsInternalMock} from "../test/tools/deploy/test/schainsInternalMock";
+import {deploySkaleDKGTester} from "../test/tools/deploy/test/skaleDKGTester";
+import {deployNodes} from "../test/tools/deploy/nodes";
+import {deployWallets} from "../test/tools/deploy/wallets";
+import {skipTime} from "../test/tools/time";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {ethers} from "hardhat";
+import {BigNumberish, BytesLike, Signer, Wallet} from "ethers";
+import {assert} from "chai";
+import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
+import {stringKeccak256} from "../test/tools/hashes";
+import {fastBeforeEach} from "../test/tools/mocha";
+import {SchainType} from "../test/tools/types";
+import {deployNodeRotation} from "../test/tools/deploy/nodeRotation";
 
 async function createNode(skaleManager: SkaleManager, node: Wallet, nodeId: number) {
     await skaleManager.connect(node).createNode(
@@ -52,11 +52,11 @@ async function getIndexInSpaceMap(nodes: Nodes, nodeId: number) {
     return res.indexInSpaceMap.toString();
 }
 
-async function getSpaceToNodes(nodes: Nodes, space: number, index: number) {
-    return (await nodes.spaceToNodes(space.toString(), index.toString())).toString();
+async function getSpaceToNodes(nodes: Nodes, space: bigint, index: number) {
+    return (await nodes.spaceToNodes(space, index)).toString();
 }
 
-async function checkSpaceToNodes(nodes: Nodes, space: number, length: number) {
+async function checkSpaceToNodes(nodes: Nodes, space: bigint, length: bigint) {
     for (let i = 0; i < length; i++) {
         const posNode = await getSpaceToNodes(nodes, space, i);
         const freeSpace = await getFreeSpaceOfNode(nodes, parseInt(posNode, 10));
@@ -66,27 +66,27 @@ async function checkSpaceToNodes(nodes: Nodes, space: number, length: number) {
     }
 }
 
-async function countNodesWithFreeSpace(nodes: Nodes, freeSpace: number) {
-    return (await nodes.countNodesWithFreeSpace(freeSpace.toString())).toString();
+async function countNodesWithFreeSpace(nodes: Nodes, freeSpace: bigint) {
+    return await nodes.countNodesWithFreeSpace(freeSpace);
 }
 
-async function checkTreeAndSpaceToNodesPart(nodes: Nodes, space: number) {
+async function checkTreeAndSpaceToNodesPart(nodes: Nodes, space: bigint) {
     const countNodes = await countNodesWithFreeSpace(nodes, space);
-    const countNodesPlus = (space === 128 ? "0" : await countNodesWithFreeSpace(nodes, space + 1));
-    await checkSpaceToNodes(nodes, space, parseInt(countNodes, 10) - parseInt(countNodesPlus, 10));
+    const countNodesPlus = (space === 128n ? 0n : await countNodesWithFreeSpace(nodes, space + 1n));
+    await checkSpaceToNodes(nodes, space, countNodes - countNodesPlus);
 }
 
 async function checkTreeAndSpaceToNodes(nodes: Nodes) {
-    const numberOfActiveNodes = (await nodes.numberOfActiveNodes()).toString();
-    const nodesInTree = await countNodesWithFreeSpace(nodes, 0);
+    const numberOfActiveNodes = await nodes.numberOfActiveNodes();
+    const nodesInTree = await countNodesWithFreeSpace(nodes, 0n);
     assert(numberOfActiveNodes === nodesInTree, "Incorrect number of active nodes and nodes in tree");
-    for (let i = 0; i <= 128; i++) {
+    for (let i = 0n; i <= 128; i++) {
         await checkTreeAndSpaceToNodesPart(nodes, i);
     }
 }
 
 async function createSchain(schains: Schains, typeOfSchain: SchainType, name: string, owner: Signer) {
-    await schains.addSchainByFoundation(0, typeOfSchain, 0, name, await owner.getAddress(), ethers.constants.AddressZero, []);
+    await schains.addSchainByFoundation(0, typeOfSchain, 0, name, await owner.getAddress(), ethers.ZeroAddress, []);
     console.log("Schain", name, "with type", typeOfSchain, "created");
 }
 
@@ -234,13 +234,13 @@ describe("Tree test", () => {
 
         node = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: node.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: node.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
         contractManager = await deployContractManager();
         schainsInternal = await deploySchainsInternalMock(contractManager);
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
         skaleDKG = await deploySkaleDKGTester(contractManager);
 
         nodes = await deployNodes(contractManager);
@@ -249,7 +249,7 @@ describe("Tree test", () => {
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);

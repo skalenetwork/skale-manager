@@ -15,7 +15,6 @@
     "func-visibility": ["error", {"ignoreConstructors": true}],
     "function-max-lines": "error",
     "max-states-count": ["error", 20],
-    "named-return-values": "error",
     "no-empty-blocks": "error",
     "no-global-import": "error",
     "no-inline-assembly": "error",
