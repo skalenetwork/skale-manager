@@ -1,37 +1,37 @@
-import { ConstantsHolder, ContractManager,
+import {ConstantsHolder, ContractManager,
         Nodes,
         Schains,
         SkaleDKGTester,
         SkaleManager,
         ValidatorService,
-        Wallets } from "../typechain-types";
-import { deployContractManager } from "./tools/deploy/contractManager";
+        Wallets} from "../typechain-types";
+import {deployContractManager} from "./tools/deploy/contractManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
-import { privateKeys } from "./tools/private-keys";
-import { deployWallets } from "./tools/deploy/wallets";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { SchainType } from "./tools/types";
+import {privateKeys} from "./tools/private-keys";
+import {deployWallets} from "./tools/deploy/wallets";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {SchainType} from "./tools/types";
 import chaiAlmost from "chai-almost";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { ContractTransaction, Wallet } from "ethers";
-import { makeSnapshot, applySnapshot } from "./tools/snapshot";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {ContractTransactionResponse, Wallet} from "ethers";
+import {makeSnapshot, applySnapshot} from "./tools/snapshot";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
 
 chai.should();
 chai.use(chaiAsPromised);
 
-async function ethSpent(response: ContractTransaction) {
+async function ethSpent(response: ContractTransactionResponse) {
     const receipt = await response.wait();
-    if (receipt.effectiveGasPrice) {
-        return receipt.effectiveGasPrice.mul(receipt.gasUsed);
+    if (receipt && receipt.gasPrice) {
+        return receipt.gasPrice * receipt.gasUsed;
     } else {
         throw new ReferenceError("gasPrice is undefined");
     }
@@ -72,14 +72,14 @@ describe("Wallets", () => {
         nodeAddress2 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress3 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
         nodeAddress4 = new Wallet(String(privateKeys[4])).connect(ethers.provider);
-        const balanceRichGuy1 = await richGuy1.getBalance();
-        const balanceRichGuy2 = await richGuy2.getBalance();
-        const balanceRichGuy3 = await richGuy3.getBalance();
-        const balanceRichGuy4 = await richGuy4.getBalance();
-        await richGuy1.sendTransaction({to: nodeAddress1.address, value: balanceRichGuy1.sub(ethers.utils.parseEther("1"))});
-        await richGuy2.sendTransaction({to: nodeAddress2.address, value: balanceRichGuy2.sub(ethers.utils.parseEther("1"))});
-        await richGuy3.sendTransaction({to: nodeAddress3.address, value: balanceRichGuy3.sub(ethers.utils.parseEther("1"))});
-        await richGuy4.sendTransaction({to: nodeAddress4.address, value: balanceRichGuy4.sub(ethers.utils.parseEther("1"))});
+        const balanceRichGuy1 = await ethers.provider.getBalance(richGuy1);
+        const balanceRichGuy2 = await ethers.provider.getBalance(richGuy2);
+        const balanceRichGuy3 = await ethers.provider.getBalance(richGuy3);
+        const balanceRichGuy4 = await ethers.provider.getBalance(richGuy4);
+        await richGuy1.sendTransaction({to: nodeAddress1.address, value: balanceRichGuy1 - ethers.parseEther("1")});
+        await richGuy2.sendTransaction({to: nodeAddress2.address, value: balanceRichGuy2 - ethers.parseEther("1")});
+        await richGuy3.sendTransaction({to: nodeAddress3.address, value: balanceRichGuy3 - ethers.parseEther("1")});
+        await richGuy4.sendTransaction({to: nodeAddress4.address, value: balanceRichGuy4 - ethers.parseEther("1")});
 
         contractManager = await deployContractManager();
         wallets = await deployWallets(contractManager);
@@ -90,7 +90,7 @@ describe("Wallets", () => {
         nodes = await deployNodes(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
 
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
 
         await validatorService.connect(validator1).registerValidator("Validator 1", "", 0, 0);
         await validatorService.connect(validator2).registerValidator("Validator 2", "", 0, 0);
@@ -105,14 +105,14 @@ describe("Wallets", () => {
     });
 
     after(async () => {
-        const balanceNode1 = await nodeAddress1.getBalance();
-        const balanceNode2 = await nodeAddress2.getBalance();
-        const balanceNode3 = await nodeAddress3.getBalance();
-        const balanceNode4 = await nodeAddress4.getBalance();
-        await nodeAddress1.sendTransaction({to: richGuy1.address, value: balanceNode1.sub(ethers.utils.parseEther("1"))});
-        await nodeAddress2.sendTransaction({to: richGuy2.address, value: balanceNode2.sub(ethers.utils.parseEther("1"))});
-        await nodeAddress3.sendTransaction({to: richGuy2.address, value: balanceNode3.sub(ethers.utils.parseEther("1"))});
-        await nodeAddress4.sendTransaction({to: richGuy2.address, value: balanceNode4.sub(ethers.utils.parseEther("1"))});
+        const balanceNode1 = await ethers.provider.getBalance(nodeAddress1);
+        const balanceNode2 = await ethers.provider.getBalance(nodeAddress2);
+        const balanceNode3 = await ethers.provider.getBalance(nodeAddress3);
+        const balanceNode4 = await ethers.provider.getBalance(nodeAddress4);
+        await nodeAddress1.sendTransaction({to: richGuy1.address, value: balanceNode1 - ethers.parseEther("1")});
+        await nodeAddress2.sendTransaction({to: richGuy2.address, value: balanceNode2 - ethers.parseEther("1")});
+        await nodeAddress3.sendTransaction({to: richGuy2.address, value: balanceNode3 - ethers.parseEther("1")});
+        await nodeAddress4.sendTransaction({to: richGuy2.address, value: balanceNode4 - ethers.parseEther("1")});
     });
 
     beforeEach(async () => {
@@ -124,36 +124,36 @@ describe("Wallets", () => {
     });
 
     it("should revert if someone sends ETH to contract Wallets", async() => {
-        const amount = ethers.utils.parseEther("1.0");
-        await owner.sendTransaction({to: wallets.address, value: amount})
+        const amount = ethers.parseEther("1.0");
+        await owner.sendTransaction({to: wallets, value: amount})
         .should.be.eventually.rejectedWith("Validator address does not exist");
     });
 
     it("should recharge validator wallet sending ETH to contract Wallets", async() => {
-        const amount = ethers.utils.parseEther("1.0");
-        (await wallets.getValidatorBalance(validator1Id)).toNumber().should.be.equal(0);
-        await validator1.sendTransaction({to: wallets.address, value: amount});
+        const amount = ethers.parseEther("1.0");
+        (await wallets.getValidatorBalance(validator1Id)).should.be.equal(0);
+        await validator1.sendTransaction({to: wallets, value: amount});
         (await wallets.getValidatorBalance(validator1Id)).should.be.equal(amount);
     });
 
     it("should recharge validator wallet", async() => {
         const amount = 1e9;
-        (await wallets.getValidatorBalance(validator1Id)).toNumber().should.be.equal(0);
-        (await wallets.getValidatorBalance(validator2Id)).toNumber().should.be.equal(0);
+        (await wallets.getValidatorBalance(validator1Id)).should.be.equal(0);
+        (await wallets.getValidatorBalance(validator2Id)).should.be.equal(0);
 
         await wallets.rechargeValidatorWallet(validator1Id, {value: amount.toString()});
-        (await wallets.getValidatorBalance(validator1Id)).toNumber().should.be.equal(amount);
-        (await wallets.getValidatorBalance(validator2Id)).toNumber().should.be.equal(0);
+        (await wallets.getValidatorBalance(validator1Id)).should.be.equal(amount);
+        (await wallets.getValidatorBalance(validator2Id)).should.be.equal(0);
     });
 
     it("should withdraw from validator wallet", async() => {
-        const amount = 1e9;
+        const amount = BigInt(1e9);
         await wallets.rechargeValidatorWallet(validator1Id, {value: amount});
-        const validator1Balance = await validator1.getBalance();
+        const validator1Balance = await ethers.provider.getBalance(validator1);
 
         const tx = await wallets.connect(validator1).withdrawFundsFromValidatorWallet(amount);
-        const validator1BalanceAfterWithdraw = await validator1.getBalance();
-        validator1BalanceAfterWithdraw.should.be.equal(validator1Balance.add(amount).sub(await ethSpent(tx)));
+        const validator1BalanceAfterWithdraw = await ethers.provider.getBalance(validator1);
+        validator1BalanceAfterWithdraw.should.be.equal(validator1Balance + amount - await ethSpent(tx));
         await wallets.connect(validator2).withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Balance is too low");
         await wallets.withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Validator address does not exist");
     });
@@ -217,10 +217,10 @@ describe("Wallets", () => {
 
             await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address)
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address, ethers.constants.AddressZero, []);
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address, ethers.ZeroAddress, []);
             await skaleDKG.setSuccessfulDKGPublic(schain1Id);
 
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address, ethers.constants.AddressZero, []);
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address, ethers.ZeroAddress, []);
             await skaleDKG.setSuccessfulDKGPublic(schain2Id);
         });
 
@@ -230,30 +230,30 @@ describe("Wallets", () => {
 
         it("should automatically recharge wallet after creating schain by foundation", async () => {
             const amount = 1e9;
-            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, ethers.constants.AddressZero, [], {value: amount.toString()});
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, ethers.ZeroAddress, [], {value: amount.toString()});
             const schainBalance = await wallets.getSchainBalance(stringKeccak256("schain-3"));
-            amount.should.be.equal(schainBalance.toNumber());
+            amount.should.be.equal(schainBalance);
         });
 
         it("should recharge schain wallet", async() => {
             const amount = 1e9;
-            (await wallets.getSchainBalance(schain1Id)).toNumber().should.be.equal(0);
-            (await wallets.getSchainBalance(schain2Id)).toNumber().should.be.equal(0);
+            (await wallets.getSchainBalance(schain1Id)).should.be.equal(0);
+            (await wallets.getSchainBalance(schain2Id)).should.be.equal(0);
 
             await wallets.rechargeSchainWallet(schain1Id, {value: amount.toString()});
-            (await wallets.getSchainBalance(schain1Id)).toNumber().should.be.equal(amount);
-            (await wallets.getSchainBalance(schain2Id)).toNumber().should.be.equal(0);
+            (await wallets.getSchainBalance(schain1Id)).should.be.equal(amount);
+            (await wallets.getSchainBalance(schain2Id)).should.be.equal(0);
         });
 
         it("should recharge schain wallet sending ETH to contract Wallets", async() => {
-            const amount = ethers.utils.parseEther("1.0");
-            (await wallets.getSchainBalance(schain1Id)).toNumber().should.be.equal(0);
-            await validator1.sendTransaction({to: wallets.address, value: amount});
+            const amount = ethers.parseEther("1.0");
+            (await wallets.getSchainBalance(schain1Id)).should.be.equal(0);
+            await validator1.sendTransaction({to: wallets, value: amount});
             (await wallets.getSchainBalance(schain1Id)).should.be.equal(amount);
         });
 
         describe("when validators and schains wallets are recharged", () => {
-            const initialBalance = ethers.utils.parseEther("1");
+            const initialBalance = ethers.parseEther("1");
 
             let snapshotWithNodesAndSchains: number;
 
@@ -270,35 +270,35 @@ describe("Wallets", () => {
             });
 
             it("should move ETH to schain owner after schain termination", async () => {
-                let balanceBefore = await validator1.getBalance();
+                let balanceBefore = await ethers.provider.getBalance(validator1);
                 const result = await skaleManager.connect(validator1).deleteSchain(schain1Name);
-                let balance = await validator1.getBalance();
-                const expectedBalance = balanceBefore.sub(await ethSpent(result)).add(initialBalance);
+                let balance = await ethers.provider.getBalance(validator1);
+                const expectedBalance = balanceBefore - await ethSpent(result) + initialBalance;
                 balance.should.be.equal(expectedBalance);
 
-                balanceBefore = await validator2.getBalance();
+                balanceBefore = await ethers.provider.getBalance(validator2);
                 await skaleManager.deleteSchainByRoot(schain2Name);
-                balance = await validator2.getBalance();
-                balance.should.be.equal(balanceBefore.add(initialBalance));
+                balance = await ethers.provider.getBalance(validator2);
+                balance.should.be.equal(balanceBefore + initialBalance);
             });
 
             it("should reimburse gas for node exit", async() => {
                 const minNodeBalance = await constantsHolder.minNodeBalance();
                 await nodeAddress1.sendTransaction({
                     to: owner.address,
-                    value: (await nodeAddress1.getBalance()).sub(minNodeBalance)
+                    value: await ethers.provider.getBalance(nodeAddress1) - minNodeBalance
                 });
                 await nodes.initExit(0);
                 const response = await skaleManager.connect(nodeAddress1).nodeExit(0, {gasLimit: 2e6});
-                const balance = await nodeAddress1.getBalance();
+                const balance = await ethers.provider.getBalance(nodeAddress1);
                 const spentValue = await ethSpent(response);
 
-                balance.add(spentValue).should.be.least(minNodeBalance);
-                balance.add(spentValue).should.be.closeTo(minNodeBalance, 1e13);
+                (balance + spentValue).should.be.least(minNodeBalance);
+                (balance + spentValue).should.be.closeTo(minNodeBalance, 1e13);
 
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);
-                initialBalance.sub(spentValue).sub(validatorBalance).toNumber()
-                    .should.be.almost(0, ethers.utils.parseEther(tolerance.toString()).toNumber());
+                (initialBalance - validatorBalance)
+                    .should.be.closeTo(spentValue, Number(ethers.parseEther(tolerance.toString())));
             });
         });
     });

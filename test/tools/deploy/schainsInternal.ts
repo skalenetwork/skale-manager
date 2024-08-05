@@ -1,9 +1,9 @@
-import { ethers } from "hardhat";
-import { ContractManager, SchainsInternal } from "../../../typechain-types";
-import { deployConstantsHolder } from "./constantsHolder";
-import { defaultDeploy, deployFunctionFactory } from "./factory";
-import { deployNodes } from "./nodes";
-import { deploySkaleDKG } from "./skaleDKG";
+import {ethers} from "hardhat";
+import {ContractManager, SchainsInternal} from "../../../typechain-types";
+import {deployConstantsHolder} from "./constantsHolder";
+import {defaultDeploy, deployFunctionFactory} from "./factory";
+import {deployNodes} from "./nodes";
+import {deploySkaleDKG} from "./skaleDKG";
 
 export const deploySchainsInternal = deployFunctionFactory(
     "SchainsInternal",
@@ -13,7 +13,7 @@ export const deploySchainsInternal = deployFunctionFactory(
         await deployNodes(contractManager);
     },
     async ( contractManager: ContractManager) => {
-        const schainsInternal = await defaultDeploy("SchainsInternal", contractManager) as SchainsInternal;
+        const schainsInternal = await defaultDeploy<SchainsInternal>("SchainsInternal", contractManager);
 
         await schainsInternal.grantRole(await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE(), (await ethers.getSigners())[0].address);
 
@@ -25,4 +25,4 @@ export const deploySchainsInternal = deployFunctionFactory(
 
         return schainsInternal;
     }
-) as (contractManager: ContractManager) => Promise<SchainsInternal>;
+);

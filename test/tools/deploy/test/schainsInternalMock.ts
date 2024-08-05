@@ -1,9 +1,9 @@
-import { ContractManager, SchainsInternalMock } from "../../../../typechain-types";
-import { deployConstantsHolder } from "../constantsHolder";
-import { defaultDeploy, deployFunctionFactory } from "../factory";
-import { deployNodes } from "../nodes";
-import { deploySkaleDKG } from "../skaleDKG";
-import { ethers } from "hardhat";
+import {ContractManager, SchainsInternalMock} from "../../../../typechain-types";
+import {deployConstantsHolder} from "../constantsHolder";
+import {defaultDeploy, deployFunctionFactory} from "../factory";
+import {deployNodes} from "../nodes";
+import {deploySkaleDKG} from "../skaleDKG";
+import {ethers} from "hardhat";
 
 export const deploySchainsInternalMock = deployFunctionFactory(
     "SchainsInternalMock",

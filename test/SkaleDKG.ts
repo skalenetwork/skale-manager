@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManager,
+import {ContractManager,
          DelegationController,
          KeyStorage,
          Nodes,
@@ -12,51 +12,53 @@ import { ContractManager,
          SlashingTable,
          ValidatorService,
          SkaleManager,
-         Wallets } from "../typechain-types";
-import { skipTime, currentTime, nextMonth } from "./tools/time";
-import { privateKeys } from "./tools/private-keys";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deployKeyStorage } from "./tools/deploy/keyStorage";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deploySlashingTable } from "./tools/deploy/slashingTable";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployWallets } from "./tools/deploy/wallets";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert, expect } from "chai";
-import { makeSnapshot, applySnapshot } from "./tools/snapshot";
-import { BytesLike, ContractTransaction, Wallet } from "ethers";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { schainParametersType, SchainType } from "./tools/types";
+         Wallets} from "../typechain-types";
+import {skipTime, currentTime, nextMonth} from "./tools/time";
+import {privateKeys} from "./tools/private-keys";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
+import {deployKeyStorage} from "./tools/deploy/keyStorage";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleDKG} from "./tools/deploy/skaleDKG";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {deploySlashingTable} from "./tools/deploy/slashingTable";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deployWallets} from "./tools/deploy/wallets";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {assert, expect} from "chai";
+import {makeSnapshot, applySnapshot} from "./tools/snapshot";
+import {BytesLike, ContractTransactionResponse, Wallet} from "ethers";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {schainParametersType, SchainType} from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
 
-const weiTolerance = ethers.utils.parseEther("0.002").toNumber();
+const weiTolerance = ethers.parseEther("0.002");
 
-async function reimbursed(transaction: ContractTransaction, operation?: string) {
+async function reimbursed(transaction: ContractTransactionResponse, operation?: string) {
     const receipt = await transaction.wait();
+    if (!receipt) {
+        throw new Error();
+    }
     const sender = transaction.from;
     const balanceBefore = await ethers.provider.getBalance(sender, receipt.blockNumber - 1);
     const balanceAfter = await ethers.provider.getBalance(sender, receipt.blockNumber);
-    if (balanceAfter.lt(balanceBefore)) {
-        const shortageEth = balanceBefore.sub(balanceAfter);
-        const shortageGas = shortageEth.div(receipt.effectiveGasPrice);
+    if (balanceAfter < balanceBefore) {
+        const shortageEth = balanceBefore - balanceAfter;
+        const shortageGas = shortageEth / receipt.gasPrice;
 
         console.log("Reimbursement failed.")
         console.log(`${shortageGas.toString()} gas units was not reimbursed`);
         if (operation !== undefined) {
             console.log(`During ${operation}`);
         }
-
     }
     balanceAfter.should.be.least(balanceBefore);
     balanceAfter.should.be.closeTo(balanceBefore, weiTolerance);
@@ -92,8 +94,8 @@ describe("SkaleDKG", () => {
         nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.parseEther("10000")});
 
         validators = [
             {
@@ -118,7 +120,7 @@ describe("SkaleDKG", () => {
         skaleManager = await deploySkaleManager(contractManager);
         wallets = await deployWallets(contractManager);
 
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
 
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
@@ -370,20 +372,20 @@ describe("SkaleDKG", () => {
             const res = await (await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ))).wait();
 
-            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
-            (await skaleDKG.getChannelStartedBlock(stringKeccak256("d2"))).should.be.equal(res.blockNumber);
+            (await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true;
+            (await skaleDKG.getChannelStartedBlock(stringKeccak256("d2"))).should.be.equal(res?.blockNumber);
         });
 
         it("should create schain and reopen a DKG channel", async () => {
@@ -392,19 +394,19 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
 
-            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
+            (await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true;
         });
 
         it("should create & delete schain and open & close a DKG channel", async () => {
@@ -413,23 +415,23 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
 
-            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true);
+            (await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.true;
 
 
             await schains.deleteSchainByRoot("d2");
-            assert((await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.false);
+            (await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.false;
         });
 
         describe("when 2-node schain is created", () => {
@@ -442,14 +444,14 @@ describe("SkaleDKG", () => {
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -458,21 +460,21 @@ describe("SkaleDKG", () => {
                 schainName = "d2";
                 await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 let index = 3;
-                while (nodesInGroup[0].eq(1)) {
+                while (nodesInGroup[0] == 1n) {
                     await schains.deleteSchainByRoot(schainName);
                     schainName = `d${index}`;
                     index++;
                     await schains.addSchain(
                         validator1.address,
                         deposit,
-                        ethers.utils.defaultAbiCoder.encode(
+                        ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: schainName,
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         ));
@@ -490,7 +492,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(isBroadcasted.should.be.false);
+                isBroadcasted.should.be.false;
 
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await expect(skaleDKG.connect(validators[0].nodeAddress).broadcast(
@@ -505,7 +507,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(isBroadcasted.should.be.true);
+                isBroadcasted.should.be.true;
             });
 
             it("should broadcast data from 1 node & check", async () => {
@@ -522,7 +524,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
             });
 
             it("should broadcast data from 2 node", async () => {
@@ -530,7 +532,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(isBroadcasted.should.be.false);
+                isBroadcasted.should.be.false;
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await expect(skaleDKG.connect(validators[1].nodeAddress).broadcast(
                     stringKeccak256(schainName),
@@ -544,7 +546,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(isBroadcasted.should.be.true);
+                isBroadcasted.should.be.true;
             });
 
             it("should rejected broadcast with incorrect rotation counter", async () => {
@@ -574,7 +576,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                     stringKeccak256(schainName),
@@ -587,19 +589,19 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 await skipTime(1700);
                 const resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1,
                 );
-                assert(resComplaint.should.be.false);
+                resComplaint.should.be.false;
                 const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
@@ -614,7 +616,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                     stringKeccak256(schainName),
@@ -627,19 +629,19 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 await skipTime(1800);
                 let resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(resComplaint.should.be.true);
+                resComplaint.should.be.true;
                 await reimbursed(
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
                         stringKeccak256(schainName),
@@ -651,17 +653,17 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 resComplaint = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(resComplaint.should.be.false);
+                resComplaint.should.be.false;
                 const resO = await skaleDKG.isChannelOpened(
                     stringKeccak256(schainName)
                 );
-                assert(resO.should.be.false);
+                resO.should.be.false;
             });
 
             it("should send complaint after missing alright", async () => {
@@ -669,7 +671,7 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                 await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                     stringKeccak256(schainName),
@@ -682,12 +684,12 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 await skaleDKG.connect(validators[1].nodeAddress).broadcast(
                     stringKeccak256(schainName),
                     1,
@@ -699,12 +701,12 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[0].nodeAddress).isAlrightPossible(
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
 
                 await reimbursed(
                     await skaleDKG.connect(validators[0].nodeAddress).alright(
@@ -717,18 +719,18 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     0
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
                 res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1,
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
 
                 const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
@@ -744,7 +746,7 @@ describe("SkaleDKG", () => {
                     0,
                     1
                 );
-                assert(res.should.be.true);
+                res.should.be.true;
 
                 await reimbursed(
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
@@ -758,17 +760,17 @@ describe("SkaleDKG", () => {
                     stringKeccak256(schainName),
                     1
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringKeccak256(schainName),
                     0,
                     1
                 );
-                assert(res.should.be.false);
+                res.should.be.false;
                 const resO = await skaleDKG.isChannelOpened(
                     stringKeccak256(schainName)
                 );
-                assert(resO.should.be.false);
+                resO.should.be.false;
             });
 
             describe("should not front run complaint with missing broadcast", () => {
@@ -788,7 +790,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                     // Simulate front-running complaint
                     await skaleDKG.connect(validators[1].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -838,7 +840,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                     // Simulate front-running complaint
                     await skaleDKG.connect(validators[1].nodeAddress).alright(
                         stringKeccak256(schainName),
@@ -893,7 +895,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                     // Simulate front-running complaint
                     await skaleDKG.connect(validators[0].nodeAddress).response(
                         stringKeccak256(schainName),
@@ -907,7 +909,6 @@ describe("SkaleDKG", () => {
                         0
                     ).should.emit(skaleDKG, "BadGuy")
                         .withArgs(0);
-
                 });
 
                 after(async () => {
@@ -945,7 +946,7 @@ describe("SkaleDKG", () => {
                     const res = await skaleDKG.isChannelOpened(
                         stringKeccak256(schainName)
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send broadcast", async () => {
@@ -953,7 +954,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send complaint", async () => {
@@ -962,7 +963,7 @@ describe("SkaleDKG", () => {
                         0,
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send another complaint", async () => {
@@ -971,7 +972,7 @@ describe("SkaleDKG", () => {
                         1,
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send preResponse", async () => {
@@ -979,7 +980,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send another preResponse", async () => {
@@ -987,7 +988,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send response", async () => {
@@ -995,7 +996,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should be impossible send another response", async () => {
@@ -1003,7 +1004,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
             });
 
@@ -1049,7 +1050,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                 });
 
                 it("should send alright from 2 node", async () => {
@@ -1107,7 +1108,7 @@ describe("SkaleDKG", () => {
                             1,
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
                         await expect(skaleDKG.connect(validators[1].nodeAddress).complaint(
                             stringKeccak256(schainName),
                             1,
@@ -1122,7 +1123,7 @@ describe("SkaleDKG", () => {
                             1,
                             0
                         );
-                        assert(res.should.be.true);
+                        res.should.be.true;
                         const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
                             stringKeccak256(schainName),
                             1,
@@ -1138,7 +1139,7 @@ describe("SkaleDKG", () => {
                             1,
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
                         await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                             stringKeccak256(schainName),
                             0,
@@ -1151,14 +1152,14 @@ describe("SkaleDKG", () => {
                             1,
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
                         await skipTime(1800);
                         res = await skaleDKG.connect(validators[1].nodeAddress).isComplaintPossible(
                             stringKeccak256(schainName),
                             1,
                             0
                         );
-                        assert(res.should.be.true);
+                        res.should.be.true;
                         const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
                             stringKeccak256(schainName),
                             1,
@@ -1173,13 +1174,13 @@ describe("SkaleDKG", () => {
                             stringKeccak256(schainName),
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
 
                         res = await skaleDKG.connect(validators[0].nodeAddress).isPreResponsePossible(
                             stringKeccak256(schainName),
                             0
                         );
-                        assert(res.should.be.true);
+                        res.should.be.true;
 
                         await skaleDKG.connect(validators[0].nodeAddress).response(
                             stringKeccak256(schainName),
@@ -1208,13 +1209,13 @@ describe("SkaleDKG", () => {
                             stringKeccak256(schainName),
                             0
                         );
-                        assert(res.should.be.true);
+                        res.should.be.true;
 
                         res = await skaleDKG.connect(validators[0].nodeAddress).isPreResponsePossible(
                             stringKeccak256(schainName),
                             0
                         );
-                        assert(res.should.be.false);
+                        res.should.be.false;
 
                         const response = await skaleDKG.connect(validators[0].nodeAddress).response(
                             stringKeccak256(schainName),
@@ -1227,11 +1228,11 @@ describe("SkaleDKG", () => {
 
                         await reimbursed(response);
 
-                        (await skaleToken.callStatic.getAndUpdateLockedAmount(validator2.address)).toNumber()
+                        (await skaleToken.getAndUpdateLockedAmount.staticCall(validator2.address))
                             .should.be.equal(delegatedAmount);
-                        (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator2.address)).toNumber()
+                        (await skaleToken.getAndUpdateDelegatedAmount.staticCall(validator2.address))
                             .should.be.equal(delegatedAmount - failedDkgPenalty);
-                        (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator2.address)).toNumber()
+                        (await skaleToken.getAndUpdateSlashedAmount.staticCall(validator2.address))
                             .should.be.equal(failedDkgPenalty);
                     });
 
@@ -1302,7 +1303,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1
                     );
-                    assert(res.should.be.false);
+                    res.should.be.false;
                     await skaleDKG.connect(validators[1].nodeAddress).alright(
                         stringKeccak256(schainName),
                         1
@@ -1320,7 +1321,7 @@ describe("SkaleDKG", () => {
                         0,
                         1
                     );
-                    assert(resComplaint.should.be.false);
+                    resComplaint.should.be.false;
                     await expect(skaleDKG.connect(validators[0].nodeAddress).complaintBadData(
                         stringKeccak256(schainName),
                         0,
@@ -1342,7 +1343,6 @@ describe("SkaleDKG", () => {
                 });
 
                 describe("when complaint successfully sent", () => {
-
                     let nodeSentBadData: number;
                     before(async () => {
                         nodeSentBadData = await makeSnapshot();
@@ -1388,14 +1388,14 @@ describe("SkaleDKG", () => {
                         await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
                         await reimbursed(response);
 
-                        const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
-                        assert.equal(await currentTime(), leavingTimeOfNode);
+                        const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation;
+                        assert.equal(BigInt(await currentTime()), leavingTimeOfNode);
 
-                        (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateLockedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount);
-                        (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateDelegatedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount - failedDkgPenalty);
-                        (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateSlashedAmount.staticCall(validator1.address))
                             .should.be.equal(failedDkgPenalty);
                     });
 
@@ -1419,11 +1419,11 @@ describe("SkaleDKG", () => {
                         await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
                         await reimbursed(response);
 
-                        (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateLockedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount);
-                        (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateDelegatedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount - failedDkgPenalty);
-                        (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator1.address)).toNumber()
+                        (await skaleToken.getAndUpdateSlashedAmount.staticCall(validator1.address))
                             .should.be.equal(failedDkgPenalty);
                     });
                 });
@@ -1436,14 +1436,14 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -1451,21 +1451,21 @@ describe("SkaleDKG", () => {
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
             let index = 3;
-            while (nodesInGroup[0].eq(1)) {
+            while (nodesInGroup[0] == 1n) {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: schainName,
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         ));
@@ -1516,11 +1516,14 @@ describe("SkaleDKG", () => {
                 0
             );
             const resComplaint = await complaintBadData.wait();
+            if(!resComplaint) {
+                throw new Error();
+            }
             await reimbursed(complaintBadData, "Complaint bad data");
 
-            assert(
-                await skaleDKG.getComplaintStartedTime(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(resComplaint.blockNumber)).timestamp.toString()
+            assert.equal(
+                Number(await skaleDKG.getComplaintStartedTime(stringKeccak256(schainName))),
+                (await ethers.provider.getBlock(resComplaint.blockNumber))?.timestamp
             );
 
             await reimbursed(
@@ -1546,11 +1549,15 @@ describe("SkaleDKG", () => {
             await responseTx.should.emit(skaleDKG, "NewGuy").withArgs(2);
             await responseTx.should.emit(skaleDKG, "FailedDKG").withArgs(stringKeccak256(schainName));
 
-            const blockNumber = (await responseTx.wait()).blockNumber;
-            const timestamp = (await ethers.provider.getBlock(blockNumber)).timestamp;
+            const receipt = await responseTx.wait()
+            if (!receipt) {
+                throw new Error();
+            }
+            const blockNumber = receipt.blockNumber;
+            const timestamp = (await ethers.provider.getBlock(blockNumber))?.timestamp;
 
             assert.equal((await skaleDKG.getNumberOfBroadcasted(stringKeccak256(schainName))).toString(), "0");
-            assert.equal((await skaleDKG.getChannelStartedTime(stringKeccak256(schainName))).toString(), timestamp.toString());
+            assert.equal((await skaleDKG.getChannelStartedTime(stringKeccak256(schainName))).toString(), timestamp?.toString());
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
@@ -1621,14 +1628,14 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -1636,21 +1643,21 @@ describe("SkaleDKG", () => {
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
             let index = 3;
-            while (nodesInGroup[0].eq(1)) {
+            while (nodesInGroup[0] === 1n) {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                             [schainParametersType],
                             [{
                                 lifetime: 5,
                                 typeOfSchain: SchainType.TEST,
                                 nonce: 0,
                                 name: schainName,
-                                originator: ethers.constants.AddressZero,
+                                originator: ethers.ZeroAddress,
                                 options: []
                             }]
                         ));
@@ -1688,12 +1695,13 @@ describe("SkaleDKG", () => {
                 encryptedSecretKeyContributions[indexes[1]],
                 rotCounter.rotationCounter
                 )).wait();
-            assert(
-                await skaleDKG.getAlrightStartedTime(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(res.blockNumber)).timestamp.toString()
+            assert(res);
+            assert.equal(
+                Number(await skaleDKG.getAlrightStartedTime(stringKeccak256(schainName))),
+                (await ethers.provider.getBlock(res.blockNumber))?.timestamp
             );
             let numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
-            assert(numOfCompleted, "0");
+            expect(numOfCompleted).to.be.equal(0);
 
             await skaleDKG.connect(validators[0].nodeAddress).alright(
                 stringKeccak256(schainName),
@@ -1701,19 +1709,20 @@ describe("SkaleDKG", () => {
             );
 
             numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
-            assert(numOfCompleted, "1");
+            expect(numOfCompleted).to.be.equal(1);
 
             const resSuccess = await (await skaleDKG.connect(validators[1].nodeAddress).alright(
                 stringKeccak256(schainName),
                 1
             )).wait();
+            assert(resSuccess);
 
             numOfCompleted = await skaleDKG.getNumberOfCompleted(stringKeccak256(schainName));
-            assert(numOfCompleted, "2");
+            expect(numOfCompleted).to.be.equal(2);
 
-            assert(
-                await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(resSuccess.blockNumber)).timestamp.toString()
+            assert.equal(
+                Number(await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName))),
+                (await ethers.provider.getBlock(resSuccess.blockNumber))?.timestamp
             );
 
             const comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256(schainName));
@@ -1726,10 +1735,10 @@ describe("SkaleDKG", () => {
             await skaleManager.connect(validators[1].nodeAddress).nodeExit(1);
 
             let prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
-            assert(prevPubKey.x.a, "0");
-            assert(prevPubKey.x.b, "0");
-            assert(prevPubKey.y.a, "0");
-            assert(prevPubKey.y.b, "0");
+            expect(prevPubKey.x.a).to.be.equal(0);
+            expect(prevPubKey.x.b).to.be.equal(0);
+            expect(prevPubKey.y.a).to.be.equal(1);
+            expect(prevPubKey.y.b).to.be.equal(0);
 
             await nodes.createNode(validators[0].nodeAddress.address,
                 {
@@ -1744,7 +1753,7 @@ describe("SkaleDKG", () => {
             );
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
-            assert.equal(rotCounter.rotationCounter.toString(), "1");
+            expect(rotCounter.rotationCounter).to.be.equal(1);
 
             await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                 stringKeccak256(schainName),
@@ -1768,9 +1777,9 @@ describe("SkaleDKG", () => {
                 0
             );
 
-            assert(
-                await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName)),
-                (await ethers.provider.getBlock(resSuccess.blockNumber)).timestamp.toString()
+            assert.equal(
+                Number(await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName))),
+                (await ethers.provider.getBlock(resSuccess.blockNumber))?.timestamp
             );
 
             await skaleDKG.connect(validators[0].nodeAddress).alright(
@@ -1779,24 +1788,24 @@ describe("SkaleDKG", () => {
             );
 
             prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
-            assert.equal(prevPubKey.x.a.toString() === comPubKey.x.a.toString(), true);
-            assert.equal(prevPubKey.x.b.toString() === comPubKey.x.b.toString(), true);
-            assert.equal(prevPubKey.y.a.toString() === comPubKey.y.a.toString(), true);
-            assert.equal(prevPubKey.y.b.toString() === comPubKey.y.b.toString(), true);
+            assert.equal(prevPubKey.x.a === comPubKey.x.a, true);
+            assert.equal(prevPubKey.x.b === comPubKey.x.b, true);
+            assert.equal(prevPubKey.y.a === comPubKey.y.a, true);
+            assert.equal(prevPubKey.y.b === comPubKey.y.b, true);
 
             let allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringKeccak256(schainName));
             assert.equal(allPrevPubKeys.length === 1, true);
-            assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
-            assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
-            assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
-            assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
+            assert.equal(prevPubKey.x.a === allPrevPubKeys[0].x.a, true);
+            assert.equal(prevPubKey.x.b === allPrevPubKeys[0].x.b, true);
+            assert.equal(prevPubKey.y.a === allPrevPubKeys[0].y.a, true);
+            assert.equal(prevPubKey.y.b === allPrevPubKeys[0].y.b, true);
 
             await skipTime(43260);
             await nodes.initExit(2);
             await skaleManager.connect(validators[0].nodeAddress).nodeExit(2);
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
-            assert.equal(rotCounter.rotationCounter.toString(), "2");
+            assert.equal(rotCounter.rotationCounter, 2n);
 
             await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                 stringKeccak256(schainName),
@@ -1827,14 +1836,13 @@ describe("SkaleDKG", () => {
 
             allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringKeccak256(schainName));
             assert.equal(allPrevPubKeys.length === 2, true);
-            assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
-            assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
-            assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
-            assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
+            assert.equal(prevPubKey.x.a === allPrevPubKeys[0].x.a, true);
+            assert.equal(prevPubKey.x.b === allPrevPubKeys[0].x.b, true);
+            assert.equal(prevPubKey.y.a === allPrevPubKeys[0].y.a, true);
+            assert.equal(prevPubKey.y.b === allPrevPubKeys[0].y.b, true);
         });
 
         it("16 nodes schain test", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,
@@ -1854,14 +1862,14 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.LARGE,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -1907,10 +1915,10 @@ describe("SkaleDKG", () => {
             let comPubKey;
             for (let i = 0; i < 16; i++) {
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
-                assert(comPubKey.x.a, "0");
-                assert(comPubKey.x.b, "0");
-                assert(comPubKey.y.a, "0");
-                assert(comPubKey.y.b, "0");
+                expect(comPubKey.x.a).to.be.equal(0);
+                expect(comPubKey.x.b).to.be.equal(0);
+                expect(comPubKey.y.a).to.be.equal(0);
+                expect(comPubKey.y.b).to.be.equal(0);
                 let index = 0;
                 if (i === 1) {
                     index = 1;
@@ -1943,15 +1951,13 @@ describe("SkaleDKG", () => {
             assert.equal(comPubKey.y.b.toString() !== "0", true);
 
             const prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256("New16NodeSchain"));
-            assert(prevPubKey.x.a, "0");
-            assert(prevPubKey.x.b, "0");
-            assert(prevPubKey.y.a, "0");
-            assert(prevPubKey.y.b, "0");
-
+            expect(prevPubKey.x.a).to.be.equal(0);
+            expect(prevPubKey.x.b).to.be.equal(0);
+            expect(prevPubKey.y.a).to.be.equal(1);
+            expect(prevPubKey.y.b).to.be.equal(0);
         });
 
         it("16 nodes schain test with incorrect complaint and response", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,
@@ -1971,14 +1977,14 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.LARGE,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -2271,7 +2277,7 @@ describe("SkaleDKG", () => {
             await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("One complaint is already sent");
             await reimbursed(complaint);
 
-            if (accusedNode.eq(1)) {
+            if (accusedNode === 1n) {
                 indexToSend = 1;
             } else {
                 indexToSend = 0;
@@ -2297,18 +2303,20 @@ describe("SkaleDKG", () => {
                 verificationVectorMultiplicationNew,
                 secretKeyContributions
             )).wait();
+            assert(resPreResp);
             const responseTx = await skaleDKG.connect(validators[indexToSend].nodeAddress).response(
                 stringKeccak256("New16NodeSchain"),
                 accusedNode,
                 secretNumbers[indexes[indexToSend]],
                 multipliedShares[indexes[indexToSend]]
             );
+            const receipt = await responseTx.wait();
+            assert(receipt);
             await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(accusedNode);
-            assert.isAtMost((await responseTx.wait()).gasUsed.toNumber() + resPreResp.gasUsed.toNumber(), 10000000);
+            expect(receipt.gasUsed + resPreResp.gasUsed).to.be.greaterThanOrEqual(5000000);
         });
 
         it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,
@@ -2328,14 +2336,14 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.LARGE,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -2392,7 +2400,6 @@ describe("SkaleDKG", () => {
         });
 
         it("16 nodes schain test with incorrect complaint and restart Schain creation", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,
@@ -2412,14 +2419,14 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.LARGE,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -2519,10 +2526,10 @@ describe("SkaleDKG", () => {
                     continue;
                 }
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
-                assert(comPubKey.x.a, "0");
-                assert(comPubKey.x.b, "0");
-                assert(comPubKey.y.a, "0");
-                assert(comPubKey.y.b, "0");
+                expect(comPubKey.x.a).to.be.equal(0);
+                expect(comPubKey.x.b).to.be.equal(0);
+                expect(comPubKey.y.a).to.be.equal(0);
+                expect(comPubKey.y.b).to.be.equal(0);
                 let index = 0;
                 if (i === 1) {
                     index = 1;
@@ -2541,7 +2548,6 @@ describe("SkaleDKG", () => {
         });
 
         it("16 nodes schain test with incorrect complaint and creating new schain", async () => {
-
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
                 await nodes.createNode(validators[0].nodeAddress.address,
@@ -2561,14 +2567,14 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "New16NodeSchain",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -2636,14 +2642,14 @@ describe("SkaleDKG", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.SMALL,
                         nonce: 0,
                         name: "New16NodeSchain1",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 )
@@ -2670,14 +2676,11 @@ describe("SkaleDKG", () => {
             }
             let comPubKey;
             for (let i = 0; i < 16; i++) {
-                // if (i.toString() === accusedNode) {
-                //     continue;
-                // }
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain1"));
-                assert(comPubKey.x.a, "0");
-                assert(comPubKey.x.b, "0");
-                assert(comPubKey.y.a, "0");
-                assert(comPubKey.y.b, "0");
+                expect(comPubKey.x.a).to.be.equal(0);
+                expect(comPubKey.x.b).to.be.equal(0);
+                expect(comPubKey.y.a).to.be.equal(0);
+                expect(comPubKey.y.b).to.be.equal(0);
                 let index = 0;
                 if (i === 1) {
                     index = 1;

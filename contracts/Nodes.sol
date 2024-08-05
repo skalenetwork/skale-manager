@@ -174,7 +174,7 @@ contract Nodes is Permissions, INodes {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
-                (uint(spaceOfNodes[nodeIndex].freeSpace) - space).toUint8()
+                (uint256(spaceOfNodes[nodeIndex].freeSpace) - space).toUint8()
             );
         }
         return true;
@@ -194,7 +194,7 @@ contract Nodes is Permissions, INodes {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
-                (uint(spaceOfNodes[nodeIndex].freeSpace) + space).toUint8()
+                (uint256(spaceOfNodes[nodeIndex].freeSpace) + space).toUint8()
             );
         }
     }

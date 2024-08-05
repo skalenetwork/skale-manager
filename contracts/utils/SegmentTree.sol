@@ -75,7 +75,7 @@ library SegmentTree {
     function create(Tree storage segmentTree, uint256 size) external {
         require(size > 0, "Size can't be 0");
         require(size & size - 1 == 0, "Size is not power of 2");
-        segmentTree.tree = new uint[](size * 2 - 1);
+        segmentTree.tree = new uint256[](size * 2 - 1);
     }
 
     /**

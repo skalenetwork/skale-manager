@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManager,
+import {ContractManager,
          DelegationController,
          Nodes,
          SchainsInternalMock,
@@ -12,31 +12,31 @@ import { ContractManager,
          Wallets,
          NodeRotation} from "../typechain-types";
 
-import { nextMonth, skipTime } from "./tools/time";
+import {nextMonth, skipTime} from "./tools/time";
 
-import { curve, ec } from "elliptic";
+import {curve, ec} from "elliptic";
 const secp256k1Curve = new ec("secp256k1");
-import { privateKeys } from "./tools/private-keys";
+import {privateKeys} from "./tools/private-keys";
 
-import { Wallet } from "ethers";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deploySlashingTable } from "./tools/deploy/slashingTable";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert } from "chai";
-import { deployWallets } from "./tools/deploy/wallets";
-import { makeSnapshot, applySnapshot } from "./tools/snapshot";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { schainParametersType, SchainType } from "./tools/types";
-import { deployNodeRotation } from "./tools/deploy/nodeRotation";
+import {Wallet} from "ethers";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleDKG} from "./tools/deploy/skaleDKG";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {deploySlashingTable} from "./tools/deploy/slashingTable";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {assert} from "chai";
+import {deployWallets} from "./tools/deploy/wallets";
+import {makeSnapshot, applySnapshot} from "./tools/snapshot";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {schainParametersType, SchainType} from "./tools/types";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -560,8 +560,8 @@ describe("SkaleDkgFakeComplaint", () => {
         nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.parseEther("10000")});
 
         validators = [
             {
@@ -587,7 +587,7 @@ describe("SkaleDkgFakeComplaint", () => {
         wallets = await deployWallets(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
 
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
 
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
         await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
@@ -648,14 +648,14 @@ describe("SkaleDkgFakeComplaint", () => {
             await schains.addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.MEDIUM_TEST,
                         nonce: 0,
                         name: "d2",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -664,21 +664,21 @@ describe("SkaleDkgFakeComplaint", () => {
             schainName = "d2";
             await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 let index = 3;
-            while (!(nodesInGroup[0].eq(0) && nodesInGroup[1].eq(1) && nodesInGroup[2].eq(2))) {
+            while (!(nodesInGroup[0] === 0n && nodesInGroup[1] === 1n && nodesInGroup[2] === 2n)) {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = `d${index}`;
                 index++;
                 await schains.addSchain(
                     validator1.address,
                     deposit,
-                    ethers.utils.defaultAbiCoder.encode(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
                         [schainParametersType],
                         [{
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
                             name: schainName,
-                            originator: ethers.constants.AddressZero,
+                            originator: ethers.ZeroAddress,
                             options: []
                         }]
                     ));

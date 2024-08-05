@@ -4,16 +4,16 @@ on:
     types: [closed]
     branches:
       - 'v*.*.*'
-      - master
       - develop
       - beta
+      - release-candidate
       - stable
   push:
     tags:
       - 'custom-release-*'
 
 env:
-  NODE_VERSION: 18
+  NODE_VERSION: 20
 
 jobs:
   build:

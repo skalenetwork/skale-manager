@@ -1,10 +1,10 @@
-import { ContractManager, DelegationController } from "../../../../typechain-types";
-import { deployBounty } from "../bounty";
-import { deployFunctionFactory } from "../factory";
-import { deploySkaleToken } from "../skaleToken";
-import { deployDelegationPeriodManager } from "./delegationPeriodManager";
-import { deployTimeHelpers } from "./timeHelpers";
-import { deployValidatorService } from "./validatorService";
+import {ContractManager, DelegationController} from "../../../../typechain-types";
+import {deployBounty} from "../bounty";
+import {deployFunctionFactory} from "../factory";
+import {deploySkaleToken} from "../skaleToken";
+import {deployDelegationPeriodManager} from "./delegationPeriodManager";
+import {deployTimeHelpers} from "./timeHelpers";
+import {deployValidatorService} from "./validatorService";
 
 export const deployDelegationController = deployFunctionFactory(
     "DelegationController",

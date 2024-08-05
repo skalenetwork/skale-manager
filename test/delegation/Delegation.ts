@@ -1,4 +1,4 @@
-import { ConstantsHolder,
+import {ConstantsHolder,
     ContractManager,
     DelegationController,
     DelegationPeriodManager,
@@ -11,36 +11,36 @@ import { ConstantsHolder,
     Nodes,
     SlashingTable} from "../../typechain-types";
 
-import { currentTime, nextMonth, skipTimeToDate } from "../tools/time";
+import {currentTime, nextMonth, skipTimeToDate} from "../tools/time";
 
-import { BigNumber, Wallet } from "ethers";
+import {HDNodeWallet, Wallet} from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
-import { deployContractManager } from "../tools/deploy/contractManager";
-import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployDelegationPeriodManager } from "../tools/deploy/delegation/delegationPeriodManager";
-import { deployDistributor } from "../tools/deploy/delegation/distributor";
-import { deployPunisher } from "../tools/deploy/delegation/punisher";
-import { deployTokenState } from "../tools/deploy/delegation/tokenState";
-import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { State } from "../tools/types";
-import { deployNodes } from "../tools/deploy/nodes";
-import { deploySlashingTable } from "../tools/deploy/slashingTable";
-import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
-import { deploySkaleManager } from "../tools/deploy/skaleManager";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { assert, expect } from "chai";
-import { getValidatorIdSignature } from "../tools/signatures";
-import { fastBeforeEach } from "../tools/mocha";
+import {deployConstantsHolder} from "../tools/deploy/constantsHolder";
+import {deployContractManager} from "../tools/deploy/contractManager";
+import {deployDelegationController} from "../tools/deploy/delegation/delegationController";
+import {deployDelegationPeriodManager} from "../tools/deploy/delegation/delegationPeriodManager";
+import {deployDistributor} from "../tools/deploy/delegation/distributor";
+import {deployPunisher} from "../tools/deploy/delegation/punisher";
+import {deployTokenState} from "../tools/deploy/delegation/tokenState";
+import {deployValidatorService} from "../tools/deploy/delegation/validatorService";
+import {deploySkaleToken} from "../tools/deploy/skaleToken";
+import {State} from "../tools/types";
+import {deployNodes} from "../tools/deploy/nodes";
+import {deploySlashingTable} from "../tools/deploy/slashingTable";
+import {deployTimeHelpersWithDebug} from "../tools/deploy/test/timeHelpersWithDebug";
+import {deploySkaleManager} from "../tools/deploy/skaleManager";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
+import {assert, expect} from "chai";
+import {getValidatorIdSignature} from "../tools/signatures";
+import {fastBeforeEach} from "../tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
 
-const allowedDelegationPeriods = [2, 6, 12];
+const allowedDelegationPeriods = [2n, 6n, 12n];
 
 describe("Delegation", () => {
     let owner: SignerWithAddress;
@@ -62,12 +62,12 @@ describe("Delegation", () => {
     let punisher: Punisher;
     let nodes: Nodes;
 
-    const defaultAmount = ethers.utils.parseEther("100");
-    const month = 60 * 60 * 24 * 31;
+    const defaultAmount = ethers.parseEther("100");
+    const month = BigInt(60 * 60 * 24 * 31);
 
     interface IValidator {
         id: number;
-        account: Wallet
+        account: HDNodeWallet
     }
 
     fastBeforeEach(async () => {
@@ -76,7 +76,7 @@ describe("Delegation", () => {
         contractManager = await deployContractManager();
 
         skaleManagerMock = await deploySkaleManagerMock(contractManager);
-        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
 
         skaleToken = await deploySkaleToken(contractManager);
         delegationController = await deployDelegationController(contractManager);
@@ -89,7 +89,7 @@ describe("Delegation", () => {
         nodes = await deployNodes(contractManager);
 
         // contract must be set in contractManager for proper work of allow modifier
-        await contractManager.setContractsAddress("SkaleDKG", nodes.address);
+        await contractManager.setContractsAddress("SkaleDKG", nodes);
 
         // each test will start from Nov 10
         await skipTimeToDate(10, 10);
@@ -107,30 +107,30 @@ describe("Delegation", () => {
     it("should allow owner to remove locker", async () => {
         const lockerMockFactory = await ethers.getContractFactory("LockerMock");
         const lockerMock = await lockerMockFactory.deploy();
-        await contractManager.setContractsAddress("D2", lockerMock.address);
+        await contractManager.setContractsAddress("D2", lockerMock);
 
         await tokenState.connect(validator).addLocker("D2")
             .should.be.eventually.rejectedWith("LOCKER_MANAGER_ROLE is required");
         await tokenState.addLocker("D2");
         // TODO: consider on transfer optimization. Locker are turned of for non delegated wallets
-        // (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(13);
+        // (await tokenState.getAndUpdateLockedAmount.call(owner)).should.be.equal(13);
         await tokenState.connect(validator).removeLocker("D2")
             .should.be.eventually.rejectedWith("LOCKER_MANAGER_ROLE is required");
         await tokenState.removeLocker("D2");
-        (await tokenState.callStatic.getAndUpdateLockedAmount(owner.address)).toNumber().should.be.equal(0);
+        (await tokenState.getAndUpdateLockedAmount.staticCall(owner.address)).should.be.equal(0);
     });
 
     it("should allow owner to set new delegation period", async () => {
         await delegationPeriodManager.connect(validator).setDelegationPeriod(13, 13)
             .should.be.eventually.rejectedWith("DELEGATION_PERIOD_SETTER_ROLE is required");
         await delegationPeriodManager.setDelegationPeriod(13, 13);
-        (await delegationPeriodManager.stakeMultipliers(13)).toNumber()
+        (await delegationPeriodManager.stakeMultipliers(13))
             .should.be.equal(13);
     });
 
     it("should check limit of validators", async () => {
         await skaleToken.mint(holder1.address, defaultAmount, "0x", "0x");
-        const validatorsLimit = (await constantsHolder.limitValidatorsPerDelegator()).toNumber();
+        const validatorsLimit = Number(await constantsHolder.limitValidatorsPerDelegator());
         const validatorsAmount = validatorsLimit + 1;
         const validators: IValidator[] = [];
         for (let i = 0; i < validatorsAmount; ++i) {
@@ -139,7 +139,7 @@ describe("Delegation", () => {
                 account: Wallet.createRandom().connect(ethers.provider)
             });
         }
-        const etherAmount = ethers.utils.parseEther("5000");
+        const etherAmount = ethers.parseEther("5000");
         for (const newValidator of validators) {
             await holder1.sendTransaction({to: newValidator.account.address, value: etherAmount});
             await validatorService.connect(newValidator.account).registerValidator("Validator", "Good Validator", 150, 0);
@@ -180,7 +180,7 @@ describe("Delegation", () => {
 
     it("should check limit of validators when delegations was not accepted", async () => {
         await skaleToken.mint(holder1.address, defaultAmount, "0x", "0x");
-        const validatorsLimit = (await constantsHolder.limitValidatorsPerDelegator()).toNumber();
+        const validatorsLimit = Number(await constantsHolder.limitValidatorsPerDelegator());
         const validatorsAmount = validatorsLimit + 1;
         const validators: IValidator[] = [];
         for (let i = 0; i < validatorsAmount; ++i) {
@@ -189,7 +189,7 @@ describe("Delegation", () => {
                 account: Wallet.createRandom().connect(ethers.provider)
             });
         }
-        const etherAmount = ethers.utils.parseEther("5000");
+        const etherAmount = ethers.parseEther("5000");
         for (const newValidator of validators) {
             await holder1.sendTransaction({to: newValidator.account.address, value: etherAmount});
             await validatorService.connect(newValidator.account).registerValidator("Validator", "Good Validator", 150, 0);
@@ -235,9 +235,9 @@ describe("Delegation", () => {
     });
 
     describe("when holders have tokens and validator is registered", () => {
-        let validatorId: number;
+        let validatorId: bigint;
         fastBeforeEach(async () => {
-            validatorId = 1;
+            validatorId = 1n;
             await skaleToken.mint(holder1.address, defaultAmount.toString(), "0x", "0x");
             await skaleToken.mint(holder2.address, defaultAmount.toString(), "0x", "0x");
             await skaleToken.mint(holder3.address, defaultAmount.toString(), "0x", "0x");
@@ -248,7 +248,7 @@ describe("Delegation", () => {
             await delegationPeriodManager.setDelegationPeriod(6, 150);
         });
 
-        for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
+        for (let delegationPeriod = 1n; delegationPeriod <= 18; ++delegationPeriod) {
             it(`should check ${delegationPeriod} month${delegationPeriod > 1 ? "s" : ""} delegation period availability`, async () => {
                 await delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod)
                     .should.be.eventually.equal(allowedDelegationPeriods.includes(delegationPeriod));
@@ -266,13 +266,12 @@ describe("Delegation", () => {
 
                         const delegation = await delegationController.delegations(requestId);
                         assert.equal(holder1.address, delegation.holder);
-                        assert.equal(validatorId, delegation.validatorId.toNumber());
-                        assert.equal(delegationPeriod, delegation.delegationPeriod.toNumber());
+                        assert.equal(validatorId, delegation.validatorId);
+                        assert.equal(delegationPeriod, delegation.delegationPeriod);
                         assert.equal("D2 is even", delegation.info);
                     });
 
                     describe("when delegation request is sent", () => {
-
                         fastBeforeEach(async () => {
                             await delegationController.connect(holder1).delegate(
                                 validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even");
@@ -312,8 +311,8 @@ describe("Delegation", () => {
                             await skaleToken.connect(holder2).transferFrom(holder1.address, holder2.address, 1);
                             await skaleToken.connect(holder1).send(holder2.address, 1, "0x");
 
-                            const balance = BigNumber.from(await skaleToken.balanceOf(holder1.address));
-                            const correctBalance = BigNumber.from(defaultAmount.toString()).sub(3);
+                            const balance = await skaleToken.balanceOf(holder1.address);
+                            const correctBalance = defaultAmount - 3n;
 
                             balance.should.be.deep.equal(correctBalance);
                         });
@@ -325,7 +324,7 @@ describe("Delegation", () => {
 
                             it("should extend delegation period if undelegation request was not sent",
                                 async () => {
-                                    await skipTimeToDate(1, (11 + delegationPeriod) % 12);
+                                    await skipTimeToDate(1, Number((11n + delegationPeriod) % 12n));
 
                                     await skaleToken.connect(holder1).transfer(holder2.address, 1)
                                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
@@ -337,7 +336,7 @@ describe("Delegation", () => {
 
                                     await delegationController.connect(holder1).requestUndelegation(requestId);
 
-                                    await skipTimeToDate(27, (11 + delegationPeriod + delegationPeriod - 1) % 12);
+                                    await skipTimeToDate(27, Number((11n + delegationPeriod + delegationPeriod - 1n) % 12n));
 
                                     await skaleToken.connect(holder1).transfer(holder2.address, 1)
                                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
@@ -348,7 +347,7 @@ describe("Delegation", () => {
                                     await skaleToken.connect(holder1).send(holder2.address, 1, "0x")
                                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
-                                    await skipTimeToDate(1, (11 + delegationPeriod + delegationPeriod) % 12);
+                                    await skipTimeToDate(1, Number((11n + delegationPeriod + delegationPeriod) % 12n));
 
                                     await skaleToken.connect(holder1).transfer(holder2.address, 1);
                                     await skaleToken.connect(holder1).approve(holder2.address, 1);
@@ -385,7 +384,7 @@ describe("Delegation", () => {
 
             await nextMonth(contractManager);
 
-            const bondAmount = await validatorService.callStatic.getAndUpdateBondAmount(validatorId);
+            const bondAmount = await validatorService.getAndUpdateBondAmount.staticCall(validatorId);
             assert.equal(defaultAmount.toString(), bondAmount.toString());
         });
 
@@ -400,8 +399,8 @@ describe("Delegation", () => {
 
             await nextMonth(contractManager);
 
-            const bondAmount = await validatorService.callStatic.getAndUpdateBondAmount(validatorId);
-            assert.equal(18, bondAmount.toNumber());
+            const bondAmount = await validatorService.getAndUpdateBondAmount.staticCall(validatorId);
+            assert.equal(18n, bondAmount);
         });
 
         it("should bond equals zero for validator if she delegated to another validator", async () =>{
@@ -420,42 +419,42 @@ describe("Delegation", () => {
             await delegationController.connect(validator2).acceptPendingDelegation(1);
             await nextMonth(contractManager);
 
-            const bondAmount1 = await validatorService.callStatic.getAndUpdateBondAmount(validator1Id);
-            let bondAmount2 = await validatorService.callStatic.getAndUpdateBondAmount(validator2Id);
-            assert.equal(bondAmount1.toNumber(), 0);
-            assert.equal(bondAmount2.toNumber(), 200);
+            const bondAmount1 = await validatorService.getAndUpdateBondAmount.staticCall(validator1Id);
+            let bondAmount2 = await validatorService.getAndUpdateBondAmount.staticCall(validator2Id);
+            assert.equal(bondAmount1, 0n);
+            assert.equal(bondAmount2, 200n);
             await delegationController.connect(validator2).delegate(
                 validator2Id, 200, 2, "D2 is even");
             await delegationController.connect(validator2).acceptPendingDelegation(2);
 
             await nextMonth(contractManager);
-            bondAmount2 = await validatorService.callStatic.getAndUpdateBondAmount(validator2Id);
-            assert.equal(bondAmount2.toNumber(), 400);
+            bondAmount2 = await validatorService.getAndUpdateBondAmount.staticCall(validator2Id);
+            assert.equal(bondAmount2, 400n);
         });
 
         it("should not pay bounty for slashed tokens", async () => {
             const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
-            await contractManager.setContractsAddress("TimeHelpers", timeHelpersWithDebug.address);
-            await skaleToken.mint(holder1.address, ethers.utils.parseEther("10000"), "0x", "0x");
-            await skaleToken.mint(holder2.address, ethers.utils.parseEther("10000"), "0x", "0x");
+            await contractManager.setContractsAddress("TimeHelpers", timeHelpersWithDebug);
+            await skaleToken.mint(holder1.address, ethers.parseEther("10000"), "0x", "0x");
+            await skaleToken.mint(holder2.address, ethers.parseEther("10000"), "0x", "0x");
 
-            await constantsHolder.setMSR(ethers.utils.parseEther("2000"));
+            await constantsHolder.setMSR(ethers.parseEther("2000"));
 
             const slashingTable: SlashingTable = await deploySlashingTable(contractManager);
             const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
             await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
-            await slashingTable.setPenalty("FailedDKG", ethers.utils.parseEther("10000"));
+            await slashingTable.setPenalty("FailedDKG", ethers.parseEther("10000"));
 
-            await constantsHolder.setLaunchTimestamp((await currentTime()) - 4 * month);
+            await constantsHolder.setLaunchTimestamp((await currentTime()) - 4n * month);
 
-            await delegationController.connect(holder1).delegate(validatorId, ethers.utils.parseEther("10000"), 2, "First delegation");
+            await delegationController.connect(holder1).delegate(validatorId, ethers.parseEther("10000"), 2, "First delegation");
             const delegationId1 = 0;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId1);
 
             await timeHelpersWithDebug.skipTime(month);
             (await delegationController.getState(delegationId1)).should.be.equal(State.DELEGATED);
 
-            const bounty = ethers.utils.parseEther("1");
+            const bounty = ethers.parseEther("1");
             for (let i = 0; i < 5; ++i) {
                 await skaleManagerMock.payBounty(validatorId, bounty);
             }
@@ -464,17 +463,17 @@ describe("Delegation", () => {
 
             await distributor.connect(holder1).withdrawBounty(validatorId, bountyAddress.address);
             let balance = (await skaleToken.balanceOf(bountyAddress.address)).toString();
-            balance.should.be.equal(bounty.mul(5).mul(85).div(100));
+            balance.should.be.equal(bounty * 5n * 85n / 100n);
             await skaleToken.connect(bountyAddress).transfer(holder1.address, balance);
 
-            await punisher.slash(validatorId, ethers.utils.parseEther("10000"));
+            await punisher.slash(validatorId, ethers.parseEther("10000"));
 
-            (await skaleToken.callStatic.getAndUpdateSlashedAmount(holder1.address)).toString()
-                .should.be.equal(ethers.utils.parseEther("10000"));
-            (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toString()
+            (await skaleToken.getAndUpdateSlashedAmount.staticCall(holder1.address)).toString()
+                .should.be.equal(ethers.parseEther("10000"));
+            (await skaleToken.getAndUpdateDelegatedAmount.staticCall(holder1.address)).toString()
                 .should.be.equal("0");
 
-            await delegationController.connect(holder2).delegate(validatorId, ethers.utils.parseEther("10000"), 2, "Second delegation");
+            await delegationController.connect(holder2).delegate(validatorId, ethers.parseEther("10000"), 2, "Second delegation");
             const delegationId2 = 1;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId2);
 
@@ -494,7 +493,7 @@ describe("Delegation", () => {
 
             await distributor.connect(holder2).withdrawBounty(validatorId, bountyAddress.address);
             balance = (await skaleToken.balanceOf(bountyAddress.address)).toString();
-            balance.should.be.equal(bounty.mul(5).mul(85).div(100));
+            balance.should.be.equal(bounty * 5n * 85n / 100n);
             await skaleToken.connect(bountyAddress).transfer(holder2.address, balance);
         });
 
@@ -505,11 +504,11 @@ describe("Delegation", () => {
                 holdersAmount = 10;
             }
             const delegatedAmount = 1e7;
-            const holders: Wallet[] = [];
+            const holders: HDNodeWallet[] = [];
             for (let i = 0; i < holdersAmount; ++i) {
                 holders.push(Wallet.createRandom().connect(ethers.provider));
             }
-            const etherAmount = ethers.utils.parseEther("5000");
+            const etherAmount = ethers.parseEther("5000");
 
             await constantsHolder.setLaunchTimestamp(0);
 
@@ -531,20 +530,20 @@ describe("Delegation", () => {
 
             for (const holder of holders) {
                 await distributor.connect(holder).withdrawBounty(validatorId, holder.address);
-                (await skaleToken.balanceOf(holder.address)).toNumber().should.be.equal(delegatedAmount * 2);
-                (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder.address))
-                    .toNumber().should.be.equal(delegatedAmount);
+                (await skaleToken.balanceOf(holder.address)).should.be.equal(delegatedAmount * 2);
+                (await skaleToken.getAndUpdateDelegatedAmount.staticCall(holder.address))
+                    .should.be.equal(delegatedAmount);
 
-                const balance = await holder.getBalance();
-                const gas = 21 * 1e3;
-                const gasPrice = 20 * 1e9;
+                const balance = await ethers.provider.getBalance(holder);
+                const gas = BigInt(21 * 1e3);
+                const gasPrice = BigInt(20 * 1e9);
                 await holder.sendTransaction({
                     to: holder1.address,
                     gasLimit: gas,
                     gasPrice,
-                    value: balance.sub(gas * gasPrice)
+                    value: balance - (gas * gasPrice)
                 });
-                (await holder.getBalance()).toNumber().should.be.equal(0);
+                (await ethers.provider.getBalance(holder)).should.be.equal(0);
             }
         });
 
@@ -590,13 +589,13 @@ describe("Delegation", () => {
                 // holder3: ~37%
 
                 // TODO: Validator should get 17 (not 15) because of rounding errors
-                (await distributor.connect(validator).callStatic.getEarnedFeeAmount())[0].toNumber().should.be.equal(15);
-                (await distributor.connect(holder1).callStatic.getAndUpdateEarnedBountyAmount(
-                    validatorId))[0].toNumber().should.be.equal(25);
-                (await distributor.connect(holder2).callStatic.getAndUpdateEarnedBountyAmount(
-                    validatorId))[0].toNumber().should.be.equal(28);
-                (await distributor.connect(holder3).callStatic.getAndUpdateEarnedBountyAmount(
-                    validatorId))[0].toNumber().should.be.equal(31);
+                (await distributor.connect(validator).getEarnedFeeAmount.staticCall())[0].should.be.equal(15);
+                (await distributor.connect(holder1).getAndUpdateEarnedBountyAmount.staticCall(
+                    validatorId))[0].should.be.equal(25);
+                (await distributor.connect(holder2).getAndUpdateEarnedBountyAmount.staticCall(
+                    validatorId))[0].should.be.equal(28);
+                (await distributor.connect(holder3).getAndUpdateEarnedBountyAmount.staticCall(
+                    validatorId))[0].should.be.equal(31);
 
                 await distributor.connect(validator).withdrawFee(bountyAddress.address)
                     .should.be.eventually.rejectedWith("Fee is locked");
@@ -606,27 +605,26 @@ describe("Delegation", () => {
                 await nextMonth(contractManager, 3);
 
                 await distributor.connect(validator).withdrawFee(bountyAddress.address);
-                (await distributor.connect(validator).callStatic.getEarnedFeeAmount())[0].toNumber().should.be.equal(0);
+                (await distributor.connect(validator).getEarnedFeeAmount.staticCall())[0].should.be.equal(0);
                 await distributor.connect(validator).withdrawFee(validator.address);
-                (await distributor.connect(validator).callStatic.getEarnedFeeAmount())[0].toNumber().should.be.equal(0);
+                (await distributor.connect(validator).getEarnedFeeAmount.staticCall())[0].should.be.equal(0);
 
-                (await skaleToken.balanceOf(bountyAddress.address)).toNumber().should.be.equal(15);
+                (await skaleToken.balanceOf(bountyAddress.address)).should.be.equal(15);
 
                 await distributor.connect(holder1).withdrawBounty(validatorId, bountyAddress.address);
-                (await distributor.connect(holder1).callStatic.getAndUpdateEarnedBountyAmount(
-                    validatorId))[0].toNumber().should.be.equal(0);
+                (await distributor.connect(holder1).getAndUpdateEarnedBountyAmount.staticCall(
+                    validatorId))[0].should.be.equal(0);
                 await distributor.connect(holder2).withdrawBounty(validatorId, holder2.address);
-                (await distributor.connect(holder2).callStatic.getAndUpdateEarnedBountyAmount(
-                    validatorId))[0].toNumber().should.be.equal(0);
+                (await distributor.connect(holder2).getAndUpdateEarnedBountyAmount.staticCall(
+                    validatorId))[0].should.be.equal(0);
 
-                (await skaleToken.balanceOf(bountyAddress.address)).toNumber().should.be.equal(15 + 25);
+                (await skaleToken.balanceOf(bountyAddress.address)).should.be.equal(15 + 25);
 
-                const balance = (await skaleToken.balanceOf(holder2.address)).toString();
-                balance.should.be.equal(BigNumber.from(defaultAmount.toString()).add(28).toString());
+                const balance = await skaleToken.balanceOf(holder2.address);
+                balance.should.be.equal(defaultAmount + 28n);
             });
 
             describe("Slashing", () => {
-
                 it("should slash validator and lock delegators fund in proportion of delegation share", async () => {
                     // do 5 separate slashes to check aggregation
                     const slashesNumber = 5;
@@ -639,56 +637,56 @@ describe("Delegation", () => {
                     // holder2: $3e6
                     // holder3: $5e6
 
-                    (await tokenState.callStatic.getAndUpdateLockedAmount(holder1.address)).toNumber()
+                    (await tokenState.getAndUpdateLockedAmount.staticCall(holder1.address))
                         .should.be.equal(delegatedAmount1);
-                    (await delegationController.callStatic.getAndUpdateDelegatedAmount(
-                        holder1.address)).toNumber().should.be.equal(delegatedAmount1 - 1 * slashesNumber);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                        holder1.address)).should.be.equal(delegatedAmount1 - 1 * slashesNumber);
 
-                    (await tokenState.callStatic.getAndUpdateLockedAmount(holder2.address)).toNumber()
+                    (await tokenState.getAndUpdateLockedAmount.staticCall(holder2.address))
                         .should.be.equal(delegatedAmount2);
-                    (await delegationController.callStatic.getAndUpdateDelegatedAmount(
-                        holder2.address)).toNumber().should.be.equal(delegatedAmount2 - 2 * slashesNumber);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                        holder2.address)).should.be.equal(delegatedAmount2 - 2 * slashesNumber);
 
-                    (await tokenState.callStatic.getAndUpdateLockedAmount(holder3.address)).toNumber()
+                    (await tokenState.getAndUpdateLockedAmount.staticCall(holder3.address))
                         .should.be.equal(delegatedAmount3);
-                    (await delegationController.callStatic.getAndUpdateDelegatedAmount(
-                        holder3.address)).toNumber().should.be.equal(delegatedAmount3 - 3 * slashesNumber);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                        holder3.address)).should.be.equal(delegatedAmount3 - 3 * slashesNumber);
                 });
 
                 it("should not lock more tokens than were delegated", async () => {
                     await punisher.slash(validatorId, 10 * (delegatedAmount1 + delegatedAmount2 + delegatedAmount3));
 
-                    (await tokenState.callStatic.getAndUpdateLockedAmount(holder1.address)).toNumber()
+                    (await tokenState.getAndUpdateLockedAmount.staticCall(holder1.address))
                         .should.be.equal(delegatedAmount1);
-                    (await delegationController.callStatic.getAndUpdateDelegatedAmount(
-                        holder1.address)).toNumber().should.be.equal(0);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                        holder1.address)).should.be.equal(0);
 
-                    (await tokenState.callStatic.getAndUpdateLockedAmount(holder2.address)).toNumber()
+                    (await tokenState.getAndUpdateLockedAmount.staticCall(holder2.address))
                         .should.be.equal(delegatedAmount2);
-                    (await delegationController.callStatic.getAndUpdateDelegatedAmount(
-                        holder2.address)).toNumber().should.be.equal(0);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                        holder2.address)).should.be.equal(0);
 
-                    (await tokenState.callStatic.getAndUpdateLockedAmount(holder3.address)).toNumber()
+                    (await tokenState.getAndUpdateLockedAmount.staticCall(holder3.address))
                         .should.be.equal(delegatedAmount3);
-                    (await delegationController.callStatic.getAndUpdateDelegatedAmount(
-                        holder3.address)).toNumber().should.be.equal(0);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                        holder3.address)).should.be.equal(0);
                 });
 
                 it("should allow to return slashed tokens back", async () => {
                     await punisher.slash(validatorId, 10);
 
-                    (await tokenState.callStatic.getAndUpdateLockedAmount(holder3.address)).toNumber()
+                    (await tokenState.getAndUpdateLockedAmount.staticCall(holder3.address))
                         .should.be.equal(delegatedAmount3);
-                    (await delegationController.callStatic.getAndUpdateDelegatedAmount(
-                        holder3.address)).toNumber().should.be.equal(delegatedAmount3 - 5);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                        holder3.address)).should.be.equal(delegatedAmount3 - 5);
 
                     await delegationController.processAllSlashes(holder3.address);
                     await punisher.forgive(holder3.address, 3);
 
-                    (await tokenState.callStatic.getAndUpdateLockedAmount(holder3.address)).toNumber()
+                    (await tokenState.getAndUpdateLockedAmount.staticCall(holder3.address))
                         .should.be.equal(delegatedAmount3 - 3);
-                    (await delegationController.callStatic.getAndUpdateDelegatedAmount(
-                        holder3.address)).toNumber().should.be.equal(delegatedAmount3 - 5);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                        holder3.address)).should.be.equal(delegatedAmount3 - 5);
                 });
 
                 it("should allow only FORGIVER_ROLE to return slashed tokens", async() => {
@@ -720,13 +718,13 @@ describe("Delegation", () => {
 
                     await nextMonth(contractManager);
 
-                    (await distributor.connect(validator).callStatic.getEarnedFeeAmount())[0].toNumber().should.be.equal(15);
-                    (await distributor.connect(holder1).callStatic.getAndUpdateEarnedBountyAmount(
-                        validatorId))[0].toNumber().should.be.equal(85);
-                    (await distributor.connect(holder2).callStatic.getAndUpdateEarnedBountyAmount(
-                        validatorId))[0].toNumber().should.be.equal(0);
-                    (await distributor.connect(holder3).callStatic.getAndUpdateEarnedBountyAmount(
-                        validatorId))[0].toNumber().should.be.equal(0);
+                    (await distributor.connect(validator).getEarnedFeeAmount.staticCall())[0].should.be.equal(15);
+                    (await distributor.connect(holder1).getAndUpdateEarnedBountyAmount.staticCall(
+                        validatorId))[0].should.be.equal(85);
+                    (await distributor.connect(holder2).getAndUpdateEarnedBountyAmount.staticCall(
+                        validatorId))[0].should.be.equal(0);
+                    (await distributor.connect(holder3).getAndUpdateEarnedBountyAmount.staticCall(
+                        validatorId))[0].should.be.equal(0);
                 });
 
                 it("should reduce delegated amount immediately after slashing", async () => {
@@ -734,7 +732,7 @@ describe("Delegation", () => {
 
                     await punisher.slash(validatorId, 1);
 
-                    (await delegationController.connect(holder1).callStatic.getAndUpdateDelegatedAmount(holder1.address)).toNumber()
+                    (await delegationController.connect(holder1).getAndUpdateDelegatedAmount.staticCall(holder1.address))
                         .should.be.equal(delegatedAmount1 - 1);
                 });
 
@@ -744,11 +742,13 @@ describe("Delegation", () => {
                     // make owner balance non zero to do not affect transfer costs
                     await skaleToken.mint(owner.address, 1, "0x", "0x");
                     let tx = await (await skaleToken.connect(validator).transfer(owner.address, 1)).wait();
+                    assert(tx);
                     const gasUsedBeforeSlashing = tx.gasUsed;
                     for (let i = 0; i < 10; ++i) {
                         await punisher.slash(validatorId, 1);
                     }
                     tx = await (await skaleToken.connect(validator).transfer(owner.address, 1)).wait();
+                    assert(tx);
                     tx.gasUsed.should.be.equal(gasUsedBeforeSlashing);
                 });
             });

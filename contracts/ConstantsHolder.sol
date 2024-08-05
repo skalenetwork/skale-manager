@@ -149,7 +149,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         allowableLatency = 150000;
         deltaPeriod = 3600;
         checkTime = 300;
-        launchTimestamp = type(uint).max;
+        launchTimestamp = type(uint256).max;
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
         proofOfUseDelegationPercentage = 50;

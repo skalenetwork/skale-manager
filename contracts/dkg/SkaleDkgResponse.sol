@@ -93,13 +93,12 @@ library SkaleDkgResponse {
         bytes32[2] memory publicKey = INodes(
             contractManager.getContract("Nodes")
         ).getNodePublicKey(complaints[schainHash].fromNodeToComplaint);
-        uint256 pkX = uint(publicKey[0]);
-        uint256 pkY;
+        uint256 pkX = uint256(publicKey[0]);
 
-        (pkX, pkY) = IECDH(contractManager.getContract("ECDH")).deriveKey(
+        (pkX, ) = IECDH(contractManager.getContract("ECDH")).deriveKey(
             secretNumber,
             pkX,
-            uint(publicKey[1])
+            uint256(publicKey[1])
         );
         bytes32 key = bytes32(pkX);
 

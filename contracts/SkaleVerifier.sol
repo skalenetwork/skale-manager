@@ -116,7 +116,7 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
         if (counter > 100) {
             return false;
         }
-        uint256 xCoord = uint(hash) % Fp2Operations.P;
+        uint256 xCoord = uint256(hash) % Fp2Operations.P;
         xCoord = (xCoord + counter) % Fp2Operations.P;
 
         uint256 ySquared = addmod(

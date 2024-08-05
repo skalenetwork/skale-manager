@@ -1,8 +1,8 @@
-import { ContractManager, TokenState } from "../../../../typechain-types";
-import { deployFunctionFactory } from "../factory";
-import { deployDelegationController } from "./delegationController";
-import { deployPunisher } from "./punisher";
-import { deployTimeHelpers } from "./timeHelpers";
+import {ContractManager, TokenState} from "../../../../typechain-types";
+import {deployFunctionFactory} from "../factory";
+import {deployDelegationController} from "./delegationController";
+import {deployPunisher} from "./punisher";
+import {deployTimeHelpers} from "./timeHelpers";
 
 const name = "TokenState";
 

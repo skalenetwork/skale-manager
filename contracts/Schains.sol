@@ -361,9 +361,9 @@ contract Schains is Permissions, ISchains {
             return 1e18;
         } else {
             uint256 up = nodeDeposit * numberOfNodes * lifetime * 2;
-            uint256 down = uint(
-                uint(constantsHolder.SMALL_DIVISOR())
-                * uint(constantsHolder.SECONDS_TO_YEAR())
+            uint256 down = uint256(
+                uint256(constantsHolder.SMALL_DIVISOR())
+                * uint256(constantsHolder.SECONDS_TO_YEAR())
                 / divisor
             );
             return up / down;
