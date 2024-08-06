@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import {contracts} from "./deploy";
-import {ethers} from "hardhat";
+import {ethers, upgrades} from "hardhat";
 import {Upgrader, AutoSubmitter} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
-import {SkaleManager} from "../typechain-types";
+import {ContractManager, PaymasterController, SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
 import {Transaction} from "ethers";
 
@@ -59,7 +59,56 @@ class SkaleManagerUpgrader extends Upgrader {
         }));
     }
 
-    // deployNewContracts = () => { };
+    deployNewContracts = async () => {
+        const [deployer] = await ethers.getSigners();
+
+        const contractManager = await this.instance.getContract("ContractManager") as ContractManager;
+
+        const paymasterControllerFactory = await ethers.getContractFactory("PaymasterController");
+        console.log("Deploy PaymasterController");
+        const paymasterController = await upgrades.deployProxy(
+            paymasterControllerFactory,
+            [contractManager]
+        ) as unknown as PaymasterController;
+
+        const ima = process.env.IMA ?? "0x8629703a9903515818C2FeB45a6f6fA5df8Da404";
+        const marionette = process.env.MARIONETTE ?? "";
+        const paymaster = process.env.PAYMASTER ?? "";
+        const paymasterChainHash = process.env.PAYMASTER_CHAIN_HASH ?? "";
+
+        console.log(`Set IMA address to ${ima}`);
+        await (await paymasterController.setImaAddress(ima)).wait();
+
+        console.log(`Set Marionette address to ${marionette}`);
+        await (await paymasterController.setMarionetteAddress(marionette)).wait();
+
+        console.log(`Set Paymaster address to ${paymaster}`);
+        await (await paymasterController.setPaymasterAddress(paymaster)).wait();
+
+        console.log(`Set Paymaster schain hash to ${paymasterChainHash}`);
+        await (await paymasterController.setPaymasterChainHash(paymasterChainHash)).wait();
+
+        console.log("Revoke PAYMASTER_SETTER_ROLE");
+        await (await paymasterController.revokeRole(
+            await paymasterController.PAYMASTER_SETTER_ROLE(),
+            deployer
+        )).wait();
+
+        const owner = await contractManager.owner();
+        if (!await paymasterController.hasRole(await paymasterController.DEFAULT_ADMIN_ROLE(), owner)) {
+            console.log(`Grant ownership to ${owner}`);
+            await (await paymasterController.grantRole(
+                await paymasterController.DEFAULT_ADMIN_ROLE(),
+                owner
+            )).wait();
+
+            console.log(`Revoke ownership from ${ethers.resolveAddress(deployer)}`);
+            await (await paymasterController.revokeRole(
+                await paymasterController.DEFAULT_ADMIN_ROLE(),
+                deployer
+            )).wait();
+        }
+    };
 
     // initialize = async () => { };
 }
