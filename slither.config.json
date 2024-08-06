@@ -1,4 +1,4 @@
 {
     "detectors_to_exclude": "similar-names,reentrancy-events,solc-version,assembly,timestamp,calls-loop,reentrancy-no-eth,public-mappings-nested,incorrect-equality,dead-code,pragma",
-    "filter_paths": "node_modules|hardhat-dependency-compiler|thirdparty|test"
+    "filter_paths": "(node_modules/|contracts/hardhat-dependency-compiler/|thirdparty/|test/)"
 }
