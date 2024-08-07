@@ -74,7 +74,7 @@ class SkaleManagerUpgrader extends Upgrader {
         const ima = process.env.IMA ?? "0x8629703a9903515818C2FeB45a6f6fA5df8Da404";
         const marionette = process.env.MARIONETTE ?? "0xef777804e94eac176bbdbb3b3c9da06de87227ba";
         const paymaster = process.env.PAYMASTER ?? "0x0d66cA00CbAD4219734D7FDF921dD7Caadc1F78D";
-        const paymasterChainHash = process.env.PAYMASTER_CHAIN_HASH ?? "0x79f99296"; // elated-tan-skat
+        const paymasterChainHash = process.env.PAYMASTER_CHAIN_HASH ?? ethers.solidityPackedKeccak256(["string"], ["elated-tan-skat"]); // Europa
 
         console.log(`Set IMA address to ${ima}`);
         await (await paymasterController.setImaAddress(ima)).wait();
@@ -146,10 +146,21 @@ async function prepareContractsList(instance: Instance) {
 
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
+    let contractsToUpgrade = [
+        "Nodes",
+        "Schains",
+        "ValidatorService"
+    ];
+    if (process.env.UPGRADE_ALL) {
+        contractsToUpgrade = await prepareContractsList(skaleManager);
+    }
+    // TODO: remove after 1.12.0 release
+    contractsToUpgrade = contractsToUpgrade.filter((contract) => contract !== "PaymasterController")
+    // End of TODO
     const upgrader = new SkaleManagerUpgrader(
         "1.11.0",
         skaleManager,
-        await prepareContractsList(skaleManager)
+        contractsToUpgrade
     );
     await upgrader.upgrade();
 }
