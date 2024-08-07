@@ -68,7 +68,7 @@ class SkaleManagerUpgrader extends Upgrader {
         console.log("Deploy PaymasterController");
         const paymasterController = await upgrades.deployProxy(
             paymasterControllerFactory,
-            [contractManager]
+            [await ethers.resolveAddress(contractManager)]
         ) as unknown as PaymasterController;
 
         const ima = process.env.IMA ?? "0x8629703a9903515818C2FeB45a6f6fA5df8Da404";
