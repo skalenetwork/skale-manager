@@ -70,6 +70,7 @@ class SkaleManagerUpgrader extends Upgrader {
             paymasterControllerFactory,
             [await ethers.resolveAddress(contractManager)]
         ) as unknown as PaymasterController;
+        await paymasterController.deploymentTransaction()?.wait();
 
         const ima = process.env.IMA ?? "0x8629703a9903515818C2FeB45a6f6fA5df8Da404";
         const marionette = process.env.MARIONETTE ?? "0xef777804e94eac176bbdbb3b3c9da06de87227ba";
