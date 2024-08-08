@@ -1705,6 +1705,13 @@
   dependencies:
     "@skalenetwork/skale-manager-interfaces" "^3.2.0-paymaster.0"
 
+"@skalenetwork/ima-interfaces@^2.0.0-paymaster.2":
+  version "2.0.0-paymaster.2"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/ima-interfaces/-/ima-interfaces-2.0.0-paymaster.2.tgz#3ab13be431f73ff7de99be742c197c89cf49bacc"
+  integrity sha512-rz3iq4Y3Q1W9lhuQBOJh5BXs1f5M/15t9ZQCGAQE53GD7UzduX2YLLWme9y+XbwDAGSQuMY173vmGQ10jkxITA==
+  dependencies:
+    "@skalenetwork/skale-manager-interfaces" "^3.2.0-paymaster.0"
+
 "@skalenetwork/marionette-interfaces@^0.0.0-main.6":
   version "0.0.0-main.6"
   resolved "https://registry.yarnpkg.com/@skalenetwork/marionette-interfaces/-/marionette-interfaces-0.0.0-main.6.tgz#51dcb8a9efbb4070606c4b4197d1317bbf404cd5"
