@@ -95,8 +95,9 @@ library SkaleDkgResponse {
         ).getNodePublicKey(complaints[schainHash].fromNodeToComplaint);
         uint256 pkX = uint256(publicKey[0]);
 
-        // Value of pkY is not needed for proper DKG work
-        //slither-disable-next-line unused-return
+        // Value of pkY is not needed for proper DKG work.
+        // Encoding is only done by using half of the keys.
+        // slither-disable-next-line unused-return
         (pkX, ) = IECDH(contractManager.getContract("ECDH")).deriveKey(
             secretNumber,
             pkX,
