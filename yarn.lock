@@ -10482,10 +10482,10 @@ solc@^0.6.3, solc@^0.6.7:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solhint@5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/solhint/-/solhint-5.0.1.tgz#f0f783bd9d945e5a27b102295a3f28edba241d6c"
-  integrity sha512-QeQLS9HGCnIiibt+xiOa/+MuP7BWz9N7C5+Mj9pLHshdkNhuo3AzCpWmjfWVZBUuwIUO3YyCRVIcYLR3YOKGfg==
+solhint@5.0.3:
+  version "5.0.3"
+  resolved "https://registry.yarnpkg.com/solhint/-/solhint-5.0.3.tgz#b57f6d2534fe09a60f9db1b92e834363edd1cbde"
+  integrity sha512-OLCH6qm/mZTCpplTXzXTJGId1zrtNuDYP5c2e6snIv/hdRVxPfBBz/bAlL91bY/Accavkayp2Zp2BaDSrLVXTQ==
   dependencies:
     "@solidity-parser/parser" "^0.18.0"
     ajv "^6.12.6"
