@@ -205,7 +205,9 @@ describe("SkaleManager", () => {
                 "0x7f000001", // public ip
                 getPublicKey(nodeAddress), // public key
                 "d2", // name
-                "some.domain.name").should.be.eventually.rejectedWith("Validator is not authorized to create a node");
+                "some.domain.name")
+                .should.be.revertedWithCustomError(validatorService, "ValidatorIsNotAuthorized")
+                .withArgs(validatorId);
             await validatorService.enableValidator(validatorId);
             await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
@@ -238,8 +240,9 @@ describe("SkaleManager", () => {
 
             it("should reject if node in maintenance call nodeExit", async () => {
                 await nodesContract.setNodeInMaintenance(0);
-                await nodesContract.initExit(0).should.be.eventually.rejectedWith("Node should be Active");
-                // await skaleManager.connect(nodeAddress).nodeExit(0).should.be.eventually.rejectedWith("Node should be Leaving");
+                await nodesContract.initExit(0)
+                    .should.be.revertedWithCustomError(nodesContract, "NodeIsNotActive")
+                    .withArgs(0);
             });
 
             it("should be Left if there is no schains and node has exited", async () => {
@@ -384,14 +387,16 @@ describe("SkaleManager", () => {
 
             it("should fail to initiate exiting of first node from another account", async () => {
                 await nodesContract.connect(hacker).initExit(0)
-                    .should.be.eventually.rejectedWith("NODE_MANAGER_ROLE is required");
+                    .should.be.revertedWithCustomError(nodesContract, "RoleRequired")
+                    .withArgs(await nodesContract.NODE_MANAGER_ROLE());
                 await skaleManager.connect(hacker).nodeExit(0)
                     .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should fail to initiate exiting of second node from another account", async () => {
                 await nodesContract.connect(hacker).initExit(1)
-                    .should.be.eventually.rejectedWith("NODE_MANAGER_ROLE is required");
+                    .should.be.revertedWithCustomError(nodesContract, "RoleRequired")
+                    .withArgs(await nodesContract.NODE_MANAGER_ROLE());
                 await skaleManager.connect(hacker).nodeExit(1)
                     .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
@@ -442,7 +447,8 @@ describe("SkaleManager", () => {
                     "0x7f000001", // public ip
                     getPublicKey(nodeAddress), // public key
                     "d2", // name
-                    "some.domain.name").should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
+                    "some.domain.name"
+                ).should.be.revertedWithCustomError(nodesContract, "MinimumStakingRequirementIsNotMet");
             });
 
             describe("when developer has SKALE tokens", () => {
@@ -488,7 +494,7 @@ describe("SkaleManager", () => {
                                 options: []
                             }]
                         )
-                    ).should.be.eventually.rejectedWith("Minimal schain lifetime should be satisfied");
+                    ).should.be.revertedWithCustomError(schains, "SchainLifetimeIsTooSmall");
 
                     await constantsHolder.setMinimalSchainLifetime(4);
                     await skaleToken.connect(developer).send(
@@ -529,7 +535,7 @@ describe("SkaleManager", () => {
                                 options: []
                             }]
                         )
-                    ).should.be.eventually.rejectedWith("It is not a time for creating Schain");
+                    ).should.be.revertedWithCustomError(schains, "SchainIsCreatedTooEarly");
                 });
 
                 describe("when schain is created", () => {
@@ -556,7 +562,7 @@ describe("SkaleManager", () => {
 
                     it("should fail to delete schain if sender is not owner of it", async () => {
                         await skaleManager.connect(hacker).deleteSchain("d2")
-                            .should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
+                            .should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain");
                     });
 
                     it("should delete schain", async () => {
@@ -595,7 +601,7 @@ describe("SkaleManager", () => {
 
                     it("should fail to delete schain if sender is not owner of it", async () => {
                         await skaleManager.connect(hacker).deleteSchain("d3")
-                            .should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
+                            .should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain");
                     });
 
                     it("should delete schain by root", async () => {
