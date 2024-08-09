@@ -91,13 +91,15 @@ describe("DelegationController", () => {
         it("should reject delegation if validator with such id does not exist", async () => {
             const nonExistedValidatorId = 2;
             await delegationController.connect(holder1).delegate(nonExistedValidatorId, amount, delegationPeriod, info)
-                .should.be.eventually.rejectedWith("Validator with such ID does not exist");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorDoesNotExist")
+                .withArgs(nonExistedValidatorId);
         });
 
         it("should reject delegation if it doesn't meet minimum delegation amount", async () => {
             amount = 99;
             await delegationController.connect(holder1).delegate(validatorId, amount, delegationPeriod, info)
-                .should.be.eventually.rejectedWith("Amount does not meet the validator's minimum delegation amount");
+                .should.be.revertedWithCustomError(validatorService, "AmountDoesNotMeetTheValidatorsMinimumDelegationAmount")
+                .withArgs(amount, (await validatorService.getValidator(validatorId)).minimumDelegationAmount);
         });
 
         it("should reject delegation if request doesn't meet allowed delegation period", async () => {
@@ -146,7 +148,8 @@ describe("DelegationController", () => {
             await skaleToken.mint(holder1.address, amount, "0x", "0x");
             await validatorService.disableValidator(validatorId);
             await delegationController.connect(holder1).delegate(validatorId, amount, delegationPeriod, info)
-                .should.be.eventually.rejectedWith("Validator is not authorized to accept delegation request");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorIsNotAuthorized")
+                .withArgs(validatorId);
             await validatorService.disableWhitelist();
             await delegationController.connect(holder1).delegate(validatorId, amount, delegationPeriod, info);
         });
@@ -191,7 +194,8 @@ describe("DelegationController", () => {
 
             it("should reject accepting request if such validator doesn't exist", async () => {
                 await delegationController.connect(validator2).acceptPendingDelegation(delegationId)
-                    .should.be.rejectedWith("Validator address does not exist");
+                    .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                    .withArgs(validator2);
             });
 
             it("should reject accepting request if validator already canceled it", async () => {
