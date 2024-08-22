@@ -1698,17 +1698,17 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
+"@skalenetwork/ima-interfaces@2.0.0-develop.67":
+  version "2.0.0-develop.67"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/ima-interfaces/-/ima-interfaces-2.0.0-develop.67.tgz#49b01c33cf04bc86c98a0425c742a0d993b9901f"
+  integrity sha512-PxzeXmIWuusESISG1lkeZVFXFpAL4szS673uFZPmFhcGXKrTf8ItG4n1eVFzUx4/egJkztRMk5Q9TJ9Unnv5vg==
+  dependencies:
+    "@skalenetwork/skale-manager-interfaces" "^3.2.0-develop.0"
+
 "@skalenetwork/ima-interfaces@^2.0.0-paymaster.0":
   version "2.0.0-paymaster.0"
   resolved "https://registry.yarnpkg.com/@skalenetwork/ima-interfaces/-/ima-interfaces-2.0.0-paymaster.0.tgz#77663aec147ba430dc292aaf5b446eff21ed5fd4"
   integrity sha512-B9PMcWcd+KkF0fudoQEAuTB2FohtOL/0l+GNlt4HvNvz/dOpsbVkCySrCQ/dCljV0/FSj45eJBgkTNCXyxYrbg==
-  dependencies:
-    "@skalenetwork/skale-manager-interfaces" "^3.2.0-paymaster.0"
-
-"@skalenetwork/ima-interfaces@^2.0.0-paymaster.2":
-  version "2.0.0-paymaster.2"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/ima-interfaces/-/ima-interfaces-2.0.0-paymaster.2.tgz#3ab13be431f73ff7de99be742c197c89cf49bacc"
-  integrity sha512-rz3iq4Y3Q1W9lhuQBOJh5BXs1f5M/15t9ZQCGAQE53GD7UzduX2YLLWme9y+XbwDAGSQuMY173vmGQ10jkxITA==
   dependencies:
     "@skalenetwork/skale-manager-interfaces" "^3.2.0-paymaster.0"
 
@@ -1740,6 +1740,16 @@
   integrity sha512-uTvjAlfFL6XRa9p0ogcXO3k9w6bm1UCHRbtKsfb5VrnqQKcCsJoJ9sX55Rcj1YNVy4Dy2E5H8NFVhGUUp0rwtQ==
   dependencies:
     axios "^1.4.0"
+
+"@skalenetwork/skale-manager-interfaces@3.2.0-develop.0":
+  version "3.2.0-develop.0"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-develop.0.tgz#01e64eeabf2b14b320074eb588b557bbd33bab39"
+  integrity sha512-f++aLtSwjLJgAb3dHAm/SMHvx2a0L3uWwF7aam1wCtB6YZrFLR3flzlH3Ms3JlLZtfl5iE7VBmsuidhAqpbfpw==
+
+"@skalenetwork/skale-manager-interfaces@^3.2.0-develop.0":
+  version "3.2.0-paymaster.2"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-paymaster.2.tgz#6b114041b623a030331e0a7853a2eab136fc2daf"
+  integrity sha512-tmqWNkafjJxIZNVp2EmysvXor5F4G+f5A4qTMWqCZ7yMrCAvGzTETpMiHGjJJCUwSIaaqd62DjDjQi69r+BUkg==
 
 "@skalenetwork/skale-manager-interfaces@^3.2.0-paymaster.0":
   version "3.2.0-paymaster.0"
@@ -10482,7 +10492,7 @@ solc@^0.6.3, solc@^0.6.7:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solhint@5.0.3:
+solhint@^5.0.3:
   version "5.0.3"
   resolved "https://registry.yarnpkg.com/solhint/-/solhint-5.0.3.tgz#b57f6d2534fe09a60f9db1b92e834363edd1cbde"
   integrity sha512-OLCH6qm/mZTCpplTXzXTJGId1zrtNuDYP5c2e6snIv/hdRVxPfBBz/bAlL91bY/Accavkayp2Zp2BaDSrLVXTQ==
