@@ -21,23 +21,18 @@
 
 pragma solidity 0.8.26;
 
-import {IERC1820Registry} from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
-import {IERC777Recipient} from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
-import {IDistributor} from "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
-import {
-    IValidatorService
-} from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import {
-    IDelegationController
-} from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import {ITimeHelpers} from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
-
-import {Permissions} from "../Permissions.sol";
-
-import {MathUtils} from "../utils/MathUtils.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import { IDelegationController }
+from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { IDistributor } from "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
+import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import { IValidatorService }
+from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { Permissions } from "./../Permissions.sol";
+import { MathUtils } from "./../utils/MathUtils.sol";
 
 /**
  * @title Distributor
