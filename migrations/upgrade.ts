@@ -148,6 +148,7 @@ async function prepareContractsList(instance: Instance) {
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
     let contractsToUpgrade = [
+        "Distributor",
         "Nodes",
         "Schains",
         "ValidatorService"
