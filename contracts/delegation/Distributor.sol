@@ -44,15 +44,12 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
 
     IERC1820Registry private _erc1820;
 
-    // validatorId =>        month => token
-    mapping(uint256 => mapping(uint256 => uint256)) private _bountyPaid;
-    // validatorId =>        month => token
-    mapping(uint256 => mapping(uint256 => uint256)) private _feePaid;
-    //        holder =>   validatorId => month
-    mapping(address => mapping(uint256 => uint256))
-        private _firstUnwithdrawnMonth;
-    // validatorId => month
-    mapping(uint256 => uint256) private _firstUnwithdrawnMonthForValidator;
+    mapping(uint256 validatorId => mapping(uint256 month => uint256 amount)) private _bountyPaid;
+    mapping(uint256 validatorId => mapping(uint256 month => uint256 amount)) private _feePaid;
+    mapping(
+        address holder => mapping(uint256 validatorId => uint256 month)
+    ) private _firstUnwithdrawnMonth;
+    mapping(uint256 validatorId => uint256 month) private _firstUnwithdrawnMonthForValidator;
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
