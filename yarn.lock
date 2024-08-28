@@ -1741,15 +1741,15 @@
   dependencies:
     axios "^1.4.0"
 
-"@skalenetwork/skale-manager-interfaces@3.2.0-develop.0":
-  version "3.2.0-develop.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-develop.0.tgz#01e64eeabf2b14b320074eb588b557bbd33bab39"
-  integrity sha512-f++aLtSwjLJgAb3dHAm/SMHvx2a0L3uWwF7aam1wCtB6YZrFLR3flzlH3Ms3JlLZtfl5iE7VBmsuidhAqpbfpw==
-
 "@skalenetwork/skale-manager-interfaces@^3.2.0-develop.0":
   version "3.2.0-paymaster.2"
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-paymaster.2.tgz#6b114041b623a030331e0a7853a2eab136fc2daf"
   integrity sha512-tmqWNkafjJxIZNVp2EmysvXor5F4G+f5A4qTMWqCZ7yMrCAvGzTETpMiHGjJJCUwSIaaqd62DjDjQi69r+BUkg==
+
+"@skalenetwork/skale-manager-interfaces@^3.2.0-linter.0":
+  version "3.2.0-linter.0"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-linter.0.tgz#4d3a30a177f83ac158b429c15fa74740b1863f02"
+  integrity sha512-6i4mj5mFQYSlEcRg+v8tEeDFH3MwzAq+tQlutzihxSL2VcmAOe8EexH8N/BqMxHPzNKvgjJ725WvPqLDQ1urCA==
 
 "@skalenetwork/skale-manager-interfaces@^3.2.0-paymaster.0":
   version "3.2.0-paymaster.0"

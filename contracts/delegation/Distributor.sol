@@ -19,12 +19,13 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import {IERC1820Registry} from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import {IERC777Recipient} from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import {IDistributor} from "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
 import {
     IValidatorService
@@ -35,7 +36,7 @@ import {
 import {ITimeHelpers} from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
 import {Permissions} from "../Permissions.sol";
-import {ConstantsHolder} from "../ConstantsHolder.sol";
+
 import {MathUtils} from "../utils/MathUtils.sol";
 
 /**
@@ -91,7 +92,7 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         ITimeHelpers timeHelpers = ITimeHelpers(
             contractManager.getContract("TimeHelpers")
         );
-        ConstantsHolder constantsHolder = ConstantsHolder(
+        IConstantsHolder constantsHolder = IConstantsHolder(
             contractManager.getContract("ConstantsHolder")
         );
 
@@ -137,7 +138,7 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         ITimeHelpers timeHelpers = ITimeHelpers(
             contractManager.getContract("TimeHelpers")
         );
-        ConstantsHolder constantsHolder = ConstantsHolder(
+        IConstantsHolder constantsHolder = IConstantsHolder(
             contractManager.getContract("ConstantsHolder")
         );
 
