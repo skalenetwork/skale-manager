@@ -26,7 +26,8 @@
     }
   ],
   "scripts": {
-    "compile": "npx hardhat clean && npx hardhat compile",
+    "compile": "npx hardhat compile",
+    "cleanCompile": "npx hardhat clean && yarn compile",
     "docs": "scripts/prepare-docs.sh",
     "fullCheck": "yarn lint && yarn tsc && yarn eslint && yarn cspell && yarn slither",
     "hooks": "git config core.hooksPath .githooks || true",
@@ -44,13 +45,16 @@
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.6",
     "@openzeppelin/hardhat-upgrades": "^3.2.0",
-    "@skalenetwork/skale-manager-interfaces": "3.1.0",
+    "@skalenetwork/ima-interfaces": "2.0.0-develop.67",
+    "@skalenetwork/marionette-interfaces": "^0.0.0-main.6",
+    "@skalenetwork/paymaster-interfaces": "^1.0.0-main.10",
+    "@skalenetwork/skale-manager-interfaces": "3.2.0-develop.0",
     "@skalenetwork/upgrade-tools": "^3.0.0-linter.42",
     "@typechain/hardhat": "^9.1.0",
     "dotenv": "^16.3.1",
     "ethereumjs-util": "^7.1.5",
     "ethers": "^6.13.1",
-    "hardhat": "^2.22.5"
+    "hardhat": "^2.22.8"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
@@ -79,7 +83,7 @@
     "ethereum-waffle": "^3.4.4",
     "ganache": "^7.9.1",
     "hardhat-dependency-compiler": "^1.2.1",
-    "solhint": "5.0.1",
+    "solhint": "^5.0.3",
     "solidity-coverage": "^0.8.4",
     "solidity-docgen": "^0.5.17",
     "ts-generator": "^0.1.1",

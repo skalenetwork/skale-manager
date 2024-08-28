@@ -126,7 +126,8 @@ describe("Wallets", () => {
     it("should revert if someone sends ETH to contract Wallets", async() => {
         const amount = ethers.parseEther("1.0");
         await owner.sendTransaction({to: wallets, value: amount})
-        .should.be.eventually.rejectedWith("Validator address does not exist");
+        .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+        .withArgs(owner);
     });
 
     it("should recharge validator wallet sending ETH to contract Wallets", async() => {
@@ -155,7 +156,9 @@ describe("Wallets", () => {
         const validator1BalanceAfterWithdraw = await ethers.provider.getBalance(validator1);
         validator1BalanceAfterWithdraw.should.be.equal(validator1Balance + amount - await ethSpent(tx));
         await wallets.connect(validator2).withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Balance is too low");
-        await wallets.withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Validator address does not exist");
+        await wallets.withdrawFundsFromValidatorWallet(amount)
+            .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+            .withArgs(owner);
     });
 
     describe("when nodes and schains have been created", () => {

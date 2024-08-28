@@ -32,7 +32,15 @@ contract MathUtilsTester is IMathUtilsTester {
         return a.boundedSub(b);
     }
 
-    function boundedSubWithoutEvent(uint256 a, uint256 b) external pure override returns (uint256 result) {
+    function boundedSubWithoutEvent(
+        uint256 a,
+        uint256 b
+    )
+        external
+        pure
+        override
+        returns (uint256 result)
+    {
         return a.boundedSubWithoutEvent(b);
     }
 

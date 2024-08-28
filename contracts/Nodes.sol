@@ -21,21 +21,32 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
-import { SafeCastUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
+import {
+    SafeCastUpgradeable
+} from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import {
+    IDelegationController
+} from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import {
+    IValidatorService
+} from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
 import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import {
+    IPaymasterController
+} from "@skalenetwork/skale-manager-interfaces/IPaymasterController.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 
 import { Permissions } from "./Permissions.sol";
-import { ConstantsHolder } from "./ConstantsHolder.sol";
-import { IRandom, Random } from "./utils/Random.sol";
-import { SegmentTree } from "./utils/SegmentTree.sol";
 
-import { NodeRotation } from "./NodeRotation.sol";
+import { IRandom, Random } from "./utils/Random.sol";
+import { RoleRequired } from "./CommonErrors.sol";
+import { SegmentTree } from "./utils/SegmentTree.sol";
+import { ValidatorDoesNotExist, ValidatorIsNotAuthorized } from "./delegation/ValidatorService.sol";
 
 
 /**
@@ -94,6 +105,20 @@ contract Nodes is Permissions, INodes {
 
     mapping(uint256 => NodeExtras) public nodeExtras;
 
+    error IpIsNotAvailable(bytes4 ip);
+    error NameIsAlreadyRegistered(string name);
+    error PortIsNotSet();
+    error PublicKeyIsIncorrect(bytes32[2] key);
+    error NodeNotFound();
+    error NodeDoesNotExist(uint256 nodeId);
+    error NodeIsNotActive(uint256 nodeId);
+    error NodeIsNotLeaving(uint256 nodeId);
+    error NodeIsNotInMaintenance(uint256 nodeId);
+    error MinimumStakingRequirementIsNotMet();
+    error NodeDoesNotExistForValidator(uint256 validatorId, uint256 nodeId);
+    error IpAndPublicIpIsDifferent(bytes4 ip, bytes4 publicIp);
+    error SenderIsNotPermitted(address sender);
+
     modifier checkNodeExists(uint256 nodeIndex) {
         _checkNodeIndex(nodeIndex);
         _;
@@ -105,12 +130,16 @@ contract Nodes is Permissions, INodes {
     }
 
     modifier onlyCompliance() {
-        require(hasRole(COMPLIANCE_ROLE, msg.sender), "COMPLIANCE_ROLE is required");
+        if (!hasRole(COMPLIANCE_ROLE, msg.sender)) {
+            revert RoleRequired(COMPLIANCE_ROLE);
+        }
         _;
     }
 
     modifier nonZeroIP(bytes4 ip) {
-        require(ip != 0x0 && !nodesIPCheck[ip], "IP address is zero or is not available");
+        if (ip == 0x0 || nodesIPCheck[ip]) {
+            revert IpIsNotAvailable(ip);
+        }
         _;
     }
 
@@ -214,38 +243,22 @@ contract Nodes is Permissions, INodes {
         nonZeroIP(params.ip)
     {
         // checks that Node has correct data
-        require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name is already registered");
-        require(params.port > 0, "Port is zero");
-        require(from == _publicKeyToAddress(params.publicKey), "Public Key is incorrect");
+        if (nodesNameCheck[keccak256(abi.encodePacked(params.name))]) {
+            revert NameIsAlreadyRegistered(params.name);
+        }
+        if (params.port == 0) {
+            revert PortIsNotSet();
+        }
+        if (from != _publicKeyToAddress(params.publicKey)) {
+            revert PublicKeyIsIncorrect(params.publicKey);
+        }
+
         uint256 validatorId = IValidatorService(
             contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
-        uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
-        nodes.push(Node({
-            name: params.name,
-            ip: params.ip,
-            publicIP: params.publicIp,
-            port: params.port,
-            publicKey: params.publicKey,
-            startBlock: block.number,
-            lastRewardDate: block.timestamp,
-            finishTime: 0,
-            status: NodeStatus.Active,
-            validatorId: validatorId
-        }));
-        uint256 nodeIndex = nodes.length - 1;
-        validatorToNodeIndexes[validatorId].push(nodeIndex);
-        bytes32 nodeHashName = keccak256(abi.encodePacked(params.name));
-        nodesIPCheck[params.ip] = true;
-        nodesNameCheck[nodeHashName] = true;
-        nodesNameToIndex[nodeHashName] = nodeIndex;
-        nodeIndexes[from].isNodeExist[nodeIndex] = true;
-        nodeIndexes[from].numberOfNodes++;
-        domainNames[nodeIndex] = params.domainName;
-        spaceOfNodes.push(SpaceManaging({
-            freeSpace: totalSpace,
-            indexInSpaceMap: spaceToNodes[totalSpace].length
-        }));
+
+        uint256 nodeIndex = _addNode(validatorId, from, params);
         _setNodeActive(nodeIndex);
+
         emit NodeCreated({
             nodeIndex: nodeIndex,
             owner: from,
@@ -256,6 +269,10 @@ contract Nodes is Permissions, INodes {
             nonce: params.nonce,
             domainName: params.domainName
         });
+
+        IPaymasterController paymasterController =
+            IPaymasterController(contractManager.getContract("PaymasterController"));
+        paymasterController.setNodesAmount(validatorId, validatorToNodeIndexes[validatorId].length);
     }
 
     /**
@@ -270,10 +287,14 @@ contract Nodes is Permissions, INodes {
         override
         checkNodeExists(nodeIndex)
     {
-        require(hasRole(NODE_MANAGER_ROLE, msg.sender), "NODE_MANAGER_ROLE is required");
-        require(isNodeActive(nodeIndex), "Node should be Active");
+        if (!hasRole(NODE_MANAGER_ROLE, msg.sender)) {
+            revert RoleRequired(NODE_MANAGER_ROLE);
+        }
+        if (!isNodeActive(nodeIndex)) {
+            revert NodeIsNotActive(nodeIndex);
+        }
         _setNodeLeaving(nodeIndex);
-        NodeRotation(contractManager.getContract("NodeRotation")).freezeSchains(nodeIndex);
+        INodeRotation(contractManager.getContract("NodeRotation")).freezeSchains(nodeIndex);
         emit ExitInitialized(nodeIndex, block.timestamp);
     }
 
@@ -295,7 +316,9 @@ contract Nodes is Permissions, INodes {
         allow("SkaleManager")
         returns (bool successful)
     {
-        require(isNodeLeaving(nodeIndex), "Node is not Leaving");
+        if (!isNodeLeaving(nodeIndex)) {
+            revert NodeIsNotLeaving(nodeIndex);
+        }
 
         _setNodeLeft(nodeIndex);
 
@@ -316,8 +339,11 @@ contract Nodes is Permissions, INodes {
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
     {
-        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
-        require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
+        IValidatorService validatorService =
+            IValidatorService(contractManager.getValidatorService());
+        if (!validatorService.validatorExists(validatorId)) {
+            revert ValidatorDoesNotExist(validatorId);
+        }
         uint256[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint256 position = _findNode(validatorNodes, nodeIndex);
         if (position < validatorNodes.length) {
@@ -326,7 +352,8 @@ contract Nodes is Permissions, INodes {
         }
         validatorToNodeIndexes[validatorId].pop();
         address nodeOwner = _publicKeyToAddress(nodes[nodeIndex].publicKey);
-        uint256 validatorIdByNode = validatorService.getValidatorIdByNodeAddressWithoutRevert(nodeOwner);
+        uint256 validatorIdByNode =
+            validatorService.getValidatorIdByNodeAddressWithoutRevert(nodeOwner);
         if (validatorIdByNode == validatorId || validatorIdByNode == 0) {
             if (nodeIndexes[nodeOwner].numberOfNodes == 1 &&
                 !validatorService.validatorAddressExists(nodeOwner) &&
@@ -337,6 +364,12 @@ contract Nodes is Permissions, INodes {
             nodeIndexes[nodeOwner].isNodeExist[nodeIndex] = false;
             nodeIndexes[nodeOwner].numberOfNodes--;
         }
+
+        IPaymasterController paymasterController =
+            IPaymasterController(contractManager.getContract("PaymasterController"));
+        // in order to do not read validatorToNodeIndexes.length
+        // we use validatorNodes but it's length is 1 more.
+        paymasterController.setNodesAmount(validatorId, validatorNodes.length - 1);
     }
 
     /**
@@ -348,13 +381,25 @@ contract Nodes is Permissions, INodes {
      * - Validator must be included on trusted list if trusted list is enabled.
      * - Validator must have sufficient stake to operate an additional node.
      */
-    function checkPossibilityCreatingNode(address nodeAddress) external override allow("SkaleManager") {
-        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
+    function checkPossibilityCreatingNode(
+        address nodeAddress
+    )
+        external
+        override
+        allow("SkaleManager")
+    {
+        IValidatorService validatorService =
+            IValidatorService(contractManager.getValidatorService());
         uint256 validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
-        require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
-        require(
-            _checkValidatorPositionToMaintainNode(validatorId, validatorToNodeIndexes[validatorId].length),
-            "Validator must meet the Minimum Staking Requirement");
+        if (!validatorService.isAuthorizedValidator(validatorId)) {
+            revert ValidatorIsNotAuthorized(validatorId);
+        }
+        if (!_checkValidatorPositionToMaintainNode(
+                validatorId,
+                validatorToNodeIndexes[validatorId].length
+            )) {
+            revert MinimumStakingRequirementIsNotMet();
+        }
     }
 
     /**
@@ -377,11 +422,16 @@ contract Nodes is Permissions, INodes {
         allow("Bounty")
         returns (bool successful)
     {
-        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
-        require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
+        IValidatorService validatorService =
+            IValidatorService(contractManager.getValidatorService());
+        if (!validatorService.validatorExists(validatorId)) {
+            revert ValidatorDoesNotExist(validatorId);
+        }
         uint256[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint256 position = _findNode(validatorNodes, nodeIndex);
-        require(position < validatorNodes.length, "Node does not exist for this Validator");
+        if (position >= validatorNodes.length) {
+            revert NodeDoesNotExistForValidator(validatorId, nodeIndex);
+        }
         return _checkValidatorPositionToMaintainNode(validatorId, position);
     }
 
@@ -393,8 +443,16 @@ contract Nodes is Permissions, INodes {
      * - Node must already be Active.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function setNodeInMaintenance(uint256 nodeIndex) external override onlyNodeOrNodeManager(nodeIndex) {
-        require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
+    function setNodeInMaintenance(
+        uint256 nodeIndex
+    )
+        external
+        override
+        onlyNodeOrNodeManager(nodeIndex)
+    {
+        if (!(nodes[nodeIndex].status == NodeStatus.Active)) {
+            revert NodeIsNotActive(nodeIndex);
+        }
         _setNodeInMaintenance(nodeIndex);
         emit MaintenanceNode(nodeIndex, true);
     }
@@ -407,8 +465,16 @@ contract Nodes is Permissions, INodes {
      * - Node must already be In Maintenance.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function removeNodeFromInMaintenance(uint256 nodeIndex) external override onlyNodeOrNodeManager(nodeIndex) {
-        require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
+    function removeNodeFromInMaintenance(
+        uint256 nodeIndex
+    )
+        external
+        override
+        onlyNodeOrNodeManager(nodeIndex)
+    {
+        if (!(nodes[nodeIndex].status == NodeStatus.In_Maintenance)) {
+            revert NodeIsNotInMaintenance(nodeIndex);
+        }
         _setNodeActive(nodeIndex);
         emit MaintenanceNode(nodeIndex, false);
     }
@@ -417,7 +483,14 @@ contract Nodes is Permissions, INodes {
      * @dev Marks the node as incompliant
      *
      */
-    function setNodeIncompliant(uint256 nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
+    function setNodeIncompliant(
+        uint256 nodeIndex
+    )
+        external
+        override
+        onlyCompliance
+        checkNodeExists(nodeIndex)
+    {
         if (!incompliant[nodeIndex]) {
             incompliant[nodeIndex] = true;
             _makeNodeInvisible(nodeIndex);
@@ -429,7 +502,14 @@ contract Nodes is Permissions, INodes {
      * @dev Marks the node as compliant
      *
      */
-    function setNodeCompliant(uint256 nodeIndex) external override onlyCompliance checkNodeExists(nodeIndex) {
+    function setNodeCompliant(
+        uint256 nodeIndex
+    )
+        external
+        override
+        onlyCompliance
+        checkNodeExists(nodeIndex)
+    {
         if (incompliant[nodeIndex]) {
             incompliant[nodeIndex] = false;
             _tryToMakeNodeVisible(nodeIndex);
@@ -465,7 +545,9 @@ contract Nodes is Permissions, INodes {
         nonZeroIP(newIP)
     {
         if (newPublicIP != 0x0) {
-            require(newIP == newPublicIP, "IP address is not the same");
+            if (newIP != newPublicIP) {
+                revert IpAndPublicIpIsDifferent(newIP, newPublicIP);
+            }
             nodes[nodeIndex].publicIP = newPublicIP;
         }
         nodesIPCheck[nodes[nodeIndex].ip] = false;
@@ -488,7 +570,9 @@ contract Nodes is Permissions, INodes {
             freeSpace == 0 ? 1 : freeSpace,
             randomGenerator
         ).toUint8();
-        require(place > 0, "Node not found");
+        if (place == 0) {
+            revert NodeNotFound();
+        }
         return spaceToNodes[place][randomGenerator.random(spaceToNodes[place].length)];
     }
 
@@ -502,7 +586,9 @@ contract Nodes is Permissions, INodes {
         checkNodeExists(nodeIndex)
         returns (bool timeForReward)
     {
-        return IBountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= block.timestamp;
+        return IBountyV2(
+            contractManager.getBounty()
+        ).getNextRewardTimestamp(nodeIndex) <= block.timestamp;
     }
 
     /**
@@ -519,7 +605,6 @@ contract Nodes is Permissions, INodes {
         checkNodeExists(nodeIndex)
         returns (bytes4 ip)
     {
-        require(nodeIndex < nodes.length, "Node does not exist");
         return nodes[nodeIndex].ip;
     }
 
@@ -668,7 +753,8 @@ contract Nodes is Permissions, INodes {
     function getActiveNodeIds() external view override returns (uint256[] memory activeNodeIds) {
         activeNodeIds = new uint256[](numberOfActiveNodes);
         uint256 indexOfActiveNodeIds = 0;
-        for (uint256 indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+        uint256 nodesLength = nodes.length;
+        for (uint256 indexOfNodes = 0; indexOfNodes < nodesLength; indexOfNodes++) {
             if (isNodeActive(indexOfNodes)) {
                 activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
                 indexOfActiveNodeIds++;
@@ -704,15 +790,25 @@ contract Nodes is Permissions, INodes {
         override
         returns (uint256[] memory validatorNodes)
     {
-        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
-        require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
+        IValidatorService validatorService =
+            IValidatorService(contractManager.getValidatorService());
+        if (!validatorService.validatorExists(validatorId)) {
+            revert ValidatorDoesNotExist(validatorId);
+        }
         return validatorToNodeIndexes[validatorId];
     }
 
     /**
      * @dev Returns number of nodes with available space.
      */
-    function countNodesWithFreeSpace(uint8 freeSpace) external view override returns (uint256 count) {
+    function countNodesWithFreeSpace(
+        uint8 freeSpace
+    )
+        external
+        view
+        override
+        returns (uint256 count)
+    {
         if (freeSpace == 0) {
             return _nodesAmountBySpace.sumFromPlaceToLast(1);
         }
@@ -932,24 +1028,69 @@ contract Nodes is Permissions, INodes {
         IDelegationController delegationController = IDelegationController(
             contractManager.getContract("DelegationController")
         );
-        uint256 delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint256 msr = ConstantsHolder(contractManager.getConstantsHolder()).msr();
+        uint256 delegationsTotal =
+            delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
+        uint256 msr = IConstantsHolder(contractManager.getConstantsHolder()).msr();
         return (position + 1) * msr <= delegationsTotal;
     }
 
+    function _addNode(
+        uint256 validatorId,
+        address nodeAddress,
+        NodeCreationParams calldata params
+    )
+        private
+        returns (uint256 nodeIndex)
+    {
+        nodes.push(Node({
+            name: params.name,
+            ip: params.ip,
+            publicIP: params.publicIp,
+            port: params.port,
+            publicKey: params.publicKey,
+            startBlock: block.number,
+            lastRewardDate: block.timestamp,
+            finishTime: 0,
+            status: NodeStatus.Active,
+            validatorId: validatorId
+        }));
+
+        uint8 totalSpace = IConstantsHolder(
+            contractManager.getContract("ConstantsHolder")
+        ).TOTAL_SPACE_ON_NODE();
+
+        nodeIndex = nodes.length - 1;
+        validatorToNodeIndexes[validatorId].push(nodeIndex);
+        bytes32 nodeHashName = keccak256(abi.encodePacked(params.name));
+        nodesIPCheck[params.ip] = true;
+        nodesNameCheck[nodeHashName] = true;
+        nodesNameToIndex[nodeHashName] = nodeIndex;
+        nodeIndexes[nodeAddress].isNodeExist[nodeIndex] = true;
+        nodeIndexes[nodeAddress].numberOfNodes++;
+        domainNames[nodeIndex] = params.domainName;
+        spaceOfNodes.push(SpaceManaging({
+            freeSpace: totalSpace,
+            indexInSpaceMap: spaceToNodes[totalSpace].length
+        }));
+    }
+
     function _checkNodeIndex(uint256 nodeIndex) private view {
-        require(nodeIndex < nodes.length, "Node with such index does not exist");
+        if (nodeIndex >= nodes.length) {
+            revert NodeDoesNotExist(nodeIndex);
+        }
     }
 
     function _checkNodeOrNodeManager(uint256 nodeIndex, address sender) private view {
-        IValidatorService validatorService = IValidatorService(contractManager.getValidatorService());
+        IValidatorService validatorService =
+            IValidatorService(contractManager.getValidatorService());
 
-        require(
-            isNodeExist(sender, nodeIndex) ||
-            hasRole(NODE_MANAGER_ROLE, msg.sender) ||
-            getValidatorId(nodeIndex) == validatorService.getValidatorId(sender),
-            "Sender is not permitted to call this function"
-        );
+        if (
+            !isNodeExist(sender, nodeIndex) &&
+            !hasRole(NODE_MANAGER_ROLE, msg.sender) &&
+            !(getValidatorId(nodeIndex) == validatorService.getValidatorId(sender))
+        ) {
+            revert SenderIsNotPermitted(sender);
+        }
     }
 
     function _canBeVisible(uint256 nodeIndex) private view returns (bool can) {
@@ -959,7 +1100,14 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev Returns the index of a given node within the validator's node index.
      */
-    function _findNode(uint256[] memory validatorNodeIndexes, uint256 nodeIndex) private pure returns (uint256 node) {
+    function _findNode(
+        uint256[] memory validatorNodeIndexes,
+        uint256 nodeIndex
+    )
+        private
+        pure
+        returns (uint256 node)
+    {
         uint256 i;
         for (i = 0; i < validatorNodeIndexes.length; i++) {
             if (validatorNodeIndexes[i] == nodeIndex) {
@@ -969,7 +1117,13 @@ contract Nodes is Permissions, INodes {
         return validatorNodeIndexes.length;
     }
 
-    function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address nodeAddress) {
+    function _publicKeyToAddress(
+        bytes32[2] memory pubKey
+    )
+        private
+        pure
+        returns (address nodeAddress)
+    {
         bytes32 hash = keccak256(abi.encodePacked(pubKey[0], pubKey[1]));
         bytes20 addr;
         for (uint8 i = 12; i < 32; i++) {

@@ -1,4 +1,7 @@
 /* eslint-env node */
+
+// cspell:words venv
+
 module.exports = {
     "extends": [
         "eslint:recommended",
@@ -6,7 +9,8 @@ module.exports = {
     ],
     "ignorePatterns": [
         "coverage/**",
-        "typechain-types/**"
+        "typechain-types/**",
+        "venv/**"
     ],
     "env": {
         "node": true

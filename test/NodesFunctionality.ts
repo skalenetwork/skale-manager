@@ -81,7 +81,8 @@ describe("NodesFunctionality", () => {
                 publicKey: getPublicKey(nodeAddress),
                 name: "D2",
                 domainName: "some.domain.name"
-            }).should.be.eventually.rejectedWith("IP address is zero or is not available");
+            }).should.be.revertedWithCustomError(nodes, "IpIsNotAvailable")
+                .withArgs("0x00000000");
     });
 
     it("should fail to create node if port is zero", async () => {
@@ -95,7 +96,7 @@ describe("NodesFunctionality", () => {
                 publicKey: getPublicKey(nodeAddress),
                 name: "D2",
                 domainName: "some.domain.name"
-            }).should.be.eventually.rejectedWith("Port is zero");
+            }).should.be.revertedWithCustomError(nodes, "PortIsNotSet");
     });
 
     it("should fail to create node if public Key is incorrect", async () => {
@@ -109,7 +110,8 @@ describe("NodesFunctionality", () => {
                 publicKey: getPublicKey(nodeAddress),
                 name: "D2",
                 domainName: "some.domain.name"
-            }).should.be.eventually.rejectedWith("Public Key is incorrect");
+            }).should.be.revertedWithCustomError(nodes, "PublicKeyIsIncorrect")
+                .withArgs(getPublicKey(nodeAddress));
     });
 
     it("should create node", async () => {
@@ -151,7 +153,8 @@ describe("NodesFunctionality", () => {
 
         it("should fail to delete non active node", async () => {
             await nodes.completeExit(0)
-                .should.be.eventually.rejectedWith("Node is not Leaving");
+                .should.be.revertedWithCustomError(nodes, "NodeIsNotLeaving")
+                .withArgs(0);
         });
 
         it("should delete node", async () => {
@@ -169,7 +172,8 @@ describe("NodesFunctionality", () => {
 
         it("should complete exiting", async () => {
             await nodes.completeExit(0)
-                .should.be.eventually.rejectedWith("Node is not Leaving");
+                .should.be.revertedWithCustomError(nodes, "NodeIsNotLeaving")
+                .withArgs(0);
 
             await nodes.initExit(0);
 
@@ -178,9 +182,15 @@ describe("NodesFunctionality", () => {
 
         it("should change IP", async () => {
             await nodes.connect(holder).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("Caller is not an admin");
-            await nodes.connect(owner).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
-            await nodes.connect(owner).changeIP(0, "0x00000000", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
-            await nodes.connect(owner).changeIP(0, "0x7f000002", "0x7f000001").should.be.eventually.rejectedWith("IP address is not the same");
+            await nodes.connect(owner).changeIP(0, "0x7f000001", "0x00000000")
+                .should.be.revertedWithCustomError(nodes, "IpIsNotAvailable")
+                .withArgs("0x7f000001");
+            await nodes.connect(owner).changeIP(0, "0x00000000", "0x00000000")
+                .should.be.revertedWithCustomError(nodes, "IpIsNotAvailable")
+                .withArgs("0x00000000");
+            await nodes.connect(owner).changeIP(0, "0x7f000002", "0x7f000001")
+                .should.be.revertedWithCustomError(nodes, "IpAndPublicIpIsDifferent")
+                .withArgs("0x7f000002", "0x7f000001");
             expect(await nodes.getNodeIP(0)).to.equal("0x7f000001");
             expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
             expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
@@ -210,7 +220,8 @@ describe("NodesFunctionality", () => {
 
         it("should mark node as incompliant", async () => {
             await nodes.setNodeIncompliant(nodeId)
-                .should.be.eventually.rejectedWith("COMPLIANCE_ROLE is required");
+                .should.be.revertedWithCustomError(nodes, "RoleRequired")
+                .withArgs(await nodes.COMPLIANCE_ROLE());
             await nodes.grantRole(await nodes.COMPLIANCE_ROLE(), owner.address);
 
             (await nodes.incompliant(nodeId)).should.be.equal(false);
@@ -282,7 +293,8 @@ describe("NodesFunctionality", () => {
 
         it("should complete exiting from first node", async () => {
             await nodes.completeExit(0)
-                .should.be.eventually.rejectedWith("Node is not Leaving");
+                .should.be.revertedWithCustomError(nodes, "NodeIsNotLeaving")
+                .withArgs(0);
 
             await nodes.initExit(0);
 
@@ -291,7 +303,8 @@ describe("NodesFunctionality", () => {
 
         it("should complete exiting from second node", async () => {
             await nodes.completeExit(1)
-                .should.be.eventually.rejectedWith("Node is not Leaving");
+                .should.be.revertedWithCustomError(nodes, "NodeIsNotLeaving")
+                .withArgs(1);
 
             await nodes.initExit(1);
 
@@ -300,15 +313,31 @@ describe("NodesFunctionality", () => {
 
         it("should change IP", async () => {
             await nodes.connect(holder).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("Caller is not an admin");
-            await nodes.connect(owner).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
-            await nodes.connect(owner).changeIP(0, "0x00000000", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
-            await nodes.connect(owner).changeIP(0, "0x7f000002", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
-            await nodes.connect(owner).changeIP(0, "0x7f000003", "0x7f000002").should.be.eventually.rejectedWith("IP address is not the same");
+            await nodes.connect(owner).changeIP(0, "0x7f000001", "0x00000000")
+                .should.be.revertedWithCustomError(nodes, "IpIsNotAvailable")
+                .withArgs("0x7f000001");
+            await nodes.connect(owner).changeIP(0, "0x00000000", "0x00000000")
+                .should.be.revertedWithCustomError(nodes, "IpIsNotAvailable")
+                .withArgs("0x00000000");
+            await nodes.connect(owner).changeIP(0, "0x7f000002", "0x00000000")
+                .should.be.revertedWithCustomError(nodes, "IpIsNotAvailable")
+                .withArgs("0x7f000002");
+            await nodes.connect(owner).changeIP(0, "0x7f000003", "0x7f000002")
+                .should.be.revertedWithCustomError(nodes, "IpAndPublicIpIsDifferent")
+                .withArgs("0x7f000003", "0x7f000002");
             await nodes.connect(holder).changeIP(1, "0x7f000002", "0x00000000").should.be.eventually.rejectedWith("Caller is not an admin");
-            await nodes.connect(owner).changeIP(1, "0x7f000002", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
-            await nodes.connect(owner).changeIP(1, "0x00000000", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
-            await nodes.connect(owner).changeIP(1, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
-            await nodes.connect(owner).changeIP(0, "0x7f000004", "0x7f000002").should.be.eventually.rejectedWith("IP address is not the same");
+            await nodes.connect(owner).changeIP(1, "0x7f000002", "0x00000000")
+                .should.be.revertedWithCustomError(nodes, "IpIsNotAvailable")
+                .withArgs("0x7f000002");
+            await nodes.connect(owner).changeIP(1, "0x00000000", "0x00000000")
+                .should.be.revertedWithCustomError(nodes, "IpIsNotAvailable")
+                .withArgs("0x00000000");
+            await nodes.connect(owner).changeIP(1, "0x7f000001", "0x00000000")
+                .should.be.revertedWithCustomError(nodes, "IpIsNotAvailable")
+                .withArgs("0x7f000001");
+            await nodes.connect(owner).changeIP(0, "0x7f000004", "0x7f000002")
+                .should.be.revertedWithCustomError(nodes, "IpAndPublicIpIsDifferent")
+                .withArgs("0x7f000004", "0x7f000002");
             expect(await nodes.getNodeIP(0)).to.equal("0x7f000001");
             expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
             expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
@@ -371,7 +400,7 @@ describe("NodesFunctionality", () => {
             await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
             await nodes.checkPossibilityCreatingNode(nodeAddress.address)
-                .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
+                .should.be.revertedWithCustomError(nodes, "MinimumStakingRequirementIsNotMet");
         });
 
         it("should allow to create node if new epoch is started", async () => {
@@ -382,7 +411,7 @@ describe("NodesFunctionality", () => {
             await nextMonth(contractManager);
 
             await nodes.checkPossibilityCreatingNode(nodeAddress.address)
-                .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
+                .should.be.revertedWithCustomError(nodes, "MinimumStakingRequirementIsNotMet");
 
             await constantsHolder.setMSR(amount);
 
@@ -416,7 +445,7 @@ describe("NodesFunctionality", () => {
 
             await nextMonth(contractManager);
             await nodes.checkPossibilityCreatingNode(nodeAddress.address)
-                .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
+                .should.be.revertedWithCustomError(nodes, "MinimumStakingRequirementIsNotMet");
 
             await constantsHolder.setMSR(amount);
 

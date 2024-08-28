@@ -190,7 +190,8 @@ describe("NodesData", () => {
 
         it("should not modify node domain name by hacker", async () => {
             await nodes.connect(hacker).setDomainName(0, "new.domain.name")
-                .should.be.eventually.rejectedWith("Validator address does not exist");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                .withArgs(hacker);
         });
 
         // it("should get array of ips of active nodes", async () => {
@@ -330,9 +331,13 @@ describe("NodesData", () => {
             await nodes.initExit(0);
             status = await nodes.getNodeStatus(0);
             assert.equal(status, 1n);
-            await nodes.setNodeInMaintenance(0).should.be.eventually.rejectedWith("Node is not Active");
+            await nodes.setNodeInMaintenance(0)
+                .should.be.revertedWithCustomError(nodes, "NodeIsNotActive")
+                .withArgs(0);
             await nodes.completeExit(0);
-            await nodes.setNodeInMaintenance(0).should.be.eventually.rejectedWith("Node is not Active");
+            await nodes.setNodeInMaintenance(0)
+                .should.be.revertedWithCustomError(nodes, "NodeIsNotActive")
+                .withArgs(0);
         });
 
         it("should decrease number of active nodes after setting node in maintenance", async () => {

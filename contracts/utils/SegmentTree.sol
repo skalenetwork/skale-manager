@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import { IRandom, Random } from "./Random.sol";
 
@@ -251,7 +251,14 @@ library SegmentTree {
      *
      * - `place` must be in range [1, size]
      */
-    function sumFromPlaceToLast(Tree storage self, uint256 place) public view returns (uint256 sum) {
+    function sumFromPlaceToLast(
+        Tree storage self,
+        uint256 place
+    )
+        public
+        view
+        returns (uint256 sum)
+    {
         require(_correctPlace(self, place), "Incorrect place");
         if (place == 1) {
             return self.tree[0];

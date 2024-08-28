@@ -29,7 +29,14 @@ library FractionUtils {
         uint256 denominator;
     }
 
-    function createFraction(uint256 numerator, uint256 denominator) internal pure returns (Fraction memory fraction) {
+    function createFraction(
+        uint256 numerator,
+        uint256 denominator
+    )
+        internal
+        pure
+        returns (Fraction memory fraction)
+    {
         require(denominator > 0, "Division by zero");
         fraction = Fraction({numerator: numerator, denominator: denominator});
         reduceFraction(fraction);
@@ -46,8 +53,16 @@ library FractionUtils {
         fraction.denominator = fraction.denominator / _gcd;
     }
 
-    // numerator - is limited by 7*10^27, we could multiply it numerator * numerator - it would less than 2^256-1
-    function multiplyFraction(Fraction memory a, Fraction memory b) internal pure returns (Fraction memory fraction) {
+    // numerator - is limited by 7*10^27,
+    // we could multiply it numerator * numerator - it would less than 2^256-1
+    function multiplyFraction(
+        Fraction memory a,
+        Fraction memory b
+    )
+        internal
+        pure
+        returns (Fraction memory fraction)
+    {
         return createFraction(a.numerator * b.numerator, a.denominator * b.denominator);
     }
 

@@ -127,12 +127,13 @@ describe("Schains", () => {
                         options: []
                     }]
                 )
-            ).should.be.eventually.rejectedWith("Not enough money to create Schain");
+            ).should.be.revertedWithCustomError(schains, "NotEnoughFunds");
         });
 
         it("should not allow everyone to create schains as the foundation", async () => {
             await schains.addSchainByFoundation(5, SchainType.SMALL, 0, "d2", ethers.ZeroAddress, ethers.ZeroAddress, [])
-                .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
+                .should.be.revertedWithCustomError(schains, "RoleRequired")
+                .withArgs(await schains.SCHAIN_CREATOR_ROLE());
         })
 
         it("should fail when schain type is wrong", async () => {
@@ -177,7 +178,8 @@ describe("Schains", () => {
                         options: []
                     }]
                 )
-            ).should.be.eventually.rejectedWith("Schain name is not available");
+            ).should.be.revertedWithCustomError(schains, "SchainNameIsNotAvailable")
+                .withArgs("Mainnet");
         });
 
         it("should fail when schain name is None", async () => {
@@ -196,7 +198,8 @@ describe("Schains", () => {
                         options: []
                     }]
                 )
-            ).should.be.eventually.rejectedWith("Schain name is not available");
+            ).should.be.revertedWithCustomError(schains, "SchainNameIsNotAvailable")
+                .withArgs("");
         });
 
         it("should fail when nodes count is too low", async () => {
@@ -1079,7 +1082,8 @@ describe("Schains", () => {
 
                 await schainsInternal.getSchains().should.be.eventually.empty;
                 await schains.getOption(schainHash, "one")
-                    .should.be.eventually.rejectedWith("The schain does not exist");
+                    .should.be.revertedWithCustomError(schains, "SchainDoesNotExist")
+                    .withArgs(schainHash);
             });
 
             it("should allow the foundation to create schain without tokens", async () => {
@@ -1491,7 +1495,8 @@ describe("Schains", () => {
                             options: []
                         }]
                     )
-                    ).should.be.eventually.rejectedWith("Schain name is not available");
+                    ).should.be.revertedWithCustomError(schains, "SchainNameIsNotAvailable")
+                        .withArgs("D2");
                 });
 
                 it("should be able to delete schain", async () => {
@@ -1518,7 +1523,7 @@ describe("Schains", () => {
                     await schains.deleteSchain(
                         nodeAddress1.address,
                         "D2",
-                    ).should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
+                    ).should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain");
                 });
             });
 
@@ -1558,7 +1563,8 @@ describe("Schains", () => {
                                 options: []
                             }]
                         )
-                    ).should.be.eventually.rejectedWith("Schain name is not available");
+                    ).should.be.revertedWithCustomError(schains, "SchainNameIsNotAvailable")
+                        .withArgs("D2");
                 });
 
                 it("should be able to delete schain", async () => {
@@ -1573,7 +1579,7 @@ describe("Schains", () => {
                     await schains.deleteSchain(
                         nodeAddress1.address,
                         "D2",
-                    ).should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
+                    ).should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain");
                 });
             });
         });
@@ -1697,7 +1703,8 @@ describe("Schains", () => {
 
         it("should reject initExit if node in maintenance", async () => {
             await nodes.setNodeInMaintenance(0);
-            await nodes.initExit(0).should.be.eventually.rejectedWith("Node should be Active");
+            await nodes.initExit(0).should.be.revertedWithCustomError(nodes, "NodeIsNotActive")
+                .withArgs(0);
         });
 
         it("should rotate 2 nodes consistently", async () => {
@@ -1957,7 +1964,8 @@ describe("Schains", () => {
                             options: []
                         }]
                     )
-            ).should.be.eventually.rejectedWith("Schain name is not available");
+            ).should.be.revertedWithCustomError(schains, "SchainNameIsNotAvailable")
+                .withArgs("d2");
             schainNameAvailable = await schainsInternal.isSchainNameAvailable("d3");
             assert.equal(schainNameAvailable, false);
             await schains.addSchain(
@@ -1974,7 +1982,8 @@ describe("Schains", () => {
                             options: []
                         }]
                     )
-            ).should.be.eventually.rejectedWith("Schain name is not available");
+            ).should.be.revertedWithCustomError(schains, "SchainNameIsNotAvailable")
+                .withArgs("d3");
             schainNameAvailable = await schainsInternal.isSchainNameAvailable("d4");
             assert.equal(schainNameAvailable, true);
             await schains.addSchain(
@@ -2626,8 +2635,9 @@ describe("Schains", () => {
             if (!(await nodes.isNodeLeft(rotIndex))) {
                 await skaleManager.connect(nodeAddress2).nodeExit(rotIndex);
             }
-            await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)
-            .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
+            await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
+            .should.be.revertedWithCustomError(validatorService, "NodeAddressIsNotAssignedToValidator")
+                .withArgs(nodeAddress2);
             await schainsInternal.getActiveSchains(rotIndex).should.be.eventually.empty;
         });
 
@@ -2645,7 +2655,8 @@ describe("Schains", () => {
                 await skaleManager.connect(validator).nodeExit(rotatedNodeIndex);
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)
-                .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
+                .should.be.revertedWithCustomError(validatorService, "NodeAddressIsNotAssignedToValidator")
+                .withArgs(nodeAddress2);
             await schainsInternal.getActiveSchains(rotatedNodeIndex).should.be.eventually.empty;
         });
 
@@ -2663,7 +2674,8 @@ describe("Schains", () => {
                 await skaleManager.nodeExit(rotatedNodeIndex);
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)
-                .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
+                .should.be.revertedWithCustomError(validatorService, "NodeAddressIsNotAssignedToValidator")
+                .withArgs(nodeAddress2);
             await schainsInternal.getActiveSchains(rotatedNodeIndex).should.be.eventually.empty;
         });
 
@@ -2683,7 +2695,8 @@ describe("Schains", () => {
                 await skaleManager.connect(nodeAddress3).nodeExit(rotIndex);
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address)
-            .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
+                .should.be.revertedWithCustomError(validatorService, "NodeAddressIsNotAssignedToValidator")
+                .withArgs(nodeAddress3);
             await schainsInternal.getActiveSchains(rotIndex).should.be.eventually.empty;
         });
 

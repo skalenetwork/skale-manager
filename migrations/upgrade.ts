@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import {contracts} from "./deploy";
-import {ethers} from "hardhat";
+import {ethers, upgrades} from "hardhat";
 import {Upgrader, AutoSubmitter} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
-import {SkaleManager} from "../typechain-types";
+import {ContractManager, PaymasterController, SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
 import {Transaction} from "ethers";
 
@@ -59,7 +59,57 @@ class SkaleManagerUpgrader extends Upgrader {
         }));
     }
 
-    // deployNewContracts = () => { };
+    deployNewContracts = async () => {
+        const [deployer] = await ethers.getSigners();
+
+        const contractManager = await this.instance.getContract("ContractManager") as ContractManager;
+
+        const paymasterControllerFactory = await ethers.getContractFactory("PaymasterController");
+        console.log("Deploy PaymasterController");
+        const paymasterController = await upgrades.deployProxy(
+            paymasterControllerFactory,
+            [await ethers.resolveAddress(contractManager)]
+        ) as unknown as PaymasterController;
+        await paymasterController.deploymentTransaction()?.wait();
+
+        const ima = process.env.IMA ?? "0x8629703a9903515818C2FeB45a6f6fA5df8Da404";
+        const marionette = process.env.MARIONETTE ?? "0xef777804e94eac176bbdbb3b3c9da06de87227ba";
+        const paymaster = process.env.PAYMASTER ?? "0x0d66cA00CbAD4219734D7FDF921dD7Caadc1F78D";
+        const paymasterChainHash = process.env.PAYMASTER_CHAIN_HASH ?? ethers.solidityPackedKeccak256(["string"], ["elated-tan-skat"]); // Europa
+
+        console.log(`Set IMA address to ${ima}`);
+        await (await paymasterController.setImaAddress(ima)).wait();
+
+        console.log(`Set Marionette address to ${marionette}`);
+        await (await paymasterController.setMarionetteAddress(marionette)).wait();
+
+        console.log(`Set Paymaster address to ${paymaster}`);
+        await (await paymasterController.setPaymasterAddress(paymaster)).wait();
+
+        console.log(`Set Paymaster schain hash to ${paymasterChainHash}`);
+        await (await paymasterController.setPaymasterChainHash(paymasterChainHash)).wait();
+
+        console.log("Revoke PAYMASTER_SETTER_ROLE");
+        await (await paymasterController.revokeRole(
+            await paymasterController.PAYMASTER_SETTER_ROLE(),
+            deployer
+        )).wait();
+
+        const owner = await contractManager.owner();
+        if (!await paymasterController.hasRole(await paymasterController.DEFAULT_ADMIN_ROLE(), owner)) {
+            console.log(`Grant ownership to ${owner}`);
+            await (await paymasterController.grantRole(
+                await paymasterController.DEFAULT_ADMIN_ROLE(),
+                owner
+            )).wait();
+
+            console.log(`Revoke ownership from ${ethers.resolveAddress(deployer)}`);
+            await (await paymasterController.revokeRole(
+                await paymasterController.DEFAULT_ADMIN_ROLE(),
+                deployer
+            )).wait();
+        }
+    };
 
     // initialize = async () => { };
 }
@@ -97,10 +147,21 @@ async function prepareContractsList(instance: Instance) {
 
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
+    let contractsToUpgrade = [
+        "Nodes",
+        "Schains",
+        "ValidatorService"
+    ];
+    if (process.env.UPGRADE_ALL) {
+        contractsToUpgrade = await prepareContractsList(skaleManager);
+    }
+    // TODO: remove after 1.12.0 release
+    contractsToUpgrade = contractsToUpgrade.filter((contract) => contract !== "PaymasterController")
+    // End of TODO
     const upgrader = new SkaleManagerUpgrader(
         "1.11.0",
         skaleManager,
-        await prepareContractsList(skaleManager)
+        contractsToUpgrade
     );
     await upgrader.upgrade();
 }

@@ -370,7 +370,8 @@ describe("Delegation", () => {
 
         it("should not allow holder to delegate to unregistered validator", async () => {
             await delegationController.connect(holder1).delegate(13, 1,  2, "D2 is even")
-                .should.be.eventually.rejectedWith("Validator with such ID does not exist");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorDoesNotExist")
+                .withArgs(13);
         });
 
         it("should calculate bond amount if validator delegated to itself", async () => {

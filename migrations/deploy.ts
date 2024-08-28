@@ -61,10 +61,10 @@ export const contracts = [
     "SkaleDKG",
     "SkaleVerifier",
     "SkaleManager",
-    "Pricing",
     "BountyV2",
     "Wallets",
-    "SyncManager"
+    "SyncManager",
+    "PaymasterController"
 ]
 
 async function main() {

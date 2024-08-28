@@ -26,7 +26,10 @@ interface IPartialDifferencesTester {
     function createSequence() external;
     function addToSequence(uint256 sequence, uint256 diff, uint256 month) external;
     function subtractFromSequence(uint256 sequence, uint256 diff, uint256 month) external;
-    function getAndUpdateSequenceItem(uint256 sequence, uint256 month) external returns (uint256 item);
+    function getAndUpdateSequenceItem(
+        uint256 sequence,
+        uint256 month
+    ) external returns (uint256 item);
     function reduceSequence(
         uint256 sequence,
         uint256 a,

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    LockerMock.sol - SKALE Manager
-    Copyright (C) 2018-Present SKALE Labs
+    CommonErrors.sol - SKALE Manager
+    Copyright (C) 2024-Present SKALE Labs
     @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -19,23 +19,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
 
-contract LockerMock is ILocker {
-    function getAndUpdateLockedAmount(address) external pure override returns (uint256 amount) {
-        return 13;
-    }
-
-    function getAndUpdateForbiddenForDelegationAmount(
-        address
-    )
-        external
-        pure
-        override
-        returns (uint256 amount)
-    {
-        return 13;
-    }
-}
+error AddressIsNotSet();
+error GroupIndexIsInvalid(uint256 index);
+error IsNotContract(address account);
+error NotEnoughFunds();
+error RoleRequired(bytes32 role);

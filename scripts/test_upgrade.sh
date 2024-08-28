@@ -53,6 +53,14 @@ rm -r --interactive=never $DEPLOYED_DIR
 # TODO: use contracts.json file when deployed version starts supporting it
 # SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
 SKALE_MANAGER_ADDRESS=$(cat data/$ABI_FILENAME | jq -r .skale_manager_address)
-ALLOW_NOT_ATOMIC_UPGRADE="OK" TARGET="$SKALE_MANAGER_ADDRESS" npx hardhat run migrations/upgrade.ts --network localhost
+export ALLOW_NOT_ATOMIC_UPGRADE="OK"
+export TARGET="$SKALE_MANAGER_ADDRESS"
+export UPGRADE_ALL=true
+# TODO: Remove after release 1.12.0
+export IMA="$SKALE_MANAGER_ADDRESS"
+export MARIONETTE="$SKALE_MANAGER_ADDRESS"
+export PAYMASTER="$SKALE_MANAGER_ADDRESS"
+# End of TODO
+npx hardhat run migrations/upgrade.ts --network localhost
 
 npx ganache instances stop $GANACHE_SESSION

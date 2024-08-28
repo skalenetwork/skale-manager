@@ -45,11 +45,27 @@ contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
         delete schainToException[schainHash];
     }
 
-    function _addAddressToSchain(bytes32, address) internal override pure returns (bool successful) {
+    function _addAddressToSchain(
+        bytes32,
+        address
+    )
+        internal
+        override
+        pure
+        returns (bool successful)
+    {
         return true;
     }
 
-    function _removeAddressFromSchain(bytes32, address) internal override pure returns (bool successful) {
+    function _removeAddressFromSchain(
+        bytes32,
+        address
+    )
+        internal
+        override
+        pure
+        returns (bool successful)
+    {
         return true;
     }
 }

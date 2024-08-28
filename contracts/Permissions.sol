@@ -19,13 +19,17 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import {
+    AddressUpgradeable
+} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import { IPermissions } from "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
 
-import { AccessControlUpgradeableLegacy } from "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
+import {
+    AccessControlUpgradeableLegacy
+} from "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
 
 
 /**
@@ -102,7 +106,12 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
      * - The caller must be the owner, `contractName1`, `contractName2`, or
      * `contractName3`.
      */
-    modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
+    modifier allowThree(
+        string memory contractName1,
+        string memory contractName2,
+        string memory contractName3
+    )
+    {
         require(
             contractManager.getContract(contractName1) == msg.sender ||
             contractManager.getContract(contractName2) == msg.sender ||
@@ -123,9 +132,11 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
     }
 
     function _isAdmin(address account) internal view returns (bool admin) {
-        address skaleManagerAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleManager")));
+        address skaleManagerAddress =
+            contractManager.contracts(keccak256(abi.encodePacked("SkaleManager")));
         if (skaleManagerAddress != address(0)) {
-            AccessControlUpgradeableLegacy skaleManager = AccessControlUpgradeableLegacy(skaleManagerAddress);
+            AccessControlUpgradeableLegacy skaleManager =
+                AccessControlUpgradeableLegacy(skaleManagerAddress);
             return skaleManager.hasRole(keccak256("ADMIN_ROLE"), account) || _isOwner();
         } else {
             return _isOwner();

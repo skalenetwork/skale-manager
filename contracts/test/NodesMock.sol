@@ -53,7 +53,14 @@ contract NodesMock is Permissions, INodesMock {
     function changeNodeLastRewardDate(uint256 nodeId) external override {
         lastRewardDate[nodeId] = block.timestamp;
     }
-    function getNodeLastRewardDate(uint256 nodeIndex) external view override returns (uint256 timestamp) {
+    function getNodeLastRewardDate(
+        uint256 nodeIndex
+    )
+        external
+        view
+        override
+        returns (uint256 timestamp)
+    {
         require(nodeIndex < nodesCount, "Node does not exist");
         return lastRewardDate[nodeIndex];
     }
