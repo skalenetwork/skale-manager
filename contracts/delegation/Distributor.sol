@@ -222,8 +222,8 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
 
         earned = 0;
         endMonth = currentMonth;
-        if (endMonth > startMonth + 12) {
-            endMonth = startMonth + 12;
+        if (endMonth > startMonth + 120) {
+            endMonth = startMonth + 120;
         }
         for (uint256 i = startMonth; i < endMonth; ++i) {
             uint256 effectiveDelegatedToValidator = delegationController

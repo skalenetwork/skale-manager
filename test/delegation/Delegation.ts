@@ -509,7 +509,7 @@ describe("Delegation", () => {
             for (let i = 0; i < holdersAmount; ++i) {
                 holders.push(Wallet.createRandom().connect(ethers.provider));
             }
-            const etherAmount = ethers.parseEther("5000");
+            const etherAmount = ethers.parseEther("500");
 
             await constantsHolder.setLaunchTimestamp(0);
 
