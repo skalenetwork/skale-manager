@@ -27,3 +27,4 @@ error GroupIndexIsInvalid(uint256 index);
 error IsNotContract(address account);
 error NotEnoughFunds();
 error RoleRequired(bytes32 role);
+error TokensTransferFailure();

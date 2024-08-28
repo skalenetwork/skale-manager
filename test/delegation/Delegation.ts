@@ -599,9 +599,9 @@ describe("Delegation", () => {
                     validatorId))[0].should.be.equal(31);
 
                 await distributor.connect(validator).withdrawFee(bountyAddress.address)
-                    .should.be.eventually.rejectedWith("Fee is locked");
+                    .should.be.revertedWithCustomError(distributor, "FeeIsLocked");
                 await distributor.connect(holder1).withdrawBounty(validatorId, bountyAddress.address)
-                    .should.be.eventually.rejectedWith("Bounty is locked");
+                    .should.be.revertedWithCustomError(distributor, "BountyIsLocked");
 
                 await nextMonth(contractManager, 3);
 
