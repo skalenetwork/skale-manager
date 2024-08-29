@@ -19,24 +19,21 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
-import {IERC1820Registry} from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
-import {IERC777Recipient} from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import {IDistributor} from "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
-import {
-    IValidatorService
-} from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import {
-    IDelegationController
-} from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
-import {ITimeHelpers} from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
-
-import {Permissions} from "../Permissions.sol";
-import {ConstantsHolder} from "../ConstantsHolder.sol";
-import {MathUtils} from "../utils/MathUtils.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import { IDelegationController }
+from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import { IDistributor } from "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
+import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
+import { IValidatorService }
+from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { TokensTransferFailure } from "./../CommonErrors.sol";
+import { Permissions } from "./../Permissions.sol";
+import { MathUtils } from "./../utils/MathUtils.sol";
 
 /**
  * @title Distributor
@@ -48,15 +45,17 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
 
     IERC1820Registry private _erc1820;
 
-    // validatorId =>        month => token
-    mapping(uint256 => mapping(uint256 => uint256)) private _bountyPaid;
-    // validatorId =>        month => token
-    mapping(uint256 => mapping(uint256 => uint256)) private _feePaid;
-    //        holder =>   validatorId => month
-    mapping(address => mapping(uint256 => uint256))
-        private _firstUnwithdrawnMonth;
-    // validatorId => month
-    mapping(uint256 => uint256) private _firstUnwithdrawnMonthForValidator;
+    mapping(uint256 validatorId => mapping(uint256 month => uint256 amount)) private _bountyPaid;
+    mapping(uint256 validatorId => mapping(uint256 month => uint256 amount)) private _feePaid;
+    mapping(
+        address holder => mapping(uint256 validatorId => uint256 month)
+    ) private _firstUnwithdrawnMonth;
+    mapping(uint256 validatorId => uint256 month) private _firstUnwithdrawnMonthForValidator;
+
+    error BountyIsLocked();
+    error DataLengthIsIncorrect();
+    error FeeIsLocked();
+    error ReceiverIsIncorrect();
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
@@ -91,18 +90,16 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         ITimeHelpers timeHelpers = ITimeHelpers(
             contractManager.getContract("TimeHelpers")
         );
-        ConstantsHolder constantsHolder = ConstantsHolder(
+        IConstantsHolder constantsHolder = IConstantsHolder(
             contractManager.getContract("ConstantsHolder")
         );
 
-        require(
-            block.timestamp >=
-                timeHelpers.addMonths(
+        if (block.timestamp < timeHelpers.addMonths(
                     constantsHolder.launchTimestamp(),
                     constantsHolder.BOUNTY_LOCKUP_MONTHS()
-                ),
-            "Bounty is locked"
-        );
+        )) {
+            revert BountyIsLocked();
+        }
 
         uint256 bounty;
         uint256 endMonth;
@@ -114,7 +111,9 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         _firstUnwithdrawnMonth[msg.sender][validatorId] = endMonth;
 
         IERC20 skaleToken = IERC20(contractManager.getContract("SkaleToken"));
-        require(skaleToken.transfer(to, bounty), "Failed to transfer tokens");
+        if(!skaleToken.transfer(to, bounty)) {
+            revert TokensTransferFailure();
+        }
 
         emit WithdrawBounty(msg.sender, validatorId, to, bounty);
     }
@@ -137,18 +136,17 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         ITimeHelpers timeHelpers = ITimeHelpers(
             contractManager.getContract("TimeHelpers")
         );
-        ConstantsHolder constantsHolder = ConstantsHolder(
+        IConstantsHolder constantsHolder = IConstantsHolder(
             contractManager.getContract("ConstantsHolder")
         );
 
-        require(
-            block.timestamp >=
-                timeHelpers.addMonths(
-                    constantsHolder.launchTimestamp(),
-                    constantsHolder.BOUNTY_LOCKUP_MONTHS()
-                ),
-            "Fee is locked"
-        );
+        if (block.timestamp < timeHelpers.addMonths(
+            constantsHolder.launchTimestamp(),
+            constantsHolder.BOUNTY_LOCKUP_MONTHS()
+        )) {
+            revert FeeIsLocked();
+        }
+
         // check Validator Exist inside getValidatorId
         uint256 validatorId = validatorService.getValidatorId(msg.sender);
 
@@ -158,7 +156,9 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
 
         _firstUnwithdrawnMonthForValidator[validatorId] = endMonth;
 
-        require(skaleToken.transfer(to, fee), "Failed to transfer tokens");
+        if(!skaleToken.transfer(to, fee)) {
+            revert TokensTransferFailure();
+        }
 
         emit WithdrawFee(validatorId, to, fee);
     }
@@ -171,8 +171,12 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         bytes calldata userData,
         bytes calldata
     ) external override allow("SkaleToken") {
-        require(to == address(this), "Receiver is incorrect");
-        require(userData.length == 32, "Data length is incorrect");
+        if (to != address(this)) {
+            revert ReceiverIsIncorrect();
+        }
+        if (userData.length != 32) {
+            revert DataLengthIsIncorrect();
+        }
         uint256 validatorId = abi.decode(userData, (uint256));
         _distributeBounty(amount, validatorId);
     }

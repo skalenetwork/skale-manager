@@ -234,6 +234,30 @@ describe("Delegation", () => {
             .should.be.eventually.rejectedWith("Limit of validators is reached");
     });
 
+    it("should revert on incorrect transfers", async () => {
+        const skaleTokenInternalTesterFactory = await ethers.getContractFactory("SkaleTokenInternalTester");
+        const skaleTokenInternalTester = await skaleTokenInternalTesterFactory.deploy(contractManager, []);
+        await contractManager.setContractsAddress("SkaleToken", skaleTokenInternalTester);
+        await skaleTokenInternalTester.callTokensReceived(
+            distributor,
+            ethers.ZeroAddress,
+            holder1,
+            holder2, // Receiver always needs to be the Distributor
+            5,
+            "0x",
+            "0x"
+        ).should.be.revertedWithCustomError(distributor, "ReceiverIsIncorrect");
+        await skaleTokenInternalTester.callTokensReceived(
+            distributor,
+            ethers.ZeroAddress,
+            holder1,
+            distributor,
+            5,
+            "0x", // Data length always must be 32 bytes
+            "0x"
+        ).should.be.revertedWithCustomError(distributor, "DataLengthIsIncorrect");
+    })
+
     describe("when holders have tokens and validator is registered", () => {
         let validatorId: bigint;
         fastBeforeEach(async () => {
@@ -599,9 +623,9 @@ describe("Delegation", () => {
                     validatorId))[0].should.be.equal(31);
 
                 await distributor.connect(validator).withdrawFee(bountyAddress.address)
-                    .should.be.eventually.rejectedWith("Fee is locked");
+                    .should.be.revertedWithCustomError(distributor, "FeeIsLocked");
                 await distributor.connect(holder1).withdrawBounty(validatorId, bountyAddress.address)
-                    .should.be.eventually.rejectedWith("Bounty is locked");
+                    .should.be.revertedWithCustomError(distributor, "BountyIsLocked");
 
                 await nextMonth(contractManager, 3);
 

@@ -23,5 +23,15 @@ pragma solidity 0.8.17;
 
 
 interface ISkaleTokenInterfaceTester {
+    function callTokensReceived(
+        address implementer,
+        address operator,
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData
+    )
+    external;
     function getMsgData() external view returns (bytes memory msgData);
 }

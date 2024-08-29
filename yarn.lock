@@ -1741,10 +1741,10 @@
   dependencies:
     axios "^1.4.0"
 
-"@skalenetwork/skale-manager-interfaces@3.2.0-develop.0":
-  version "3.2.0-develop.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-develop.0.tgz#01e64eeabf2b14b320074eb588b557bbd33bab39"
-  integrity sha512-f++aLtSwjLJgAb3dHAm/SMHvx2a0L3uWwF7aam1wCtB6YZrFLR3flzlH3Ms3JlLZtfl5iE7VBmsuidhAqpbfpw==
+"@skalenetwork/skale-manager-interfaces@3.2.0-develop.1":
+  version "3.2.0-develop.1"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-develop.1.tgz#ec4ad8f2b4d12a5ff8d03763674a214be61c773d"
+  integrity sha512-ACugcMzRFa7nbHcJ8mZE/J60M8GW9gJKsqmQYEYoElzZBMTCstEeWy1ff6Vj7kcv+xESHPPhTzJ34ieMCL3pFg==
 
 "@skalenetwork/skale-manager-interfaces@^3.2.0-develop.0":
   version "3.2.0-paymaster.2"
