@@ -185,7 +185,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainHash,
             Context({
                 isDebt: true,
-                delta: ConstantsHolder(contractManager.getConstantsHolder()).COMPLAINT_BAD_DATA_DELTA(),
+                delta: ConstantsHolder(contractManager.getConstantsHolder())
+                    .COMPLAINT_BAD_DATA_DELTA(),
                 dkgFunction: DkgFunction.ComplaintBadData
         }))
         correctGroupWithoutRevert(schainHash)
@@ -326,7 +327,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete pendingToBeReplaced[schainHash];
     }
 
-    function finalizeSlashing(bytes32 schainHash, uint256 badNode) external override allow("SkaleDKG") {
+    function finalizeSlashing(
+        bytes32 schainHash,
+        uint256 badNode
+    )
+        external
+        override
+        allow("SkaleDKG")
+    {
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         ISchainsInternal schainsInternal = ISchainsInternal(
             contractManager.getContract("SchainsInternal")
@@ -353,23 +361,58 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
     }
 
-    function getChannelStartedTime(bytes32 schainHash) external view override returns (uint256 timestamp) {
+    function getChannelStartedTime(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (uint256 timestamp)
+    {
         return channels[schainHash].startedBlockTimestamp;
     }
 
-    function getChannelStartedBlock(bytes32 schainHash) external view override returns (uint256 blockNumber) {
+    function getChannelStartedBlock(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (uint256 blockNumber)
+    {
         return channels[schainHash].startedBlock;
     }
 
-    function getNumberOfBroadcasted(bytes32 schainHash) external view override returns (uint256 amount) {
+    function getNumberOfBroadcasted(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (uint256 amount)
+    {
         return dkgProcess[schainHash].numberOfBroadcasted;
     }
 
-    function getNumberOfCompleted(bytes32 schainHash) external view override returns (uint256 amount) {
+    function getNumberOfCompleted(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (uint256 amount)
+    {
         return dkgProcess[schainHash].numberOfCompleted;
     }
 
-    function getTimeOfLastSuccessfulDKG(bytes32 schainHash) external view override returns (uint256 timestamp) {
+    function getTimeOfLastSuccessfulDKG(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (uint256 timestamp)
+    {
         return lastSuccessfulDKG[schainHash];
     }
 
@@ -384,11 +427,25 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return (complaints[schainHash].fromNodeToComplaint, complaints[schainHash].nodeToComplaint);
     }
 
-    function getComplaintStartedTime(bytes32 schainHash) external view override returns (uint256 timestamp) {
+    function getComplaintStartedTime(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (uint256 timestamp)
+    {
         return complaints[schainHash].startComplaintBlockTimestamp;
     }
 
-    function getAlrightStartedTime(bytes32 schainHash) external view override returns (uint256 timestamp) {
+    function getAlrightStartedTime(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (uint256 timestamp)
+    {
         return startAlrightTimestamp[schainHash];
     }
 
@@ -399,19 +456,35 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[schainHash].active;
     }
 
-    function isLastDKGSuccessful(bytes32 schainHash) external view override returns (bool successful) {
+    function isLastDKGSuccessful(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (bool successful)
+    {
         return channels[schainHash].startedBlockTimestamp <= lastSuccessfulDKG[schainHash];
     }
 
     /**
      * @dev Checks whether broadcast is possible.
      */
-    function isBroadcastPossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool possible) {
+    function isBroadcastPossible(
+        bytes32 schainHash,
+        uint256 nodeIndex
+    )
+        external
+        view
+        override
+        returns (bool possible)
+    {
         (uint256 index, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return channels[schainHash].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
-            channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit() > block.timestamp &&
+            channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit()
+                > block.timestamp &&
             !dkgProcess[schainHash].broadcasted[index];
     }
 
@@ -428,8 +501,16 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         override
         returns (bool possible)
     {
-        (uint256 indexFrom, bool checkFrom) = checkAndReturnIndexInGroup(schainHash, fromNodeIndex, false);
-        (uint256 indexTo, bool checkTo) = checkAndReturnIndexInGroup(schainHash, toNodeIndex, false);
+        (uint256 indexFrom, bool checkFrom) = checkAndReturnIndexInGroup(
+            schainHash,
+            fromNodeIndex,
+            false
+        );
+        (uint256 indexTo, bool checkTo) = checkAndReturnIndexInGroup(
+            schainHash,
+            toNodeIndex,
+            false
+        );
         if (!checkFrom || !checkTo)
             return false;
         bool complaintSending = (
@@ -439,13 +520,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             ) ||
             (
                 dkgProcess[schainHash].broadcasted[indexTo] &&
-                complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit() <= block.timestamp &&
+                complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit()
+                    <= block.timestamp &&
                 complaints[schainHash].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !dkgProcess[schainHash].broadcasted[indexTo] &&
                 complaints[schainHash].nodeToComplaint == type(uint256).max &&
-                channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit() <= block.timestamp
+                channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit()
+                    <= block.timestamp
             ) ||
             (
                 complaints[schainHash].nodeToComplaint == type(uint256).max &&
@@ -463,7 +546,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     /**
      * @dev Checks whether sending Alright response is possible.
      */
-    function isAlrightPossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool possible) {
+    function isAlrightPossible(
+        bytes32 schainHash,
+        uint256 nodeIndex
+    )
+        external
+        view
+        override
+        returns (bool possible)
+    {
         (uint256 index, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return channels[schainHash].active &&
             check &&
@@ -492,20 +583,30 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
             complaints[schainHash].nodeToComplaint == nodeIndex &&
-            complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit() > block.timestamp &&
+            complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit()
+                > block.timestamp &&
             !complaints[schainHash].isResponse;
     }
 
     /**
      * @dev Checks whether sending a response is possible.
      */
-    function isResponsePossible(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool possible) {
+    function isResponsePossible(
+        bytes32 schainHash,
+        uint256 nodeIndex
+    )
+        external
+        view
+        override
+        returns (bool possible)
+    {
         (, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return channels[schainHash].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
             complaints[schainHash].nodeToComplaint == nodeIndex &&
-            complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit() > block.timestamp &&
+            complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit()
+                > block.timestamp &&
             complaints[schainHash].isResponse;
     }
 
@@ -525,7 +626,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      /**
      * @dev Checks whether all data has been received by node.
      */
-    function isAllDataReceived(bytes32 schainHash, uint256 nodeIndex) external view override returns (bool received) {
+    function isAllDataReceived(
+        bytes32 schainHash,
+        uint256 nodeIndex
+    )
+        external
+        view
+        override
+        returns (bool received)
+    {
         (uint256 index, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
         return check && dkgProcess[schainHash].completed[index];
     }
@@ -541,7 +650,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     {
         bytes memory data;
         for (uint256 i = 0; i < secretKeyContribution.length; i++) {
-            data = abi.encodePacked(data, secretKeyContribution[i].publicKey, secretKeyContribution[i].share);
+            data = abi.encodePacked(
+                data,
+                secretKeyContribution[i].publicKey,
+                secretKeyContribution[i].share
+            );
         }
         for (uint256 i = 0; i < verificationVector.length; i++) {
             // Named arguments cannot be used for functions that take arbitrary parameters
@@ -575,32 +688,60 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return (index, index < channels[schainHash].n);
     }
 
-    function isEveryoneBroadcasted(bytes32 schainHash) public view override returns (bool broadcasted) {
+    function isEveryoneBroadcasted(
+        bytes32 schainHash
+    )
+        public
+        view
+        override
+        returns (bool broadcasted)
+    {
         return channels[schainHash].n == dkgProcess[schainHash].numberOfBroadcasted;
     }
 
-    function _refundGasBySchain(bytes32 schainHash, uint256 gasTotal, Context memory context) private {
+    function _refundGasBySchain(
+        bytes32 schainHash,
+        uint256 gasTotal,
+        Context memory context
+    )
+        private
+    {
         IWallets wallets = IWallets(payable(contractManager.getContract("Wallets")));
         bool isLastNode = channels[schainHash].n == dkgProcess[schainHash].numberOfCompleted;
         if (context.dkgFunction == DkgFunction.Alright && isLastNode) {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta - 74800, context.isDebt
+                schainHash,
+                payable(msg.sender),
+                gasTotal - gasleft() + context.delta - 74800,
+                context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal - gasleft() > 14e5) {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta - 341979, context.isDebt
+                schainHash,
+                payable(msg.sender),
+                gasTotal - gasleft() + context.delta - 341979,
+                context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal - gasleft() > 7e5) {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta - 152214, context.isDebt
+                schainHash,
+                payable(msg.sender),
+                gasTotal - gasleft() + context.delta - 152214,
+                context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Response){
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta, context.isDebt
+                schainHash,
+                payable(msg.sender),
+                gasTotal - gasleft() + context.delta,
+                context.isDebt
             );
         } else {
             wallets.refundGasBySchain(
-                schainHash, payable(msg.sender), gasTotal - gasleft() + context.delta, context.isDebt
+                schainHash,
+                payable(msg.sender),
+                gasTotal - gasleft() + context.delta,
+                context.isDebt
             );
         }
     }
@@ -637,12 +778,22 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit ChannelOpened(schainHash);
     }
 
-    function _isNodeOwnedByMessageSender(uint256 nodeIndex, address from) private view returns (bool owned) {
+    function _isNodeOwnedByMessageSender(
+        uint256 nodeIndex,
+        address from
+    )
+        private
+        view
+        returns (bool owned)
+    {
         return INodes(contractManager.getContract("Nodes")).isNodeExist(from, nodeIndex);
     }
 
     function _checkMsgSenderIsNodeOwner(uint256 nodeIndex) private view {
-        require(_isNodeOwnedByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
+        require(
+            _isNodeOwnedByMessageSender(nodeIndex, msg.sender),
+            "Node does not exist for message sender"
+        );
     }
 
     function _getComplaintTimeLimit() private view returns (uint256 timeLimit) {

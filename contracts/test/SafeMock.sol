@@ -21,7 +21,9 @@
 
 pragma solidity 0.8.17;
 
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {
+    OwnableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import { ISafeMock } from "./interfaces/ISafeMock.sol";
 
@@ -30,8 +32,9 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
 
     bool public constant IS_SAFE_MOCK = true;
     bytes32 public constant SAFE_TX_TYPE_HASH = keccak256(
-        "SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,"
-        "address gasToken,address refundReceiver,uint256 nonce)"
+        "SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,"
+        "uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,"
+        "uint256 nonce)"
     );
     bytes32 public constant DOMAIN_SEPARATOR_TYPE_HASH = keccak256(
         "EIP712Domain(uint256 chainId,address verifyingContract)"
@@ -42,7 +45,14 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
         multiSend(""); // this is needed to remove slither warning
     }
 
-    function transferProxyAdminOwnership(OwnableUpgradeable proxyAdmin, address newOwner) external override onlyOwner {
+    function transferProxyAdminOwnership(
+        OwnableUpgradeable proxyAdmin,
+        address newOwner
+    )
+        external
+        override
+        onlyOwner
+    {
         proxyAdmin.transferOwnership(newOwner);
     }
 
@@ -52,7 +62,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
 
     /// @dev Sends multiple transactions and reverts all if one fails.
     /// @param transactions Encoded transactions. Each transaction is encoded as a packed bytes of
-    ///                     operation as a uint8 with 0 for a call or 1 for a delegatecall (=> 1 byte),
+    ///                     operation as a uint8 with 0 for a call or 1 for a delegatecall,
     ///                     to as a address (=> 20 bytes),
     ///                     value as a uint256 (=> 32 bytes),
     ///                     data length as a uint256 (=> 32 bytes),
@@ -79,7 +89,8 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
                 let to := shr(0x60, mload(add(transactions, add(i, 0x01))))
                 // We offset the load address by 21 byte (operation byte + 20 address bytes)
                 let value := mload(add(transactions, add(i, 0x15)))
-                // We offset the load address by 53 byte (operation byte + 20 address bytes + 32 value bytes)
+                // We offset the load address by 53 byte
+                // (operation byte + 20 address bytes + 32 value bytes)
                 let dataLength := mload(add(transactions, add(i, 0x35)))
                 // We offset the load address by 85 byte
                 // (operation byte + 20 address bytes + 32 value bytes + 32 data length bytes)

@@ -1,56 +1,59 @@
-import { ethers, upgrades } from "hardhat";
-import { ContractManager } from "../../../typechain-types";
-import { deployLibraries, getLinkedContractFactory } from "@skalenetwork/upgrade-tools";
+import {ethers, upgrades} from "hardhat";
+import {ContractManager} from "../../../typechain-types";
+import {deployLibraries} from "@skalenetwork/upgrade-tools";
+import {AddressLike, Contract} from "ethers";
 
-async function defaultDeploy(contractName: string,
+async function defaultDeploy<ContractType = Contract>(contractName: string,
                              contractManager: ContractManager) {
     const contractFactory = await ethers.getContractFactory(contractName);
-    return await upgrades.deployProxy(contractFactory, [contractManager.address]);
+    return await upgrades.deployProxy(
+        contractFactory,
+        [await ethers.resolveAddress(contractManager)]
+    ) as ContractType;
 }
 
-async function defaultDeployWithConstructor(
+async function defaultDeployWithConstructor<ContractType extends AddressLike = Contract>(
     contractName: string,
     contractManager: ContractManager) {
         const contractFactory = await ethers.getContractFactory(contractName);
-        return await contractFactory.deploy(contractManager.address);
+        return await contractFactory.deploy(contractManager) as unknown as ContractType;
 }
 
-async function deployWithConstructor(
+async function deployWithConstructor<ContractType = Contract>(
     contractName: string) {
         const contractFactory = await ethers.getContractFactory(contractName);
-        return await contractFactory.deploy();
+        return await contractFactory.deploy() as unknown as ContractType;
 }
 
-function deployFunctionFactory(
+function deployFunctionFactory<ContractType extends AddressLike = Contract>(
     contractName: string,
     deployDependencies: (contractManager: ContractManager) => Promise<void>
         = () => Promise.resolve(undefined),
     deploy
         = async ( contractManager: ContractManager) => {
-          return await defaultDeploy(contractName, contractManager);
+          return await defaultDeploy<ContractType>(contractName, contractManager);
         }
 ) {
-
     return async (contractManager: ContractManager) => {
             const contractFactory = await ethers.getContractFactory(contractName);
             try {
-                return contractFactory.attach(await contractManager.getContract(contractName));
+                return contractFactory.attach(await contractManager.getContract(contractName)) as unknown as ContractType;
             } catch (e) {
                 const instance = await deploy(contractManager);
-                await contractManager.setContractsAddress(contractName, instance.address);
+                await contractManager.setContractsAddress(contractName, instance);
                 await deployDependencies(contractManager);
                 return instance;
             }
         };
 }
 
-function deployWithConstructorFunctionFactory(
+function deployWithConstructorFunctionFactory<ContractType extends AddressLike = Contract>(
     contractName: string,
     deployDependencies: (contractManager: ContractManager) => Promise<void>
         = () => Promise.resolve(undefined),
     deploy
         = async ( contractManager: ContractManager) => {
-            return await defaultDeployWithConstructor(contractName, contractManager);
+            return await defaultDeployWithConstructor<ContractType>(contractName, contractManager);
         }
 ) {
     return deployFunctionFactory(
@@ -60,7 +63,7 @@ function deployWithConstructorFunctionFactory(
 }
 
 
-function deployWithLibraryFunctionFactory(
+function deployWithLibraryFunctionFactory<ContractType extends AddressLike = Contract>(
     contractName: string,
     libraryNames: string[],
     deployDependencies: (contractManager: ContractManager) => Promise<void>
@@ -68,19 +71,23 @@ function deployWithLibraryFunctionFactory(
 ) {
     return async (contractManager: ContractManager) => {
         const libraries = await deployLibraries(libraryNames);
-        const contractFactory = await getLinkedContractFactory(contractName, libraries);
+        const contractFactory = await ethers.getContractFactory(contractName, {libraries: Object.fromEntries(libraries)});
         try {
-            return contractFactory.attach(await contractManager.getContract(contractName));
+            return contractFactory.attach(await contractManager.getContract(contractName)) as unknown as ContractType;
         } catch (e) {
-            const instance = await upgrades.deployProxy(contractFactory, [contractManager.address], { unsafeAllowLinkedLibraries: true });
-            await contractManager.setContractsAddress(contractName, instance.address);
+            const instance = await upgrades.deployProxy(
+                contractFactory,
+                [await ethers.resolveAddress(contractManager)],
+                {unsafeAllowLinkedLibraries: true}
+            ) as unknown as ContractType;
+            await contractManager.setContractsAddress(contractName, instance);
             await deployDependencies(contractManager);
             return instance;
         }
     }
 }
 
-function deployWithLibraryWithConstructor(
+function deployWithLibraryWithConstructor<ContractType extends AddressLike = Contract>(
     contractName: string,
     libraryNames: string[],
     deployDependencies: (contractManager: ContractManager) => Promise<void>
@@ -88,12 +95,12 @@ function deployWithLibraryWithConstructor(
 ) {
     return async (contractManager: ContractManager) => {
         const libraries = await deployLibraries(libraryNames);
-        const contractFactory = await getLinkedContractFactory(contractName, libraries);
+        const contractFactory = await ethers.getContractFactory(contractName, {libraries: Object.fromEntries(libraries)});
         try {
-            return contractFactory.attach(await contractManager.getContract(contractName));
+            return contractFactory.attach(await contractManager.getContract(contractName)) as unknown as ContractType;
         } catch (e) {
-            const instance = await upgrades.deployProxy(contractFactory, { unsafeAllowLinkedLibraries: true });
-            await contractManager.setContractsAddress(contractName, instance.address);
+            const instance = await upgrades.deployProxy(contractFactory, {unsafeAllowLinkedLibraries: true}) as unknown as ContractType;
+            await contractManager.setContractsAddress(contractName, instance);
             await deployDependencies(contractManager);
             return instance;
         }

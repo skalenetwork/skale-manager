@@ -1,9 +1,9 @@
-import { promises as fs } from 'fs';
-import { contracts } from "../migrations/deploy";
-import { ethers } from "hardhat";
-import { getAbi, getVersion } from '@skalenetwork/upgrade-tools';
-import { ContractFactory } from 'ethers';
-import { Libraries } from '@nomiclabs/hardhat-ethers/types';
+import {promises as fs} from 'fs';
+import {contracts} from "../migrations/deploy";
+import {ethers} from "hardhat";
+import {getAbi, getVersion} from '@skalenetwork/upgrade-tools';
+import {ContractFactory} from 'ethers';
+import {Libraries} from '@nomicfoundation/hardhat-ethers/types'
 
 async function main() {
     const allContracts = contracts.concat(["SkaleToken", "TimeHelpersWithDebug"])
@@ -26,7 +26,7 @@ async function main() {
         if (Object.keys(librariesRequirements).includes(contractName)) {
             const libraries: Libraries = {};
             for(const library of librariesRequirements[contractName]) {
-                libraries[library] = ethers.constants.AddressZero;
+                libraries[library] = ethers.ZeroAddress;
             }
             factory = await ethers.getContractFactory(contractName, {libraries});
         } else {

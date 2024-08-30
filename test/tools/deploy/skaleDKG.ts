@@ -1,11 +1,11 @@
-import { deployPunisher } from "./delegation/punisher";
-import { deployKeyStorage } from "./keyStorage";
-import { deployWithLibraryFunctionFactory } from "./factory";
-import { deployNodes } from "./nodes";
-import { deploySchainsInternal } from "./schainsInternal";
-import { deploySlashingTable } from "./slashingTable";
-import { deployNodeRotation } from "./nodeRotation";
-import { ContractManager, SkaleDKG } from "../../../typechain-types";
+import {deployPunisher} from "./delegation/punisher";
+import {deployKeyStorage} from "./keyStorage";
+import {deployWithLibraryFunctionFactory} from "./factory";
+import {deployNodes} from "./nodes";
+import {deploySchainsInternal} from "./schainsInternal";
+import {deploySlashingTable} from "./slashingTable";
+import {deployNodeRotation} from "./nodeRotation";
+import {ContractManager, SkaleDKG} from "../../../typechain-types";
 
 const libraries = [
     "SkaleDkgAlright",
@@ -15,7 +15,7 @@ const libraries = [
     "SkaleDkgResponse"
 ]
 
-export const deploySkaleDKG = deployWithLibraryFunctionFactory(
+export const deploySkaleDKG = deployWithLibraryFunctionFactory<SkaleDKG>(
     "SkaleDKG",
     libraries,
     async (contractManager: ContractManager) => {
@@ -26,4 +26,4 @@ export const deploySkaleDKG = deployWithLibraryFunctionFactory(
         await deployNodeRotation(contractManager);
         await deployKeyStorage(contractManager);
     }
-) as (contractManager: ContractManager) => Promise<SkaleDKG>;
+);

@@ -116,7 +116,7 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
         if (counter > 100) {
             return false;
         }
-        uint256 xCoord = uint(hash) % Fp2Operations.P;
+        uint256 xCoord = uint256(hash) % Fp2Operations.P;
         xCoord = (xCoord + counter) % Fp2Operations.P;
 
         uint256 ySquared = addmod(
@@ -124,7 +124,9 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
             3,
             Fp2Operations.P
         );
-        if (hashB < Fp2Operations.P / 2 || mulmod(hashB, hashB, Fp2Operations.P) != ySquared || xCoord != hashA) {
+        if (hashB < Fp2Operations.P / 2
+            || mulmod(hashB, hashB, Fp2Operations.P) != ySquared
+            || xCoord != hashA) {
             return false;
         }
 

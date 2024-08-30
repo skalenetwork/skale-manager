@@ -32,21 +32,33 @@ import { ISkaleManagerMock } from "./interfaces/ISkaleManagerMock.sol";
 
 contract SkaleManagerMock is Permissions, IERC777Recipient, ISkaleManagerMock {
 
-    IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry private _erc1820 =
+        IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     constructor (address contractManagerAddress) {
         Permissions.initialize(contractManagerAddress);
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
+        _erc1820.setInterfaceImplementer(
+            address(this),
+            keccak256("ERC777TokensRecipient"),
+            address(this)
+        );
     }
 
     function payBounty(uint256 validatorId, uint256 amount) external override {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
-        require(IMintableToken(address(skaleToken)).mint(address(this), amount, "", ""), "Token was not minted");
         require(
-            IMintableToken(address(skaleToken))
-                .mint(contractManager.getContract("Distributor"), amount, abi.encode(validatorId), ""),
+            IMintableToken(address(skaleToken)).mint(address(this), amount, "", ""),
+            "Token was not minted"
+        );
+        require(
+            IMintableToken(address(skaleToken)).mint(
+                contractManager.getContract("Distributor"),
+                amount,
+                abi.encode(validatorId),
+                ""
+            ),
             "Token was not minted"
         );
     }

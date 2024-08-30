@@ -1,21 +1,21 @@
 import chaiAsPromised from "chai-as-promised";
-import { ContractManager,
+import {ContractManager,
          Nodes,
          ValidatorService} from "../typechain-types";
-import { skipTime } from "./tools/time";
-import { privateKeys } from "./tools/private-keys";
+import {skipTime} from "./tools/time";
+import {privateKeys} from "./tools/private-keys";
 import chai = require("chai");
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { BigNumber, Wallet } from "ethers";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert } from "chai";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { fastBeforeEach } from "./tools/mocha";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
+import {Wallet} from "ethers";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {assert} from "chai";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -36,7 +36,7 @@ describe("NodesData", () => {
 
         nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
@@ -124,7 +124,10 @@ describe("NodesData", () => {
         it("should change node last reward date", async () => {
             await skipTime(5);
             const res = await(await nodes.changeNodeLastRewardDate(0)).wait();
-            const currentTimeLocal = BigNumber.from((await ethers.provider.getBlock(res.blockNumber)).timestamp);
+            if (!res?.blockNumber) {
+                throw new Error();
+            }
+            const currentTimeLocal = (await ethers.provider.getBlock(res.blockNumber))?.timestamp;
 
             (await nodes.nodes(0))[5].should.be.equal(currentTimeLocal);
             (await nodes.getNodeLastRewardDate(0)).should.be.equal(currentTimeLocal);
@@ -187,7 +190,8 @@ describe("NodesData", () => {
 
         it("should not modify node domain name by hacker", async () => {
             await nodes.connect(hacker).setDomainName(0, "new.domain.name")
-                .should.be.eventually.rejectedWith("Validator address does not exist");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                .withArgs(hacker);
         });
 
         // it("should get array of ips of active nodes", async () => {
@@ -215,68 +219,68 @@ describe("NodesData", () => {
 
         it("should return Node status", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.initExit(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 1);
+            assert.equal(status, 1n);
         });
 
         it("should set node status In Maintenance from node address", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.connect(nodeAddress).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 3);
+            assert.equal(status, 3n);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
         });
 
         it("should set node status From In Maintenance from node address", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.connect(nodeAddress).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 3);
+            assert.equal(status, 3n);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
             await nodes.connect(nodeAddress).removeNodeFromInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
         });
 
         it("should set node status In Maintenance from validator address", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.connect(validator).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 3);
+            assert.equal(status, 3n);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
         });
 
         it("should set node status From In Maintenance from validator address", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.connect(validator).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 3);
+            assert.equal(status, 3n);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
             await nodes.connect(validator).removeNodeFromInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
         });
 
         it("should set node status In Maintenance from NODE_MANAGER_ROLE", async () => {
             const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
             await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.connect(admin).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 3);
+            assert.equal(status, 3n);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
         });
@@ -285,58 +289,62 @@ describe("NodesData", () => {
             const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
             await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.connect(admin).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 3);
+            assert.equal(status, 3n);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
             await nodes.connect(admin).removeNodeFromInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
         });
 
         it("should set node status In Maintenance from owner", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 3);
+            assert.equal(status, 3n);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
         });
 
         it("should set node status From In Maintenance from owner", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 3);
+            assert.equal(status, 3n);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
             await nodes.removeNodeFromInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
         });
 
         it("should node set node status In Maintenance from Leaving or Left", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status, 0);
+            assert.equal(status, 0n);
             await nodes.initExit(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status, 1);
-            await nodes.setNodeInMaintenance(0).should.be.eventually.rejectedWith("Node is not Active");
+            assert.equal(status, 1n);
+            await nodes.setNodeInMaintenance(0)
+                .should.be.revertedWithCustomError(nodes, "NodeIsNotActive")
+                .withArgs(0);
             await nodes.completeExit(0);
-            await nodes.setNodeInMaintenance(0).should.be.eventually.rejectedWith("Node is not Active");
+            await nodes.setNodeInMaintenance(0)
+                .should.be.revertedWithCustomError(nodes, "NodeIsNotActive")
+                .withArgs(0);
         });
 
         it("should decrease number of active nodes after setting node in maintenance", async () => {
             const numberOfActiveNodes = await nodes.numberOfActiveNodes();
             await nodes.setNodeInMaintenance(0);
             const numberOfActiveNodesAfter = await nodes.numberOfActiveNodes();
-            assert.equal(numberOfActiveNodesAfter.toNumber(), numberOfActiveNodes.toNumber()-1);
+            assert.equal(numberOfActiveNodesAfter, numberOfActiveNodes - 1n);
         });
 
         describe("when node is registered", () => {
@@ -382,7 +390,6 @@ describe("NodesData", () => {
                 (await nodes.countNodesWithFreeSpace(1)).should.be.equal(2);
             });
         });
-
     });
 
     describe("when two nodes are added", () => {
@@ -457,9 +464,6 @@ describe("NodesData", () => {
                 const spaceAfter = nodesFillingAfter["0"];
                 parseInt(spaceBefore.toString(), 10).should.be.equal(parseInt(spaceAfter.toString(), 10));
             });
-
         });
-
     });
-
 });

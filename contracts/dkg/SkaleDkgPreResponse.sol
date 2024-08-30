@@ -23,12 +23,13 @@
 
 pragma solidity 0.8.17;
 
-import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
-import { G1Operations } from "../utils/fieldOperations/G1Operations.sol";
-import { G2Operations } from "../utils/fieldOperations/G2Operations.sol";
-import { Precompiled } from "../utils/Precompiled.sol";
+import {G1Operations} from "../utils/fieldOperations/G1Operations.sol";
+import {G2Operations} from "../utils/fieldOperations/G2Operations.sol";
+import {GroupIndexIsInvalid} from "../CommonErrors.sol";
+import {Precompiled} from "../utils/Precompiled.sol";
 
 /**
  * @title SkaleDkgPreResponse
@@ -47,9 +48,7 @@ library SkaleDkgPreResponse {
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData
-    )
-        external
-    {
+    ) external {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         uint256 index = _preResponseCheck({
             schainHash: schainHash,
@@ -74,11 +73,11 @@ library SkaleDkgPreResponse {
         bytes32 schainHash,
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
-    )
-        private
-    {
+    ) private {
         complaints[schainHash].keyShare = share;
-        complaints[schainHash].sumOfVerVec = _calculateSum(verificationVectorMultiplication);
+        complaints[schainHash].sumOfVerVec = _calculateSum(
+            verificationVectorMultiplication
+        );
         complaints[schainHash].isResponse = true;
     }
 
@@ -91,34 +90,51 @@ library SkaleDkgPreResponse {
         ISkaleDKG skaleDKG,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData
-    )
-        private
-        view
-        returns (uint256 index)
-    {
-        (uint256 indexOnSchain, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
-        require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
-        require(!complaints[schainHash].isResponse, "Already submitted pre response data");
+    ) private view returns (uint256 index) {
+        (uint256 indexOnSchain, bool valid) = skaleDKG
+            .checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        if (!valid) {
+            revert GroupIndexIsInvalid(index);
+        }
         require(
-            hashedData[schainHash][indexOnSchain] == skaleDKG.hashData(secretKeyContribution, verificationVector),
+            complaints[schainHash].nodeToComplaint == fromNodeIndex,
+            "Not this Node"
+        );
+        require(
+            !complaints[schainHash].isResponse,
+            "Already submitted pre response data"
+        );
+        require(
+            hashedData[schainHash][indexOnSchain] ==
+                skaleDKG.hashData(secretKeyContribution, verificationVector),
             "Broadcasted Data is not correct"
         );
         require(
-            verificationVector.length == verificationVectorMultiplication.length,
+            verificationVector.length ==
+                verificationVectorMultiplication.length,
             "Incorrect length of multiplied verification vector"
         );
-        (index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, complaints[schainHash].fromNodeToComplaint, true);
+        (index, valid) = skaleDKG.checkAndReturnIndexInGroup(
+            schainHash,
+            complaints[schainHash].fromNodeToComplaint,
+            true
+        );
+        if (!valid) {
+            revert GroupIndexIsInvalid(index);
+        }
         require(
-            _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMultiplication),
+            _checkCorrectVectorMultiplication(
+                index,
+                verificationVector,
+                verificationVectorMultiplication
+            ),
             "Multiplied verification vector is incorrect"
         );
     }
 
-    function _calculateSum(ISkaleDKG.G2Point[] memory verificationVectorMultiplication)
-        private
-        view
-        returns (ISkaleDKG.G2Point memory result)
-    {
+    function _calculateSum(
+        ISkaleDKG.G2Point[] memory verificationVectorMultiplication
+    ) private view returns (ISkaleDKG.G2Point memory result) {
         ISkaleDKG.G2Point memory value = G2Operations.getG2Zero();
         for (uint256 i = 0; i < verificationVectorMultiplication.length; i++) {
             value = value.addG2(verificationVectorMultiplication[i]);
@@ -130,16 +146,22 @@ library SkaleDkgPreResponse {
         uint256 indexOnSchain,
         ISkaleDKG.G2Point[] memory verificationVector,
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication
-    )
-        private
-        view
-        returns (bool correct)
-    {
+    ) private view returns (bool correct) {
         ISkaleDKG.Fp2Point memory value = G1Operations.getG1Generator();
         ISkaleDKG.Fp2Point memory tmp = G1Operations.getG1Generator();
         for (uint256 i = 0; i < verificationVector.length; i++) {
-            (tmp.a, tmp.b) = Precompiled.bn256ScalarMul(value.a, value.b, (indexOnSchain + 1) ** i);
-            if (!_checkPairing(tmp, verificationVector[i], verificationVectorMultiplication[i])) {
+            (tmp.a, tmp.b) = Precompiled.bn256ScalarMul(
+                value.a,
+                value.b,
+                (indexOnSchain + 1) ** i
+            );
+            if (
+                !_checkPairing(
+                    tmp,
+                    verificationVector[i],
+                    verificationVectorMultiplication[i]
+                )
+            ) {
                 return false;
             }
         }
@@ -150,28 +172,24 @@ library SkaleDkgPreResponse {
         ISkaleDKG.Fp2Point memory g1Mul,
         ISkaleDKG.G2Point memory verificationVector,
         ISkaleDKG.G2Point memory verificationVectorMultiplication
-    )
-        private
-        view
-        returns (bool valid)
-    {
+    ) private view returns (bool valid) {
         require(G1Operations.checkRange(g1Mul), "g1Mul is not valid");
         g1Mul.b = G1Operations.negate(g1Mul.b);
         ISkaleDKG.Fp2Point memory one = G1Operations.getG1Generator();
-        return Precompiled.bn256Pairing({
-            x1: one.a,
-            y1: one.b,
-            a1: verificationVectorMultiplication.x.b,
-            b1: verificationVectorMultiplication.x.a,
-            c1: verificationVectorMultiplication.y.b,
-            d1: verificationVectorMultiplication.y.a,
-            x2: g1Mul.a,
-            y2: g1Mul.b,
-            a2: verificationVector.x.b,
-            b2: verificationVector.x.a,
-            c2: verificationVector.y.b,
-            d2: verificationVector.y.a
-        });
+        return
+            Precompiled.bn256Pairing({
+                x1: one.a,
+                y1: one.b,
+                a1: verificationVectorMultiplication.x.b,
+                b1: verificationVectorMultiplication.x.a,
+                c1: verificationVectorMultiplication.y.b,
+                d1: verificationVectorMultiplication.y.a,
+                x2: g1Mul.a,
+                y2: g1Mul.b,
+                a2: verificationVector.x.b,
+                b2: verificationVector.x.a,
+                c2: verificationVector.y.b,
+                d2: verificationVector.y.a
+            });
     }
-
 }

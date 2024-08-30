@@ -28,7 +28,9 @@ import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Re
 import { ISkaleManager } from "@skalenetwork/skale-manager-interfaces/ISkaleManager.sol";
 import { IMintableToken } from "@skalenetwork/skale-manager-interfaces/IMintableToken.sol";
 import { IDistributor } from "@skalenetwork/skale-manager-interfaces/delegation/IDistributor.sol";
-import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import {
+    IValidatorService
+} from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
 import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
@@ -52,7 +54,7 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    uint256 constant public HEADER_COSTS = 7486;
+    uint256 constant public HEADER_COSTS = 5310;
     uint256 constant public CALL_PRICE = 21000;
 
     string public version;
@@ -62,7 +64,11 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-        _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
+        _erc1820.setInterfaceImplementer(
+            address(this),
+            _TOKENS_RECIPIENT_INTERFACE_HASH,
+            address(this)
+        );
     }
 
     function tokensReceived(
@@ -115,7 +121,8 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
 
     function nodeExit(uint256 nodeIndex) external override {
         uint256 gasLimit = _getGasLimit();
-        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
+        IValidatorService validatorService =
+            IValidatorService(contractManager.getContract("ValidatorService"));
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
         uint256 validatorId = nodes.getValidatorId(nodeIndex);
@@ -135,7 +142,8 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
                 nodeIndex,
                 block.timestamp + (
                     isSchains ?
-                    IConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay() :
+                    IConstantsHolder(contractManager.getContract("ConstantsHolder"))
+                        .rotationDelay() :
                     0
                 )
             );
@@ -195,12 +203,23 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
         IDistributor distributor = IDistributor(contractManager.getContract("Distributor"));
 
         require(
-            IMintableToken(address(skaleToken)).mint(address(distributor), bounty, abi.encode(validatorId), ""),
+            IMintableToken(address(skaleToken)).mint(
+                address(distributor),
+                bounty,
+                abi.encode(validatorId),
+                ""
+            ),
             "Token was not minted"
         );
     }
 
-    function _refundGasByValidator(uint256 validatorId, address payable spender, uint256 gasLimit) private {
+    function _refundGasByValidator(
+        uint256 validatorId,
+        address payable spender,
+        uint256 gasLimit
+    )
+        private
+    {
         IWallets(payable(contractManager.getContract("Wallets")))
             .refundGasByValidator(validatorId, spender, gasLimit);
     }

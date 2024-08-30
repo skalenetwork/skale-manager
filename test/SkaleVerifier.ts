@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolder,
+import {ConstantsHolder,
          ContractManager,
          KeyStorage,
          Nodes,
@@ -9,28 +9,28 @@ import { ConstantsHolder,
          SkaleDKGTester,
          SkaleManager,
          SkaleVerifier,
-         ValidatorService } from "../typechain-types";
-import { privateKeys } from "./tools/private-keys";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
-import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
-import { deployKeyStorage } from "./tools/deploy/keyStorage";
-import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert } from "chai";
-import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { Wallet } from "ethers";
-import { getPublicKey, getValidatorIdSignature } from "./tools/signatures";
-import { stringKeccak256 } from "./tools/hashes";
-import { fastBeforeEach } from "./tools/mocha";
-import { skipTime } from "./tools/time";
-import { schainParametersType, SchainType } from "./tools/types";
+         ValidatorService} from "../typechain-types";
+import {privateKeys} from "./tools/private-keys";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployNodes} from "./tools/deploy/nodes";
+import {deploySchainsInternalMock} from "./tools/deploy/test/schainsInternalMock";
+import {deploySchains} from "./tools/deploy/schains";
+import {deploySkaleVerifier} from "./tools/deploy/skaleVerifier";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
+import {deployKeyStorage} from "./tools/deploy/keyStorage";
+import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {assert} from "chai";
+import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
+import {Wallet} from "ethers";
+import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
+import {stringKeccak256} from "./tools/hashes";
+import {fastBeforeEach} from "./tools/mocha";
+import {skipTime} from "./tools/time";
+import {schainParametersType, SchainType} from "./tools/types";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -55,7 +55,7 @@ describe("SkaleVerifier", () => {
         [validator1, owner] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[0])).connect(ethers.provider);
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
         constantsHolder = await deployConstantsHolder(contractManager);
@@ -69,8 +69,8 @@ describe("SkaleVerifier", () => {
         await deploySchainsInternal(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
 
         await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
@@ -84,7 +84,6 @@ describe("SkaleVerifier", () => {
     });
 
     describe("when skaleVerifier contract is activated", () => {
-
         it("should verify valid signatures with valid data", async () => {
             const isVerified = await skaleVerifier.verify(
                 {
@@ -254,14 +253,14 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "Bob",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -321,14 +320,14 @@ describe("SkaleVerifier", () => {
             await schains.connect(validator1).addSchain(
                 validator1.address,
                 deposit,
-                ethers.utils.defaultAbiCoder.encode(
+                ethers.AbiCoder.defaultAbiCoder().encode(
                     [schainParametersType],
                     [{
                         lifetime: 5,
                         typeOfSchain: SchainType.TEST,
                         nonce: 0,
                         name: "Bob",
-                        originator: ethers.constants.AddressZero,
+                        originator: ethers.ZeroAddress,
                         options: []
                     }]
                 ));
@@ -415,9 +414,9 @@ describe("SkaleVerifier", () => {
 
             const rotDelay = await constantsHolder.rotationDelay();
 
-            const tenSecDelta = 10;
+            const tenSecDelta = 10n;
 
-            await skipTime(rotDelay.toNumber() - tenSecDelta);
+            await skipTime(rotDelay - tenSecDelta);
 
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
