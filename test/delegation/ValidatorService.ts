@@ -1,4 +1,4 @@
-import { ContractManager,
+import {ContractManager,
     DelegationController,
     SkaleToken,
     ValidatorService} from "../../typechain-types";
@@ -6,17 +6,17 @@ import { ContractManager,
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "../tools/deploy/contractManager";
-import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { deploySkaleManager } from "../tools/deploy/skaleManager";
-import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { assert } from "chai";
-import { makeSnapshot, applySnapshot } from "../tools/snapshot";
-import { getValidatorIdSignature } from "../tools/signatures";
+import {deployContractManager} from "../tools/deploy/contractManager";
+import {deployDelegationController} from "../tools/deploy/delegation/delegationController";
+import {deployValidatorService} from "../tools/deploy/delegation/validatorService";
+import {deploySkaleToken} from "../tools/deploy/skaleToken";
+import {deploySkaleManager} from "../tools/deploy/skaleManager";
+import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {assert} from "chai";
+import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+import {getValidatorIdSignature} from "../tools/signatures";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -43,7 +43,7 @@ describe("ValidatorService", () => {
         delegationController = await deployDelegationController(contractManager);
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
-        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
     });
@@ -67,8 +67,8 @@ describe("ValidatorService", () => {
         assert.equal(validator.name, "ValidatorName");
         assert.equal(validator.validatorAddress, validator1.address);
         assert.equal(validator.description, "Really good validator");
-        assert.equal(validator.feeRate.toNumber(), 500);
-        assert.equal(validator.minimumDelegationAmount.toNumber(), 100);
+        assert.equal(validator.feeRate, 500n);
+        assert.equal(validator.minimumDelegationAmount, 100n);
         assert.isTrue(await validatorService.checkValidatorAddressToId(validator1.address, validatorId));
     });
 
@@ -78,12 +78,14 @@ describe("ValidatorService", () => {
             "Really good validator",
             1500,
             100)
-            .should.be.eventually.rejectedWith("Fee rate of validator should be lower than 100%");
+            .should.be.revertedWithCustomError(validatorService, "WrongFeeValue")
+            .withArgs(1500);
     });
 
     it("should allow only owner to call disableWhitelist", async() => {
         await validatorService.connect(validator1).disableWhitelist()
-            .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
+            .should.be.revertedWithCustomError(validatorService, "RoleRequired")
+            .withArgs(await validatorService.VALIDATOR_MANAGER_ROLE());
         await validatorService.connect(owner).disableWhitelist();
     });
 
@@ -110,8 +112,8 @@ describe("ValidatorService", () => {
                 "Really good validator",
                 500,
                 100)
-                .should.be.eventually.rejectedWith("Validator with such address already exists");
-
+                .should.be.revertedWithCustomError(validatorService, "AddressIsAlreadyInUse")
+                .withArgs(validator1);
         });
 
         it("should reset name, description, minimum delegation amount", async () => {
@@ -138,7 +140,8 @@ describe("ValidatorService", () => {
             const signature = await getValidatorIdSignature(validatorId, nodeAddress);
             await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, signature);
             await validatorService.connect(nodeAddress).unlinkNodeAddress(validator1.address)
-                .should.be.eventually.rejectedWith("Validator address does not exist");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                .withArgs(nodeAddress);
         });
 
         it("should reject if validator tried to override node address of another validator", async () => {
@@ -153,7 +156,8 @@ describe("ValidatorService", () => {
             const signature2 = await getValidatorIdSignature(validatorId2, nodeAddress);
             await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, signature1);
             await validatorService.connect(validator2).linkNodeAddress(nodeAddress.address, signature2)
-                .should.be.eventually.rejectedWith("Validator cannot override node address");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorCannotOverrideNodeAddress")
+                .withArgs(validatorId2, nodeAddress);
             const id = await validatorService.getValidatorIdByNodeAddress(nodeAddress.address);
             id.should.be.equal(validatorId1);
         });
@@ -167,7 +171,8 @@ describe("ValidatorService", () => {
             const validatorId = await validatorService.getValidatorId(validator1.address);
             const signature = await getValidatorIdSignature(validatorId, validator2);
             await validatorService.connect(validator1).linkNodeAddress(validator2.address, signature)
-                .should.be.eventually.rejectedWith("Node address is a validator");
+                .should.be.revertedWithCustomError(validatorService, "NodeAddressIsAValidator")
+                .withArgs(validator2, await validatorService.getValidatorId(validator2));
         });
 
         it("should unlink node address for validator", async () => {
@@ -180,13 +185,15 @@ describe("ValidatorService", () => {
                 500,
                 100);
             await validatorService.connect(validator2).unlinkNodeAddress(nodeAddress.address)
-                .should.be.eventually.rejectedWith("Validator does not have permissions to unlink node");
+                .should.be.revertedWithCustomError(validatorService, "NoPermissionsToUnlinkNode")
+                .withArgs(await validatorService.getValidatorId(validator2), nodeAddress);
             const id = await validatorService.getValidatorIdByNodeAddress(nodeAddress.address);
             id.should.be.equal(validatorId);
 
             await validatorService.connect(validator1).unlinkNodeAddress(nodeAddress.address);
             await validatorService.connect(validator1).getValidatorId(nodeAddress.address)
-                .should.be.eventually.rejectedWith("Validator address does not exist");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                .withArgs(nodeAddress);
         });
 
         it("should not allow changing the address to the address of an existing validator", async () => {
@@ -196,7 +203,8 @@ describe("ValidatorService", () => {
                 500,
                 100);
             await validatorService.connect(validator2).requestForNewAddress(validator1.address)
-                .should.be.eventually.rejectedWith("Address already registered");
+                .should.be.revertedWithCustomError(validatorService, "AddressIsAlreadyInUse")
+                .withArgs(validator1);
         });
 
         describe("when validator requests for a new address", () => {
@@ -213,7 +221,8 @@ describe("ValidatorService", () => {
             it("should reject when hacker tries to change validator address", async () => {
                 const validatorId = 1;
                 await validatorService.connect(validator2).confirmNewAddress(validatorId)
-                    .should.be.eventually.rejectedWith("The validator address cannot be changed because it is not the actual owner");
+                    .should.be.revertedWithCustomError(validatorService, "SenderHasToBeEqualToRequestedAddress")
+                    .withArgs(validator2, validator3);
             });
 
             it("should set new address for validator", async () => {
@@ -222,28 +231,32 @@ describe("ValidatorService", () => {
                 await validatorService.connect(validator3).confirmNewAddress(validatorId);
                 (await validatorService.getValidatorId(validator3.address)).should.be.equal(validatorId);
                 await validatorService.getValidatorId(validator1.address)
-                    .should.be.eventually.rejectedWith("Validator address does not exist");
+                    .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                    .withArgs(validator1);
             });
         });
 
         it("should reject when someone tries to set new address for validator that doesn't exist", async () => {
             await validatorService.requestForNewAddress(validator2.address)
-                .should.be.eventually.rejectedWith("Validator address does not exist");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                .withArgs(owner);
         });
 
         it("should reject if validator tries to set new address as null", async () => {
             await validatorService.requestForNewAddress("0x0000000000000000000000000000000000000000")
-            .should.be.eventually.rejectedWith("New address cannot be null");
+            .should.be.revertedWithCustomError(validatorService, "AddressIsNotSet");
         });
 
         it("should reject if provided validatorId equals zero", async () => {
             await validatorService.enableValidator(0)
-                .should.be.eventually.rejectedWith("Validator with such ID does not exist");
+                .should.be.revertedWithCustomError(validatorService, "ValidatorDoesNotExist")
+                .withArgs(0);
         });
 
         it("should allow only VALIDATOR_MANAGER_ROLE to enable validator", async () => {
             await validatorService.connect(holder).enableValidator(1)
-                .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
+                .should.be.revertedWithCustomError(validatorService, "RoleRequired")
+                .withArgs(await validatorService.VALIDATOR_MANAGER_ROLE());
             await deploySkaleManager(contractManager);
             const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
             await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, holder.address);
@@ -253,7 +266,8 @@ describe("ValidatorService", () => {
         it("should allow only VALIDATOR_MANAGER_ROLE to disable validator", async () => {
             await validatorService.enableValidator(1);
             await validatorService.connect(holder).disableValidator(1)
-                .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
+                .should.be.revertedWithCustomError(validatorService, "RoleRequired")
+                .withArgs(await validatorService.VALIDATOR_MANAGER_ROLE());
             await deploySkaleManager(contractManager);
             const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
             await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, holder.address);
@@ -309,15 +323,18 @@ describe("ValidatorService", () => {
 
             it("should allow to enable validator in whitelist", async () => {
                 await validatorService.connect(validator1).enableValidator(validatorId)
-                    .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
+                    .should.be.revertedWithCustomError(validatorService, "RoleRequired")
+                    .withArgs(await validatorService.VALIDATOR_MANAGER_ROLE());
                 await validatorService.enableValidator(validatorId);
             });
 
             it("should allow to disable validator from whitelist", async () => {
                 await validatorService.connect(validator1).disableValidator(validatorId)
-                    .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
+                    .should.be.revertedWithCustomError(validatorService, "RoleRequired")
+                    .withArgs(await validatorService.VALIDATOR_MANAGER_ROLE());
                 await validatorService.disableValidator(validatorId)
-                    .should.be.eventually.rejectedWith("Validator is already disabled");
+                    .should.be.revertedWithCustomError(validatorService, "ValidatorIsAlreadyDisabled")
+                    .withArgs(validatorId);
 
                 await validatorService.enableValidator(validatorId);
                 await validatorService.isAuthorizedValidator(validatorId).should.eventually.be.true;
@@ -327,7 +344,8 @@ describe("ValidatorService", () => {
 
             it("should not allow to send delegation request if validator isn't authorized", async () => {
                 await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info)
-                    .should.be.eventually.rejectedWith("Validator is not authorized to accept delegation request");
+                    .should.be.revertedWithCustomError(validatorService, "ValidatorIsNotAuthorized")
+                    .withArgs(validatorId);
             });
 
             it("should allow to send delegation request if validator is authorized", async () => {
@@ -341,11 +359,13 @@ describe("ValidatorService", () => {
                 await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
 
                 await validatorService.connect(holder).stopAcceptingNewRequests()
-                    .should.be.eventually.rejectedWith("Validator address does not exist");
+                    .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                    .withArgs(holder);
 
                 await validatorService.connect(validator1).stopAcceptingNewRequests()
                 await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info)
-                    .should.be.eventually.rejectedWith("The validator is not currently accepting new requests");
+                    .should.be.revertedWithCustomError(validatorService, "ValidatorIsNotCurrentlyAcceptingNewRequests")
+                    .withArgs(validatorId);
 
                 await validatorService.connect(validator1).startAcceptingNewRequests();
                 await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);

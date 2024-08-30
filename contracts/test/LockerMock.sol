@@ -28,7 +28,14 @@ contract LockerMock is ILocker {
         return 13;
     }
 
-    function getAndUpdateForbiddenForDelegationAmount(address) external pure override returns (uint256 amount) {
+    function getAndUpdateForbiddenForDelegationAmount(
+        address
+    )
+        external
+        pure
+        override
+        returns (uint256 amount)
+    {
         return 13;
     }
 }

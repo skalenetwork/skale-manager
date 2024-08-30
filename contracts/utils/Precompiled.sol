@@ -19,12 +19,20 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
 
 library Precompiled {
 
-    function bigModExp(uint256 base, uint256 power, uint256 modulus) internal view returns (uint256 value) {
+    function bigModExp(
+        uint256 base,
+        uint256 power,
+        uint256 modulus
+    )
+        internal
+        view
+        returns (uint256 value)
+    {
         uint256[6] memory inputToBigModExp;
         inputToBigModExp[0] = 32;
         inputToBigModExp[1] = 32;
@@ -42,7 +50,15 @@ library Precompiled {
         return out[0];
     }
 
-    function bn256ScalarMul(uint256 x, uint256 y, uint256 k) internal view returns (uint256 xValue, uint256 yValue) {
+    function bn256ScalarMul(
+        uint256 x,
+        uint256 y,
+        uint256 k
+    )
+        internal
+        view
+        returns (uint256 xValue, uint256 yValue)
+    {
         uint256[3] memory inputToMul;
         uint256[2] memory output;
         inputToMul[0] = x;

@@ -21,8 +21,12 @@
 
 pragma solidity 0.8.17;
 
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { AddressUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import {
+    OwnableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {
+    AddressUpgradeable
+} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 import { StringUtils } from "./utils/StringUtils.sol";
@@ -91,7 +95,12 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
      *
      * - Contract must exist.
      */
-    function getDelegationPeriodManager() external view override returns (address delegationPeriodManager) {
+    function getDelegationPeriodManager()
+        external
+        view
+        override
+        returns (address delegationPeriodManager)
+    {
         return getContract(DELEGATION_PERIOD_MANAGER);
     }
 
@@ -123,7 +132,14 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
         return getContract(PUNISHER);
     }
 
-    function getContract(string memory name) public view override returns (address contractAddress) {
+    function getContract(
+        string memory name
+    )
+        public
+        view
+        override
+        returns (address contractAddress)
+    {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
         if (contractAddress == address(0)) {
             revert(name.strConcat(" contract has not been found"));

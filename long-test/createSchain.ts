@@ -1,30 +1,17 @@
-import { deployContractManager } from "../test/tools/deploy/contractManager";
-import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
-import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
-import { deploySchainsInternalMock } from "../test/tools/deploy/test/schainsInternalMock";
-import { ContractManager, Schains, SkaleManager, ValidatorService, SchainsInternalMock } from "../typechain-types";
-import { privateKeys } from "../test/tools/private-keys";
-import { deploySchains } from "../test/tools/deploy/schains";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { Event, Wallet } from "ethers";
-import { getPublicKey, getValidatorIdSignature } from "../test/tools/signatures";
-import { SchainType } from "../test/tools/types";
-import { TypedEvent } from "../typechain-types/common";
-import { SchainNodesEvent } from "../typechain-types/artifacts/@skalenetwork/skale-manager-interfaces/ISchains";
+import {deployContractManager} from "../test/tools/deploy/contractManager";
+import {deployValidatorService} from "../test/tools/deploy/delegation/validatorService";
+import {deploySkaleManager} from "../test/tools/deploy/skaleManager";
+import {deploySchainsInternalMock} from "../test/tools/deploy/test/schainsInternalMock";
+import {ContractManager, Schains, SkaleManager, ValidatorService, SchainsInternalMock} from "../typechain-types";
+import {privateKeys} from "../test/tools/private-keys";
+import {deploySchains} from "../test/tools/deploy/schains";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {Wallet} from "ethers";
+import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
+import {SchainType} from "../test/tools/types";
+import {findEvent} from "../gas/createSchain";
 
-function findEvent<TargetEvent extends TypedEvent>(events: Event[] | undefined, eventName: string) {
-    if (events) {
-        const target = events.find((event) => event.event === eventName);
-        if (target) {
-            return target as TargetEvent;
-        } else {
-            throw new Error("Event was not emitted");
-        }
-    } else {
-        throw new Error("Event was not emitted");
-    }
-}
 
 describe("Schain creation test", () => {
     let owner: SignerWithAddress;
@@ -40,11 +27,11 @@ describe("Schain creation test", () => {
     beforeEach(async () => {
         [owner, validator] = await ethers.getSigners();
         nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
         contractManager = await deployContractManager();
 
         schainsInternal = await deploySchainsInternalMock(contractManager);
-        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
         validatorService = await deployValidatorService(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         schains = await deploySchains(contractManager);
@@ -74,8 +61,8 @@ describe("Schain creation test", () => {
             const type = SchainType.MEDIUM;
             console.log(type);
             for (let try1 = 0; try1 < 32; try1++) {
-                const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}${try1}`, owner.address, ethers.constants.AddressZero, [])).wait();
-                const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
+                const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}${try1}`, owner.address, ethers.ZeroAddress, [])).wait();
+                const nodeInGroup = findEvent(result, "SchainNodes").args?.nodesInGroup;
                 const setOfNodes = new Set();
                 for (const nodeOfSchain of nodeInGroup) {
                     if (!setOfNodes.has(nodeOfSchain.toNumber())) {
@@ -86,12 +73,12 @@ describe("Schain creation test", () => {
                     }
                     console.log(nodeOfSchain.toNumber());
                 }
-                console.log(`create schain-${tries}${try1}`, result.gasUsed.toNumber(), "gu");
+                console.log(`create schain-${tries}${try1}`, result?.gasUsed, "gu");
             }
 
             for (let try2 = 0; try2 < 32; try2++) {
                 const resDel = await (await skaleManager.deleteSchain(`schain-${tries}${try2}`)).wait();
-                console.log(`delete schain-${tries}${try2}`, resDel.gasUsed.toNumber(), "gu");
+                console.log(`delete schain-${tries}${try2}`, resDel?.gasUsed, "gu");
             }
         }
     });
@@ -119,8 +106,8 @@ describe("Schain creation test", () => {
         for(let tries = 0; tries < 200; tries++) {
             const type = Math.floor(Math.random() * 2) + 1;
             console.log(type);
-            const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}`, owner.address, ethers.constants.AddressZero, [])).wait();
-            const nodeInGroup = findEvent<SchainNodesEvent>(result.events, "SchainNodes").args?.nodesInGroup;
+            const result = await (await schains.addSchainByFoundation(0, type, 0, `schain-${tries}`, owner.address, ethers.ZeroAddress, [])).wait();
+            const nodeInGroup = findEvent(result, "SchainNodes").args?.nodesInGroup;
             const setOfNodes = new Set();
             for (const nodeOfSchain of nodeInGroup) {
                 if (!setOfNodes.has(nodeOfSchain.toNumber())) {
@@ -132,9 +119,9 @@ describe("Schain creation test", () => {
                 console.log(nodeOfSchain.toNumber());
             }
 
-            console.log(`create schain-${tries}`, result.gasUsed.toNumber(), "gu");
+            console.log(`create schain-${tries}`, result?.gasUsed, "gu");
             const resDel = await (await skaleManager.deleteSchain(`schain-${tries}`)).wait();
-            console.log(`delete schain-${tries}`, resDel.gasUsed.toNumber(), "gu");
+            console.log(`delete schain-${tries}`, resDel?.gasUsed, "gu");
         }
     });
 });

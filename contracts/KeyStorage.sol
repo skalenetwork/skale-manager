@@ -21,12 +21,12 @@
 
 pragma solidity 0.8.17;
 
-import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
-import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
-import { Permissions } from "./Permissions.sol";
-import { Fp2Operations } from "./utils/fieldOperations/Fp2Operations.sol";
-import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
+import {Permissions} from "./Permissions.sol";
+import {Fp2Operations} from "./utils/fieldOperations/Fp2Operations.sol";
+import {G2Operations} from "./utils/fieldOperations/G2Operations.sol";
 
 contract KeyStorage is Permissions, IKeyStorage {
     using Fp2Operations for ISkaleDKG.Fp2Point;
@@ -55,24 +55,37 @@ contract KeyStorage is Permissions, IKeyStorage {
     }
 
     function deleteKey(bytes32 schainHash) external override allow("SkaleDKG") {
-        _previousSchainsPublicKeys[schainHash].push(_schainsPublicKeys[schainHash]);
+        _previousSchainsPublicKeys[schainHash].push(
+            _schainsPublicKeys[schainHash]
+        );
         delete _schainsPublicKeys[schainHash];
         delete _data[schainHash][0];
         delete _schainsNodesPublicKeys[schainHash];
     }
 
-    function initPublicKeyInProgress(bytes32 schainHash) external override allow("SkaleDKG") {
+    function initPublicKeyInProgress(
+        bytes32 schainHash
+    ) external override allow("SkaleDKG") {
         _publicKeysInProgress[schainHash] = G2Operations.getG2Zero();
     }
 
-    function adding(bytes32 schainHash, ISkaleDKG.G2Point memory value) external override allow("SkaleDKG") {
+    function adding(
+        bytes32 schainHash,
+        ISkaleDKG.G2Point memory value
+    ) external override allow("SkaleDKG") {
         require(value.isG2(), "Incorrect g2 point");
-        _publicKeysInProgress[schainHash] = value.addG2(_publicKeysInProgress[schainHash]);
+        _publicKeysInProgress[schainHash] = value.addG2(
+            _publicKeysInProgress[schainHash]
+        );
     }
 
-    function finalizePublicKey(bytes32 schainHash) external override allow("SkaleDKG") {
+    function finalizePublicKey(
+        bytes32 schainHash
+    ) external override allow("SkaleDKG") {
         if (!_isSchainsPublicKeyZero(schainHash)) {
-            _previousSchainsPublicKeys[schainHash].push(_schainsPublicKeys[schainHash]);
+            _previousSchainsPublicKeys[schainHash].push(
+                _schainsPublicKeys[schainHash]
+            );
         }
         _schainsPublicKeys[schainHash] = _publicKeysInProgress[schainHash];
         delete _publicKeysInProgress[schainHash];
@@ -80,12 +93,7 @@ contract KeyStorage is Permissions, IKeyStorage {
 
     function getCommonPublicKey(
         bytes32 schainHash
-    )
-        external
-        view
-        override
-        returns (ISkaleDKG.G2Point memory publicKey)
-    {
+    ) external view override returns (ISkaleDKG.G2Point memory publicKey) {
         return _schainsPublicKeys[schainHash];
     }
 
@@ -115,8 +123,11 @@ contract KeyStorage is Permissions, IKeyStorage {
         return _previousSchainsPublicKeys[schainHash];
     }
 
-    function _isSchainsPublicKeyZero(bytes32 schainHash) private view returns (bool zero) {
-        return _schainsPublicKeys[schainHash].x.a == 0 &&
+    function _isSchainsPublicKeyZero(
+        bytes32 schainHash
+    ) private view returns (bool zero) {
+        return
+            _schainsPublicKeys[schainHash].x.a == 0 &&
             _schainsPublicKeys[schainHash].x.b == 0 &&
             _schainsPublicKeys[schainHash].y.a == 0 &&
             _schainsPublicKeys[schainHash].y.b == 0;

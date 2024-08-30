@@ -1,6 +1,5 @@
-import { createMultiSendTransaction } from "@skalenetwork/upgrade-tools";
-import { UnsignedTransaction } from "ethers";
-import { promises as fs } from "fs";
+import {createMultiSendTransaction} from "@skalenetwork/upgrade-tools";
+import {promises as fs} from "fs";
 
 async function main() {
     if (!process.env.TRANSACTIONS || !process.env.SAFE) {
@@ -20,7 +19,7 @@ async function main() {
     if (!privateKey.startsWith("0x")) {
         privateKey = "0x" + privateKey;
     }
-    const safeTransactions = JSON.parse(await fs.readFile(process.env.TRANSACTIONS, "utf-8")) as UnsignedTransaction[];
+    const safeTransactions = JSON.parse(await fs.readFile(process.env.TRANSACTIONS, "utf-8"));
 
     await createMultiSendTransaction(safe, safeTransactions);
     console.log("Done");

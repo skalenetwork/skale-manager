@@ -21,12 +21,13 @@
 
 pragma solidity 0.8.17;
 
-import { ITokenState } from "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
-import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
-import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import {ITokenState} from "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
+import {ILocker} from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import {
+    IDelegationController
+} from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
-import { Permissions } from "../Permissions.sol";
-
+import {Permissions} from "../Permissions.sol";
 
 /**
  * @title Token State
@@ -45,19 +46,24 @@ import { Permissions } from "../Permissions.sol";
  * `getAndUpdateForbiddenForDelegationAmount`. This lock enforces slashing.
  */
 contract TokenState is Permissions, ILocker, ITokenState {
-
     string[] private _lockers;
 
     IDelegationController private _delegationController;
 
-    bytes32 public constant LOCKER_MANAGER_ROLE = keccak256("LOCKER_MANAGER_ROLE");
+    bytes32 public constant LOCKER_MANAGER_ROLE =
+        keccak256("LOCKER_MANAGER_ROLE");
 
     modifier onlyLockerManager() {
-        require(hasRole(LOCKER_MANAGER_ROLE, msg.sender), "LOCKER_MANAGER_ROLE is required");
+        require(
+            hasRole(LOCKER_MANAGER_ROLE, msg.sender),
+            "LOCKER_MANAGER_ROLE is required"
+        );
         _;
     }
 
-    function initialize(address contractManagerAddress) public override initializer {
+    function initialize(
+        address contractManagerAddress
+    ) public override initializer {
         Permissions.initialize(contractManagerAddress);
         _setupRole(LOCKER_MANAGER_ROLE, msg.sender);
         addLocker("DelegationController");
@@ -67,16 +73,21 @@ contract TokenState is Permissions, ILocker, ITokenState {
     /**
      *  @dev See {ILocker-getAndUpdateLockedAmount}.
      */
-    function getAndUpdateLockedAmount(address holder) external override returns (uint256 amount) {
+    function getAndUpdateLockedAmount(
+        address holder
+    ) external override returns (uint256 amount) {
         if (address(_delegationController) == address(0)) {
-            _delegationController =
-                IDelegationController(contractManager.getContract("DelegationController"));
+            _delegationController = IDelegationController(
+                contractManager.getContract("DelegationController")
+            );
         }
         uint256 locked = 0;
         if (_delegationController.getDelegationsByHolderLength(holder) > 0) {
             // the holder ever delegated
             for (uint256 i = 0; i < _lockers.length; ++i) {
-                ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
+                ILocker locker = ILocker(
+                    contractManager.getContract(_lockers[i])
+                );
                 locked = locked + locker.getAndUpdateLockedAmount(holder);
             }
         }
@@ -86,11 +97,15 @@ contract TokenState is Permissions, ILocker, ITokenState {
     /**
      * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
-    function getAndUpdateForbiddenForDelegationAmount(address holder) external override returns (uint256 amount) {
+    function getAndUpdateForbiddenForDelegationAmount(
+        address holder
+    ) external override returns (uint256 amount) {
         uint256 forbidden = 0;
         for (uint256 i = 0; i < _lockers.length; ++i) {
             ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
-            forbidden = forbidden + locker.getAndUpdateForbiddenForDelegationAmount(holder);
+            forbidden =
+                forbidden +
+                locker.getAndUpdateForbiddenForDelegationAmount(holder);
         }
         return forbidden;
     }
@@ -100,19 +115,22 @@ contract TokenState is Permissions, ILocker, ITokenState {
      *
      * Emits a {LockerWasRemoved} event.
      */
-    function removeLocker(string calldata locker) external override onlyLockerManager {
+    function removeLocker(
+        string calldata locker
+    ) external override onlyLockerManager {
         uint256 index;
+        uint256 lockersLength = _lockers.length;
         bytes32 hash = keccak256(abi.encodePacked(locker));
-        for (index = 0; index < _lockers.length; ++index) {
+        for (index = 0; index < lockersLength; ++index) {
             if (keccak256(abi.encodePacked(_lockers[index])) == hash) {
                 break;
             }
         }
-        if (index < _lockers.length) {
-            if (index < _lockers.length - 1) {
-                _lockers[index] = _lockers[_lockers.length - 1];
+        if (index < lockersLength) {
+            if (index < lockersLength - 1) {
+                _lockers[index] = _lockers[lockersLength - 1];
             }
-            delete _lockers[_lockers.length - 1];
+            delete _lockers[lockersLength - 1];
             _lockers.pop();
             emit LockerWasRemoved(locker);
         }

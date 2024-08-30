@@ -21,8 +21,8 @@
 
 pragma solidity 0.8.17;
 
-import { MathUtils } from "../utils/MathUtils.sol";
-import { FractionUtils } from "../utils/FractionUtils.sol";
+import {MathUtils} from "../utils/MathUtils.sol";
+import {FractionUtils} from "../utils/FractionUtils.sol";
 
 /**
  * @title Partial Differences Library
@@ -44,23 +44,21 @@ library PartialDifferences {
     using MathUtils for uint;
 
     struct Sequence {
-             // month => diff
-        mapping (uint256 => uint256) addDiff;
-             // month => diff
-        mapping (uint256 => uint256) subtractDiff;
-             // month => value
-        mapping (uint256 => uint256) value;
-
+        // month => diff
+        mapping(uint256 => uint256) addDiff;
+        // month => diff
+        mapping(uint256 => uint256) subtractDiff;
+        // month => value
+        mapping(uint256 => uint256) value;
         uint256 firstUnprocessedMonth;
         uint256 lastChangedMonth;
     }
 
     struct Value {
-             // month => diff
-        mapping (uint256 => uint256) addDiff;
-             // month => diff
-        mapping (uint256 => uint256) subtractDiff;
-
+        // month => diff
+        mapping(uint256 => uint256) addDiff;
+        // month => diff
+        mapping(uint256 => uint256) subtractDiff;
         uint256 value;
         uint256 firstUnprocessedMonth;
         uint256 lastChangedMonth;
@@ -68,8 +66,15 @@ library PartialDifferences {
 
     // functions for sequence
 
-    function addToSequence(Sequence storage sequence, uint256 diff, uint256 month) internal {
-        require(sequence.firstUnprocessedMonth <= month, "Cannot add to the past");
+    function addToSequence(
+        Sequence storage sequence,
+        uint256 diff,
+        uint256 month
+    ) internal {
+        require(
+            sequence.firstUnprocessedMonth <= month,
+            "Cannot add to the past"
+        );
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
         }
@@ -79,8 +84,15 @@ library PartialDifferences {
         }
     }
 
-    function subtractFromSequence(Sequence storage sequence, uint256 diff, uint256 month) internal {
-        require(sequence.firstUnprocessedMonth <= month, "Cannot subtract from the past");
+    function subtractFromSequence(
+        Sequence storage sequence,
+        uint256 diff,
+        uint256 month
+    ) internal {
+        require(
+            sequence.firstUnprocessedMonth <= month,
+            "Cannot subtract from the past"
+        );
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
         }
@@ -90,14 +102,18 @@ library PartialDifferences {
         }
     }
 
-    function getAndUpdateValueInSequence(Sequence storage sequence, uint256 month) internal returns (uint256 value) {
+    function getAndUpdateValueInSequence(
+        Sequence storage sequence,
+        uint256 month
+    ) internal returns (uint256 value) {
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
         }
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint256 i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                uint256 nextValue = (sequence.value[i - 1] + sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                uint256 nextValue = (sequence.value[i - 1] +
+                    sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 if (sequence.value[i] != nextValue) {
                     sequence.value[i] = nextValue;
                 }
@@ -117,12 +133,16 @@ library PartialDifferences {
     function reduceSequence(
         Sequence storage sequence,
         FractionUtils.Fraction memory reducingCoefficient,
-        uint256 month) internal
-    {
-        require(month + 1 >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
+        uint256 month
+    ) internal {
+        require(
+            month + 1 >= sequence.firstUnprocessedMonth,
+            "Cannot reduce value in the past"
+        );
         require(
             reducingCoefficient.numerator <= reducingCoefficient.denominator,
-            "Increasing of values is not implemented");
+            "Increasing of values is not implemented"
+        );
         if (sequence.firstUnprocessedMonth == 0) {
             return;
         }
@@ -131,21 +151,28 @@ library PartialDifferences {
             return;
         }
 
-        sequence.value[month] = sequence.value[month]
-            * reducingCoefficient.numerator
-            / reducingCoefficient.denominator;
+        sequence.value[month] =
+            (sequence.value[month] * reducingCoefficient.numerator) /
+            reducingCoefficient.denominator;
 
         for (uint256 i = month + 1; i <= sequence.lastChangedMonth; ++i) {
-            sequence.subtractDiff[i] = sequence.subtractDiff[i]
-                * reducingCoefficient.numerator
-                / reducingCoefficient.denominator;
+            sequence.subtractDiff[i] =
+                (sequence.subtractDiff[i] * reducingCoefficient.numerator) /
+                reducingCoefficient.denominator;
         }
     }
 
     // functions for value
 
-    function addToValue(Value storage sequence, uint256 diff, uint256 month) internal {
-        require(sequence.firstUnprocessedMonth <= month, "Cannot add to the past");
+    function addToValue(
+        Value storage sequence,
+        uint256 diff,
+        uint256 month
+    ) internal {
+        require(
+            sequence.firstUnprocessedMonth <= month,
+            "Cannot add to the past"
+        );
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -161,8 +188,15 @@ library PartialDifferences {
         }
     }
 
-    function subtractFromValue(Value storage sequence, uint256 diff, uint256 month) internal {
-        require(sequence.firstUnprocessedMonth <= month + 1, "Cannot subtract from the past");
+    function subtractFromValue(
+        Value storage sequence,
+        uint256 diff,
+        uint256 month
+    ) internal {
+        require(
+            sequence.firstUnprocessedMonth <= month + 1,
+            "Cannot subtract from the past"
+        );
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -178,10 +212,14 @@ library PartialDifferences {
         }
     }
 
-    function getAndUpdateValue(Value storage sequence, uint256 month) internal returns (uint256 value) {
+    function getAndUpdateValue(
+        Value storage sequence,
+        uint256 month
+    ) internal returns (uint256 value) {
         require(
             month + 1 >= sequence.firstUnprocessedMonth,
-            "Cannot calculate value in the past");
+            "Cannot calculate value in the past"
+        );
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
         }
@@ -189,7 +227,9 @@ library PartialDifferences {
         if (sequence.firstUnprocessedMonth <= month) {
             value = sequence.value;
             for (uint256 i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                value = (value + sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                value = (value + sequence.addDiff[i]).boundedSub(
+                    sequence.subtractDiff[i]
+                );
                 if (sequence.addDiff[i] > 0) {
                     delete sequence.addDiff[i];
                 }
@@ -209,10 +249,12 @@ library PartialDifferences {
     function reduceValue(
         Value storage sequence,
         uint256 amount,
-        uint256 month)
-        internal returns (FractionUtils.Fraction memory reducingCoefficient)
-    {
-        require(month + 1 >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
+        uint256 month
+    ) internal returns (FractionUtils.Fraction memory reducingCoefficient) {
+        require(
+            month + 1 >= sequence.firstUnprocessedMonth,
+            "Cannot reduce value in the past"
+        );
         if (sequence.firstUnprocessedMonth == 0) {
             return FractionUtils.createFraction(0);
         }
@@ -226,8 +268,10 @@ library PartialDifferences {
             _amount = value;
         }
 
-        reducingCoefficient =
-            FractionUtils.createFraction(value.boundedSub(_amount), value);
+        reducingCoefficient = FractionUtils.createFraction(
+            value.boundedSub(_amount),
+            value
+        );
         reduceValueByCoefficient(sequence, reducingCoefficient, month);
         return reducingCoefficient;
     }
@@ -235,9 +279,8 @@ library PartialDifferences {
     function reduceValueByCoefficient(
         Value storage sequence,
         FractionUtils.Fraction memory reducingCoefficient,
-        uint256 month)
-        internal
-    {
+        uint256 month
+    ) internal {
         reduceValueByCoefficientAndUpdateSumIfNeeded({
             sequence: sequence,
             sumSequence: sequence,
@@ -251,8 +294,8 @@ library PartialDifferences {
         Value storage sequence,
         Value storage sumSequence,
         FractionUtils.Fraction memory reducingCoefficient,
-        uint256 month) internal
-    {
+        uint256 month
+    ) internal {
         reduceValueByCoefficientAndUpdateSumIfNeeded({
             sequence: sequence,
             sumSequence: sumSequence,
@@ -267,15 +310,22 @@ library PartialDifferences {
         Value storage sumSequence,
         FractionUtils.Fraction memory reducingCoefficient,
         uint256 month,
-        bool hasSumSequence) internal
-    {
-        require(month + 1 >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
+        bool hasSumSequence
+    ) internal {
+        require(
+            month + 1 >= sequence.firstUnprocessedMonth,
+            "Cannot reduce value in the past"
+        );
         if (hasSumSequence) {
-            require(month + 1 >= sumSequence.firstUnprocessedMonth, "Cannot reduce value in the past");
+            require(
+                month + 1 >= sumSequence.firstUnprocessedMonth,
+                "Cannot reduce value in the past"
+            );
         }
         require(
             reducingCoefficient.numerator <= reducingCoefficient.denominator,
-            "Increasing of values is not implemented");
+            "Increasing of values is not implemented"
+        );
         if (sequence.firstUnprocessedMonth == 0) {
             return;
         }
@@ -284,25 +334,34 @@ library PartialDifferences {
             return;
         }
 
-        uint256 newValue = sequence.value * reducingCoefficient.numerator / reducingCoefficient.denominator;
+        uint256 newValue = (sequence.value * reducingCoefficient.numerator) /
+            reducingCoefficient.denominator;
         if (hasSumSequence) {
-            subtractFromValue(sumSequence, sequence.value.boundedSub(newValue), month);
+            subtractFromValue(
+                sumSequence,
+                sequence.value.boundedSub(newValue),
+                month
+            );
         }
         sequence.value = newValue;
 
         for (uint256 i = month + 1; i <= sequence.lastChangedMonth; ++i) {
-            uint256 newDiff = sequence.subtractDiff[i]
-                * reducingCoefficient.numerator
-                / reducingCoefficient.denominator;
+            uint256 newDiff = (sequence.subtractDiff[i] *
+                reducingCoefficient.numerator) /
+                reducingCoefficient.denominator;
             if (hasSumSequence) {
-                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i]
+                sumSequence.subtractDiff[i] = sumSequence
+                    .subtractDiff[i]
                     .boundedSub(sequence.subtractDiff[i].boundedSub(newDiff));
             }
             sequence.subtractDiff[i] = newDiff;
         }
     }
 
-    function getValueInSequence(Sequence storage sequence, uint256 month) internal view returns (uint256 value) {
+    function getValueInSequence(
+        Sequence storage sequence,
+        uint256 month
+    ) internal view returns (uint256 value) {
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
         }
@@ -318,7 +377,9 @@ library PartialDifferences {
         }
     }
 
-    function getValuesInSequence(Sequence storage sequence) internal view returns (uint256[] memory values) {
+    function getValuesInSequence(
+        Sequence storage sequence
+    ) internal view returns (uint256[] memory values) {
         if (sequence.firstUnprocessedMonth == 0) {
             return values;
         }
@@ -331,14 +392,21 @@ library PartialDifferences {
         values[0] = sequence.value[sequence.firstUnprocessedMonth - 1];
         for (uint256 i = 0; i + 1 < values.length; ++i) {
             uint256 month = sequence.firstUnprocessedMonth + i;
-            values[i + 1] = values[i] + sequence.addDiff[month] - sequence.subtractDiff[month];
+            values[i + 1] =
+                values[i] +
+                sequence.addDiff[month] -
+                sequence.subtractDiff[month];
         }
     }
 
-    function getValue(Value storage sequence, uint256 month) internal view returns (uint256 value) {
+    function getValue(
+        Value storage sequence,
+        uint256 month
+    ) internal view returns (uint256 value) {
         require(
             month + 1 >= sequence.firstUnprocessedMonth,
-            "Cannot calculate value in the past");
+            "Cannot calculate value in the past"
+        );
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
         }
@@ -354,7 +422,9 @@ library PartialDifferences {
         }
     }
 
-    function getValues(Value storage sequence) internal view returns (uint256[] memory values) {
+    function getValues(
+        Value storage sequence
+    ) internal view returns (uint256[] memory values) {
         if (sequence.firstUnprocessedMonth == 0) {
             return values;
         }
@@ -367,7 +437,10 @@ library PartialDifferences {
         values[0] = sequence.value;
         for (uint256 i = 0; i + 1 < values.length; ++i) {
             uint256 month = sequence.firstUnprocessedMonth + i;
-            values[i + 1] = values[i] + sequence.addDiff[month] - sequence.subtractDiff[month];
+            values[i + 1] =
+                values[i] +
+                sequence.addDiff[month] -
+                sequence.subtractDiff[month];
         }
     }
 }

@@ -1,7 +1,7 @@
-import { ContractManager, SegmentTreeTester } from "../../../../typechain-types";
-import { deployWithLibraryWithConstructor } from "../factory";
+import {SegmentTreeTester} from "../../../../typechain-types";
+import {deployWithLibraryWithConstructor} from "../factory";
 
-export const deploySegmentTreeTester = deployWithLibraryWithConstructor(
+export const deploySegmentTreeTester = deployWithLibraryWithConstructor<SegmentTreeTester>(
     "SegmentTreeTester",
     ["SegmentTree"]
-) as (contractManager: ContractManager) => Promise<SegmentTreeTester>;
+);
