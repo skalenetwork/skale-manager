@@ -102,16 +102,10 @@ contract PaymasterController is IPaymasterController, Permissions {
         override
         onlyPaymasterSetter
     {
-        if (!marionetteAddress.isContract()) {
-            revert IsNotContract(marionetteAddress);
-        }
         marionette = IMarionette(marionetteAddress);
     }
 
     function setPaymasterAddress(address paymasterAddress) external override onlyPaymasterSetter {
-        if (!paymasterAddress.isContract()) {
-            revert IsNotContract(paymasterAddress);
-        }
         paymaster = IPaymaster(paymasterAddress);
     }
 
