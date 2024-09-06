@@ -1510,6 +1510,11 @@
   resolved "https://registry.yarnpkg.com/@quant-finance/solidity-datetime/-/solidity-datetime-2.2.0.tgz#50f2d00a571d8cc2d962257b40b70fc44450dcaa"
   integrity sha512-iO0EnqPKTzGCgQOkI9lerpJc0XKUhMNurSjHcA7p7nlP2K2z3U4kk9OC9eQkZUrdBtltft+kIibiDdIOYWuQMg==
 
+"@renovatebot/pep440@^3.0.20":
+  version "3.0.20"
+  resolved "https://registry.yarnpkg.com/@renovatebot/pep440/-/pep440-3.0.20.tgz#eac961dec19ac7dca488c1ec20a91df17161f0e2"
+  integrity sha512-Jw8jzHh2r1LAPTrjQlIwh/+8J3N2MqXZgPuTt6HdNeJIBjJskV8bsEfGs9rBzXi/omeHob3BXnvlECu2rCCUYw==
+
 "@resolver-engine/core@^0.3.3":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@resolver-engine/core/-/core-0.3.3.tgz#590f77d85d45bc7ecc4e06c654f41345db6ca967"
@@ -1726,20 +1731,22 @@
   dependencies:
     "@quant-finance/solidity-datetime" "^2.2.0"
 
-"@skalenetwork/skale-contracts-ethers-v6@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-contracts-ethers-v6/-/skale-contracts-ethers-v6-1.0.0.tgz#2ec9e1e6113c0b0e0e7abaa492702baa9d647148"
-  integrity sha512-V9sttSFsntgQiQouxnL/Mr2pLQWX7hXy4fmM8d9x2UFfSbLCVXJth/n0YzEGSxEzjSN5IPvOBRJ4kdxyGauTUg==
+"@skalenetwork/skale-contracts-ethers-v6@^1.0.2-develop.0":
+  version "1.0.2-develop.5"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-contracts-ethers-v6/-/skale-contracts-ethers-v6-1.0.2-develop.5.tgz#5be1a25e6bc6a9ec56c6306d2c1f505cccec5978"
+  integrity sha512-nrB2pcQLGyHvwLpmdo6pe0hkJAWTIdd7065/44aWvxjeQy2GghPjx5U46mfFPMkJjlk1HICMiih6g2BuIH8G1A==
   dependencies:
-    "@skalenetwork/skale-contracts" "1.0.0"
+    "@skalenetwork/skale-contracts" "1.0.2-develop.5"
     ethers "^6.7.1"
 
-"@skalenetwork/skale-contracts@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-contracts/-/skale-contracts-1.0.0.tgz#0135e67086714eebd7f936100714c3bcc89384df"
-  integrity sha512-uTvjAlfFL6XRa9p0ogcXO3k9w6bm1UCHRbtKsfb5VrnqQKcCsJoJ9sX55Rcj1YNVy4Dy2E5H8NFVhGUUp0rwtQ==
+"@skalenetwork/skale-contracts@1.0.2-develop.5":
+  version "1.0.2-develop.5"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-contracts/-/skale-contracts-1.0.2-develop.5.tgz#b678b119c8faa3c03bb7fccde9986cf1f2e06c8a"
+  integrity sha512-Ke/AOlZt7jNbRSPsJ9ZRyEMzOFH0LIQReAVXvqx2VZJHSU2drDI+WT/zUuG6mK6AErZNhmfHi6iPu3fna7jDEA==
   dependencies:
+    "@renovatebot/pep440" "^3.0.20"
     axios "^1.4.0"
+    semver "^7.6.0"
 
 "@skalenetwork/skale-manager-interfaces@3.2.0-develop.1":
   version "3.2.0-develop.1"
@@ -1756,15 +1763,15 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-paymaster.0.tgz#4fee7d3a6dfd1dc8c446f6d28a2252fce426b537"
   integrity sha512-AC0g3dMAtHORQnxm9QoZIgpNqTNwe/ahK9kPyTQFV/Ht3/sIoWkx0vXUiAwsDzK56HAVFXfc+LqfmEnKiefDqg==
 
-"@skalenetwork/upgrade-tools@^3.0.0-linter.42":
-  version "3.0.0-linter.42"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-linter.42.tgz#a09471562eb1a314784af2e8593e9f5177f97818"
-  integrity sha512-c4ue+XF5wg7YbISnar0mxOUrQXapzYZA7uWe2Lt66TO6XeX1v/iMh0MpcnMRZwu/TslID45kHyjgyvME3fDLsQ==
+"@skalenetwork/upgrade-tools@^3.0.0-openzeppelin-5.1":
+  version "3.0.0-openzeppelin-5.1"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-openzeppelin-5.1.tgz#aea4ce81746797b8de686e71d9ffdb86e0fc946b"
+  integrity sha512-Fqeo40epeWOQUBf1bcFCbCS7xyx/mi8P9/A1zTkj5SN+/ScidRsGlM1yeqz7HIEJMXQc2upbSsvnhb0Vg5XG8Q==
   dependencies:
     "@safe-global/api-kit" "^2.4.1"
     "@safe-global/protocol-kit" "^4.0.1"
     "@safe-global/safe-core-sdk-types" "^5.0.1"
-    "@skalenetwork/skale-contracts-ethers-v6" "^1.0.0"
+    "@skalenetwork/skale-contracts-ethers-v6" "^1.0.2-develop.0"
     axios "^1.4.0"
     ethereumjs-util "^7.1.4"
     semaphore-async-await "^1.5.1"
