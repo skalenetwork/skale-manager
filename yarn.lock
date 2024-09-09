@@ -1763,10 +1763,10 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-paymaster.0.tgz#4fee7d3a6dfd1dc8c446f6d28a2252fce426b537"
   integrity sha512-AC0g3dMAtHORQnxm9QoZIgpNqTNwe/ahK9kPyTQFV/Ht3/sIoWkx0vXUiAwsDzK56HAVFXfc+LqfmEnKiefDqg==
 
-"@skalenetwork/upgrade-tools@^3.0.0-openzeppelin-5.1":
-  version "3.0.0-openzeppelin-5.1"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-openzeppelin-5.1.tgz#aea4ce81746797b8de686e71d9ffdb86e0fc946b"
-  integrity sha512-Fqeo40epeWOQUBf1bcFCbCS7xyx/mi8P9/A1zTkj5SN+/ScidRsGlM1yeqz7HIEJMXQc2upbSsvnhb0Vg5XG8Q==
+"@skalenetwork/upgrade-tools@3.0.0-develop.21":
+  version "3.0.0-develop.21"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-develop.21.tgz#3832343e6870e00c33ddc2ca4c70325a5f69bb1b"
+  integrity sha512-gfpLSfgA9RmToV4tfb1oAllIUGXdce4PlpJfQWS6QZQQa3uEE2MmjNwIh0AWB97kb0CJOzf/zp4WN1J1eKxIhQ==
   dependencies:
     "@safe-global/api-kit" "^2.4.1"
     "@safe-global/protocol-kit" "^4.0.1"
