@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import {contracts} from "./deploy";
 import {ethers, upgrades} from "hardhat";
-import {Upgrader, AutoSubmitter} from "@skalenetwork/upgrade-tools";
+import {Upgrader, Submitter} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
 import {ContractManager, PaymasterController, SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
@@ -27,7 +27,7 @@ class SkaleManagerUpgrader extends Upgrader {
         targetVersion: string,
         instance: Instance,
         contractNamesToUpgrade: string[],
-        submitter = new AutoSubmitter()) {
+        submitter?: Submitter) {
             super(
                 {
                     contractNamesToUpgrade,
@@ -35,7 +35,8 @@ class SkaleManagerUpgrader extends Upgrader {
                     name: "skale-manager",
                     version: targetVersion
                 },
-                submitter);
+                submitter
+            );
         }
 
     async getSkaleManager() {
@@ -68,7 +69,10 @@ class SkaleManagerUpgrader extends Upgrader {
         console.log("Deploy PaymasterController");
         const paymasterController = await upgrades.deployProxy(
             paymasterControllerFactory,
-            [await ethers.resolveAddress(contractManager)]
+            [await ethers.resolveAddress(contractManager)],
+            {
+                initialOwner: await this.getOwner()
+            }
         ) as unknown as PaymasterController;
         await paymasterController.deploymentTransaction()?.wait();
 
@@ -110,8 +114,6 @@ class SkaleManagerUpgrader extends Upgrader {
             )).wait();
         }
     };
-
-    // initialize = async () => { };
 }
 
 async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
