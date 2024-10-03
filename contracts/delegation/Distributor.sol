@@ -43,6 +43,8 @@ import { MathUtils } from "./../utils/MathUtils.sol";
 contract Distributor is Permissions, IERC777Recipient, IDistributor {
     using MathUtils for uint;
 
+    uint256 constant public MAX_CALCULATION_PERIOD_MONTHS = 120;
+
     IERC1820Registry private _erc1820;
 
     mapping(uint256 validatorId => mapping(uint256 month => uint256 amount)) private _bountyPaid;
@@ -226,8 +228,8 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
 
         earned = 0;
         endMonth = currentMonth;
-        if (endMonth > startMonth + 120) {
-            endMonth = startMonth + 120;
+        if (endMonth > startMonth + MAX_CALCULATION_PERIOD_MONTHS) {
+            endMonth = startMonth + MAX_CALCULATION_PERIOD_MONTHS;
         }
         for (uint256 i = startMonth; i < endMonth; ++i) {
             uint256 effectiveDelegatedToValidator = delegationController
@@ -266,8 +268,8 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
 
         earned = 0;
         endMonth = currentMonth;
-        if (endMonth > startMonth + 12) {
-            endMonth = startMonth + 12;
+        if (endMonth > startMonth + MAX_CALCULATION_PERIOD_MONTHS) {
+            endMonth = startMonth + MAX_CALCULATION_PERIOD_MONTHS;
         }
         for (uint256 i = startMonth; i < endMonth; ++i) {
             earned = earned + _feePaid[validatorId][i];
