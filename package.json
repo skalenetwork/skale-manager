@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
-    "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/contracts": "^4.9.6",
     "@openzeppelin/contracts-upgradeable": "^4.9.6",
     "@openzeppelin/hardhat-upgrades": "^3.2.0",
     "@skalenetwork/ima-interfaces": "2.0.0-develop.67",
