@@ -47,7 +47,7 @@
     "@openzeppelin/hardhat-upgrades": "^3.2.0",
     "@skalenetwork/ima-interfaces": "2.0.0-develop.67",
     "@skalenetwork/marionette-interfaces": "^0.0.0-main.6",
-    "@skalenetwork/paymaster-interfaces": "^1.0.0-main.10",
+    "@skalenetwork/paymaster-interfaces": "^1.0.0",
     "@skalenetwork/skale-manager-interfaces": "3.2.0-develop.1",
     "@skalenetwork/upgrade-tools": "3.0.0-develop.21",
     "@typechain/hardhat": "^9.1.0",
