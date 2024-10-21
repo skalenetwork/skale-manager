@@ -1429,6 +1429,11 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.3.tgz#00d7a8cf35a475b160b3f0293a6403c511099364"
   integrity sha512-He3LieZ1pP2TNt5JbkPA4PNT9WC3gOTOlDcFGJW4Le4QKqwmiNJCRt44APfxMxvq7OugU/cqYuPcSBzOw38DAg==
 
+"@openzeppelin/contracts@^5.0.2":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-5.1.0.tgz#4e61162f2a2bf414c4e10c45eca98ce5f1aadbd4"
+  integrity sha512-p1ULhl7BXzjjbha5aqst+QMLY+4/LCWADXOCsmLHRM77AqiPjnd9vvUN9sosUfhL9JGKpZ0TjEGxgvnizmWGSA==
+
 "@openzeppelin/defender-sdk-base-client@^1.10.0", "@openzeppelin/defender-sdk-base-client@^1.13.4":
   version "1.13.4"
   resolved "https://registry.yarnpkg.com/@openzeppelin/defender-sdk-base-client/-/defender-sdk-base-client-1.13.4.tgz#51b25d46bb766e7a107b9a87ca623fae3ad5a8c3"
@@ -1504,11 +1509,6 @@
     "@pnpm/config.env-replace" "^1.1.0"
     "@pnpm/network.ca-file" "^1.0.1"
     config-chain "^1.1.11"
-
-"@quant-finance/solidity-datetime@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@quant-finance/solidity-datetime/-/solidity-datetime-2.2.0.tgz#50f2d00a571d8cc2d962257b40b70fc44450dcaa"
-  integrity sha512-iO0EnqPKTzGCgQOkI9lerpJc0XKUhMNurSjHcA7p7nlP2K2z3U4kk9OC9eQkZUrdBtltft+kIibiDdIOYWuQMg==
 
 "@renovatebot/pep440@^3.0.20":
   version "3.0.20"
@@ -1724,12 +1724,12 @@
   dependencies:
     "@skalenetwork/ima-interfaces" "^2.0.0-paymaster.0"
 
-"@skalenetwork/paymaster-interfaces@^1.0.0-main.10":
-  version "1.0.0-main.10"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/paymaster-interfaces/-/paymaster-interfaces-1.0.0-main.10.tgz#abe2394bd948c3fac808e8cf09d91b99a59ac94d"
-  integrity sha512-P7Vc5F+hxeBrTDft2Th7jYY1N3lyzxsVMHkGhJd8Xjc3eSs4tLwvOE15vJPVBwwvqgnsdQwtsfNs+vF49o89LA==
+"@skalenetwork/paymaster-interfaces@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/paymaster-interfaces/-/paymaster-interfaces-1.0.0.tgz#a0305bff4ff3840df4c9a20cddf3c0d7d0cb4c2a"
+  integrity sha512-0LeVSKCAKhmJRVJ0PpZvCT95VjXNIGm8jrVd9Q7uBiKUnL82zybX4667kETizbt2dhVMjqgj1kXZUaFQF/zljg==
   dependencies:
-    "@quant-finance/solidity-datetime" "^2.2.0"
+    "@openzeppelin/contracts" "^5.0.2"
 
 "@skalenetwork/skale-contracts-ethers-v6@^1.0.2-develop.0":
   version "1.0.2-develop.5"
