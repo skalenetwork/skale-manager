@@ -1,12 +1,12 @@
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolder,
-         ContractManager } from "../typechain-types";
+import {ConstantsHolder,
+         ContractManager} from "../typechain-types";
 
 import chai = require("chai");
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -105,19 +105,19 @@ describe("ConstantsHolder", () => {
     await constantsHolder.connect(user).setRotationDelay(13)
       .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setRotationDelay(13);
-    (await constantsHolder.rotationDelay()).toNumber()
+    (await constantsHolder.rotationDelay())
       .should.be.equal(13);
   });
 
   it("should set proof-of-use lockup period", async () => {
     await constantsHolder.setProofOfUseLockUpPeriod(13);
-    (await constantsHolder.proofOfUseLockUpPeriodDays()).toNumber()
+    (await constantsHolder.proofOfUseLockUpPeriodDays())
       .should.be.equal(13);
   });
 
   it("should set proof-of-use delegation percentage", async () => {
     await constantsHolder.setProofOfUseDelegationPercentage(13);
-    (await constantsHolder.proofOfUseDelegationPercentage()).toNumber()
+    (await constantsHolder.proofOfUseDelegationPercentage())
       .should.be.equal(13);
   });
 
@@ -193,5 +193,4 @@ describe("ConstantsHolder", () => {
     await constantsHolder.setMinNodeBalance(minNodeBalance);
     (await constantsHolder.minNodeBalance()).should.be.equal(minNodeBalance);
   });
-
 });

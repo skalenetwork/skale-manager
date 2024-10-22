@@ -7,24 +7,23 @@ import {
     SkaleToken,
     ValidatorService
 } from "../typechain-types";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployBounty } from "./tools/deploy/bounty";
-import { currentTime, nextMonth, skipTime, skipTimeToDate } from "./tools/time";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployBounty} from "./tools/deploy/bounty";
+import {currentTime, nextMonth, skipTime, skipTimeToDate} from "./tools/time";
 import chaiAsPromised from "chai-as-promised";
 import chaiAlmost from "chai-almost";
 import * as chai from "chai";
-import { deployNodesMock } from "./tools/deploy/test/nodesMock";
-import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
-import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
-import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { BigNumber } from "ethers";
-import { deployPunisher } from "./tools/deploy/delegation/punisher";
-import { fastBeforeEach } from "./tools/mocha";
+import {deployNodesMock} from "./tools/deploy/test/nodesMock";
+import {deploySkaleToken} from "./tools/deploy/skaleToken";
+import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
+import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
+import {deployDelegationPeriodManager} from "./tools/deploy/delegation/delegationPeriodManager";
+import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
+import {ethers} from "hardhat";
+import {deployPunisher} from "./tools/deploy/delegation/punisher";
+import {fastBeforeEach} from "./tools/mocha";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -51,7 +50,6 @@ describe("Bounty", () => {
     let bountyContract: BountyV2;
     let nodes: NodesMock;
 
-    const ten18 = BigNumber.from(10).pow(18);
     const day = 60 * 60 * 24;
 
     fastBeforeEach(async () => {
@@ -61,13 +59,13 @@ describe("Bounty", () => {
         constantsHolder = await deployConstantsHolder(contractManager);
         bountyContract = await deployBounty(contractManager);
         nodes = await deployNodesMock(contractManager);
-        await contractManager.setContractsAddress("Nodes", nodes.address);
+        await contractManager.setContractsAddress("Nodes", nodes);
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
-        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
         const BOUNTY_REDUCTION_MANAGER_ROLE = await bountyContract.BOUNTY_REDUCTION_MANAGER_ROLE();
-        await bountyContract.grantRole(BOUNTY_REDUCTION_MANAGER_ROLE, owner.address);
+        await bountyContract.grantRole(BOUNTY_REDUCTION_MANAGER_ROLE, owner);
         const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
-        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
+        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner);
     });
 
     it("should allow only owner to call enableBountyReduction", async() => {
@@ -98,21 +96,21 @@ describe("Bounty", () => {
             delegationController = await deployDelegationController(contractManager);
             validatorService = await deployValidatorService(contractManager);
             const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
-            await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+            await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner);
 
             await skipTimeToDate(1, 11);
 
-            await skaleToken.mint(validator.address, ten18.mul(validatorAmount).toString(), "0x", "0x");
+            await skaleToken.mint(validator, ethers.parseEther(validatorAmount.toString()), "0x", "0x");
             await validatorService.connect(validator).registerValidator("Validator", "", 150, 1e6 + 1);
             await validatorService.enableValidator(validatorId);
-            await delegationController.connect(validator).delegate(validatorId, ten18.mul(validatorAmount).toString(), 2, "");
+            await delegationController.connect(validator).delegate(validatorId, ethers.parseEther(validatorAmount.toString()), 2, "");
             await delegationController.connect(validator).acceptPendingDelegation(0);
             await nextMonth(contractManager);
         });
 
         async function calculateBounty(nodeId: number) {
-            const estimate = (await bountyContract.estimateBounty(nodeId)).div(ten18).toNumber();
-            const bounty = (await bountyContract.callStatic.calculateBounty(nodeId)).div(ten18).toNumber();
+            const estimate = Number.parseFloat(ethers.formatEther(await bountyContract.estimateBounty(nodeId)));
+            const bounty = Number.parseFloat(ethers.formatEther(await bountyContract.calculateBounty.staticCall(nodeId)));
             bounty.should.be.almost(estimate);
             await bountyContract.calculateBounty(nodeId);
             await nodes.changeNodeLastRewardDate(nodeId);
@@ -125,21 +123,21 @@ describe("Bounty", () => {
             fastBeforeEach(async () => {
                 const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
                 const DELEGATION_PERIOD_SETTER_ROLE = await delegationPeriodManager.DELEGATION_PERIOD_SETTER_ROLE();
-                await delegationPeriodManager.grantRole(DELEGATION_PERIOD_SETTER_ROLE, owner.address);
+                await delegationPeriodManager.grantRole(DELEGATION_PERIOD_SETTER_ROLE, owner);
 
                 await skipTimeToDate(1, 11);
 
-                await skaleToken.mint(validator2.address, ten18.mul(validator2Amount).toString(), "0x", "0x");
+                await skaleToken.mint(validator2, ethers.parseEther(validator2Amount.toString()), "0x", "0x");
                 await validatorService.connect(validator2).registerValidator("Validator", "", 150, 1e6 + 1);
                 await validatorService.enableValidator(validator2Id);
                 await delegationPeriodManager.setDelegationPeriod(12, 200);
-                await delegationController.connect(validator2).delegate(validator2Id, ten18.mul(validator2Amount).toString(), 12, "");
+                await delegationController.connect(validator2).delegate(validator2Id, ethers.parseEther(validator2Amount.toString()), 12, "");
                 await delegationController.connect(validator2).acceptPendingDelegation(1);
                 await nextMonth(contractManager);
 
                 await skipTimeToDate(1, 0); // Jan 1st
                 await constantsHolder.setLaunchTimestamp(await currentTime());
-                await constantsHolder.setMSR(ten18.mul(validator2Amount).toString());
+                await constantsHolder.setMSR(ethers.parseEther(validator2Amount.toString()));
             });
 
             it("should pay bounty proportionally to effective validator's stake", async () => {
@@ -154,11 +152,11 @@ describe("Bounty", () => {
             });
 
             it("should process nodes adding and removing, delegation and undelegation and slashing", async () => {
-                await skaleToken.mint(validator.address, ten18.mul(10e6).toString(), "0x", "0x");
-                await skaleToken.mint(validator2.address, ten18.mul(10e6).toString(), "0x", "0x");
+                await skaleToken.mint(validator, ethers.parseEther("10000000"), "0x", "0x");
+                await skaleToken.mint(validator2, ethers.parseEther("10000000"), "0x", "0x");
                 const punisher = await deployPunisher(contractManager);
-                await contractManager.setContractsAddress("SkaleDKG", contractManager.address); // for testing
-                const million = ten18.mul(1e6).toString();
+                await contractManager.setContractsAddress("SkaleDKG", contractManager); // for testing
+                const million = ethers.parseEther("1000000");
 
                 // Jan 1st
                 // console.log("ts: current", new Date(await currentTime() * 1000));
@@ -276,7 +274,7 @@ describe("Bounty", () => {
                 await delegationController.connect(validator).delegate(validatorId, million, 2, "");
                 await delegationController.connect(validator).acceptPendingDelegation(4);
 
-                await constantsHolder.setMSR(ten18.mul(1.5e6).toString());
+                await constantsHolder.setMSR(ethers.parseEther("1500000").toString());
                 let bounty = await calculateBounty(0);
                 bounty.should.be.almost(getBountyForEpoch(0) + getBountyForEpoch(1));
 
@@ -519,13 +517,19 @@ describe("Bounty", () => {
                 totalBounty = 0;
 
                 effectiveDelegated1.should.be.almost(
-                    (await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0]
-                        .div(ten18)
-                        .toNumber());
+                    Number.parseFloat(
+                        ethers.formatEther(
+                            (await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0]
+                        )
+                    )
+                );
                 effectiveDelegated2.should.be.almost(
-                    (await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[1]
-                        .div(ten18)
-                        .toNumber());
+                    Number.parseFloat(
+                        ethers.formatEther(
+                            (await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[1]
+                        )
+                    )
+                );
 
                 await bountyContract.calculateBounty(0)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
@@ -561,17 +565,23 @@ describe("Bounty", () => {
                 //         0: Apr 28th
                 //         3: May 1st
 
-                await punisher.slash(validator2Id, ten18.mul(1.25e6).toString());
+                await punisher.slash(validator2Id, ethers.parseEther("1250000"));
                 effectiveDelegated2 = 1e6 * 100 + 0.25e6 * 200;
 
                 effectiveDelegated1.should.be.almost(
-                    (await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0]
-                        .div(ten18)
-                        .toNumber());
+                    Number.parseFloat(
+                        ethers.formatEther(
+                            (await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0]
+                        )
+                    )
+                );
                 effectiveDelegated2.should.be.almost(
-                    (await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[0]
-                        .div(ten18)
-                        .toNumber());
+                    Number.parseFloat(
+                        ethers.formatEther(
+                            (await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[0]
+                        )
+                    )
+                );
 
                 bounty = await calculateBounty(0);
                 bounty.should.be.almost(0); // stake is too small

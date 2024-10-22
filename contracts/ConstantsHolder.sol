@@ -33,12 +33,12 @@ import { Permissions } from "./Permissions.sol";
 contract ConstantsHolder is Permissions, IConstantsHolder {
 
     // initial price for creating Node (100 SKL)
-    uint256 public constant NODE_DEPOSIT = 100 * 1e18;
+    uint256 public constant override NODE_DEPOSIT = 100 * 1e18;
 
-    uint8 public constant TOTAL_SPACE_ON_NODE = 128;
+    uint8 public constant override TOTAL_SPACE_ON_NODE = 128;
 
     // part of Node for Small Skale-chain (1/128 of Node)
-    uint8 public constant SMALL_DIVISOR = 128;
+    uint8 public constant override SMALL_DIVISOR = 128;
 
     // part of Node for Medium Skale-chain (1/32 of Node)
     uint8 public constant MEDIUM_DIVISOR = 32;
@@ -59,7 +59,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     uint256 public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
 
     // number of seconds in one year
-    uint32 public constant SECONDS_TO_YEAR = 31622400;
+    uint32 public constant override SECONDS_TO_YEAR = 31622400;
 
     // initial number of monitors
     uint256 public constant NUMBER_OF_MONITORS = 24;
@@ -130,10 +130,14 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
 
     uint256 public minNodeBalance;
 
-    bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
+    bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE =
+        keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
 
     modifier onlyConstantsHolderManager() {
-        require(hasRole(CONSTANTS_HOLDER_MANAGER_ROLE, msg.sender), "CONSTANTS_HOLDER_MANAGER_ROLE is required");
+        require(
+            hasRole(CONSTANTS_HOLDER_MANAGER_ROLE, msg.sender),
+            "CONSTANTS_HOLDER_MANAGER_ROLE is required"
+        );
         _;
     }
 
@@ -145,7 +149,7 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         allowableLatency = 150000;
         deltaPeriod = 3600;
         checkTime = 300;
-        launchTimestamp = type(uint).max;
+        launchTimestamp = type(uint256).max;
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
         proofOfUseDelegationPercentage = 50;
@@ -159,7 +163,14 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
      * @dev Allows the Owner to set new reward and delta periods
      * This function is only for tests.
      */
-    function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external override onlyConstantsHolderManager {
+    function setPeriods(
+        uint32 newRewardPeriod,
+        uint32 newDeltaPeriod
+    )
+        external
+        override
+        onlyConstantsHolderManager
+    {
         require(
             newRewardPeriod >= newDeltaPeriod && newRewardPeriod - newDeltaPeriod >= checkTime,
             "Incorrect Periods"
@@ -248,7 +259,13 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     /**
      * @dev Allows the Owner to set the proof-of-use lockup period.
      */
-    function setProofOfUseLockUpPeriod(uint256 periodDays) external override onlyConstantsHolderManager {
+    function setProofOfUseLockUpPeriod(
+        uint256 periodDays
+    )
+        external
+        override
+        onlyConstantsHolderManager
+    {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("ProofOfUseLockUpPeriodDays")),
             uint(proofOfUseLockUpPeriodDays),
@@ -261,7 +278,13 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
      * @dev Allows the Owner to set the proof-of-use delegation percentage
      * requirement.
      */
-    function setProofOfUseDelegationPercentage(uint256 percentage) external override onlyConstantsHolderManager {
+    function setProofOfUseDelegationPercentage(
+        uint256 percentage
+    )
+        external
+        override
+        onlyConstantsHolderManager
+    {
         require(percentage <= 100, "Percentage value is incorrect");
         emit ConstantUpdated(
             keccak256(abi.encodePacked("ProofOfUseDelegationPercentage")),
@@ -275,7 +298,13 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
      * @dev Allows the Owner to set the maximum number of validators that a
      * single delegator can delegate to.
      */
-    function setLimitValidatorsPerDelegator(uint256 newLimit) external override onlyConstantsHolderManager {
+    function setLimitValidatorsPerDelegator(
+        uint256 newLimit
+    )
+        external
+        override
+        onlyConstantsHolderManager
+    {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("LimitValidatorsPerDelegator")),
             uint(limitValidatorsPerDelegator),
@@ -284,7 +313,13 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         limitValidatorsPerDelegator = newLimit;
     }
 
-    function setSchainCreationTimeStamp(uint256 timestamp) external override onlyConstantsHolderManager {
+    function setSchainCreationTimeStamp(
+        uint256 timestamp
+    )
+        external
+        override
+        onlyConstantsHolderManager
+    {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("SchainCreationTimeStamp")),
             uint(schainCreationTimeStamp),
@@ -293,7 +328,13 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         schainCreationTimeStamp = timestamp;
     }
 
-    function setMinimalSchainLifetime(uint256 lifetime) external override onlyConstantsHolderManager {
+    function setMinimalSchainLifetime(
+        uint256 lifetime
+    )
+        external
+        override
+        onlyConstantsHolderManager
+    {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("MinimalSchainLifetime")),
             uint(minimalSchainLifetime),
@@ -302,7 +343,13 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         minimalSchainLifetime = lifetime;
     }
 
-    function setComplaintTimeLimit(uint256 timeLimit) external override onlyConstantsHolderManager {
+    function setComplaintTimeLimit(
+        uint256 timeLimit
+    )
+        external
+        override
+        onlyConstantsHolderManager
+    {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("ComplaintTimeLimit")),
             uint(complaintTimeLimit),
@@ -311,7 +358,13 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         complaintTimeLimit = timeLimit;
     }
 
-    function setMinNodeBalance(uint256 newMinNodeBalance) external override onlyConstantsHolderManager {
+    function setMinNodeBalance(
+        uint256 newMinNodeBalance
+    )
+        external
+        override
+        onlyConstantsHolderManager
+    {
         emit ConstantUpdated(
             keccak256(abi.encodePacked("MinNodeBalance")),
             uint(minNodeBalance),

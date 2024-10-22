@@ -23,11 +23,12 @@
 
 pragma solidity 0.8.17;
 
-import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
-import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
-import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
+import {GroupIndexIsInvalid} from "../CommonErrors.sol";
 
 /**
  * @title SkaleDkgAlright
@@ -35,7 +36,6 @@ import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConsta
  * Joint-Feldman protocol.
  */
 library SkaleDkgAlright {
-
     event AllDataReceived(bytes32 indexed schainHash, uint256 nodeIndex);
     event SuccessfulDKG(bytes32 indexed schainHash);
 
@@ -48,37 +48,54 @@ library SkaleDkgAlright {
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => uint256) storage lastSuccessfulDKG,
         mapping(bytes32 => uint256) storage startAlrightTimestamp
-
-    )
-        external
-    {
+    ) external {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        (uint256 index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        (uint256 index, bool valid) = skaleDKG.checkAndReturnIndexInGroup(
+            schainHash,
+            fromNodeIndex,
+            true
+        );
+        if (!valid) {
+            revert GroupIndexIsInvalid(index);
+        }
         uint256 numberOfParticipant = channels[schainHash].n;
-        require(numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted, "Still Broadcasting phase");
         require(
-            startAlrightTimestamp[schainHash] + _getComplaintTimeLimit(contractManager) > block.timestamp,
+            numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted,
+            "Still Broadcasting phase"
+        );
+        require(
+            startAlrightTimestamp[schainHash] +
+                _getComplaintTimeLimit(contractManager) >
+                block.timestamp,
             "Incorrect time for alright"
         );
         require(
             complaints[schainHash].fromNodeToComplaint != fromNodeIndex ||
-            (fromNodeIndex == 0 && complaints[schainHash].startComplaintBlockTimestamp == 0),
+                (fromNodeIndex == 0 &&
+                    complaints[schainHash].startComplaintBlockTimestamp == 0),
             "Node has already sent complaint"
         );
-        require(!dkgProcess[schainHash].completed[index], "Node is already alright");
+        require(
+            !dkgProcess[schainHash].completed[index],
+            "Node is already alright"
+        );
         dkgProcess[schainHash].completed[index] = true;
         dkgProcess[schainHash].numberOfCompleted++;
         emit AllDataReceived(schainHash, fromNodeIndex);
         if (dkgProcess[schainHash].numberOfCompleted == numberOfParticipant) {
             lastSuccessfulDKG[schainHash] = block.timestamp;
             channels[schainHash].active = false;
-            IKeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
+            IKeyStorage(contractManager.getContract("KeyStorage"))
+                .finalizePublicKey(schainHash);
             emit SuccessfulDKG(schainHash);
         }
     }
 
-    function _getComplaintTimeLimit(IContractManager contractManager) private view returns (uint256 timeLimit) {
-        return IConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
+    function _getComplaintTimeLimit(
+        IContractManager contractManager
+    ) private view returns (uint256 timeLimit) {
+        return
+            IConstantsHolder(contractManager.getConstantsHolder())
+                .complaintTimeLimit();
     }
-
 }

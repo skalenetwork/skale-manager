@@ -13,10 +13,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 
-/* Added by SKALE */
-import "../../Permissions.sol";
-/* End of added by SKALE */
-
 /**
  * @dev Implementation of the {IERC777} interface.
  *
