@@ -45,7 +45,7 @@ contract SlashingTable is Permissions, ISlashingTable {
      */
     function setPenalty(string calldata offense, uint256 penalty) external override {
         require(hasRole(PENALTY_SETTER_ROLE, msg.sender), "PENALTY_SETTER_ROLE is required");
-        uint256 offenseHash = uint(keccak256(abi.encodePacked(offense)));
+        uint256 offenseHash = uint256(keccak256(abi.encodePacked(offense)));
         _penalties[offenseHash] = penalty;
         emit PenaltyAdded(offenseHash, offense, penalty);
     }

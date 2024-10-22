@@ -21,7 +21,9 @@
 
 pragma solidity 0.8.17;
 
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {
+    OwnableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import { TimeHelpers } from "../delegation/TimeHelpers.sol";
 import { ITimeHelpersWithDebug } from "./interfaces/ITimeHelpersWithDebug.sol";
@@ -90,9 +92,16 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWi
         }
     }
 
-    function _findTimeBeforeTimeShift(uint256 shiftedTimestamp) private view returns (uint256 timestamp) {
+    function _findTimeBeforeTimeShift(
+        uint256 shiftedTimestamp
+    )
+        private
+        view
+        returns (uint256 timestamp)
+    {
         uint256 lastTimeShiftIndex = _timeShift.length - 1;
-        if (_timeShift[lastTimeShiftIndex].pointInTime + _timeShift[lastTimeShiftIndex].shift < shiftedTimestamp) {
+        if (_timeShift[lastTimeShiftIndex].pointInTime + _timeShift[lastTimeShiftIndex].shift
+            < shiftedTimestamp) {
             return shiftedTimestamp - _timeShift[lastTimeShiftIndex].shift;
         } else {
             if (shiftedTimestamp <= _timeShift[0].pointInTime + _timeShift[0].shift) {
@@ -106,7 +115,8 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWi
                 uint256 right = lastTimeShiftIndex;
                 while (left + 1 < right) {
                     uint256 middle = (left + right) / 2;
-                    if (_timeShift[middle].pointInTime + _timeShift[middle].shift < shiftedTimestamp) {
+                    if (_timeShift[middle].pointInTime + _timeShift[middle].shift
+                        < shiftedTimestamp) {
                         left = middle;
                     } else {
                         right = middle;

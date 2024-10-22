@@ -1,12 +1,12 @@
-import { ConstantsHolder,
-         ContractManager } from "../typechain-types";
-import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import {ConstantsHolder,
+         ContractManager} from "../typechain-types";
+import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { fastBeforeEach } from "./tools/mocha";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -26,10 +26,10 @@ describe("ContractManager", () => {
 
   it("Should add a right contract address (ConstantsHolder) to the register", async () => {
     const simpleContractName = "Constants";
-    await contractManager.connect(user).setContractsAddress(simpleContractName, constantsHolder.address)
+    await contractManager.connect(user).setContractsAddress(simpleContractName, constantsHolder)
       .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
-    await contractManager.setContractsAddress(simpleContractName, constantsHolder.address);
+    await contractManager.setContractsAddress(simpleContractName, constantsHolder);
 
-    (await contractManager.getContract("ConstantsHolder")).should.be.equal(constantsHolder.address);
+    (await contractManager.getContract("ConstantsHolder")).should.be.equal(constantsHolder);
   });
 });

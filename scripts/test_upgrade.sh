@@ -16,7 +16,7 @@ export NVM_DIR=~/.nvm;
 source $NVM_DIR/nvm.sh;
 
 DEPLOYED_TAG=$(cat $GITHUB_WORKSPACE/DEPLOYED)
-DEPLOYED_VERSION=$(echo $DEPLOYED_TAG | cut -d '-' -f 1)
+DEPLOYED_VERSION=$(echo $DEPLOYED_TAG | xargs ) # trim
 DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
 DEPLOYED_WITH_NODE_VERSION="lts/hydrogen"
@@ -24,7 +24,13 @@ CURRENT_NODE_VERSION=$(nvm current)
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 
-npx ganache-cli --gasLimit 8000000 --quiet &
+# Have to set --miner.blockTime 1
+# because there is a bug in ganache
+# https://github.com/trufflesuite/ganache/issues/4165
+# TODO: remove --miner.blockTime 1
+# when ganache processes pending queue correctly
+# to speed up testing process
+GANACHE_SESSION=$(npx ganache --😈 --miner.blockGasLimit 8000000 --miner.blockTime 1)
 
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
@@ -34,6 +40,9 @@ yarn install
 PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost
 rm $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json || true
 cp .openzeppelin/unknown-*.json $GITHUB_WORKSPACE/.openzeppelin
+CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
+# TODO: copy contracts.json file when deployed version starts supporting it
+# cp "data/$CONTRACTS_FILENAME" "$GITHUB_WORKSPACE/data"
 ABI_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-abi.json"
 cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data"
 
@@ -41,8 +50,17 @@ cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
 
-# TODO remove after upgrade from 1.9.2
-python3 scripts/change_manifest.py $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
-ALLOW_NOT_ATOMIC_UPGRADE="OK" ABI="data/$ABI_FILENAME" npx hardhat run migrations/upgrade.ts --network localhost
+# TODO: use contracts.json file when deployed version starts supporting it
+# SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
+SKALE_MANAGER_ADDRESS=$(cat data/$ABI_FILENAME | jq -r .skale_manager_address)
+export ALLOW_NOT_ATOMIC_UPGRADE="OK"
+export TARGET="$SKALE_MANAGER_ADDRESS"
+export UPGRADE_ALL=true
+# TODO: Remove after release 1.12.0
+export IMA="$SKALE_MANAGER_ADDRESS"
+export MARIONETTE="$SKALE_MANAGER_ADDRESS"
+export PAYMASTER="$SKALE_MANAGER_ADDRESS"
+# End of TODO
+npx hardhat run migrations/upgrade.ts --network localhost
 
-npx kill-port 8545
+npx ganache instances stop $GANACHE_SESSION

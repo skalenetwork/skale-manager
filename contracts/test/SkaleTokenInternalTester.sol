@@ -21,6 +21,7 @@
 
 pragma solidity 0.8.17;
 
+import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import { SkaleToken } from "../SkaleToken.sol";
 import { ISkaleTokenInterfaceTester } from "./interfaces/ISkaleTokenInterfaceTester.sol";
 
@@ -31,6 +32,30 @@ contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
     SkaleToken(contractManagerAddress, defOps)
     // solhint-disable-next-line no-empty-blocks
     { }
+
+    function callTokensReceived(
+        address implementer,
+        address operator,
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData
+    )
+    external
+    override
+    {
+        if (implementer != address(0)) {
+            IERC777Recipient(implementer).tokensReceived({
+                operator: operator,
+                from: from,
+                to: to,
+                amount: amount,
+                userData: userData,
+                operatorData: operatorData
+            });
+        }
+    }
 
     function getMsgData() external view override returns (bytes memory msgData) {
         return _msgData();

@@ -9,6 +9,7 @@ cache/
 tmp.sol
 data/*.json
 scTopics
+contracts/hardhat-dependency-compiler
 
 ### Node ###
 # Logs

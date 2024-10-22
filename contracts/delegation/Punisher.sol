@@ -21,24 +21,29 @@
 
 pragma solidity 0.8.17;
 
-import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
-import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
-import { IValidatorService } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import { IDelegationController } from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
+import {IPunisher} from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import {ILocker} from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
+import {
+    IValidatorService
+} from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
+import {
+    IDelegationController
+} from "@skalenetwork/skale-manager-interfaces/delegation/IDelegationController.sol";
 
-import { Permissions } from "../Permissions.sol";
+import {Permissions} from "../Permissions.sol";
 
 /**
  * @title Punisher
  * @dev This contract handles all slashing and forgiving operations.
  */
 contract Punisher is Permissions, ILocker, IPunisher {
-
     //        holder => tokens
-    mapping (address => uint256) private _locked;
+    mapping(address => uint256) private _locked;
     bytes32 public constant FORGIVER_ROLE = keccak256("FORGIVER_ROLE");
 
-    function initialize(address contractManagerAddress) public override initializer {
+    function initialize(
+        address contractManagerAddress
+    ) public override initializer {
         Permissions.initialize(contractManagerAddress);
     }
 
@@ -52,12 +57,21 @@ contract Punisher is Permissions, ILocker, IPunisher {
      *
      * - Validator must exist.
      */
-    function slash(uint256 validatorId, uint256 amount) external override allow("SkaleDKG") {
-        IValidatorService validatorService = IValidatorService(contractManager.getContract("ValidatorService"));
+    function slash(
+        uint256 validatorId,
+        uint256 amount
+    ) external override allow("SkaleDKG") {
+        IValidatorService validatorService = IValidatorService(
+            contractManager.getContract("ValidatorService")
+        );
         IDelegationController delegationController = IDelegationController(
-            contractManager.getContract("DelegationController"));
+            contractManager.getContract("DelegationController")
+        );
 
-        require(validatorService.validatorExists(validatorId), "Validator does not exist");
+        require(
+            validatorService.validatorExists(validatorId),
+            "Validator does not exist"
+        );
 
         delegationController.confiscate(validatorId, amount);
 
@@ -74,11 +88,18 @@ contract Punisher is Permissions, ILocker, IPunisher {
      * - All slashes must have been processed.
      */
     function forgive(address holder, uint256 amount) external override {
-        require(hasRole(FORGIVER_ROLE, msg.sender), "FORGIVER_ROLE is required");
+        require(
+            hasRole(FORGIVER_ROLE, msg.sender),
+            "FORGIVER_ROLE is required"
+        );
         IDelegationController delegationController = IDelegationController(
-            contractManager.getContract("DelegationController"));
+            contractManager.getContract("DelegationController")
+        );
 
-        require(!delegationController.hasUnprocessedSlashes(holder), "Not all slashes were calculated");
+        require(
+            !delegationController.hasUnprocessedSlashes(holder),
+            "Not all slashes were calculated"
+        );
 
         if (amount > _locked[holder]) {
             delete _locked[holder];
@@ -92,14 +113,18 @@ contract Punisher is Permissions, ILocker, IPunisher {
     /**
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
-    function getAndUpdateLockedAmount(address wallet) external override returns (uint256 amount) {
+    function getAndUpdateLockedAmount(
+        address wallet
+    ) external override returns (uint256 amount) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
     /**
      * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
-    function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint256 amount) {
+    function getAndUpdateForbiddenForDelegationAmount(
+        address wallet
+    ) external override returns (uint256 amount) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
@@ -107,7 +132,10 @@ contract Punisher is Permissions, ILocker, IPunisher {
      * @dev Allows DelegationController contract to execute slashing of
      * delegations.
      */
-    function handleSlash(address holder, uint256 amount) external override allow("DelegationController") {
+    function handleSlash(
+        address holder,
+        uint256 amount
+    ) external override allow("DelegationController") {
         _locked[holder] = _locked[holder] + amount;
     }
 
@@ -116,12 +144,14 @@ contract Punisher is Permissions, ILocker, IPunisher {
     /**
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
-    function _getAndUpdateLockedAmount(address wallet) private returns (uint256 amount) {
+    function _getAndUpdateLockedAmount(
+        address wallet
+    ) private returns (uint256 amount) {
         IDelegationController delegationController = IDelegationController(
-            contractManager.getContract("DelegationController"));
+            contractManager.getContract("DelegationController")
+        );
 
         delegationController.processAllSlashes(wallet);
         return _locked[wallet];
     }
-
 }

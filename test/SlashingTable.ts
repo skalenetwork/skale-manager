@@ -1,12 +1,12 @@
-import { ContractManager, SlashingTable } from "../typechain-types";
-import { deployContractManager } from "./tools/deploy/contractManager";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
+import {ContractManager, SlashingTable} from "../typechain-types";
+import {deployContractManager} from "./tools/deploy/contractManager";
+import {deploySkaleManager} from "./tools/deploy/skaleManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
-import { deploySlashingTable } from "./tools/deploy/slashingTable";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { fastBeforeEach } from "./tools/mocha";
+import {deploySlashingTable} from "./tools/deploy/slashingTable";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);

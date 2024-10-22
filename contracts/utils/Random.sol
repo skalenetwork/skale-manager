@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SegmentTree.sol - SKALE Manager
+    Random.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
     @author Dmytro Stebaiev
@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
 import { IRandom } from "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
 
@@ -37,7 +37,13 @@ library Random {
         return IRandom.RandomGenerator({seed: seed});
     }
 
-    function createFromEntropy(bytes memory entropy) internal pure returns (IRandom.RandomGenerator memory generator) {
+    function createFromEntropy(
+        bytes memory entropy
+    )
+        internal
+        pure
+        returns (IRandom.RandomGenerator memory generator)
+    {
         return create(uint(keccak256(entropy)));
     }
 
@@ -45,16 +51,23 @@ library Random {
      * @dev Generates random value
      */
     function random(IRandom.RandomGenerator memory self) internal pure returns (uint256 value) {
-        self.seed = uint(sha256(abi.encodePacked(self.seed)));
+        self.seed = uint256(sha256(abi.encodePacked(self.seed)));
         return self.seed;
     }
 
     /**
      * @dev Generates random value in range [0, max)
      */
-    function random(IRandom.RandomGenerator memory self, uint256 max) internal pure returns (uint256 value) {
+    function random(
+        IRandom.RandomGenerator memory self,
+        uint256 max
+    )
+        internal
+        pure
+        returns (uint256 value)
+    {
         assert(max > 0);
-        uint256 maxRand = type(uint).max - type(uint).max % max;
+        uint256 maxRand = type(uint256).max - type(uint256).max % max;
         if (type(uint).max - maxRand == max - 1) {
             return random(self) % max;
         } else {

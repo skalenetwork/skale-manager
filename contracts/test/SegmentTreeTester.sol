@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import { IRandom, Random, SegmentTree } from "../utils/SegmentTree.sol";
 import { ISegmentTreeTester } from "./interfaces/ISegmentTreeTester.sol";
@@ -58,7 +58,14 @@ contract SegmentTreeTester is ISegmentTreeTester {
         _tree.removeFromPlace(place, elem);
     }
 
-    function moveFromPlaceToPlace(uint256 fromPlace, uint256 toPlace, uint256 elem) external override {
+    function moveFromPlaceToPlace(
+        uint256 fromPlace,
+        uint256 toPlace,
+        uint256 elem
+    )
+        external
+        override
+    {
         _tree.moveFromPlaceToPlace(fromPlace, toPlace, elem);
     }
 
@@ -68,7 +75,7 @@ contract SegmentTreeTester is ISegmentTreeTester {
 
     function getRandomElem(uint256 place) external view override returns (uint256 element) {
         IRandom.RandomGenerator memory randomGenerator = Random.createFromEntropy(
-            abi.encodePacked(uint(blockhash(block.number - 1)), place)
+            abi.encodePacked(uint256(blockhash(block.number - 1)), place)
         );
         return _tree.getRandomNonZeroElementFromPlaceToLast(place, randomGenerator);
     }
