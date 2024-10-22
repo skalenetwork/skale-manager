@@ -48,7 +48,7 @@
     "@skalenetwork/ima-interfaces": "2.0.0-develop.67",
     "@skalenetwork/marionette-interfaces": "^0.0.0-main.6",
     "@skalenetwork/paymaster-interfaces": "^1.0.0-main.10",
-    "@skalenetwork/skale-manager-interfaces": "3.2.0-develop.1",
+    "@skalenetwork/skale-manager-interfaces": "3.2.0",
     "@skalenetwork/upgrade-tools": "3.0.0-develop.21",
     "@typechain/hardhat": "^9.1.0",
     "dotenv": "^16.3.1",
@@ -90,5 +90,6 @@
     "ts-node": "10.9.1",
     "typechain": "^8.3.2",
     "typescript": "5.2.2"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
