@@ -1748,10 +1748,10 @@
     axios "^1.4.0"
     semver "^7.6.0"
 
-"@skalenetwork/skale-manager-interfaces@3.2.0-develop.1":
-  version "3.2.0-develop.1"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-develop.1.tgz#ec4ad8f2b4d12a5ff8d03763674a214be61c773d"
-  integrity sha512-ACugcMzRFa7nbHcJ8mZE/J60M8GW9gJKsqmQYEYoElzZBMTCstEeWy1ff6Vj7kcv+xESHPPhTzJ34ieMCL3pFg==
+"@skalenetwork/skale-manager-interfaces@3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0.tgz#41f654c469c8b2e067f4f89784824c19b1fee7b4"
+  integrity sha512-nf74ZAI4T2MZfPNkmFa1hUv9PrFuMBa120lL3C4BS0m1CzimPY+sRjjy8VQFpno0yzXcWncpRjJpY2I83YcEsA==
 
 "@skalenetwork/skale-manager-interfaces@^3.2.0-develop.0":
   version "3.2.0-paymaster.2"
