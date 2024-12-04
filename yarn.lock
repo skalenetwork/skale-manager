@@ -1703,19 +1703,12 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@skalenetwork/ima-interfaces@2.0.0-develop.67":
-  version "2.0.0-develop.67"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/ima-interfaces/-/ima-interfaces-2.0.0-develop.67.tgz#49b01c33cf04bc86c98a0425c742a0d993b9901f"
-  integrity sha512-PxzeXmIWuusESISG1lkeZVFXFpAL4szS673uFZPmFhcGXKrTf8ItG4n1eVFzUx4/egJkztRMk5Q9TJ9Unnv5vg==
+"@skalenetwork/ima-interfaces@2.0.0", "@skalenetwork/ima-interfaces@^2.0.0-paymaster.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/ima-interfaces/-/ima-interfaces-2.0.0.tgz#93cb73a5200f7d9753a44c1be3e15156e7ceaf9c"
+  integrity sha512-Kqm45GHQl56H4pqdWHIcTUfFrE60LAUKI3j2CecebN0T9rKa0DDokvE42VDa3PfK2z6XIJxh7SkF+i6NsLbpjA==
   dependencies:
-    "@skalenetwork/skale-manager-interfaces" "^3.2.0-develop.0"
-
-"@skalenetwork/ima-interfaces@^2.0.0-paymaster.0":
-  version "2.0.0-paymaster.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/ima-interfaces/-/ima-interfaces-2.0.0-paymaster.0.tgz#77663aec147ba430dc292aaf5b446eff21ed5fd4"
-  integrity sha512-B9PMcWcd+KkF0fudoQEAuTB2FohtOL/0l+GNlt4HvNvz/dOpsbVkCySrCQ/dCljV0/FSj45eJBgkTNCXyxYrbg==
-  dependencies:
-    "@skalenetwork/skale-manager-interfaces" "^3.2.0-paymaster.0"
+    "@skalenetwork/skale-manager-interfaces" "^0.1.2"
 
 "@skalenetwork/marionette-interfaces@^0.0.0-main.6":
   version "0.0.0-main.6"
@@ -1753,15 +1746,10 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0.tgz#41f654c469c8b2e067f4f89784824c19b1fee7b4"
   integrity sha512-nf74ZAI4T2MZfPNkmFa1hUv9PrFuMBa120lL3C4BS0m1CzimPY+sRjjy8VQFpno0yzXcWncpRjJpY2I83YcEsA==
 
-"@skalenetwork/skale-manager-interfaces@^3.2.0-develop.0":
-  version "3.2.0-paymaster.2"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-paymaster.2.tgz#6b114041b623a030331e0a7853a2eab136fc2daf"
-  integrity sha512-tmqWNkafjJxIZNVp2EmysvXor5F4G+f5A4qTMWqCZ7yMrCAvGzTETpMiHGjJJCUwSIaaqd62DjDjQi69r+BUkg==
-
-"@skalenetwork/skale-manager-interfaces@^3.2.0-paymaster.0":
-  version "3.2.0-paymaster.0"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-paymaster.0.tgz#4fee7d3a6dfd1dc8c446f6d28a2252fce426b537"
-  integrity sha512-AC0g3dMAtHORQnxm9QoZIgpNqTNwe/ahK9kPyTQFV/Ht3/sIoWkx0vXUiAwsDzK56HAVFXfc+LqfmEnKiefDqg==
+"@skalenetwork/skale-manager-interfaces@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-0.1.2.tgz#88e543c8cc298cd0cc9559892d746d2d74786da8"
+  integrity sha512-gapSQJahwWMlTB/xp/kMzB6k+9+Skx/N0fvEloiW4CUrkGkSa8+fj16YmUXX45p1hOc45W+JydiJPNgZtx32Dg==
 
 "@skalenetwork/upgrade-tools@3.0.0-develop.21":
   version "3.0.0-develop.21"
