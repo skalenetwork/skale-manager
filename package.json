@@ -44,7 +44,7 @@
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.6",
-    "@openzeppelin/hardhat-upgrades": "^3.2.0",
+    "@openzeppelin/hardhat-upgrades": "^3.7.0",
     "@skalenetwork/ima-interfaces": "2.0.0-develop.67",
     "@skalenetwork/marionette-interfaces": "^0.0.0-main.6",
     "@skalenetwork/paymaster-interfaces": "^1.0.1",
