@@ -1763,10 +1763,10 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-paymaster.0.tgz#4fee7d3a6dfd1dc8c446f6d28a2252fce426b537"
   integrity sha512-AC0g3dMAtHORQnxm9QoZIgpNqTNwe/ahK9kPyTQFV/Ht3/sIoWkx0vXUiAwsDzK56HAVFXfc+LqfmEnKiefDqg==
 
-"@skalenetwork/upgrade-tools@3.0.0-test-ima-agent.3":
-  version "3.0.0-test-ima-agent.3"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-test-ima-agent.3.tgz#d63f2aff351ec9a6ff85eee230a0101f34f95244"
-  integrity sha512-T7Fqtgtnlh5kUujv9CCpoLLdkTvpDYJNvfLGHJ+Fmlak1Ho1zm9Bug4HXve6a6F9EDl1gdRd7uXSZ2B804skVA==
+"@skalenetwork/upgrade-tools@3.0.0-test-ima-agent.4":
+  version "3.0.0-test-ima-agent.4"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-test-ima-agent.4.tgz#4a82d1d87a6e6027b5f380f31041c644d9026f8e"
+  integrity sha512-zzZ8KNcHkkoX3VRPS4d6pqa2Z+1M/heuUOZJWaQxIx0+zm5uaIHVYedVYOO5e6zJg1F+/GX+7qpSzV+sANuaPw==
   dependencies:
     "@safe-global/api-kit" "^2.4.1"
     "@safe-global/protocol-kit" "^4.0.1"
