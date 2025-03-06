@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import {contracts} from "./deploy";
 import {ethers} from "hardhat";
-import {Upgrader, Submitter} from "@skalenetwork/upgrade-tools";
+import {Upgrader, Submitter, getVersion} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
 import {SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
@@ -100,7 +100,7 @@ async function main() {
         contractsToUpgrade = await prepareContractsList(skaleManager);
     }
     const upgrader = new SkaleManagerUpgrader(
-        "1.12.0",
+        await getVersion(),
         skaleManager,
         contractsToUpgrade
     );
