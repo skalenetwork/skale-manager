@@ -181,7 +181,7 @@ async function main() {
     console.log("Verify contracts");
     for (const artifact of contractArtifacts) {
         if (artifact.contract === skaleTokenName) {
-            await verify(skaleTokenName, await skaleToken.getAddress(), [contractManager.address, []]);
+            await verify(skaleTokenName, await skaleToken.getAddress(), [await contractManager.getAddress(), []]);
         } else {
             await verifyProxy(artifact.contract, artifact.address, [])
         }
