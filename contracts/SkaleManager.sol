@@ -40,14 +40,12 @@ import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchain
 import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
 import { Permissions } from "./Permissions.sol";
-import { IGreeter } from "./interfaces/IGreeter.sol";
-
 /**
  * @title SkaleManager
  * @dev Contract contains functions for node registration and exit, bounty
  * management, and monitoring verdicts.
  */
-contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions, IGreeter {
+contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
 
     IERC1820Registry private _erc1820;
 
@@ -55,12 +53,15 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions, IGreeter 
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 constant public GREET_SETTER_ROLE = keccak256("GREET_SETTER_ROLE");
     uint256 constant public HEADER_COSTS = 5310;
     uint256 constant public CALL_PRICE = 21000;
 
     string public version;
 
     bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
+
+    string public hello;
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
@@ -200,8 +201,9 @@ contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions, IGreeter 
         version = newVersion;
     }
 
-    function hello() external pure override returns (string memory greeting) {
-        greeting = "Hello Eduardo!";
+    function setGreeting(string calldata newGreeting) external override {
+        require(hasRole(GREET_SETTER_ROLE, msg.sender));
+        hello = newGreeting;
     }
 
     function _payBounty(uint256 bounty, uint256 validatorId) private {

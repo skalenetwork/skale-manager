@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import {contracts} from "./deploy";
 import {ethers} from "hardhat";
-import {Upgrader, Submitter, getVersion} from "@skalenetwork/upgrade-tools";
+import {Upgrader, Submitter} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
 import {SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
@@ -69,6 +69,7 @@ async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
     return storageLayout.find(storageItem => storageItem.label === "_timeShift") !== undefined;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function prepareContractsList(instance: Instance) {
     // If skale-manager is deployed not in production mode
     // the smart contract TimeHelpers is replaced
@@ -94,17 +95,20 @@ async function prepareContractsList(instance: Instance) {
 
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
-    let contractsToUpgrade: string[] = [
+    const contractsToUpgrade: string[] = [
+        "SkaleManager"
     ];
-    if (process.env.UPGRADE_ALL) {
-        contractsToUpgrade = await prepareContractsList(skaleManager);
-    }
+    //if (process.env.UPGRADE_ALL) {
+    //    contractsToUpgrade = await prepareContractsList(skaleManager);
+    //}
     const upgrader = new SkaleManagerUpgrader(
-        await getVersion(),
+        "1.12.0-develop.19",
         skaleManager,
         contractsToUpgrade
     );
-    await upgrader.upgrade();
+    //console.log(await upgrader.getOwner());
+    console.log(await upgrader.getDeployedVersion())
+    //await upgrader.upgrade();
 }
 
 if (require.main === module) {
