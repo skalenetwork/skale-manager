@@ -98,16 +98,14 @@ async function main() {
     const contractsToUpgrade: string[] = [
         "SkaleManager"
     ];
-    //if (process.env.UPGRADE_ALL) {
-    //    contractsToUpgrade = await prepareContractsList(skaleManager);
-    //}
+
+    // cspell:ignore eduv
     const upgrader = new SkaleManagerUpgrader(
         "1.12.0-eduv.0",
         skaleManager,
         contractsToUpgrade
     );
-    //console.log(await upgrader.getOwner());
-    //console.log(await upgrader.getDeployedVersion())
+
     await upgrader.upgrade();
 }
 

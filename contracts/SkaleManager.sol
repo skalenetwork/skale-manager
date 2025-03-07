@@ -40,12 +40,13 @@ import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchain
 import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
 import { Permissions } from "./Permissions.sol";
+import { IGreeter } from "./interfaces/IGreeter.sol";
 /**
  * @title SkaleManager
  * @dev Contract contains functions for node registration and exit, bounty
  * management, and monitoring verdicts.
  */
-contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
+contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions, IGreeter {
 
     IERC1820Registry private _erc1820;
 

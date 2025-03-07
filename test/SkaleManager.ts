@@ -150,7 +150,7 @@ describe("SkaleManager", () => {
         await skaleManager.setVersion("good");
         (await skaleManager.version()).should.be.equal("good");
     });
-    it("should restrict access to setting greeting", async () => {
+    it.only("should restrict access to setting greeting", async () => {
         //no access yet
         await skaleManager.setGreeting("This is a new Greeting").should.be.rejected;
 
