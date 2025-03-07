@@ -150,6 +150,14 @@ describe("SkaleManager", () => {
         await skaleManager.setVersion("good");
         (await skaleManager.version()).should.be.equal("good");
     });
+    it("should restrict access to setting greeting", async () => {
+        //no access yet
+        await skaleManager.setGreeting("This is a new Greeting").should.be.rejected;
+
+        await skaleManager.grantRole(await skaleManager.GREET_SETTER(), owner.address);
+        await skaleManager.setGreeting("This is a new Greeting");
+        await skaleManager.hello().should.be.eventually.equal("This is a new Greeting");
+    })
 
     describe("when validator has delegated SKALE tokens", () => {
         const validatorId = 1;
