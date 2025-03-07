@@ -101,7 +101,7 @@ async function main() {
 
     // cspell:ignore eduv
     const upgrader = new SkaleManagerUpgrader(
-        "1.12.0-eduv.0",
+        "1.12.0",
         skaleManager,
         contractsToUpgrade
     );
