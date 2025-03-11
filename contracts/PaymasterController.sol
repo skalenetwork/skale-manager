@@ -48,19 +48,29 @@ contract PaymasterController is IPaymasterController, Permissions {
     using AddressUpgradeable for address;
     using AddressUpgradeable for address payable;
 
+
     bytes32 public constant PAYMASTER_SETTER_ROLE = keccak256("PAYMASTER_SETTER_ROLE");
 
     IMessageProxyForMainnet public ima;
     IMarionette public marionette;
     IPaymaster public paymaster;
     bytes32 public paymasterChainHash;
+    bool private _bypassFreshDeployment;
+
+    event BypassDisabled();
 
     error MessageProxyForMainnetAddressIsNotSet();
     error MarionetteAddressIsNotSet();
     error PaymasterAddressIsNotSet();
     error EuropaChainHashIsNotSet();
+    error BypassIsEnabled();
+
 
     modifier whenConfigured() {
+        if (_bypassFreshDeployment) {
+            _;
+            return;
+        }
         if (address(ima) == address(0)) {
             revert MessageProxyForMainnetAddressIsNotSet();
         }
@@ -86,6 +96,7 @@ contract PaymasterController is IPaymasterController, Permissions {
     function initialize(address contractManagerAddress) public override initializer {
         Permissions.initialize(contractManagerAddress);
         _setupRole(PAYMASTER_SETTER_ROLE, msg.sender);
+        _bypassFreshDeployment = true;
     }
 
     function setImaAddress(address imaAddress) external override onlyPaymasterSetter {
@@ -115,9 +126,12 @@ contract PaymasterController is IPaymasterController, Permissions {
 
     function addSchain(string calldata name) external override allow("Schains") {
         _callPaymaster(abi.encodeWithSelector(
-            paymaster.addSchain.selector,
-            name
-        ));
+                paymaster.addSchain.selector,
+                name
+            ));
+        if (_bypassFreshDeployment) {
+            _disableBypass();
+        }
     }
 
     function removeSchain(bytes32 schainHash) external override allow("Schains") {
@@ -173,6 +187,9 @@ contract PaymasterController is IPaymasterController, Permissions {
     }
 
     function _callPaymaster(bytes memory data) private whenConfigured {
+        if (_bypassFreshDeployment) {
+            return;
+        }
         ima.postOutgoingMessage(
             paymasterChainHash,
             address(marionette),
@@ -182,5 +199,9 @@ contract PaymasterController is IPaymasterController, Permissions {
                 data
             )
         );
+    }
+    function _disableBypass() private {
+        _bypassFreshDeployment = false;
+        emit BypassDisabled();
     }
 }
