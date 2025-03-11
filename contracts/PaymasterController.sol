@@ -48,6 +48,7 @@ contract PaymasterController is IPaymasterController, Permissions {
     using AddressUpgradeable for address;
     using AddressUpgradeable for address payable;
 
+
     bytes32 public constant PAYMASTER_SETTER_ROLE = keccak256("PAYMASTER_SETTER_ROLE");
 
     IMessageProxyForMainnet public ima;
@@ -60,7 +61,14 @@ contract PaymasterController is IPaymasterController, Permissions {
     error PaymasterAddressIsNotSet();
     error EuropaChainHashIsNotSet();
 
+
     modifier whenConfigured() {
+        if (_isFreshDeployment()) {
+            // Bypass for fresh deploy
+            _;
+            return;
+
+        }
         if (address(ima) == address(0)) {
             revert MessageProxyForMainnetAddressIsNotSet();
         }
@@ -75,6 +83,7 @@ contract PaymasterController is IPaymasterController, Permissions {
         }
         _;
     }
+
 
     modifier onlyPaymasterSetter() {
         if (!hasRole(PAYMASTER_SETTER_ROLE, msg.sender)) {
@@ -115,9 +124,9 @@ contract PaymasterController is IPaymasterController, Permissions {
 
     function addSchain(string calldata name) external override allow("Schains") {
         _callPaymaster(abi.encodeWithSelector(
-            paymaster.addSchain.selector,
-            name
-        ));
+                paymaster.addSchain.selector,
+                name
+            ));
     }
 
     function removeSchain(bytes32 schainHash) external override allow("Schains") {
@@ -173,6 +182,9 @@ contract PaymasterController is IPaymasterController, Permissions {
     }
 
     function _callPaymaster(bytes memory data) private whenConfigured {
+        if (_isFreshDeployment()){
+            return;
+        }
         ima.postOutgoingMessage(
             paymasterChainHash,
             address(marionette),
@@ -182,5 +194,13 @@ contract PaymasterController is IPaymasterController, Permissions {
                 data
             )
         );
+    }
+
+    function _isFreshDeployment() private view returns (bool){
+        return address(ima) == address(0) &&
+            address(marionette) == address(0) &&
+            address(paymaster) == address(0) &&
+            paymasterChainHash == 0;
+
     }
 }

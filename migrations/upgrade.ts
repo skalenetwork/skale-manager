@@ -33,7 +33,7 @@ class SkaleManagerUpgrader extends Upgrader {
                     contractNamesToUpgrade,
                     instance,
                     name: "skale-manager",
-                    version: targetVersion
+                    oldVersion: targetVersion
                 },
                 submitter
             );
