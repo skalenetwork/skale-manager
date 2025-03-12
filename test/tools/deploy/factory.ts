@@ -1,6 +1,6 @@
 import {ethers, upgrades} from "hardhat";
 import {ContractManager} from "../../../typechain-types";
-import {deployLibraries} from "@skalenetwork/upgrade-tools";
+import {deployLibrariesSequential} from "@skalenetwork/upgrade-tools";
 import {AddressLike, Contract} from "ethers";
 
 async function defaultDeploy<ContractType = Contract>(contractName: string,
@@ -70,7 +70,7 @@ function deployWithLibraryFunctionFactory<ContractType extends AddressLike = Con
         = () => Promise.resolve(undefined)
 ) {
     return async (contractManager: ContractManager) => {
-        const libraries = await deployLibraries(libraryNames);
+        const libraries = await deployLibrariesSequential(libraryNames);
         const contractFactory = await ethers.getContractFactory(contractName, {libraries: Object.fromEntries(libraries)});
         try {
             return contractFactory.attach(await contractManager.getContract(contractName)) as unknown as ContractType;
@@ -94,7 +94,7 @@ function deployWithLibraryWithConstructor<ContractType extends AddressLike = Con
         = () => Promise.resolve(undefined)
 ) {
     return async (contractManager: ContractManager) => {
-        const libraries = await deployLibraries(libraryNames);
+        const libraries = await deployLibrariesSequential(libraryNames);
         const contractFactory = await ethers.getContractFactory(contractName, {libraries: Object.fromEntries(libraries)});
         try {
             return contractFactory.attach(await contractManager.getContract(contractName)) as unknown as ContractType;

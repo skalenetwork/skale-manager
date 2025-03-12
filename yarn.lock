@@ -1845,10 +1845,10 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0-paymaster.0.tgz#4fee7d3a6dfd1dc8c446f6d28a2252fce426b537"
   integrity sha512-AC0g3dMAtHORQnxm9QoZIgpNqTNwe/ahK9kPyTQFV/Ht3/sIoWkx0vXUiAwsDzK56HAVFXfc+LqfmEnKiefDqg==
 
-"@skalenetwork/upgrade-tools@3.0.0-fix-race-conditions.1":
-  version "3.0.0-fix-race-conditions.1"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-fix-race-conditions.1.tgz#9b9202be4b5a9bb7911d98b6cba5fa15d6e01c98"
-  integrity sha512-BVI4y5uG2TB4mQo/0eZNnSMx2MOSTmYJRGj0h6E2fRaNlB4H36+dDsjHAnJ5uies53sND+zxMl1FJ4pT6Oo/1g==
+"@skalenetwork/upgrade-tools@3.0.0-fix-race-conditions.2":
+  version "3.0.0-fix-race-conditions.2"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-fix-race-conditions.2.tgz#e2f14bffc2a96f4b0a9a55a815e7486c84bf28fd"
+  integrity sha512-a5poGgQp7gBAwDDF88desH9HEYtKn3T0JHnsit5BetXjijLgxGeshdJ4SThR4gy3MVwXD2A91bnQNMo/pkFDMg==
   dependencies:
     "@safe-global/api-kit" "^2.4.1"
     "@safe-global/protocol-kit" "^5.0.1"
