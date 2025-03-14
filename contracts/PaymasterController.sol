@@ -63,22 +63,29 @@ contract PaymasterController is IPaymasterController, Permissions {
 
 
     modifier whenConfigured() {
-        if (_isFreshDeployment()) {
-            // Bypass for fresh deploy
-            _;
-            return;
+        bool imaAddress = address(ima) == address(0);
+        bool marionetteAddress = address(marionette) == address(0);
+        bool paymasterAddress = address(paymaster) == address(0);
+        bool chainHash = paymasterChainHash == 0;
 
+        if (
+            imaAddress &&
+            marionetteAddress &&
+            paymasterAddress &&
+            chainHash
+        ) {
+            return;
         }
-        if (address(ima) == address(0)) {
+        if (imaAddress) {
             revert MessageProxyForMainnetAddressIsNotSet();
         }
-        if (address(marionette) == address(0)) {
+        if (marionetteAddress) {
             revert MarionetteAddressIsNotSet();
         }
-        if (address(paymaster) == address(0)) {
+        if (paymasterAddress) {
             revert PaymasterAddressIsNotSet();
         }
-        if (paymasterChainHash == 0) {
+        if (chainHash) {
             revert EuropaChainHashIsNotSet();
         }
         _;
@@ -182,9 +189,6 @@ contract PaymasterController is IPaymasterController, Permissions {
     }
 
     function _callPaymaster(bytes memory data) private whenConfigured {
-        if (_isFreshDeployment()){
-            return;
-        }
         ima.postOutgoingMessage(
             paymasterChainHash,
             address(marionette),
@@ -196,11 +200,4 @@ contract PaymasterController is IPaymasterController, Permissions {
         );
     }
 
-    function _isFreshDeployment() private view returns (bool){
-        return address(ima) == address(0) &&
-            address(marionette) == address(0) &&
-            address(paymaster) == address(0) &&
-            paymasterChainHash == 0;
-
-    }
 }
