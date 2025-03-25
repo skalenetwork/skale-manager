@@ -62,36 +62,6 @@ contract PaymasterController is IPaymasterController, Permissions {
     error EuropaChainHashIsNotSet();
 
 
-    modifier whenConfigured() {
-        bool imaAddress = address(ima) == address(0);
-        bool marionetteAddress = address(marionette) == address(0);
-        bool paymasterAddress = address(paymaster) == address(0);
-        bool chainHash = paymasterChainHash == 0;
-
-        if (
-            imaAddress &&
-            marionetteAddress &&
-            paymasterAddress &&
-            chainHash
-        ) {
-            return;
-        }
-        if (imaAddress) {
-            revert MessageProxyForMainnetAddressIsNotSet();
-        }
-        if (marionetteAddress) {
-            revert MarionetteAddressIsNotSet();
-        }
-        if (paymasterAddress) {
-            revert PaymasterAddressIsNotSet();
-        }
-        if (chainHash) {
-            revert EuropaChainHashIsNotSet();
-        }
-        _;
-    }
-
-
     modifier onlyPaymasterSetter() {
         if (!hasRole(PAYMASTER_SETTER_ROLE, msg.sender)) {
             revert RoleRequired(PAYMASTER_SETTER_ROLE);
@@ -131,9 +101,9 @@ contract PaymasterController is IPaymasterController, Permissions {
 
     function addSchain(string calldata name) external override allow("Schains") {
         _callPaymaster(abi.encodeWithSelector(
-                paymaster.addSchain.selector,
-                name
-            ));
+            paymaster.addSchain.selector,
+            name
+        ));
     }
 
     function removeSchain(bytes32 schainHash) external override allow("Schains") {
@@ -188,16 +158,62 @@ contract PaymasterController is IPaymasterController, Permissions {
         ));
     }
 
-    function _callPaymaster(bytes memory data) private whenConfigured {
+
+    function _callPaymaster(bytes memory data) private {
+        address imaAddress = address(ima);
+        address marionetteAddress = address(marionette);
+        address paymasterAddress = address(paymaster);
+        bytes32 chainHash = paymasterChainHash;
+
+        if (_isFreshDeployment(imaAddress, marionetteAddress, paymasterAddress, chainHash)) {
+            // Bypass of fresh deployments
+            return;
+        }
+
+        _checkConfigs(imaAddress, marionetteAddress, paymasterAddress, chainHash);
+
         ima.postOutgoingMessage(
-            paymasterChainHash,
-            address(marionette),
+            chainHash,
+            marionetteAddress,
             Encoder.encodeFunctionCall(
-                address(paymaster),
+                paymasterAddress,
                 0,
                 data
             )
         );
     }
 
+    function _checkConfigs (
+        address imaAddress,
+        address marionetteAddress,
+        address paymasterAddress,
+        bytes32 chainHash
+    ) private pure {
+        if (imaAddress == address(0)) {
+            revert MessageProxyForMainnetAddressIsNotSet();
+        }
+        if (marionetteAddress == address(0)) {
+            revert MarionetteAddressIsNotSet();
+        }
+        if (paymasterAddress == address(0)) {
+            revert PaymasterAddressIsNotSet();
+        }
+        if (chainHash == 0) {
+            revert EuropaChainHashIsNotSet();
+        }
+    }
+
+    function _isFreshDeployment (
+        address imaAddress,
+        address marionetteAddress,
+        address paymasterAddress,
+        bytes32 chainHash
+    ) private pure returns (bool) {
+        return (
+            imaAddress == address(0) &&
+            marionetteAddress == address(0) &&
+            paymasterAddress == address(0) &&
+            chainHash == 0
+        );
+    }
 }
