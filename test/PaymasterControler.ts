@@ -7,7 +7,8 @@ import {ConstantsHolder,
          Schains,
          SkaleDKGTester,
          SkaleManager,
-         ValidatorService,} from "../typechain-types";
+         ValidatorService,
+         PaymasterController,} from "../typechain-types";
 import {Wallet} from "ethers";
 import {privateKeys} from "./tools/private-keys";
 import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
@@ -27,6 +28,8 @@ import {schainParametersType, SchainType} from "./tools/types";
 import {deployDelegationController} from "./tools/deploy/delegation/delegationController";
 import {deployPaymasterControllerNoInit, setupPaymasterController} from "./tools/deploy/paymasterController";
 import {deployFunctionFactory} from "./tools/deploy/factory";
+import {expect} from "chai";
+import {ZeroAddress} from "ethers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -51,7 +54,7 @@ describe("Schains", () => {
     let validatorService: ValidatorService;
     let skaleDKG: SkaleDKGTester;
     let skaleManager: SkaleManager;
-
+    let paymasterController: PaymasterController;
 
     fastBeforeEach(async () => {
         [owner, validator, richGuy1, richGuy2, richGuy3, richGuy4] = await ethers.getSigners();
@@ -69,7 +72,7 @@ describe("Schains", () => {
         contractManager = await deployContractManager();
 
         constantsHolder = await deployConstantsHolder(contractManager);
-        await deployPaymasterControllerNoInit(contractManager);
+        paymasterController = await deployPaymasterControllerNoInit(contractManager);
         const deployValidatorService = deployFunctionFactory("ValidatorService") as (contractManager: ContractManager) => Promise<ValidatorService>;
         validatorService = await deployValidatorService(contractManager);
         nodes = await deployNodes(contractManager);
@@ -110,7 +113,7 @@ describe("Schains", () => {
     });
 
     describe("should bypass checks for fresh deployments", () => {
-        it("should create Schains with and without parameters initialized", async () => {
+        it("should create Schains only with all or without any parameters initialized", async () => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
@@ -142,6 +145,76 @@ describe("Schains", () => {
                     }]
                 )
             );
+            await paymasterController.setMarionetteAddress(await contractManager.getAddress());
+
+            await expect(schains.addSchain(
+                owner.address,
+                deposit,
+                ethers.AbiCoder.defaultAbiCoder().encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d3",
+                        originator: ethers.ZeroAddress,
+                        options: []
+                    }]
+                )
+            )).to.be.revertedWithCustomError(paymasterController, "MessageProxyForMainnetAddressIsNotSet");
+            await paymasterController.setMarionetteAddress(ZeroAddress);
+            await paymasterController.setImaAddress(await contractManager.getAddress());
+
+            await expect(schains.addSchain(
+                owner.address,
+                deposit,
+                ethers.AbiCoder.defaultAbiCoder().encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d3",
+                        originator: ethers.ZeroAddress,
+                        options: []
+                    }]
+                )
+            )).to.be.revertedWithCustomError(paymasterController, "MarionetteAddressIsNotSet");
+
+            await paymasterController.setMarionetteAddress(await contractManager.getAddress());
+            await expect(schains.addSchain(
+                owner.address,
+                deposit,
+                ethers.AbiCoder.defaultAbiCoder().encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d3",
+                        originator: ethers.ZeroAddress,
+                        options: []
+                    }]
+                )
+            )).to.be.revertedWithCustomError(paymasterController, "PaymasterAddressIsNotSet");
+
+            await paymasterController.setPaymasterAddress(await contractManager.getAddress());
+            await expect(schains.addSchain(
+                owner.address,
+                deposit,
+                ethers.AbiCoder.defaultAbiCoder().encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: "d3",
+                        originator: ethers.ZeroAddress,
+                        options: []
+                    }]
+                )
+            )).to.be.revertedWithCustomError(paymasterController, "EuropaChainHashIsNotSet");
+
 
             await setupPaymasterController(contractManager);
             await schains.addSchain(
