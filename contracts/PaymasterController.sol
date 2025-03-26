@@ -48,7 +48,6 @@ contract PaymasterController is IPaymasterController, Permissions {
     using AddressUpgradeable for address;
     using AddressUpgradeable for address payable;
 
-
     bytes32 public constant PAYMASTER_SETTER_ROLE = keccak256("PAYMASTER_SETTER_ROLE");
 
     IMessageProxyForMainnet public ima;
@@ -157,7 +156,6 @@ contract PaymasterController is IPaymasterController, Permissions {
             nodesAmount
         ));
     }
-
 
     function _callPaymaster(bytes memory data) private {
         address imaAddress = address(ima);

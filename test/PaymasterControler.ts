@@ -34,7 +34,7 @@ import {ZeroAddress} from "ethers";
 chai.should();
 chai.use(chaiAsPromised);
 
-describe("Schains", () => {
+describe("Paymaster Controller", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
     let richGuy1: SignerWithAddress;

@@ -25,6 +25,3 @@ export const deployPaymasterController = deployFunctionFactory<PaymasterControll
 export const deployPaymasterControllerNoInit = deployFunctionFactory<PaymasterController>(
     "PaymasterController"
 );
-
-
-
