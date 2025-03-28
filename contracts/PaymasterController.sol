@@ -60,21 +60,6 @@ contract PaymasterController is IPaymasterController, Permissions {
     error PaymasterAddressIsNotSet();
     error EuropaChainHashIsNotSet();
 
-    modifier whenConfigured() {
-        if (address(ima) == address(0)) {
-            revert MessageProxyForMainnetAddressIsNotSet();
-        }
-        if (address(marionette) == address(0)) {
-            revert MarionetteAddressIsNotSet();
-        }
-        if (address(paymaster) == address(0)) {
-            revert PaymasterAddressIsNotSet();
-        }
-        if (paymasterChainHash == 0) {
-            revert EuropaChainHashIsNotSet();
-        }
-        _;
-    }
 
     modifier onlyPaymasterSetter() {
         if (!hasRole(PAYMASTER_SETTER_ROLE, msg.sender)) {
@@ -172,15 +157,61 @@ contract PaymasterController is IPaymasterController, Permissions {
         ));
     }
 
-    function _callPaymaster(bytes memory data) private whenConfigured {
+    function _callPaymaster(bytes memory data) private {
+        address imaAddress = address(ima);
+        address marionetteAddress = address(marionette);
+        address paymasterAddress = address(paymaster);
+        bytes32 chainHash = paymasterChainHash;
+
+        if (_isFreshDeployment(imaAddress, marionetteAddress, paymasterAddress, chainHash)) {
+            // Bypass of fresh deployments
+            return;
+        }
+
+        _checkConfigs(imaAddress, marionetteAddress, paymasterAddress, chainHash);
+
         ima.postOutgoingMessage(
-            paymasterChainHash,
-            address(marionette),
+            chainHash,
+            marionetteAddress,
             Encoder.encodeFunctionCall(
-                address(paymaster),
+                paymasterAddress,
                 0,
                 data
             )
+        );
+    }
+
+    function _checkConfigs (
+        address imaAddress,
+        address marionetteAddress,
+        address paymasterAddress,
+        bytes32 chainHash
+    ) private pure {
+        if (imaAddress == address(0)) {
+            revert MessageProxyForMainnetAddressIsNotSet();
+        }
+        if (marionetteAddress == address(0)) {
+            revert MarionetteAddressIsNotSet();
+        }
+        if (paymasterAddress == address(0)) {
+            revert PaymasterAddressIsNotSet();
+        }
+        if (chainHash == 0) {
+            revert EuropaChainHashIsNotSet();
+        }
+    }
+
+    function _isFreshDeployment (
+        address imaAddress,
+        address marionetteAddress,
+        address paymasterAddress,
+        bytes32 chainHash
+    ) private pure returns (bool) {
+        return (
+            imaAddress == address(0) &&
+            marionetteAddress == address(0) &&
+            paymasterAddress == address(0) &&
+            chainHash == 0
         );
     }
 }
