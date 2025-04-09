@@ -182,8 +182,11 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         });
     }
 
-    // we have to override _msgData() and _msgSender() functions
-    // because of collision in Context and ContextUpgradeable
+    function _contextSuffixLength() internal view override(Context, ContextUpgradeable) returns (uint256) {
+        return Context._contextSuffixLength();
+    }
+
+    // we have to override _msgData() and _msgSender() functions because of collision in Context and ContextUpgradeable
 
     function _msgData()
         internal
