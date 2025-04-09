@@ -40,17 +40,20 @@
     "cspell": "npx cspell \"**/*\""
   },
   "dependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.6",
-    "@openzeppelin/hardhat-upgrades": "^1.14.0",
-    "@skalenetwork/skale-manager-interfaces": "^3.0.0-develop.2",
-    "@skalenetwork/upgrade-tools": "^2.0.1",
-    "@typechain/hardhat": "^7.0.0",
+    "@openzeppelin/hardhat-upgrades": "^3.2.0",
+    "@skalenetwork/ima-interfaces": "2.0.0-develop.67",
+    "@skalenetwork/marionette-interfaces": "^0.0.0-main.6",
+    "@skalenetwork/paymaster-interfaces": "^1.0.0-main.10",
+    "@skalenetwork/skale-manager-interfaces": "3.2.0-develop.1",
+    "@skalenetwork/upgrade-tools": "3.0.0-update-deploy-lib.5",
+    "@typechain/hardhat": "^9.1.0",
     "dotenv": "^16.3.1",
     "ethereumjs-util": "^7.1.5",
-    "ethers": "^5.7.2",
-    "hardhat": "2.11.0 - 2.16.1"
+    "ethers": "^6.13.5",
+    "hardhat": "^2.22.8"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "<2.0.0",
@@ -84,5 +87,6 @@
     "ts-node": "10.9.1",
     "typechain": "^8.3.2",
     "typescript": "5.2.2"
-  }
+  },
+  "packageManager": "yarn@4.7.0+sha512.5a0afa1d4c1d844b3447ee3319633797bcd6385d9a44be07993ae52ff4facabccafb4af5dcd1c2f9a94ac113e5e9ff56f6130431905884414229e284e37bb7c9"
 }
