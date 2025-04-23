@@ -8,8 +8,15 @@ set -e
 # TODO: remove --miner.blockTime 1
 # when ganache processes pending queue correctly
 # to speed up testing process
+
+echo "Deploy on ganache node"
 GANACHE_SESSION=$(npx ganache --😈 --miner.blockGasLimit 8000000 --miner.blockTime 1)
-
 PRODUCTION=true npx hardhat run migrations/deploy.ts --network localhost
-
 npx ganache instances stop $GANACHE_SESSION
+
+echo "Deploy on hardhat node"
+npx hardhat node > /dev/null 2>&1 &
+HARDHAT_NODE_PID=$!
+sleep 5
+npx hardhat run migrations/deploy.ts --network hardhat
+kill $HARDHAT_NODE_PID
