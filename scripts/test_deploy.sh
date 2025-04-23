@@ -16,7 +16,5 @@ npx ganache instances stop $GANACHE_SESSION
 
 echo "Deploy on hardhat node"
 npx hardhat node > /dev/null 2>&1 &
-HARDHAT_NODE_PID=$!
-sleep 5
-npx hardhat run migrations/deploy.ts --network hardhat
-kill $HARDHAT_NODE_PID
+PRODUCTION=true npx hardhat run migrations/deploy.ts
+lsof -ti:8545 | xargs kill
