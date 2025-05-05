@@ -19,14 +19,12 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
 import {
     OwnableUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {
-    AddressUpgradeable
-} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { Address } from '@openzeppelin/contracts/utils/Address.sol';
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 import { StringUtils } from "./utils/StringUtils.sol";
@@ -39,7 +37,7 @@ import { InitializableWithGap } from "./thirdparty/openzeppelin/InitializableWit
  */
 contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractManager {
     using StringUtils for string;
-    using AddressUpgradeable for address;
+    using Address for address;
 
     string public constant BOUNTY = "Bounty";
     string public constant CONSTANTS_HOLDER = "ConstantsHolder";
@@ -54,7 +52,7 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
     mapping (bytes32 => address) public override contracts;
 
     function initialize() external override initializer {
-        OwnableUpgradeable.__Ownable_init();
+        OwnableUpgradeable.__Ownable_init(msg.sender);
     }
 
     /**
@@ -82,7 +80,7 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
         bytes32 contractId = keccak256(abi.encodePacked(contractsName));
         // check newContractsAddress is not equal the previous contract's address
         require(contracts[contractId] != newContractsAddress, "Contract is already added");
-        require(newContractsAddress.isContract(), "Given contract address does not contain code");
+        require(address(newContractsAddress).code.length > 0, "Given contract address does not contain code");
         // add newContractsAddress to mapping of actual contract addresses
         contracts[contractId] = newContractsAddress;
         emit ContractUpgraded(contractsName, newContractsAddress);

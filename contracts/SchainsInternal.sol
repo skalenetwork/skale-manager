@@ -19,10 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-import { EnumerableSetUpgradeable }
-from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
@@ -40,8 +39,8 @@ import { Permissions } from "./Permissions.sol";
 contract SchainsInternal is Permissions, IPruningSchainsInternal {
 
     using Random for IRandom.RandomGenerator;
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
+    using EnumerableSet for EnumerableSet.UintSet;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
@@ -80,11 +79,11 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
 
     mapping (bytes32 => uint256[]) private _schainToExceptionNodes;
 
-    EnumerableSetUpgradeable.UintSet private _keysOfSchainTypes;
+    EnumerableSet.UintSet private _keysOfSchainTypes;
 
     uint256 public currentGeneration;
 
-    mapping (bytes32 => EnumerableSetUpgradeable.AddressSet) private _nodeAddressInSchain;
+    mapping (bytes32 => EnumerableSet.AddressSet) private _nodeAddressInSchain;
 
     bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");

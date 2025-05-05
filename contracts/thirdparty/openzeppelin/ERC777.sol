@@ -5,13 +5,12 @@ pragma solidity ^0.8.0;
 // cSpell:words adoc
 
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
+import "@openzeppelin/contracts/interfaces/IERC777.sol";
+import "@openzeppelin/contracts/interfaces/IERC777Recipient.sol";
+import "@openzeppelin/contracts/interfaces/IERC777Sender.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/interfaces/IERC1820Registry.sol";
 
 /**
  * @dev Implementation of the {IERC777} interface.
@@ -29,7 +28,6 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
  * destroyed. This makes integration with ERC20 applications seamless.
  */
 contract ERC777 is Context, IERC777, IERC20 {
-    using SafeMath for uint256;
     using Address for address;
 
     IERC1820Registry constant internal _ERC1820_REGISTRY = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
@@ -290,7 +288,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         _callTokensToSend(spender, holder, recipient, amount, "", "");
 
         _move(spender, holder, recipient, amount, "", "");
-        _approve(holder, spender, _allowances[holder][spender].sub(amount, "ERC777: transfer amount exceeds allowance"));
+        _approve(holder, spender, _allowances[holder][spender] - amount);
 
         _callTokensReceived(spender, holder, recipient, amount, "", "", false);
 
@@ -329,8 +327,8 @@ contract ERC777 is Context, IERC777, IERC20 {
         _beforeTokenTransfer(operator, address(0), account, amount);
 
         // Update state variables
-        _totalSupply = _totalSupply.add(amount);
-        _balances[account] = _balances[account].add(amount);
+        _totalSupply = _totalSupply + amount;
+        _balances[account] = _balances[account] + amount;
 
         _callTokensReceived(operator, address(0), account, amount, userData, operatorData, true);
 
@@ -397,8 +395,8 @@ contract ERC777 is Context, IERC777, IERC20 {
         /* End of changed by SKALE */
 
         // Update state variables
-        _balances[from] = _balances[from].sub(amount, "ERC777: burn amount exceeds balance");
-        _totalSupply = _totalSupply.sub(amount);
+        _balances[from] = _balances[from] - amount;
+        _totalSupply = _totalSupply - amount;
 
         emit Burned(operator, from, amount, data, operatorData);
         emit Transfer(from, address(0), amount);
@@ -416,8 +414,8 @@ contract ERC777 is Context, IERC777, IERC20 {
     {
         _beforeTokenTransfer(operator, from, to, amount);
 
-        _balances[from] = _balances[from].sub(amount, "ERC777: transfer amount exceeds balance");
-        _balances[to] = _balances[to].add(amount);
+        _balances[from] = _balances[from] - amount;
+        _balances[to] = _balances[to] + amount;
 
         emit Sent(operator, from, to, amount, userData, operatorData);
         emit Transfer(from, to, amount);
@@ -489,7 +487,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         if (implementer != address(0)) {
             IERC777Recipient(implementer).tokensReceived(operator, from, to, amount, userData, operatorData);
         } else if (requireReceptionAck) {
-            require(!to.isContract(), "ERC777: token recipient contract has no implementer for ERC777TokensRecipient");
+            require(address(to).code.length == 0, "ERC777: token recipient contract has no implementer for ERC777TokensRecipient");
         }
     }
 

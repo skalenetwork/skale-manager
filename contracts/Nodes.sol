@@ -21,11 +21,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity ^0.8.26;
 
 import {
-    SafeCastUpgradeable
-} from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
+    SafeCast
+} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import {
@@ -67,7 +67,7 @@ import { ValidatorDoesNotExist, ValidatorIsNotAuthorized } from "./delegation/Va
 contract Nodes is Permissions, INodes {
 
     using Random for IRandom.RandomGenerator;
-    using SafeCastUpgradeable for uint;
+    using SafeCast for uint;
     using SegmentTree for SegmentTree.Tree;
 
     bytes32 constant public COMPLIANCE_ROLE = keccak256("COMPLIANCE_ROLE");

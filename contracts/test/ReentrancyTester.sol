@@ -19,13 +19,13 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
-import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import { IERC777Sender } from "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
+import { IERC1820Registry } from "@openzeppelin/contracts/interfaces/IERC1820Registry.sol";
+import { IERC777Recipient } from "@openzeppelin/contracts/interfaces/IERC777Recipient.sol";
+import { IERC777Sender } from "@openzeppelin/contracts/interfaces/IERC777Sender.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC777 } from "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import { IERC777 } from "@openzeppelin/contracts/interfaces/IERC777.sol";
 
 import { Permissions } from "../Permissions.sol";
 import { DelegationController } from "../delegation/DelegationController.sol";

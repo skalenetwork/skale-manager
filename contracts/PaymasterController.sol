@@ -19,11 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity ^0.8.26;
 
-import {
-    AddressUpgradeable
-} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { Address } from '@openzeppelin/contracts/utils/Address.sol';
 import { Encoder } from "@skalenetwork/marionette-interfaces/Encoder.sol";
 import {
     IMessageProxyForMainnet
@@ -45,8 +43,8 @@ import { Permissions } from "./Permissions.sol";
  *
  */
 contract PaymasterController is IPaymasterController, Permissions {
-    using AddressUpgradeable for address;
-    using AddressUpgradeable for address payable;
+    using Address for address;
+    using Address for address payable;
 
     bytes32 public constant PAYMASTER_SETTER_ROLE = keccak256("PAYMASTER_SETTER_ROLE");
 
@@ -74,7 +72,7 @@ contract PaymasterController is IPaymasterController, Permissions {
     }
 
     function setImaAddress(address imaAddress) external override onlyPaymasterSetter {
-        if (!imaAddress.isContract()) {
+        if (address(imaAddress).code.length == 0) {
             revert IsNotContract(imaAddress);
         }
         ima = IMessageProxyForMainnet(imaAddress);

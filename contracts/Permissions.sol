@@ -21,9 +21,7 @@
 
 pragma solidity ^0.8.17;
 
-import {
-    AddressUpgradeable
-} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { Address } from '@openzeppelin/contracts/utils/Address.sol';
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import { IPermissions } from "@skalenetwork/skale-manager-interfaces/IPermissions.sol";
 
@@ -37,7 +35,7 @@ import {
  * @dev Contract is connected module for Upgradeable approach, knows ContractManager
  */
 contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
-    using AddressUpgradeable for address;
+    using Address for address;
 
     IContractManager public contractManager;
 
@@ -145,7 +143,7 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
 
     function _setContractManager(address contractManagerAddress) private {
         require(contractManagerAddress != address(0), "ContractManager address is not set");
-        require(contractManagerAddress.isContract(), "Address is not contract");
+        require(address(contractManagerAddress).code.length > 0, "Address is not contract");
         contractManager = IContractManager(contractManagerAddress);
     }
 }

@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
 import {
     OwnableUpgradeable
@@ -41,7 +41,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
     );
 
     constructor() initializer {
-        OwnableUpgradeable.__Ownable_init();
+        OwnableUpgradeable.__Ownable_init(msg.sender);
         multiSend(""); // this is needed to remove slither warning
     }
 
@@ -57,7 +57,7 @@ contract SafeMock is OwnableUpgradeable, ISafeMock {
     }
 
     function destroy() external override onlyOwner {
-        selfdestruct(payable(msg.sender));
+        payable(msg.sender).transfer(address(this).balance);
     }
 
     /// @dev Sends multiple transactions and reverts all if one fails.

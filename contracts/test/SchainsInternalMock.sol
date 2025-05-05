@@ -19,17 +19,17 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-import { EnumerableSetUpgradeable, SchainsInternal } from "../SchainsInternal.sol";
+import { EnumerableSet, SchainsInternal } from "../SchainsInternal.sol";
 import { ISchainsInternalMock } from "./interfaces/ISchainsInternalMock.sol";
 
 
 contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
 
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
-    mapping (bytes32 => EnumerableSetUpgradeable.AddressSet) private _nodeAddressInSchainTest;
+    mapping (bytes32 => EnumerableSet.AddressSet) private _nodeAddressInSchainTest;
 
     function removePlaceOfSchainOnNode(bytes32 schainHash, uint256 nodeIndex) external override {
         delete placeOfSchainOnNode[schainHash][nodeIndex];

@@ -19,13 +19,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity ^0.8.26;
 
-import {
-    AddressUpgradeable
-} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import { EnumerableSetUpgradeable }
-from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { Address } from '@openzeppelin/contracts/utils/Address.sol';
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import { ISchains } from "@skalenetwork/skale-manager-interfaces/ISchains.sol";
 import { ISkaleVerifier } from "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
@@ -47,8 +45,8 @@ import { Permissions } from "./Permissions.sol";
  * deletion, and rotation.
  */
 contract Schains is Permissions, ISchains {
-    using AddressUpgradeable for address;
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.Bytes32Set;
+    using Address for address;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
     struct SchainParameters {
         uint256 lifetime;
@@ -60,7 +58,7 @@ contract Schains is Permissions, ISchains {
     }
 
     //    schainHash => Set of options hashes
-    mapping (bytes32 => EnumerableSetUpgradeable.Bytes32Set) private _optionsIndex;
+    mapping (bytes32 => EnumerableSet.Bytes32Set) private _optionsIndex;
     //    schainHash => optionHash => schain option
     mapping (bytes32 => mapping (bytes32 => SchainOption)) private _options;
 
@@ -574,10 +572,10 @@ contract Schains is Permissions, ISchains {
     }
 
     function _checkOriginator(address from, SchainParameters memory schainParameters) private view {
-        if (schainParameters.originator.isContract()) {
+        if (address(schainParameters.originator).code.length > 0) {
             revert OriginatorIsAContract(schainParameters.originator);
         }
-        if (from.isContract()) {
+        if (address(from).code.length > 0) {
             if (schainParameters.originator == address(0)) {
                 revert OriginatorIsNotProvided();
             }

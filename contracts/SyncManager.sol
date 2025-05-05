@@ -19,10 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-import { EnumerableSetUpgradeable }
-from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ISyncManager } from "@skalenetwork/skale-manager-interfaces/ISyncManager.sol";
 import { Permissions } from "./Permissions.sol";
 
@@ -32,10 +31,10 @@ import { Permissions } from "./Permissions.sol";
  * that keeps a list of allowed sync IP address ranges.
  */
 contract SyncManager is Permissions, ISyncManager {
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.Bytes32Set;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
     bytes32 constant public SYNC_MANAGER_ROLE = keccak256("SYNC_MANAGER_ROLE");
-    EnumerableSetUpgradeable.Bytes32Set private _ipRangeNames;
+    EnumerableSet.Bytes32Set private _ipRangeNames;
     mapping (bytes32 => IPRange) public ipRanges;
 
     modifier onlySyncManager() {

@@ -21,11 +21,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-import {
-    AddressUpgradeable
-} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { Address } from '@openzeppelin/contracts/utils/Address.sol';
 import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import {
@@ -44,7 +42,7 @@ import { Permissions } from "./Permissions.sol";
  * owners should hold funds for recharging nodes that provide security for the schain.
  */
 contract Wallets is Permissions, IWallets {
-    using AddressUpgradeable for address payable;
+    using Address for address payable;
 
     // mapping which store validator eth balance
     // validatorId => eth balance

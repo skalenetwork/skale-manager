@@ -19,10 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-import { EnumerableSetUpgradeable }
-from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
@@ -39,7 +38,7 @@ import { Permissions } from "./Permissions.sol";
  * @dev This contract handles all node rotation functionality.
  */
 contract NodeRotation is Permissions, INodeRotation {
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
+    using EnumerableSet for EnumerableSet.UintSet;
     using Random for IRandom.RandomGenerator;
 
 
@@ -58,7 +57,7 @@ contract NodeRotation is Permissions, INodeRotation {
         uint256 rotationCounter;
         //    schainHash =>        nodeIndex => nodeIndex
         mapping (uint256 => uint256) previousNodes;
-        EnumerableSetUpgradeable.UintSet newNodeIndexes;
+        EnumerableSet.UintSet newNodeIndexes;
         mapping (uint256 => uint256) indexInLeavingHistory;
     }
 

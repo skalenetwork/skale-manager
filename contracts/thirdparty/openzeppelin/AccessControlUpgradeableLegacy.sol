@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@skalenetwork/skale-manager-interfaces/thirdparty/openzeppelin/IAccessControlUpgradeableLegacy.sol";
 import "./InitializableWithGap.sol";
@@ -48,10 +48,10 @@ abstract contract AccessControlUpgradeableLegacy is InitializableWithGap, Contex
 
     }
 
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     struct RoleData {
-        EnumerableSetUpgradeable.AddressSet members;
+        EnumerableSet.AddressSet members;
         bytes32 adminRole;
     }
 

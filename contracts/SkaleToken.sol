@@ -19,10 +19,10 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import {
     ContextUpgradeable
 } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
@@ -48,8 +48,6 @@ import { Permissions } from "./Permissions.sol";
  * implementation.
  */
 contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, IMintableToken {
-    using SafeMath for uint;
-
     string public constant NAME = "SKALE";
 
     string public constant SYMBOL = "SKL";
@@ -87,7 +85,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         //onlyAuthorized
         returns (bool successful)
     {
-        require(amount <= CAP.sub(totalSupply()), "Amount is too big");
+        require(amount <= CAP - totalSupply(), "Amount is too big");
         _mint(
             account,
             amount,
@@ -138,7 +136,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         uint256 locked = getAndUpdateLockedAmount(from);
         if (locked > 0) {
             require(
-                balanceOf(from) >= locked.add(tokenId),
+                balanceOf(from) >= locked + tokenId,
                 "Token should be unlocked for transferring"
             );
         }
@@ -201,5 +199,9 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         returns (address sender)
     {
         return Context._msgSender();
+    }
+
+    function _contextSuffixLength() internal pure override(Context, ContextUpgradeable) returns (uint256) {
+        return 0;
     }
 }

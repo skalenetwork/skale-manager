@@ -21,11 +21,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity ^0.8.26;
 
 import {
-    ECDSAUpgradeable
-} from "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+    ECDSA
+} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {
     IValidatorService
 } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
@@ -38,6 +38,7 @@ import {
 
 import {AddressIsNotSet, RoleRequired} from "../CommonErrors.sol";
 import {Permissions} from "../Permissions.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 
 error ValidatorDoesNotExist(uint256 id);
@@ -81,7 +82,8 @@ error ValidatorCannotOverrideNodeAddress(
  * register nodes.
  */
 contract ValidatorService is Permissions, IValidatorService {
-    using ECDSAUpgradeable for bytes32;
+    using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
 
     mapping(uint256 => Validator) public validators;
     mapping(uint256 => bool) private _trustedValidators;

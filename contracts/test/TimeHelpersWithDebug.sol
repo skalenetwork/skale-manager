@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
 import {
     OwnableUpgradeable
@@ -39,7 +39,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable, ITimeHelpersWi
     TimeShift[] private _timeShift;
 
     function initialize() external override initializer {
-        OwnableUpgradeable.__Ownable_init();
+        OwnableUpgradeable.__Ownable_init(msg.sender);
     }
 
     function skipTime(uint256 sec) external override onlyOwner {
