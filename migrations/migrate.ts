@@ -3,10 +3,10 @@ import chalk from "chalk";
 import {FetchRequest, JsonRpcProvider, resolveAddress} from "ethers";
 import {Migrator} from "@skalenetwork/upgrade-tools/dist/src/migration/migrator"
 import * as dotenv from "dotenv"
-import {ethers, run} from "hardhat";
+import {ethers, run, upgrades} from "hardhat";
 import {Client} from "@skalenetwork/upgrade-tools/dist/src/migration/clients/clientStrategyFactory";
 import {getAbi, getVersion} from "@skalenetwork/upgrade-tools";
-import {SkaleToken} from "../typechain-types";
+import {SchainsInternalMigrator, SkaleToken} from "../typechain-types";
 import {promises as fs} from 'fs';
 dotenv.config();
 
@@ -58,6 +58,7 @@ async function main() {
         await run("erc1820");
     }
     // Change to desired Node
+    const owner = (await ethers.getSigners())[0];
     const fetch = new FetchRequest(process.env.ARCHIVE_NODE_ENDPOINT);
     fetch.timeout = 180000;
     const provider = new JsonRpcProvider(fetch);
@@ -76,7 +77,7 @@ async function main() {
             contractNamesToUpgrade: contracts
         },
         provider,
-        undefined, // max number tx per block
+        2, // max number tx per block
         Client.GETH
     );
 
@@ -114,7 +115,7 @@ async function main() {
     const latest = await provider.getBlockNumber();
     const balances = new Map<string, bigint>();
 
-    for (let start = 0; start <= latest; start += BATCH_SIZE + 1) {
+    for (let start = 1_500_000; start <= latest; start += BATCH_SIZE + 1) {
         const end = Math.min(start + BATCH_SIZE, latest);
         let attempts = 0;
 
@@ -184,6 +185,23 @@ async function main() {
         `data/skale-manager-${instance.version as string}-${(await ethers.provider.getNetwork()).name}-abi.json`,
         JSON.stringify(outputObject, null, 4)
     );
+    console.log("Migration success!! Verifying contracts..");
+
+    // Change address of Schains we own - Testnet only
+    if (process.env.OLD_SCHAINS_OWNER && process.env.NEW_SCHAINS_OWNER) {
+        const setterFactory = await ethers.getContractFactory("SchainsInternalMigrator");
+        const setter = await upgrades.upgradeProxy(migrator.getContractNewAddress("SchainsInternal")!, setterFactory);
+        await setter.waitForDeployment();
+        const tx = await (setter.connect(owner) as unknown as SchainsInternalMigrator).changeSchainsOwner(process.env.OLD_SCHAINS_OWNER, process.env.NEW_SCHAINS_OWNER);
+        await tx.wait();
+
+        const internalFactory = await ethers.getContractFactory("SchainsInternal");
+        const internal = await upgrades.upgradeProxy(migrator.getContractNewAddress("SchainsInternal")!, internalFactory);
+        await internal.waitForDeployment();
+    }
+
+    await migrator.verify();
+    console.log("Success!!");
 }
 
 if (require.main === module) {
