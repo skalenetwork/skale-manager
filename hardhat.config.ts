@@ -8,8 +8,8 @@ import '@typechain/hardhat'
 import "hardhat-dependency-compiler";
 import "solidity-coverage";
 import * as dotenv from "dotenv"
-import { parseEther, Wallet } from "ethers";
-import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
+import {parseEther, Wallet} from "ethers";
+import {HardhatNetworkAccountUserConfig} from "hardhat/types/config";
 dotenv.config();
 
 task("erc1820", "Deploy ERC1820 contract", async (_, {ethers}) => {
@@ -117,7 +117,7 @@ const config: HardhatUserConfig = {
         network: "hoodi",
         chainId: 560048,
         urls: {
-          apiURL: "https://api-hoodi.etherscan.io/api",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=560048",
           browserURL: "https://hoodi.etherscan.io"
         }
       }

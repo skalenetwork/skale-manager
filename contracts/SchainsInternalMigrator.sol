@@ -128,36 +128,16 @@ contract SchainsInternalMigrator is Permissions, IPruningSchainsInternal {
      * @dev Allows Schain contract to initialize an schain.
      */
     function initializeSchain(
-        string calldata name,
-        address from,
-        address originator,
-        uint256 lifetime,
-        uint256 deposit
+        string calldata,
+        address,
+        address,
+        uint256,
+        uint256
     )
         external
         override
         allow("Schains")
     {
-        bytes32 schainHash = keccak256(abi.encodePacked(name));
-
-        schains[schainHash] = Schain({
-            name: name,
-            owner: from,
-            indexInOwnerList: schainIndexes[from].length,
-            partOfNode: 0,
-            startDate: block.timestamp,
-            startBlock: block.number,
-            lifetime: lifetime,
-            deposit: deposit,
-            index: numberOfSchains,
-            generation: currentGeneration,
-            originator: originator
-        });
-        isSchainActive[schainHash] = true;
-        numberOfSchains++;
-        schainIndexes[from].push(schainHash);
-        schainsAtSystem.push(schainHash);
-        usedSchainNames[schainHash] = true;
     }
 
     function changeSchainsOwner(
@@ -167,6 +147,7 @@ contract SchainsInternalMigrator is Permissions, IPruningSchainsInternal {
         external
         //onlyOwner
     {
+
         uint256 nSchains = schainIndexes[oldOwner].length;
 
         bytes32[] memory hashes = schainIndexes[oldOwner];
@@ -177,7 +158,9 @@ contract SchainsInternalMigrator is Permissions, IPruningSchainsInternal {
             schains[hashes[i]].startDate=block.timestamp;
             schains[hashes[i]].startBlock=block.number;
         }
-        delete schainIndexes[oldOwner];
+        if (oldOwner != newOwner) {
+            delete schainIndexes[oldOwner];
+        }
     }
 
     /**
@@ -189,24 +172,15 @@ contract SchainsInternalMigrator is Permissions, IPruningSchainsInternal {
      * - Schain must exist
      */
     function createGroupForSchain(
-        bytes32 schainHash,
-        uint256 numberOfNodes,
-        uint8 partOfNode
+        bytes32,
+        uint256,
+        uint8
     )
         external
         override
         allow("Schains")
-        schainExists(schainHash)
         returns (uint256[] memory group)
     {
-        ConstantsHolder constantsHolder =
-            ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        schains[schainHash].partOfNode = partOfNode;
-        if (partOfNode > 0) {
-            sumOfSchainsResources = sumOfSchainsResources +
-                numberOfNodes * constantsHolder.TOTAL_SPACE_ON_NODE() / partOfNode;
-        }
-        return _generateGroup(schainHash, numberOfNodes);
     }
 
     /**

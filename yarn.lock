@@ -2143,10 +2143,10 @@
   resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-3.2.0.tgz#41f654c469c8b2e067f4f89784824c19b1fee7b4"
   integrity sha512-nf74ZAI4T2MZfPNkmFa1hUv9PrFuMBa120lL3C4BS0m1CzimPY+sRjjy8VQFpno0yzXcWncpRjJpY2I83YcEsA==
 
-"@skalenetwork/upgrade-tools@3.0.0-update-deploy-lib.10":
-  version "3.0.0-update-deploy-lib.10"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-update-deploy-lib.10.tgz#51c4cd64a2db07c33ab6b4407ab2a88a5309a8f7"
-  integrity sha512-bVRdOOb4GQIN5GpohsLyaw96kY3xVYS9MEvCUT9gtF4gkPFKmwOrCi55B/bnvIXsLfVsNV1CaY3E6S4Dgvf+8g==
+"@skalenetwork/upgrade-tools@3.0.0-update-deploy-lib.18":
+  version "3.0.0-update-deploy-lib.18"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/upgrade-tools/-/upgrade-tools-3.0.0-update-deploy-lib.18.tgz#b943a5000d0b68eefd587457d7df01374c074d5e"
+  integrity sha512-qgDqHLHsXL4oMD/ETo6uZNGDrPH2KbUcmmrnZZMUZDjYCeAMsrPkxvmPiyjpkbd+6GhiIrbPyOkWwcdBwz6kdA==
   dependencies:
     "@safe-global/api-kit" "^2.4.1"
     "@safe-global/protocol-kit" "^5.0.1"
