@@ -1,15 +1,16 @@
-FROM node:18
+FROM node:22-slim
 
-RUN mkdir /usr/src/manager
 WORKDIR /usr/src/manager
 
-RUN apt-get update && apt-get install build-essential
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y git build-essential python3 ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY package.json ./
-COPY hardhat.config.ts ./
-COPY yarn.lock ./
-RUN yarn install
+COPY package.json yarn.lock hardhat.config.ts tsconfig.json ./
+RUN yarn install --frozen-lockfile
 
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 COPY . .
+
+RUN npx hardhat compile
