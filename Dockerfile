@@ -13,4 +13,4 @@ ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 COPY . .
 
-RUN npx hardhat compile
+RUN yarn compile
