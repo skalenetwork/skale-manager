@@ -3,10 +3,10 @@ name: Build and test
 on:
   push:
     branches-ignore:
-      - 'docs-*'
+      - "docs-*"
   pull_request:
     branches-ignore:
-      - 'docs-*'
+      - "docs-*"
 
 env:
   PYTHON_VERSION: 3.9
@@ -17,55 +17,55 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [18.x, 20.x, 22.x]
 
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install NODE JS
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
+      - name: Install NODE JS
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        cache: 'pip'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
 
-    - name: Install project
-      run: yarn install
+      - name: Install project
+        run: yarn install
 
-    - name: Install slither
-      run: pip3 install -r scripts/requirements.txt
+      - name: Install slither
+        run: pip3 install -r scripts/requirements.txt
 
-    - name: Show slither version
-      run: slither --version
+      - name: Show slither version
+        run: slither --version
 
-    - name: lint
-      run: yarn fullCheck
+      - name: lint
+        run: yarn fullCheck
 
-    - name: Test deployment
-      run: ./scripts/test_deploy.sh
+      - name: Test deployment
+        run: ./scripts/test_deploy.sh
 
-    - name: Test upgrade
-      env:
-        NODE_VERSION: ${{ matrix.node-version }}
-      run: ./scripts/test_upgrade.sh
+      - name: Test upgrade
+        env:
+          NODE_VERSION: ${{ matrix.node-version }}
+        run: ./scripts/test_upgrade.sh
 
-    - name: Test ABI generation
-      run: npx hardhat run scripts/generateAbi.ts
+      - name: Test ABI generation
+        run: npx hardhat run scripts/generateAbi.ts
 
-    - name: Run tests
-      env:
-        NODE_OPTIONS: --max-old-space-size=12288
-      run: npx hardhat coverage --solcoverjs .solcover.js
+      - name: Run tests
+        env:
+          NODE_OPTIONS: --max-old-space-size=12288
+        run: npx hardhat coverage --solcoverjs .solcover.js
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
