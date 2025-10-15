@@ -45,8 +45,6 @@ jobs:
 
     - name: Set up Foundry
       uses: foundry-rs/foundry-toolchain@v1
-      with:
-        version: 'latest'
 
     - name: Show slither version
       run: slither --version
