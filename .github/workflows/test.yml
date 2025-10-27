@@ -51,6 +51,9 @@ jobs:
       - name: Test ABI generation
         run: yarn hardhat run scripts/generateAbi.ts
 
+      - name: Test types-package generation
+        run: yarn buildTypes
+
   deployments-and-tests:
     runs-on: ubuntu-latest
     needs: build-and-static-analysis

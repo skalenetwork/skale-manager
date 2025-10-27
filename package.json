@@ -38,7 +38,10 @@
     "test": "yarn tsc && yarn hardhat test",
     "tsc": "tsc --noEmit",
     "eslint": "npx eslint .",
-    "cspell": "npx cspell \"**/*\""
+    "cspell": "npx cspell \"**/*\"",
+    "buildTypes": "yarn generateTypes && yarn buildTypesPackage",
+    "buildTypesPackage": "yarn ts-node scripts/buildTypesPackage.ts",
+    "generateTypes": "yarn ts-node scripts/generateTypes.ts"
   },
   "packageManager": "yarn@4.12.0",
   "dependencies": {
@@ -64,6 +67,7 @@
     "@nomicfoundation/hardhat-verify": "^2.0.14",
     "@openzeppelin/upgrades-core": "^1.38.0",
     "@skalenetwork/skale-contracts-ethers-v6": "^2.0.0-develop.6",
+    "@typechain/ethers-v5": "^11.1.2",
     "@typechain/ethers-v6": "^0.5.1",
     "@types/chai": "^4.3.20",
     "@types/chai-almost": "^1.0.3",
