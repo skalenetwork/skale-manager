@@ -107,3 +107,41 @@ jobs:
           default_author: github_actions
           message: "Add ABI for version ${{ env.VERSION }}"
           add: "*-abi.json"
+
+  types:
+    runs-on: ubuntu-latest
+
+    needs:
+      build
+
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install project
+        run: yarn install
+
+      - name: Generate TypeChain types
+        run: yarn generateTypes
+
+      - name: Build types package
+        run: yarn buildTypesPackage
+
+      - name: Publish types package
+        working-directory: types-package
+        run: |
+          BRANCH=${GITHUB_REF##*/}
+          TAG=""
+          if [[ "$BRANCH" != "stable" ]]; then
+            TAG="--tag $BRANCH"
+          fi
+          npm publish --access public $TAG

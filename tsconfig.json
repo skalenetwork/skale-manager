@@ -4,8 +4,13 @@
     "module": "commonjs",
     "strict": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "outDir": "dist"
   },
   "include": ["./scripts", "./test", "./migrations/", "./gas", "./long-test"],
-  "files": ["./hardhat.config.ts"]
+  "files": ["./hardhat.config.ts"],
+  "exclude": [
+    "typechain-output",
+    "types-package"
+  ]
 }
