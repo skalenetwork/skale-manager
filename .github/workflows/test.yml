@@ -60,6 +60,9 @@ jobs:
       - name: Test ABI generation
         run: npx hardhat run scripts/generateAbi.ts
 
+      - name: Test types-package generation
+        run: yarn buildTypes
+
       - name: Run tests
         env:
           NODE_OPTIONS: --max-old-space-size=12288
