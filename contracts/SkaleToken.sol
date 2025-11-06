@@ -59,6 +59,16 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     // the maximum amount of tokens that can ever be created
     uint256 public constant CAP = 7 * 1e9 * (10 ** DECIMALS);
 
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
+    modifier onlyMinter() {
+        require(
+            hasRole(MINTER_ROLE, msg.sender),
+            "Caller does not have MINTER_ROLE"
+        );
+        _;
+    }
+
     constructor(address contractsAddress, address[] memory defOps)
     ERC777("SKALE", "SKL", defOps)
     {
@@ -83,8 +93,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     )
         external
         override
-        allow("SkaleManager")
-        //onlyAuthorized
+        onlyMinter
         returns (bool successful)
     {
         require(amount <= CAP.sub(totalSupply()), "Amount is too big");
