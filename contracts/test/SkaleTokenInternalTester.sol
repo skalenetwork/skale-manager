@@ -28,8 +28,8 @@ import { ISkaleTokenInterfaceTester } from "./interfaces/ISkaleTokenInterfaceTes
 
 contract SkaleTokenInternalTester is SkaleToken, ISkaleTokenInterfaceTester {
 
-    constructor(address contractManagerAddress, address[] memory defOps)
-    SkaleToken(contractManagerAddress, defOps)
+    constructor(address contractManagerAddress, address owner, address[] memory defOps)
+    SkaleToken(contractManagerAddress, owner, defOps)
     // solhint-disable-next-line no-empty-blocks
     { }
 

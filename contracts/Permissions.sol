@@ -143,7 +143,7 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
         }
     }
 
-    function _setContractManager(address contractManagerAddress) private {
+    function _setContractManager(address contractManagerAddress) internal {
         require(contractManagerAddress != address(0), "ContractManager address is not set");
         require(contractManagerAddress.isContract(), "Address is not contract");
         contractManager = IContractManager(contractManagerAddress);

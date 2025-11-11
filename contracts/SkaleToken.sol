@@ -40,6 +40,10 @@ import { ILocker } from "@skalenetwork/skale-manager-interfaces/delegation/ILock
 import { Context, ERC777 } from "./thirdparty/openzeppelin/ERC777.sol";
 
 import { Permissions } from "./Permissions.sol";
+import {
+    AccessControlUpgradeableLegacy
+} from "./thirdparty/openzeppelin/AccessControlUpgradeableLegacy.sol";
+
 
 
 /**
@@ -69,10 +73,12 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         _;
     }
 
-    constructor(address contractsAddress, address[] memory defOps)
+    constructor(address contractsAddress, address owner, address[] memory defOps)
     ERC777("SKALE", "SKL", defOps)
     {
-        Permissions.initialize(contractsAddress);
+        AccessControlUpgradeableLegacy.__AccessControl_init();
+        _setupRole(DEFAULT_ADMIN_ROLE, owner);
+        _setContractManager(contractsAddress);
     }
 
     /**
