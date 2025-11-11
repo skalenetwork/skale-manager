@@ -55,10 +55,6 @@ async function main() {
     console.log(`Registering ${skaleTokenName} in ContractManager`);
     await (await contractManager.setContractsAddress(skaleTokenName, skaleToken)).wait();
 
-    console.log("Granting MINTER_ROLE to SkaleManager");
-    const skaleManagerAddress = await contractManager.getContract("SkaleManager");
-    await (await skaleToken.grantRole(await skaleToken.MINTER_ROLE(), skaleManagerAddress)).wait();
-
     const deployerAddress = await deployer.getAddress();
     await transferOwnership(skaleToken, owner, deployerAddress);
 
