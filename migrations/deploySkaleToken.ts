@@ -33,7 +33,7 @@ async function main() {
     const skaleTokenName = "SkaleToken";
     console.log(`Deploying ${skaleTokenName}`);
     const skaleTokenFactory = await ethers.getContractFactory(skaleTokenName);
-    const skaleToken = await skaleTokenFactory.deploy(contractManagerAddress, []);
+    const skaleToken = await skaleTokenFactory.deploy(contractManagerAddress, owner, []);
     await skaleToken.waitForDeployment();
     const skaleTokenAddress = await skaleToken.getAddress();
     console.log(`${skaleTokenName} deployed at:`, skaleTokenAddress);
