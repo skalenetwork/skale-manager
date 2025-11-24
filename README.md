@@ -2,8 +2,9 @@
 
 # SKALE Manager
 
-<img src="https://github.com/user-attachments/assets/e25b683d-874b-478a-9964-b589076d749c" width="600" height="300" style="border:1px solid #ccc" alt="SKALE Network Token Graphic" />
 <div align="center">
+<img src="https://github.com/user-attachments/assets/dbbbf4eb-e959-4bf1-b4d9-579ea2cc8321" width="600" height="300" style="border:1px solid #ccc" alt="SKALE Network" />
+
 
 [![License](https://img.shields.io/github/license/skalenetwork/skale-manager.svg)](LICENSE)
 
@@ -11,9 +12,10 @@
 [![Build Status](https://github.com/skalenetwork/skale-manager/actions/workflows/test.yml/badge.svg)](https://github.com/skalenetwork/skale-manager/actions)
 [![codecov](https://codecov.io/gh/skalenetwork/skale-manager/branch/develop/graph/badge.svg)](https://codecov.io/gh/skalenetwork/skale-manager)
 
+<p> A smart contract system that orchestrates and operates the SKALE Network. </p> 
+
 </div>
 
-A smart contract system that orchestrates and operates the SKALE Network.
 
 ## Introduction
 
