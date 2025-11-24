@@ -3,7 +3,8 @@
 # SKALE Manager
 <div align="center">
 
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/skalenetwork/skale-manager.svg)](LICENSE)
+
 [![Discord](https://img.shields.io/discord/534485763354787851.svg)](https://discord.gg/skale)
 [![Build Status](https://github.com/skalenetwork/skale-manager/actions/workflows/test.yml/badge.svg)](https://github.com/skalenetwork/skale-manager/actions)
 [![codecov](https://codecov.io/gh/skalenetwork/skale-manager/branch/develop/graph/badge.svg)](https://codecov.io/gh/skalenetwork/skale-manager)
@@ -37,7 +38,22 @@ Most contracts inherit from `Permissions.sol`, which extends `Ownable.sol`. We h
 - **owner**: The owner of skale-manager, full access to everything including upgradeability.
 - `only(string contractName)`: `Permissions.sol` queries the address from `ContractManager` with name **contractName**. If it matches msg.sender, access is granted. `ContractManager.sol` is thus the central source of truth for deployed contract addresses.
 
+### Repository structure
 
+- `contracts/` – Core Solidity contracts for SKALE Manager and its modules (nodes, Schains, delegation, DKG, wallets, utils, interfaces, tests, and third‑party code).
+   - `contracts/delegation/` – Delegation, validator, and staking–related contracts.
+   - `contracts/dkg/` – Distributed Key Generation (DKG) and BLS‑related contracts.
+   - `contracts/test/` – Helper contracts used only in tests.
+   - `contracts/utils/` – Common utility libraries and helpers.
+   - `contracts/thirdparty/` – Third‑party Solidity dependencies.
+- `migrations/` – Hardhat deployment and upgrade scripts for SKALE Manager contracts.
+- `test/` – TypeScript test suite covering core contracts and flows.
+- `artifacts/` – Auto‑generated Hardhat build artifacts (ABIs, bytecode, build info).
+- `scripts/` – Helper scripts for development and CI pipelines (docs generation, bytecode size, ABI generation, test deploy/upgrade, etc.).
+- `docs/` – Contract documentation templates, helpers, and specs.
+- `gas/` – Gas usage experiments and benchmarks.
+- `long-test/` – Longer‑running or scenario tests.
+- `dictionaries/` – Custom SKALE dictionary repository used by cspell for Solidity and SKALE‑specific terms.
 
 ## Installation & Setup
 
@@ -99,7 +115,7 @@ ETHERSCAN={etherscan API key to verify contracts} # optional
 npx hardhat run migrations/deploy.ts --network custom
 ```
 
-### Production deployment on Ethereum mainnet
+### Official Deployments - Ethereum Mainnet
 
 * Blockscout: [skale-manager](https://eth.blockscout.com/address/0x8b32F750966273cb6D804C02360F3E2743E2B511)
 * Etherscan: [skale-manager](https://etherscan.io/address/0x8b32F750966273cb6D804C02360F3E2743E2B511)
@@ -122,12 +138,23 @@ npx hardhat run migrations/deploy.ts --network custom
 | Solidified | [Report](https://github.com/solidified-platform/audits/blob/master/Audit%20Report%20-%20SKALE%20Self-Recharging%20Wallets.pdf) | Self-Recharging Wallets |
 
 
+### Bug Bounty Programs
+
+Please see [HackerOne](https://hackerone.com/skale_network?type=team) for SKALE’s active bug bounty program OR submit a bug directly via [encrypted email](https://skale.space/security).
+
 ## Main Branches
 
 * **develop:** Most up-to-date branch with latest features and technological updates. It may be ahead of production instances. This is where contributions should be pushed to.
 
 * **stable:** Latest stable version of the project.
 
+## Resources
+
+
+- **SKALE Whitepaper** – Whitepaper of SKALE Network: https://skale.space/whitepaper
+- **SKALE Developer Documentation** – Full technical docs for building on SKALE (dApps, chains, validators, tooling): https://docs.skale.space/
+- **SKALE Main Website** – High-level overview of the network, architecture, and ecosystem: https://www.skale.space/
+- **SKALE Ecosystem Portal** – Explorer, bridges, staking dashboard, live chains & projects: https://portal.skale.space/
 
 ## License
 
