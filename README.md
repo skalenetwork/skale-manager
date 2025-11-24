@@ -1,6 +1,8 @@
 <!-- cspell:ignore Blockscout Consen -->
 
 # SKALE Manager
+
+<img src="https://github.com/user-attachments/assets/e25b683d-874b-478a-9964-b589076d749c" width="600" height="300" style="border:1px solid #ccc" alt="SKALE Network Token Graphic" />
 <div align="center">
 
 [![License](https://img.shields.io/github/license/skalenetwork/skale-manager.svg)](LICENSE)
@@ -19,7 +21,7 @@ SKALE Manager is a comprehensive suite of upgradeable smart contracts that serve
 
 The system implements a sophisticated mechanism where validators register nodes, accept delegated SKL tokens, and earn bounties based on their effective stake and network participation. Through distributed key generation (DKG) and BLS signature verification, SKALE Manager ensures cryptographic security across all chains without relying on centralized intermediaries.
 
-The high-level architecture and main contracts are described in detail in [ARCHITECTURE.md](./ARCHITECTURE.md).
+The high-level architecture of the repository is described in [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 **Core Capabilities:**
 
