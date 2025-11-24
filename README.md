@@ -19,6 +19,8 @@ SKALE Manager is a comprehensive suite of upgradeable smart contracts that serve
 
 The system implements a sophisticated mechanism where validators register nodes, accept delegated SKL tokens, and earn bounties based on their effective stake and network participation. Through distributed key generation (DKG) and BLS signature verification, SKALE Manager ensures cryptographic security across all chains without relying on centralized intermediaries.
 
+The high-level architecture and main contracts are described in detail in [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 **Core Capabilities:**
 
 - **Validator & Node Management:** Registration, authorization, stake verification, and lifecycle management for network participants
@@ -26,34 +28,6 @@ The system implements a sophisticated mechanism where validators register nodes,
 - **Staking & Delegation:** Comprehensive delegation framework supporting validator fees, minimum delegation amounts, slashing, and reward distribution
 - **Distributed Key Generation:** DKG protocol implementation with complaint handling and BLS public key storage for Consensus protocol of SKALE network
 - **Economic Incentives:** Automated bounty calculation and SKL token minting (immutable limited supply) based on network participation and delegated stake
-
-## Architecture & Design
-
-A set of smart contracts following the Transparent Upgradeable Proxy pattern.
-
-The central contract of the system is `SkaleManager.sol`.
-From there, you can find the address of `ContractManager.sol` which holds a mapping from contract name to address.
-
-Most contracts inherit from `Permissions.sol`, which extends `Ownable.sol`. We have thus two main categories:
-- **owner**: The owner of skale-manager, full access to everything including upgradeability.
-- `only(string contractName)`: `Permissions.sol` queries the address from `ContractManager` with name **contractName**. If it matches msg.sender, access is granted. `ContractManager.sol` is thus the central source of truth for deployed contract addresses.
-
-### Repository structure
-
-- `contracts/` – Core Solidity contracts for SKALE Manager and its modules (nodes, Schains, delegation, DKG, wallets, utils, interfaces, tests, and third‑party code).
-   - `contracts/delegation/` – Delegation, validator, and staking–related contracts.
-   - `contracts/dkg/` – Distributed Key Generation (DKG) and BLS‑related contracts.
-   - `contracts/test/` – Helper contracts used only in tests.
-   - `contracts/utils/` – Common utility libraries and helpers.
-   - `contracts/thirdparty/` – Third‑party Solidity dependencies.
-- `migrations/` – Hardhat deployment and upgrade scripts for SKALE Manager contracts.
-- `test/` – TypeScript test suite covering core contracts and flows.
-- `artifacts/` – Auto‑generated Hardhat build artifacts (ABIs, bytecode, build info).
-- `scripts/` – Helper scripts for development and CI pipelines (docs generation, bytecode size, ABI generation, test deploy/upgrade, etc.).
-- `docs/` – Contract documentation templates, helpers, and specs.
-- `gas/` – Gas usage experiments and benchmarks.
-- `long-test/` – Longer‑running or scenario tests.
-- `dictionaries/` – Custom SKALE dictionary repository used by cspell for Solidity and SKALE‑specific terms.
 
 ## Installation & Setup
 
