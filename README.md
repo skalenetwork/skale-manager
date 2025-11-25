@@ -3,23 +3,20 @@
 # SKALE Manager
 
 <div align="center">
-<img src="https://github.com/user-attachments/assets/dbbbf4eb-e959-4bf1-b4d9-579ea2cc8321" width="600" height="300" style="border:1px solid #ccc" alt="SKALE Network" />
-
 
 [![License](https://img.shields.io/github/license/skalenetwork/skale-manager.svg)](LICENSE)
-
 [![Discord](https://img.shields.io/discord/534485763354787851.svg)](https://discord.gg/skale)
 [![Build Status](https://github.com/skalenetwork/skale-manager/actions/workflows/test.yml/badge.svg)](https://github.com/skalenetwork/skale-manager/actions)
 [![codecov](https://codecov.io/gh/skalenetwork/skale-manager/branch/develop/graph/badge.svg)](https://codecov.io/gh/skalenetwork/skale-manager)
 
-<p> A smart contract system that orchestrates and operates the SKALE Network. </p> 
+<p> A smart contract system that orchestrates and operates the SKALE Network. </p>
 
 </div>
 
 
 ## Introduction
 
-SKALE Manager is a comprehensive suite of upgradeable smart contracts that serves as the backbone infrastructure for the SKALE Network. It orchestrates a decentralized network of validators and nodes that provision elastic, high-performance SKALE Chains (also known as "Schains") — application-specific blockchains with zero gas fees and sub-second finality.
+SKALE Manager is a comprehensive suite of upgradeable smart contracts that serves as the backbone infrastructure for the SKALE Network. It orchestrates a decentralized network of validators and nodes that provision elastic, high-performance SKALE Chains — application-specific blockchains with zero gas fees and sub-second finality.
 
 The system implements a sophisticated mechanism where validators register nodes, accept delegated SKL tokens, and earn bounties based on their effective stake and network participation. Through distributed key generation (DKG) and BLS signature verification, SKALE Manager ensures cryptographic security across all chains without relying on centralized intermediaries.
 
