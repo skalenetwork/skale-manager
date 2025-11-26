@@ -27,14 +27,14 @@ const configs: TypeChainConfig[] = [
     }
 ];
 
-async function cleanDirectory(dir: string) {
+export async function cleanDirectory(dir: string) {
     if (fs.existsSync(dir)) {
         console.log(`Cleaning directory: ${dir}`);
         fs.rmSync(dir, {recursive: true, force: true});
     }
 }
 
-async function ensureDirectory(dir: string) {
+export async function ensureDirectory(dir: string) {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, {recursive: true});
     }

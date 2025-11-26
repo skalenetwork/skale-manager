@@ -127,21 +127,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
 
-      - name: Install project
-        run: yarn install
-
-      - name: Generate TypeChain types
-        run: yarn generateTypes
-
-      - name: Build types package
-        run: yarn buildTypesPackage
-
-      - name: Publish types package
-        working-directory: types-package
+      - name: Build and publish types package
         run: |
-          BRANCH=${GITHUB_REF##*/}
-          TAG=""
-          if [[ "$BRANCH" != "stable" ]]; then
-            TAG="--tag $BRANCH"
-          fi
-          npm publish --access public $TAG
+          export BRANCH=${GITHUB_REF##*/}
+          echo "Branch $BRANCH"
+          bash ./scripts/build_and_publish_types.sh
