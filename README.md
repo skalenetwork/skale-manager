@@ -20,7 +20,7 @@ SKALE Manager is a comprehensive suite of upgradeable smart contracts that serve
 
 The system implements a sophisticated mechanism where validators register nodes, accept delegated SKL tokens, and earn bounties based on their effective stake and network participation. Through distributed key generation (DKG) and BLS signature verification, SKALE Manager ensures cryptographic security across all chains without relying on centralized intermediaries.
 
-The high-level architecture of the repository is described in [ARCHITECTURE.md](./ARCHITECTURE.md).
+The high-level architecture of the repository is described in [ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
 **Core Capabilities:**
 
