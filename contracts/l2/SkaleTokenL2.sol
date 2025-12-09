@@ -68,4 +68,14 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
     function burn(address account, uint256 amount) external override onlyMinter {
         _burn(account, amount, "", "");
     }
+
+    /**
+     * @dev ERC-165 interface detection.
+     * Called by Optimism bridge to verify contract capabilities.
+     */
+     function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
+        bytes4 interfaceERC165 = type(IERC165).interfaceId;
+        bytes4 interfaceLegacyMintableERC20 = type(ILegacyMintableERC20).interfaceId;
+        return interfaceId == interfaceERC165 || interfaceId == interfaceLegacyMintableERC20;
+    }
 }
