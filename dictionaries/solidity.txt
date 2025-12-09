@@ -8,3 +8,4 @@ staticcall
 struct
 abicoder
 reinitializer
+IERC
