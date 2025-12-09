@@ -39,17 +39,12 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
      */
     address public l1Token;
 
-    constructor(address contractManager,address[] memory defOps) SkaleToken(contractManager, defOps) {}
-
-    /**
-     * @dev ERC-165 interface detection.
-     * Called by Optimism bridge to verify contract capabilities.
-     */
-     function supportsInterface(bytes4 _interfaceId) external pure returns (bool) {
-        bytes4 interfaceERC165 = type(IERC165).interfaceId;
-        bytes4 interfaceLegacyMintableERC20 = type(ILegacyMintableERC20).interfaceId;
-        return _interfaceId == interfaceERC165 || _interfaceId == interfaceLegacyMintableERC20;
-    }
+    constructor(
+        address contractManager,
+        address[] memory defOps
+    )
+        SkaleToken(contractManager, defOps)
+    {}
 
     /**
      * @dev Sets L1 token address for bridge mapping.
