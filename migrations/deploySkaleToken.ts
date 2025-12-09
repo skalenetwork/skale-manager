@@ -64,7 +64,7 @@ async function main() {
     await transferOwnership(skaleToken, owner, deployerAddress);
 
     console.log("Verify contract");
-    await verify(skaleTokenName, skaleTokenAddress);
+    await verify(skaleTokenName, skaleTokenAddress, [contractManagerAddress, []]);
 
     console.log("Done");
 }
