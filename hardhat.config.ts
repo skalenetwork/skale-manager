@@ -70,6 +70,13 @@ function getGasPrice(gasPrice: string | undefined) {
   }
 }
 
+function normalizeUrl(url: string | undefined): string {
+  if (!url) {
+    return "";
+  }
+  return url.replace(/\/+$/, "");
+}
+
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   solidity: {
