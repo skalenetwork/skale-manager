@@ -57,6 +57,9 @@ jobs:
           NODE_VERSION: ${{ matrix.node-version }}
         run: ./scripts/test_upgrade.sh
 
+      - name: Test transfer ownership
+        run: TEST_MODE=true ./scripts/test_transfer_ownership.sh
+
       - name: Test ABI generation
         run: npx hardhat run scripts/generateAbi.ts
 
