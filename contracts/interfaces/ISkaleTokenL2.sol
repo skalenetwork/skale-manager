@@ -23,7 +23,7 @@ pragma solidity 0.8.17;
 
 
 interface ISkaleTokenL2 {
-    function setL1Token(address _l1Token) external;
+    function setL1Token(address l1TokenAddress) external;
     function burn(address account, uint256 amount) external;
     function mint(address account, uint256 amount) external returns (bool);
     function supportsInterface(bytes4 interfaceId) external pure returns (bool);
