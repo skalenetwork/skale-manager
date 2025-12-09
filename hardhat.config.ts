@@ -117,7 +117,19 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN
+    apiKey: {
+      custom: "custom"
+    },
+    customChains: [
+      {
+        network: "custom",
+        chainId: Number(process.env.CHAIN_ID),
+        urls: {
+          apiURL: `${normalizeUrl(process.env.EXPLORER_URL)}/api`,
+          browserURL: normalizeUrl(process.env.EXPLORER_URL)
+        }
+      }
+    ]
   },
   typechain: {
     externalArtifacts: [
