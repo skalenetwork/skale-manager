@@ -24,12 +24,13 @@ pragma solidity 0.8.17;
 import { SkaleToken } from "../SkaleToken.sol";
 import { ILegacyMintableERC20, IERC165 } from "../thirdparty/optimism/ILegacyMintableERC20.sol";
 import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { ISkaleTokenL2 } from "../interfaces/ISkaleTokenL2.sol";
 
 /**
  * @title SkaleTokenL2
  * @dev Contract defines the SKALE token for L1-L2 interaction.
  */
-contract SkaleTokenL2 is SkaleToken {
+contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
     using SafeMath for uint;
 
     /**
