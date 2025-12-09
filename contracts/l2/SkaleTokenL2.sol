@@ -40,10 +40,10 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
     address public l1Token;
 
     constructor(
-        address contractManager,
+        address _contractManager,
         address[] memory defOps
     )
-        SkaleToken(contractManager, defOps)
+        SkaleToken(_contractManager, defOps)
     {}
 
     /**
