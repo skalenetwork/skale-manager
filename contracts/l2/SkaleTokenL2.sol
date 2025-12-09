@@ -49,8 +49,9 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
     /**
      * @dev Sets L1 token address for bridge mapping.
      */
-    function setL1Token(address _l1Token) external override onlyOwner {
-        l1Token = _l1Token;
+    function setL1Token(address l1TokenAddress) external override onlyOwner {
+        require(l1TokenAddress != address(0), "L1 token address cannot be zero");
+        l1Token = l1TokenAddress;
     }
 
     /**
