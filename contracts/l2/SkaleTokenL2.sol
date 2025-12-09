@@ -49,14 +49,14 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
     /**
      * @dev Sets L1 token address for bridge mapping.
      */
-    function setL1Token(address _l1Token) external onlyOwner {
+    function setL1Token(address _l1Token) external override onlyOwner {
         l1Token = _l1Token;
     }
 
     /**
      * @dev Mints tokens on L2 when deposited from L1.
      */
-    function mint(address account, uint256 amount) external onlyMinter returns (bool) {
+    function mint(address account, uint256 amount) external override onlyMinter returns (bool) {
         require(amount <= CAP.sub(totalSupply()), "Amount is too big");
         _mint(account, amount, "", "");
         return true;
@@ -65,7 +65,7 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
     /**
      * @dev Burns tokens on L2 when withdrawn to L1.
      */
-    function burn(address account, uint256 amount) external onlyMinter {
+    function burn(address account, uint256 amount) external override onlyMinter {
         _burn(account, amount, "", "");
     }
 }
