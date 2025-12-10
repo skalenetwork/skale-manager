@@ -23,6 +23,12 @@ async function transferOwnership(skaleToken: any, newOwner: string, currentOwner
     console.log(`Granting DEFAULT_ADMIN_ROLE to new owner: ${newOwner}`);
     await (await skaleToken.grantRole(DEFAULT_ADMIN_ROLE, newOwner)).wait();
 
+    console.log(`Verifying role was granted to new owner`);
+    const hasRole = await skaleToken.hasRole(DEFAULT_ADMIN_ROLE, newOwner);
+    if (!hasRole) {
+        throw new Error(`Failed to grant DEFAULT_ADMIN_ROLE to ${newOwner}`);
+    }
+
     console.log(`Revoking DEFAULT_ADMIN_ROLE from current owner: ${currentOwner}`);
     await (await skaleToken.renounceRole(DEFAULT_ADMIN_ROLE, currentOwner)).wait();
 
