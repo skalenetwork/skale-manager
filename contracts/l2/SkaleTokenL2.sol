@@ -19,6 +19,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+// cspell:ignore IERC
+
 pragma solidity 0.8.17;
 
 import { SkaleToken } from "../SkaleToken.sol";
