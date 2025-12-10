@@ -467,6 +467,11 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.50.0.tgz#9e93b850f0f3fa35f5fa59adfd03adae8488e484"
   integrity sha512-NCC3zz2+nvYd+Ckfh87rA47zfu2QsQpvc6k1yzTk+b9KzRj0wkGa8LSoGOXN6Zv4lRf/EIoZ80biDh9HOI+RNQ==
 
+"@eth-optimism/contracts-bedrock@^0.17.3":
+  version "0.17.3"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts-bedrock/-/contracts-bedrock-0.17.3.tgz#ab3085e90d50e66ddbf07512ca1d666b5bab625b"
+  integrity sha512-cHPO7ntWeOBDLO7ZFFSZGI1D7CDqf4loRbRVJrFIsqLEz+hysWIqA0e3dv2GnrjVeuYePBfI2NTBEG4uwz9bQQ==
+
 "@ethereum-waffle/chai@^3.4.4":
   version "3.4.4"
   resolved "https://registry.yarnpkg.com/@ethereum-waffle/chai/-/chai-3.4.4.tgz#16c4cc877df31b035d6d92486dfdf983df9138ff"
