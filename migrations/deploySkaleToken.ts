@@ -37,11 +37,18 @@ async function transferOwnership(skaleToken: any, newOwner: string, currentOwner
 
 async function main() {
     const [deployer] = await ethers.getSigners();
-    const owner = process.env[OWNER_PARAMETER];
 
+    const owner = process.env[OWNER_PARAMETER];
     if (!owner) {
         console.log(chalk.red(`OWNER environment variable is required`));
         console.log(chalk.red(`Set the owner address who will have admin access to the SkaleToken`));
+        process.exit(1);
+    }
+
+    const l2BridgeAddress = process.env.L2_BRIDGE;
+    if (!l2BridgeAddress) {
+        console.log(chalk.red(`L2_BRIDGE environment variable is required`));
+        console.log(chalk.red(`Set the L2 bridge address (e.g., Optimism bridge at 0x4200000000000000000000000000000000000010)`));
         process.exit(1);
     }
 
@@ -61,10 +68,9 @@ async function main() {
     console.log(`Registering ${skaleTokenName} in ContractManager`);
     await (await contractManager.setContractsAddress(skaleTokenName, skaleToken)).wait();
 
-    console.log("Granting MINTER_ROLE for Optimism predeployed contract");
+    console.log(`Granting MINTER_ROLE for L2 bridge: ${l2BridgeAddress}`);
     const MINTER_ROLE = await skaleToken.MINTER_ROLE();
-    const optimismL2BridgeAddress = "0x4200000000000000000000000000000000000010";
-    await (await skaleToken.grantRole(MINTER_ROLE, optimismL2BridgeAddress)).wait();
+    await (await skaleToken.grantRole(MINTER_ROLE, l2BridgeAddress)).wait();
 
     const deployerAddress = await deployer.getAddress();
     await transferOwnership(skaleToken, owner, deployerAddress);
