@@ -59,6 +59,7 @@ typechain-types/
 .openzeppelin/dev-*.json
 .openzeppelin/unknown-*.json
 .openzeppelin/.session
+.openzeppelin/*sepolia.json
 
 # docs
 docs/api/*
