@@ -52,6 +52,13 @@ async function main() {
         process.exit(1);
     }
 
+    const remoteTokenAddress = process.env.REMOTE_TOKEN;
+    if (!remoteTokenAddress) {
+        console.log(chalk.red(`REMOTE_TOKEN environment variable is required`));
+        console.log(chalk.red(`Set the remote token address on L1`));
+        process.exit(1);
+    }
+
     const instance = await getSkaleManagerInstance();
     const contractManager = await instance.getContract("ContractManager") as ContractManager;
     const contractManagerAddress = await contractManager.getAddress();
