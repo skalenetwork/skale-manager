@@ -6,7 +6,7 @@ import {EoaSubmitter, InstanceAdmin, InstanceAdminOptions, SafeSubmitter} from "
 async function main() {
     const contractsWithOwnershipToChange = contracts;
     let readonly = false;
-    let revokeRoles = true;
+    let renounceRoles = true;
     let testMode = false;
     let oldOwner: string;
     let submitter: EoaSubmitter | SafeSubmitter;
@@ -25,12 +25,12 @@ async function main() {
 
     if (process.env.TEST_MODE === "true") {
         readonly = false;
-        revokeRoles = true;
+        renounceRoles = true;
         testMode = true;
     }
 
     if (process.env.REVOKE_ROLES) {
-        revokeRoles = process.env.REVOKE_ROLES === "true";
+        renounceRoles = process.env.REVOKE_ROLES === "true";
     }
 
     // Set readonly variable if desired
@@ -49,10 +49,17 @@ async function main() {
     const network = await skaleContracts.getNetworkByProvider(ethers.provider);
     const project = network.getProject("skale-manager");
     const instance = await project.getInstance(process.env.TARGET);
+    try {
+        await instance.getContract("SkaleToken"); // to ensure that the instance is initialized correctly
+    }
+    catch (e) {
+        instance.version = "1.12.0-stable.0"; // fallback to stable version - enough for this particular purpose
+        await instance.getContract("SkaleToken");
+    }
     const configs: InstanceAdminOptions = {
         newOwner,
         readonly,
-        revokeRoles,
+        renounceRoles,
         testMode,
         oldOwner,
         submitter,
@@ -77,7 +84,11 @@ async function main() {
             "VALIDATOR_MANAGER_ROLE"
         ]
     }
-    const admin = new InstanceAdmin(instance, contractsWithOwnershipToChange, configs);
+    const admin = new InstanceAdmin(
+        contractsWithOwnershipToChange.map(contract => ({name: contract})),
+        configs,
+        instance
+    );
     await admin.executeOwnershipTransfer();
 }
 

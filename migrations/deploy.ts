@@ -186,7 +186,12 @@ async function main() {
     console.log("Verify contracts");
     for (const artifact of contractArtifacts) {
         if (artifact.contract === skaleTokenName) {
-            await verify(skaleTokenName, await skaleToken.getAddress(), await contractManager.getAddress());
+            // Encode constructor arguments: address contractsAddress, address[] memory defOps
+            const constructorArguments = ethers.AbiCoder.defaultAbiCoder().encode(
+                ["address", "address[]"],
+                [await contractManager.getAddress(), []]
+            );
+            await verify(skaleTokenName, await skaleToken.getAddress(), constructorArguments);
         } else {
             await verifyProxy(artifact.contract, artifact.address)
         }
