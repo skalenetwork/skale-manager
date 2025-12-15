@@ -91,13 +91,14 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
     function bridge() public view returns (address) {
         return BRIDGE;
     }
+
     /**
      * @dev ERC-165 interface detection.
      * Called by Optimism bridge to verify contract capabilities.
      */
      function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
         bytes4 interfaceERC165 = type(IERC165).interfaceId;
-        bytes4 interfaceLegacyMintableERC20 = type(ILegacyMintableERC20).interfaceId;
-        return interfaceId == interfaceERC165 || interfaceId == interfaceLegacyMintableERC20;
+        bytes4 interfaceOptimismMintableERC20 = type(IOptimismMintableERC20).interfaceId;
+        return interfaceId == interfaceERC165 || interfaceId == interfaceOptimismMintableERC20;
     }
 }
