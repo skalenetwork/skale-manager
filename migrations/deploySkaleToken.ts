@@ -63,11 +63,13 @@ async function main() {
     const contractManager = await instance.getContract("ContractManager") as ContractManager;
     const contractManagerAddress = await contractManager.getAddress();
 
-    const skaleTokenName = "SkaleTokenL2";
+    const skaleTokenName = "SkaleToken";
+    const skaleTokenImplementationName = "SkaleTokenL2";
+
     console.log(`Deploying ${skaleTokenName}`);
     console.log(`Owner will be set to: ${owner}`);
-    const skaleTokenFactory = await ethers.getContractFactory(skaleTokenName);
-    const skaleToken = await skaleTokenFactory.deploy(contractManagerAddress, []);
+    const skaleTokenFactory = await ethers.getContractFactory(skaleTokenImplementationName);
+    const skaleToken = await skaleTokenFactory.deploy(contractManagerAddress, [], remoteTokenAddress, l2BridgeAddress);
     await skaleToken.waitForDeployment();
     const skaleTokenAddress = await skaleToken.getAddress();
     console.log(`${skaleTokenName} deployed at:`, skaleTokenAddress);
