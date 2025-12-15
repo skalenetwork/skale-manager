@@ -37,8 +37,6 @@ import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
     using SafeMath for uint;
 
-    error ZeroAddress(string param);
-
     /**
      * @dev Address of the L1 SKALE token contract.
      * Required by Optimism bridge to link L2 token to L1 counterpart.
@@ -50,6 +48,8 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
      * Required by Optimism bridge to authorize minting and burning.
      */
     address public immutable bridge;
+
+    error ZeroAddress(string param);
 
     constructor(
         address _contractManager,
