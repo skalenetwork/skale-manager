@@ -23,7 +23,10 @@
 
 pragma solidity 0.8.17;
 
-import { IOptimismMintableERC20, IERC165 } from "@eth-optimism/contracts-bedrock/src/universal/IOptimismMintableERC20.sol";
+import {
+    IERC165,
+    IOptimismMintableERC20
+} from "@eth-optimism/contracts-bedrock/src/universal/IOptimismMintableERC20.sol";
 import { SkaleToken } from "../SkaleToken.sol";
 import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
@@ -34,17 +37,19 @@ import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
     using SafeMath for uint;
 
+    error ZeroAddress(string param);
+
     /**
      * @dev Address of the L1 SKALE token contract.
      * Required by Optimism bridge to link L2 token to L1 counterpart.
      */
-    address public immutable REMOTE_TOKEN;
+    address public immutable remoteToken;
 
     /**
      * @dev Address of the Optimism L2 Standard Bridge.
      * Required by Optimism bridge to authorize minting and burning.
      */
-    address public immutable BRIDGE;
+    address public immutable bridge;
 
     constructor(
         address _contractManager,
@@ -54,8 +59,12 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
     )
         SkaleToken(_contractManager, defOps)
     {
-        REMOTE_TOKEN = _remoteToken;
-        BRIDGE = _bridge;
+        if(_remoteToken == address(0))
+            revert ZeroAddress("remoteToken");
+        if(_bridge == address(0))
+            revert ZeroAddress("bridge");
+        remoteToken = _remoteToken;
+        bridge = _bridge;
     }
 
     /**
@@ -71,20 +80,6 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
      */
     function burn(address account, uint256 amount) external override onlyMinter {
         _burn(account, amount, "", "");
-    }
-
-    /**
-     * @dev Getter for REMOTE_TOKEN.
-     */
-    function remoteToken() public view returns (address) {
-        return REMOTE_TOKEN;
-    }
-
-    /**
-     * @dev Getter for BRIDGE.
-     */
-    function bridge() public view returns (address) {
-        return BRIDGE;
     }
 
     /**
