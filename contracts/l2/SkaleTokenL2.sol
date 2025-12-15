@@ -48,17 +48,14 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
 
     constructor(
         address _contractManager,
-        address[] memory defOps
+        address[] memory defOps,
+        address _remoteToken,
+        address _bridge
     )
         SkaleToken(_contractManager, defOps)
-    {}
-
-    /**
-     * @dev Sets L1 token address for bridge mapping.
-     */
-    function setL1Token(address l1TokenAddress) external override onlyOwner {
-        require(l1TokenAddress != address(0), "L1 token address cannot be zero");
-        l1Token = l1TokenAddress;
+    {
+        REMOTE_TOKEN = _remoteToken;
+        BRIDGE = _bridge;
     }
 
     /**
