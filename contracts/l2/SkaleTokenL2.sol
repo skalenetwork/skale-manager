@@ -65,10 +65,9 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
     /**
      * @dev Mints tokens on L2 when deposited from L1.
      */
-    function mint(address account, uint256 amount) external override onlyMinter returns (bool) {
+    function mint(address account, uint256 amount) external override onlyMinter {
         require(amount <= CAP.sub(totalSupply()), "Amount is too big");
         _mint(account, amount, "", "");
-        return true;
     }
 
     /**
