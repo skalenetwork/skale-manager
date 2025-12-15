@@ -39,7 +39,13 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
      * @dev Address of the L1 SKALE token contract.
      * Required by Optimism bridge to link L2 token to L1 counterpart.
      */
-    address public l1Token;
+    address public immutable REMOTE_TOKEN;
+
+    /**
+     * @dev Address of the Optimism L2 Standard Bridge.
+     * Required by Optimism bridge to authorize minting and burning.
+     */
+    address public immutable BRIDGE;
 
     constructor(
         address _contractManager,
@@ -72,6 +78,19 @@ contract SkaleTokenL2 is SkaleToken, ISkaleTokenL2 {
         _burn(account, amount, "", "");
     }
 
+    /**
+     * @dev Getter for REMOTE_TOKEN.
+     */
+    function remoteToken() public view returns (address) {
+        return REMOTE_TOKEN;
+    }
+
+    /**
+     * @dev Getter for BRIDGE.
+     */
+    function bridge() public view returns (address) {
+        return BRIDGE;
+    }
     /**
      * @dev ERC-165 interface detection.
      * Called by Optimism bridge to verify contract capabilities.
