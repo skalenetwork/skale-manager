@@ -152,9 +152,14 @@ async function main() {
 
     if (!production) {
         console.log("Do actions for non production deployment");
+        // In non-production environment, owner has minter role by default and mints some tokens to himself
+        await (await skaleToken.grantRole(await skaleToken.MINTER_ROLE(), owner.address)).wait();
         const money = "5000000000000000000000000000"; // 5e9 * 1e18
         await skaleToken.mint(owner.address, money, "0x", "0x");
     }
+
+    // Grant MINTER_ROLE to SkaleManager
+    await (await skaleToken.grantRole(await skaleToken.MINTER_ROLE(), await contractManager.getContract("SkaleManager"))).wait();
 
     console.log("Store addresses");
 
