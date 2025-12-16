@@ -1,6 +1,6 @@
 import {task, HardhatUserConfig} from "hardhat/config";
 import "@nomicfoundation/hardhat-chai-matchers";
-import "@nomiclabs/hardhat-etherscan";
+import "@nomicfoundation/hardhat-verify";
 import "@openzeppelin/hardhat-upgrades";
 import '@typechain/hardhat'
 import "hardhat-dependency-compiler";
