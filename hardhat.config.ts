@@ -118,7 +118,7 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      custom: "custom"
+      custom: process.env.ETHERSCAN || ""
     },
     customChains: [
       {
