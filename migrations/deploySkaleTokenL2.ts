@@ -60,7 +60,8 @@ async function main() {
     }
 
     const instance = await getSkaleManagerInstance();
-    const contractManager = await instance.getContract("ContractManager") as ContractManager;
+    const contractManagerReadOnly = await instance.getContract("ContractManager") as ContractManager;
+    const contractManager = contractManagerReadOnly.connect(deployer) as ContractManager;
     const contractManagerAddress = await contractManager.getAddress();
 
     const skaleTokenName = "SkaleToken";
@@ -82,7 +83,7 @@ async function main() {
     await (await skaleToken.grantRole(MINTER_ROLE, l2BridgeAddress)).wait();
 
     const deployerAddress = await deployer.getAddress();
-    await transferOwnership(skaleToken, owner, deployerAddress);
+    // await transferOwnership(skaleToken, owner, deployerAddress);
 
     console.log("Verify contract");
     await verify(skaleTokenName, skaleTokenAddress, [contractManagerAddress, [], remoteTokenAddress, l2BridgeAddress]);
