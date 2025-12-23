@@ -19,6 +19,7 @@ async function main() {
         throw new Error("Please set TARGET env variable");
     }
 
+    // Set readonly variable if desired
     if (process.env.READONLY) {
         readonly = process.env.READONLY === "true";
     }
@@ -32,8 +33,6 @@ async function main() {
     if (process.env.REVOKE_ROLES) {
         renounceRoles = process.env.REVOKE_ROLES === "true";
     }
-
-    // Set readonly variable if desired
 
     if (process.env.MULTISIG_OWNER) {
         oldOwner = process.env.MULTISIG_OWNER;
@@ -49,13 +48,7 @@ async function main() {
     const network = await skaleContracts.getNetworkByProvider(ethers.provider);
     const project = network.getProject("skale-manager");
     const instance = await project.getInstance(process.env.TARGET);
-    try {
-        await instance.getContract("SkaleToken"); // to ensure that the instance is initialized correctly
-    }
-    catch (e) {
-        instance.version = "1.12.0-stable.0"; // fallback to stable version - enough for this particular purpose
-        await instance.getContract("SkaleToken");
-    }
+    await instance.getContract("SkaleToken"); // to ensure that the instance is initialized correctly
     const configs: InstanceAdminOptions = {
         newOwner,
         readonly,
