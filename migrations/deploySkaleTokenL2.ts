@@ -83,7 +83,7 @@ async function main() {
     await (await skaleToken.grantRole(MINTER_ROLE, l2BridgeAddress)).wait();
 
     const deployerAddress = await deployer.getAddress();
-    // await transferOwnership(skaleToken, owner, deployerAddress);
+    await transferOwnership(skaleToken, owner, deployerAddress);
 
     console.log("Verify contract");
     await verify(skaleTokenName, skaleTokenAddress, [contractManagerAddress, [], remoteTokenAddress, l2BridgeAddress]);
