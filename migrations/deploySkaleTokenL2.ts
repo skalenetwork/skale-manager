@@ -78,7 +78,7 @@ async function main() {
     try {
         console.log(`Registering ${skaleTokenName} in ContractManager`);
         await (await contractManager.setContractsAddress(skaleTokenName, skaleToken)).wait();
-    } catch (error) {
+    } catch {
         console.log(chalk.yellow("Warning: SkaleToken was not registered in ContractManager."));
         console.log(chalk.yellow("Ensure that setContractsAddress in ContractManager is executed via the multisig."));
     }
