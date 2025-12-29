@@ -75,9 +75,6 @@ async function main() {
     const skaleTokenAddress = await skaleToken.getAddress();
     console.log(`${skaleTokenName} deployed at:`, skaleTokenAddress);
 
-    console.log(`Registering ${skaleTokenName} in ContractManager`);
-    await (await contractManager.setContractsAddress(skaleTokenName, skaleToken)).wait();
-
     console.log(`Granting MINTER_ROLE for L2 bridge: ${l2BridgeAddress}`);
     const MINTER_ROLE = await skaleToken.MINTER_ROLE();
     await (await skaleToken.grantRole(MINTER_ROLE, l2BridgeAddress)).wait();
@@ -87,6 +84,8 @@ async function main() {
 
     console.log("Verify contract");
     await verify(skaleTokenName, skaleTokenAddress, [contractManagerAddress, [], remoteTokenAddress, l2BridgeAddress]);
+
+    chalk.yellow("Warning: Ensure that setContractsAddress in ContractManager is executed via the multisig.");
 
     console.log("Done");
 }
