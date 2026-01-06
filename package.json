@@ -49,7 +49,7 @@
     "@skalenetwork/marionette-interfaces": "^0.0.0-main.6",
     "@skalenetwork/paymaster-interfaces": "^1.0.1",
     "@skalenetwork/skale-manager-interfaces": "3.2.0",
-    "@skalenetwork/upgrade-tools": "4.0.0-develop.5",
+    "@skalenetwork/upgrade-tools": "4.0.0-develop.7",
     "@typechain/hardhat": "^9.1.0",
     "dotenv": "^16.4.5",
     "ethereumjs-util": "^7.1.5",
