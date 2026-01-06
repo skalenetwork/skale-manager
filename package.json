@@ -57,6 +57,7 @@
     "hardhat": "^2.22.8"
   },
   "devDependencies": {
+    "@eth-optimism/contracts-bedrock": "^0.17.3",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.8",
     "@nomiclabs/hardhat-etherscan": "^3.1.8",
