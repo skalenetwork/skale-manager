@@ -91,7 +91,11 @@ async function main() {
     await transferOwnership(skaleToken, owner, deployerAddress);
 
     console.log("Verify contract");
-    await verify(skaleTokenName, skaleTokenAddress, [contractManagerAddress, [], remoteTokenAddress, l2BridgeAddress]);
+    const constructorArguments = ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address", "address[]", "address", "address"],
+        [contractManagerAddress, [], remoteTokenAddress, l2BridgeAddress]
+    );
+    await verify(skaleTokenName, skaleTokenAddress, constructorArguments);
 
     console.log("Done");
 }
