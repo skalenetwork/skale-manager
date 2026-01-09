@@ -41,6 +41,6 @@ trap cleanup EXIT
 
 echo "Running upgrade check"
 
-TARGET=$TARGET npx hardhat run migrations/checkMainnetUpgrade.ts --network localhost
+TARGET=$TARGET npx hardhat run scripts/checkMainnetUpgrade.ts --network localhost
 
 echo "SUCCESS: Upgrade check completed successfully."
