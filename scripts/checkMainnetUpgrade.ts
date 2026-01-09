@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import {contracts} from "./deploy";
+import {contracts} from "../migrations/deploy";
 import {ethers} from "hardhat";
 import {Upgrader, Submitter} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
