@@ -24,7 +24,7 @@ CURRENT_NODE_VERSION=$(nvm current)
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 
-## Network setup START
+## Setup node
 HARDHAT_NODE_SESSION="hardhat-node"
 yarn pm2 start "yarn hardhat node" --name "$HARDHAT_NODE_SESSION"
 
@@ -36,7 +36,6 @@ cleanup() {
 }
 
 trap cleanup EXIT
-## Network setup END
 
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
@@ -44,8 +43,7 @@ nvm use $DEPLOYED_WITH_NODE_VERSION
 yarn install
 
 PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost
-
-cp .openzeppelin/unknown-*.json $GITHUB_WORKSPACE/.openzeppelin
+# No need to handle manifests using hardhat node, saved in cache not in .openzeppelin folder
 CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
 # TODO: copy contracts.json file when deployed version starts supporting it
 # cp "data/$CONTRACTS_FILENAME" "$GITHUB_WORKSPACE/data"
