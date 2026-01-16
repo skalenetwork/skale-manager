@@ -3,7 +3,7 @@ on:
   schedule:
     - cron:  '14 3 * * *'
 env:
-  NODE_VERSION: 20
+  NODE_VERSION: 22
   PYTHON_VERSION: 3.9
 
 jobs:
@@ -11,22 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install NODE JS
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: yarn
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: pip
 
     - name: Install project
-      run: yarn install
+      run: yarn install && yarn cleanCompile
 
     - name: Run gas measurements
       env:
@@ -39,22 +39,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install NODE JS
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: yarn
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: pip
 
     - name: Install project
-      run: yarn install
+      run: yarn install && yarn cleanCompile
 
     - name: Run gas measurements
       env:
@@ -65,22 +65,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install NODE JS
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: yarn
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: pip
 
     - name: Install project
-      run: yarn install
+      run: yarn install && yarn cleanCompile
 
     - name: Run long tests
       run: npx hardhat test long-test/*
