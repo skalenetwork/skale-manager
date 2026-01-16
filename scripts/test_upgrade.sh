@@ -22,8 +22,6 @@ DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 DEPLOYED_WITH_NODE_VERSION="lts/hydrogen"
 CURRENT_NODE_VERSION=$(nvm current)
 
-git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
-
 ## Setup node
 HARDHAT_NODE_SESSION="hardhat-node"
 yarn pm2 start "yarn hardhat node" --name "$HARDHAT_NODE_SESSION"
@@ -37,11 +35,13 @@ cleanup() {
 
 trap cleanup EXIT
 
+git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
+
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
 nvm use $DEPLOYED_WITH_NODE_VERSION
-corepack enable
-yarn install --frozen-lockfile
+corepack prepare $(cat package.json | jq -r '.packageManager') --activate
+yarn install
 
 # TODO: change to yarn hardhat when deployed version starts supporting it
 PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost
