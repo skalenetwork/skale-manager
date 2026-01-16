@@ -59,8 +59,8 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     error FeeIsLocked();
     error ReceiverIsIncorrect();
 
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
+    function initialize(address contractsAddress) external override initializer {
+        Permissions._permissionsInit(contractsAddress);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(
             address(this),

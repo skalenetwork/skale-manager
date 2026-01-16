@@ -31,12 +31,13 @@ import { Permissions } from "./Permissions.sol";
  * @dev This contract manages slashing conditions and penalties.
  */
 contract SlashingTable is Permissions, ISlashingTable {
-    mapping (uint256 => uint256) private _penalties;
 
     bytes32 public constant PENALTY_SETTER_ROLE = keccak256("PENALTY_SETTER_ROLE");
 
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
+    mapping (uint256 => uint256) private _penalties;
+
+    function initialize(address contractManagerAddress) external override initializer {
+        Permissions._permissionsInit(contractManagerAddress);
     }
 
     /**

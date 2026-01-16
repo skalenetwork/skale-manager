@@ -77,8 +77,8 @@ contract BountyV2 is Permissions, IBountyV2 {
         _;
     }
 
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
+    function initialize(address contractManagerAddress) external override initializer {
+        Permissions._permissionsInit(contractManagerAddress);
         _nextEpoch = 0;
         _epochPool = 0;
         _bountyWasPaidInCurrentEpoch = 0;

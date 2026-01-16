@@ -172,8 +172,8 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         _;
     }
 
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
+    function initialize(address contractsAddress) external override initializer {
+        Permissions._permissionsInit(contractsAddress);
     }
 
     /**

@@ -146,8 +146,8 @@ contract Nodes is Permissions, INodes {
     /**
      * @dev constructor in Permissions approach.
      */
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
+    function initialize(address contractsAddress) external override initializer {
+        Permissions._permissionsInit(contractsAddress);
 
         numberOfActiveNodes = 0;
         numberOfLeavingNodes = 0;

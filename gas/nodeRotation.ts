@@ -23,9 +23,9 @@ import {getPublicKey, getValidatorIdSignature} from "../test/tools/signatures";
 import {stringKeccak256} from "../test/tools/hashes";
 import {fastBeforeEach} from "../test/tools/mocha";
 import {SchainType} from "../test/tools/types";
-import {applySnapshot, makeSnapshot} from "../test/tools/snapshot";
 import {deployNodes} from "../test/tools/deploy/nodes";
 import {findEvent} from "./createSchain";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
 
 
 describe("nodeRotation", () => {
@@ -141,10 +141,10 @@ describe("nodeRotation", () => {
         const leavingNode = Math.floor(Math.random() * nodesAmount);
         const gas = [];
         let schainHashes: string[];
-        let stateBefore: number;
+        let stateBefore: SnapshotRestorer;
 
         before(async () => {
-            stateBefore = await makeSnapshot();
+            stateBefore = await takeSnapshot();
             await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
             const signature = await getValidatorIdSignature(validatorId, node);
             await validatorService.connect(validator).linkNodeAddress(node.address, signature);
@@ -222,7 +222,7 @@ describe("nodeRotation", () => {
         }
 
         after(async () => {
-            await applySnapshot(stateBefore);
+            await stateBefore.restore();
         })
     });
 
@@ -237,10 +237,10 @@ describe("nodeRotation", () => {
 
         let nodeId = 0;
         let nodesAmount: number;
-        let stateBefore: number;
+        let stateBefore: SnapshotRestorer;
 
         before(async () => {
-            stateBefore = await makeSnapshot();
+            stateBefore = await takeSnapshot();
             await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
             const signature = await getValidatorIdSignature(validatorId, node);
             await validatorService.connect(validator).linkNodeAddress(node.address, signature);
@@ -323,7 +323,7 @@ describe("nodeRotation", () => {
 
         after(async () => {
             fs.writeFileSync("nodeRotation.json", JSON.stringify(measurementsSchainCreation, null, 4));
-            await applySnapshot(stateBefore);
+            await stateBefore.restore();
         })
     });
 });

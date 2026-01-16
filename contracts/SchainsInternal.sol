@@ -43,6 +43,10 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
+    bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
+    bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
+    bytes32 public constant GENERATION_MANAGER_ROLE = keccak256("GENERATION_MANAGER_ROLE");
+
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
 
@@ -86,10 +90,6 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
 
     mapping (bytes32 => EnumerableSetUpgradeable.AddressSet) private _nodeAddressInSchain;
 
-    bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
-    bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
-    bytes32 public constant GENERATION_MANAGER_ROLE = keccak256("GENERATION_MANAGER_ROLE");
-
     modifier onlySchainTypeManager() {
         require(
             hasRole(SCHAIN_TYPE_MANAGER_ROLE, msg.sender),
@@ -116,8 +116,8 @@ contract SchainsInternal is Permissions, IPruningSchainsInternal {
         _;
     }
 
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
+    function initialize(address newContractsAddress) external override initializer {
+        Permissions._permissionsInit(newContractsAddress);
 
         numberOfSchains = 0;
         sumOfSchainsResources = 0;

@@ -20,7 +20,8 @@
         "**/*.hbs",
         ".openzeppelin/**",
         ".github/**",
-        "**/*.orig"
+        "**/*.orig",
+        ".yarn/**"
     ],
     "dictionaries": ["domain-terms", "libraries", "names", "skale-terms", "solidity"],
     "dictionaryDefinitions": [

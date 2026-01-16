@@ -59,12 +59,12 @@ contract Schains is Permissions, ISchains {
         SchainOption[] options;
     }
 
+    bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
+
     //    schainHash => Set of options hashes
     mapping (bytes32 => EnumerableSetUpgradeable.Bytes32Set) private _optionsIndex;
     //    schainHash => optionHash => schain option
     mapping (bytes32 => mapping (bytes32 => SchainOption)) private _options;
-
-    bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
     error SchainDoesNotExist(bytes32 schainHash);
     error SchainIsCreatedTooEarly();
@@ -87,8 +87,8 @@ contract Schains is Permissions, ISchains {
         _;
     }
 
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
+    function initialize(address newContractsAddress) external override initializer {
+        Permissions._permissionsInit(newContractsAddress);
     }
 
     /**

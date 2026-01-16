@@ -23,7 +23,7 @@ pragma solidity 0.8.17;
 
 import { EnumerableSetUpgradeable, SchainsInternal } from "../SchainsInternal.sol";
 import { ISchainsInternalMock } from "./interfaces/ISchainsInternalMock.sol";
-
+import { Permissions } from "../Permissions.sol";
 
 contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
 
@@ -43,6 +43,16 @@ contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
     function removeSchainToExceptionNode(bytes32 schainHash) external override {
         mapping(bytes32 => uint256[]) storage schainToException = _getSchainToExceptionNodes();
         delete schainToException[schainHash];
+    }
+
+    // To avoid having to set initialize() as virtual
+    // solhint-disable-next-line comprehensive-interface
+    function initializeMock(address contractsAddress) external initializer {
+        Permissions._permissionsInit(contractsAddress);
+
+        numberOfSchains = 0;
+        sumOfSchainsResources = 0;
+        numberOfSchainTypes = 0;
     }
 
     function _addAddressToSchain(

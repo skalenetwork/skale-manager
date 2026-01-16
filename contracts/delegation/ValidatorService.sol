@@ -83,6 +83,9 @@ error ValidatorCannotOverrideNodeAddress(
 contract ValidatorService is Permissions, IValidatorService {
     using ECDSAUpgradeable for bytes32;
 
+    bytes32 public constant VALIDATOR_MANAGER_ROLE =
+        keccak256("VALIDATOR_MANAGER_ROLE");
+
     mapping(uint256 => Validator) public validators;
     mapping(uint256 => bool) private _trustedValidators;
     uint256[] public trustedValidatorsList;
@@ -94,9 +97,6 @@ contract ValidatorService is Permissions, IValidatorService {
     mapping(uint256 => address[]) private _nodeAddresses;
     uint256 public numberOfValidators;
     bool public useWhitelist;
-
-    bytes32 public constant VALIDATOR_MANAGER_ROLE =
-        keccak256("VALIDATOR_MANAGER_ROLE");
 
     modifier onlyValidatorManager() {
         if (!hasRole(VALIDATOR_MANAGER_ROLE, msg.sender)) {
@@ -114,8 +114,8 @@ contract ValidatorService is Permissions, IValidatorService {
 
     function initialize(
         address contractManagerAddress
-    ) public override initializer {
-        Permissions.initialize(contractManagerAddress);
+    ) external override initializer {
+        Permissions._permissionsInit(contractManagerAddress);
         useWhitelist = true;
     }
 

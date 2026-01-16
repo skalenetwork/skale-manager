@@ -68,8 +68,8 @@ contract PaymasterController is IPaymasterController, Permissions {
         _;
     }
 
-    function initialize(address contractManagerAddress) public override initializer {
-        Permissions.initialize(contractManagerAddress);
+    function initialize(address contractManagerAddress) external override initializer {
+        Permissions._permissionsInit(contractManagerAddress);
         _setupRole(PAYMASTER_SETTER_ROLE, msg.sender);
     }
 

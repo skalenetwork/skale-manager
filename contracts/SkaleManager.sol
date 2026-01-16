@@ -48,21 +48,21 @@ import { Permissions } from "./Permissions.sol";
  */
 contract SkaleManager is IERC777Recipient, ISkaleManager, Permissions {
 
-    IERC1820Registry private _erc1820;
-
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
     uint256 constant public HEADER_COSTS = 5310;
     uint256 constant public CALL_PRICE = 21000;
+    bytes32 constant public SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
+
+    IERC1820Registry private _erc1820;
 
     string public version;
 
-    bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
 
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
+    function initialize(address newContractsAddress) external override initializer {
+        Permissions._permissionsInit(newContractsAddress);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(
             address(this),

@@ -62,13 +62,13 @@ contract NodeRotation is Permissions, INodeRotation {
         mapping (uint256 => uint256) indexInLeavingHistory;
     }
 
+    bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
+
     mapping (bytes32 => RotationWithPreviousNodes) private _rotations;
 
     mapping (uint256 => INodeRotation.LeavingHistory[]) public leavingHistory;
 
     mapping (bytes32 => bool) public waitForNewNode;
-
-    bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
 
     /**
      * @dev Emitted when rotation delay skipped.
@@ -80,8 +80,8 @@ contract NodeRotation is Permissions, INodeRotation {
         _;
     }
 
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
+    function initialize(address newContractsAddress) external override initializer {
+        Permissions._permissionsInit(newContractsAddress);
     }
 
     /**

@@ -92,10 +92,6 @@ contract Wallets is Permissions, IWallets {
      */
     event ReturnDebtFromValidator(uint256 validatorId, bytes32 schainHash, uint256 debtAmount);
 
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-    }
-
     /**
      * @dev Is executed on a call to the contract with empty calldata.
      * This is the function that is executed on plain Ether transfers,
@@ -113,6 +109,10 @@ contract Wallets is Permissions, IWallets {
             uint256 validatorId = validatorService.getValidatorId(msg.sender);
             rechargeValidatorWallet(validatorId);
         }
+    }
+
+    function initialize(address contractsAddress) external override initializer {
+        Permissions._permissionsInit(contractsAddress);
     }
 
     /**

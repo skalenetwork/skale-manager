@@ -36,7 +36,7 @@ contract NodesMock is Permissions, INodesMock {
     mapping (uint256 => uint256) public owner;
 
     constructor (address contractManagerAddress) {
-        Permissions.initialize(contractManagerAddress);
+        Permissions._permissionsInit(contractManagerAddress);
     }
 
     function registerNodes(uint256 amount, uint256 validatorId) external override {

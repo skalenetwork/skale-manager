@@ -85,6 +85,9 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
     uint256 public constant COMPLAINT_DELTA = 203463;
     uint256 public constant RESPONSE_DELTA = 55111;
 
+    bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE =
+        keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
+
     // MSR - Minimum staking requirement
     uint256 public msr;
 
@@ -130,9 +133,6 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
 
     uint256 public minNodeBalance;
 
-    bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE =
-        keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
-
     modifier onlyConstantsHolderManager() {
         require(
             hasRole(CONSTANTS_HOLDER_MANAGER_ROLE, msg.sender),
@@ -141,8 +141,8 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
         _;
     }
 
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
+    function initialize(address contractsAddress) external override initializer {
+        Permissions._permissionsInit(contractsAddress);
 
         msr = 0;
         rewardPeriod = 2592000;

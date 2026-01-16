@@ -23,6 +23,7 @@ pragma solidity 0.8.17;
 
 import { IKeyStorage, SkaleDKG } from "../SkaleDKG.sol";
 import { ISkaleDKGTester } from "./interfaces/ISkaleDKGTester.sol";
+import { Permissions } from "../Permissions.sol";
 
 
 contract SkaleDKGTester is SkaleDKG, ISkaleDKGTester {
@@ -31,5 +32,11 @@ contract SkaleDKGTester is SkaleDKG, ISkaleDKGTester {
         channels[schainHash].active = false;
         IKeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
         emit SuccessfulDKG(schainHash);
+    }
+
+    // To avoid having to set initialize() as virtual
+    // solhint-disable-next-line comprehensive-interface
+    function initializeMock(address contractsAddress) public initializer {
+        Permissions._permissionsInit(contractsAddress);
     }
 }

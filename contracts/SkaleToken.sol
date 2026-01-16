@@ -72,7 +72,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     constructor(address contractsAddress, address[] memory defOps)
     ERC777("SKALE", "SKL", defOps)
     {
-        Permissions.initialize(contractsAddress);
+        Permissions._permissionsInit(contractsAddress);
     }
 
     /**
@@ -191,7 +191,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         });
     }
 
-    // we have to override _msgData() and _msgSender() functions
+    // we have to override _msgData(), _msgSender() and _contextSuffixLength() functions
     // because of collision in Context and ContextUpgradeable
 
     function _msgData()
@@ -210,5 +210,16 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         returns (address sender)
     {
         return Context._msgSender();
+    }
+
+    // We have to override this function because of collision in
+
+    function _contextSuffixLength()
+        internal
+        view
+        override(Context, ContextUpgradeable)
+        returns (uint256 len)
+    {
+        return Context._contextSuffixLength();
     }
 }

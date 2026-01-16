@@ -17,7 +17,7 @@ async function getSkaleManagerInstance() {
         console.log(chalk.red("Set instance alias or SkaleManager address to TARGET environment variable"));
         process.exit(1);
     }
-    const network = await skaleContracts.getNetworkByProvider(ethers.provider);
+    const network = await skaleContracts.getNetworkByProvider(ethers.provider as any);
     const project = network.getProject("skale-manager");
     return await project.getInstance(process.env.TARGET);
 }
@@ -40,7 +40,7 @@ class SkaleManagerUpgrader extends Upgrader {
         }
 
     async getSkaleManager() {
-        return await this.instance.getContract("SkaleManager") as SkaleManager;
+        return await this.instance.getContract("SkaleManager") as unknown as SkaleManager;
     }
 
     getDeployedVersion = async () => {
@@ -65,7 +65,7 @@ async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
     const implementationAddress = await getImplementationAddress(ethers.provider, timeHelpersAddress)
     const manifest = await Manifest.forNetwork(ethers.provider);
     const deployment = await manifest.getDeploymentFromAddress(implementationAddress);
-    const storageLayout = deployment.layout.storage;
+    const storageLayout: {label: string}[] = deployment.layout.storage;
     return storageLayout.find(storageItem => storageItem.label === "_timeShift") !== undefined;
 }
 

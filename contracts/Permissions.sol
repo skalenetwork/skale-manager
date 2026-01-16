@@ -121,7 +121,11 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
         _;
     }
 
-    function initialize(address contractManagerAddress) public virtual override initializer {
+    function initialize(address contractManagerAddress) external virtual override initializer {
+        _permissionsInit(contractManagerAddress);
+    }
+
+    function _permissionsInit(address contractManagerAddress) internal onlyInitializing {
         AccessControlUpgradeableLegacy.__AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setContractManager(contractManagerAddress);

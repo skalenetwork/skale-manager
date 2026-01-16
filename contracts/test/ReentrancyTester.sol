@@ -41,7 +41,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender, IReen
     uint256 private _amount = 0;
 
     constructor (address contractManagerAddress) {
-        Permissions.initialize(contractManagerAddress);
+        Permissions._permissionsInit(contractManagerAddress);
         _erc1820.setInterfaceImplementer(
             address(this),
             keccak256("ERC777TokensRecipient"), address(this)

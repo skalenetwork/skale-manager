@@ -38,8 +38,8 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
     using Fp2Operations for ISkaleDKG.Fp2Point;
     using G2Operations for ISkaleDKG.G2Point;
 
-    function initialize(address newContractsAddress) public override initializer {
-        Permissions.initialize(newContractsAddress);
+    function initialize(address newContractsAddress) external override initializer {
+        Permissions._permissionsInit(newContractsAddress);
     }
 
     /**

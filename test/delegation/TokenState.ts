@@ -15,7 +15,8 @@ import {State} from "../tools/types";
 import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
-import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
+
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -28,7 +29,7 @@ describe("DelegationController (token state)", () => {
     let delegationController: DelegationController;
     let validatorService: ValidatorService;
     let skaleToken: SkaleToken;
-    let snapshot: number;
+    let snapshot: SnapshotRestorer;
 
     let validatorId: number;
 
@@ -52,11 +53,11 @@ describe("DelegationController (token state)", () => {
     });
 
     beforeEach(async () => {
-        snapshot = await makeSnapshot();
+        snapshot = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(snapshot);
+        await snapshot.restore();
     });
 
     it("should not lock tokens by default", async () => {
@@ -73,14 +74,14 @@ describe("DelegationController (token state)", () => {
         const amount = 100;
         const period = 2;
         const delegationId = 0;
-        let cleanContracts: number;
+        let cleanContracts: SnapshotRestorer;
         before(async () => {
-            cleanContracts = await makeSnapshot();
+            cleanContracts = await takeSnapshot();
             await delegationController.connect(holder).delegate(validatorId, amount, period, "INFO");
         });
 
         after(async () => {
-            await applySnapshot(cleanContracts);
+            await cleanContracts.restore();
         });
 
         it("should be in `proposed` state", async () => {
@@ -131,14 +132,14 @@ describe("DelegationController (token state)", () => {
         });
 
         describe("when delegation request is accepted", () => {
-            let holderDelegatedToValidator: number;
+            let holderDelegatedToValidator: SnapshotRestorer;
             before(async () => {
-                holderDelegatedToValidator = await makeSnapshot();
+                holderDelegatedToValidator = await takeSnapshot();
                 await delegationController.connect(validator).acceptPendingDelegation(delegationId);
             });
 
             after(async () => {
-                await applySnapshot(holderDelegatedToValidator);
+                await holderDelegatedToValidator.restore();
             });
 
             it("should allow to move delegation from proposed to accepted state", async () => {
@@ -161,14 +162,14 @@ describe("DelegationController (token state)", () => {
             });
 
             describe("when 1 month was passed", () => {
-                let validatorAcceptedDelegation: number;
+                let validatorAcceptedDelegation: SnapshotRestorer;
                 before(async () => {
-                    validatorAcceptedDelegation = await makeSnapshot();
+                    validatorAcceptedDelegation = await takeSnapshot();
                     await nextMonth(contractManager);
                 });
 
                 after(async () => {
-                    await applySnapshot(validatorAcceptedDelegation);
+                    await validatorAcceptedDelegation.restore();
                 });
 
                 it("should become delegated", async () => {

@@ -46,12 +46,13 @@ import {Permissions} from "../Permissions.sol";
  * `getAndUpdateForbiddenForDelegationAmount`. This lock enforces slashing.
  */
 contract TokenState is Permissions, ILocker, ITokenState {
-    string[] private _lockers;
-
-    IDelegationController private _delegationController;
 
     bytes32 public constant LOCKER_MANAGER_ROLE =
         keccak256("LOCKER_MANAGER_ROLE");
+
+    string[] private _lockers;
+
+    IDelegationController private _delegationController;
 
     modifier onlyLockerManager() {
         require(
@@ -63,8 +64,8 @@ contract TokenState is Permissions, ILocker, ITokenState {
 
     function initialize(
         address contractManagerAddress
-    ) public override initializer {
-        Permissions.initialize(contractManagerAddress);
+    ) external override initializer {
+        Permissions._permissionsInit(contractManagerAddress);
         _setupRole(LOCKER_MANAGER_ROLE, msg.sender);
         addLocker("DelegationController");
         addLocker("Punisher");

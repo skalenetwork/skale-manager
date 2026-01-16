@@ -23,6 +23,14 @@ node_modules
 package-lock.json
 data/*.json
 
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
 ### Geth ###
 # geth secrets
 docker/geth/shared/eth_datadir/geth

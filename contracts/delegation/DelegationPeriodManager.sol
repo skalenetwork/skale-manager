@@ -35,16 +35,17 @@ import {Permissions} from "../Permissions.sol";
  * returns or `stakeMultiplier`. Currently, only delegation periods can be added.
  */
 contract DelegationPeriodManager is Permissions, IDelegationPeriodManager {
-    mapping(uint256 => uint256) public stakeMultipliers;
 
     bytes32 public constant DELEGATION_PERIOD_SETTER_ROLE =
         keccak256("DELEGATION_PERIOD_SETTER_ROLE");
 
+    mapping(uint256 => uint256) public stakeMultipliers;
+
     /**
      * @dev Initial delegation period and multiplier settings.
      */
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
+    function initialize(address contractsAddress) external override initializer {
+        Permissions._permissionsInit(contractsAddress);
         stakeMultipliers[2] = 100; // 2 months at 100
         // stakeMultipliers[6] = 150;  // 6 months at 150
         // stakeMultipliers[12] = 200; // 12 months at 200

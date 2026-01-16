@@ -19,11 +19,11 @@ import chaiAlmost from "chai-almost";
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {ContractTransactionResponse, Wallet} from "ethers";
-import {makeSnapshot, applySnapshot} from "./tools/snapshot";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {deployNodes} from "./tools/deploy/nodes";
 import {deployConstantsHolder} from "./tools/deploy/constantsHolder";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -62,7 +62,7 @@ describe("Wallets", () => {
     const tolerance = 0.004;
     const validator1Id = 1;
     const validator2Id = 2;
-    let snapshot: number;
+    let snapshot: SnapshotRestorer;
 
     before(async() => {
         chai.use(chaiAlmost(tolerance));
@@ -116,11 +116,11 @@ describe("Wallets", () => {
     });
 
     beforeEach(async () => {
-        snapshot = await makeSnapshot();
+        snapshot = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(snapshot);
+        await snapshot.restore();
     });
 
     it("should revert if someone sends ETH to contract Wallets", async() => {
@@ -167,10 +167,10 @@ describe("Wallets", () => {
         const schain1Id = stringKeccak256(schain1Name);
         const schain2Id = stringKeccak256(schain2Name);
 
-        let snapshotOfDeployedContracts: number;
+        let snapshotOfDeployedContracts: SnapshotRestorer;
 
         before(async () => {
-            snapshotOfDeployedContracts = await makeSnapshot();
+            snapshotOfDeployedContracts = await takeSnapshot();
             await validatorService.disableWhitelist();
             let signature = await getValidatorIdSignature(validator1Id, nodeAddress1);
             await validatorService.connect(validator1).linkNodeAddress(nodeAddress1.address, signature);
@@ -228,7 +228,7 @@ describe("Wallets", () => {
         });
 
         after(async () => {
-            await applySnapshot(snapshotOfDeployedContracts);
+            await snapshotOfDeployedContracts.restore();
         });
 
         it("should automatically recharge wallet after creating schain by foundation", async () => {
@@ -258,10 +258,10 @@ describe("Wallets", () => {
         describe("when validators and schains wallets are recharged", () => {
             const initialBalance = ethers.parseEther("1");
 
-            let snapshotWithNodesAndSchains: number;
+            let snapshotWithNodesAndSchains: SnapshotRestorer;
 
             before(async () => {
-                snapshotWithNodesAndSchains = await makeSnapshot();
+                snapshotWithNodesAndSchains = await takeSnapshot();
                 await wallets.rechargeValidatorWallet(validator1Id, {value: initialBalance});
                 await wallets.rechargeValidatorWallet(validator2Id, {value: initialBalance});
                 await wallets.rechargeSchainWallet(schain1Id, {value: initialBalance});
@@ -269,7 +269,7 @@ describe("Wallets", () => {
             });
 
             after(async () => {
-                await applySnapshot(snapshotWithNodesAndSchains);
+                await snapshotWithNodesAndSchains.restore();
             });
 
             it("should move ETH to schain owner after schain termination", async () => {

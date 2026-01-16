@@ -9,7 +9,6 @@
     "check-send-result": "error",
     "code-complexity": "error",
     "comprehensive-interface": "error",
-    "contract-name-camelcase": "error",
     "explicit-types": "error",
     "func-name-mixedcase": "error",
     "func-named-parameters": "error",

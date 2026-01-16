@@ -37,14 +37,16 @@ import {Permissions} from "../Permissions.sol";
  * @dev This contract handles all slashing and forgiving operations.
  */
 contract Punisher is Permissions, ILocker, IPunisher {
+
+    bytes32 public constant FORGIVER_ROLE = keccak256("FORGIVER_ROLE");
+
     //        holder => tokens
     mapping(address => uint256) private _locked;
-    bytes32 public constant FORGIVER_ROLE = keccak256("FORGIVER_ROLE");
 
     function initialize(
         address contractManagerAddress
-    ) public override initializer {
-        Permissions.initialize(contractManagerAddress);
+    ) external override initializer {
+        Permissions._permissionsInit(contractManagerAddress);
     }
 
     /**
