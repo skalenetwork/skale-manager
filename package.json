@@ -27,8 +27,8 @@
   ],
   "packageManager": "yarn@4.12.0",
   "scripts": {
-    "compile": "npx hardhat compile",
-    "cleanCompile": "npx hardhat clean && yarn compile",
+    "compile": "yarn hardhat compile",
+    "cleanCompile": "yarn hardhat clean && yarn compile",
     "docs": "scripts/prepare-docs.sh",
     "fullCheck": "yarn lint && yarn tsc && yarn eslint && yarn cspell && yarn slither",
     "hooks": "git config core.hooksPath .githooks || true",
@@ -36,7 +36,7 @@
     "lint": "npx solhint \"contracts/**/*.sol\"",
     "prepare": "yarn compile && yarn hooks",
     "slither": "slither .",
-    "test": "yarn tsc && npx hardhat test",
+    "test": "yarn tsc && yarn hardhat test",
     "tsc": "tsc --noEmit",
     "eslint": "npx eslint .",
     "cspell": "npx cspell \"**/*\""

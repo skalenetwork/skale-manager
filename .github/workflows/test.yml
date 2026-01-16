@@ -64,12 +64,12 @@ jobs:
         run: TEST_MODE=true ./scripts/test_change_ownership.sh
 
       - name: Test ABI generation
-        run: npx hardhat run scripts/generateAbi.ts
+        run: yarn hardhat run scripts/generateAbi.ts
 
       - name: Run tests
         env:
           NODE_OPTIONS: --max-old-space-size=12288
-        run: npx hardhat coverage --solcoverjs .solcover.js
+        run: yarn hardhat coverage --solcoverjs .solcover.js
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2

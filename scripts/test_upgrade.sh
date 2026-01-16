@@ -42,7 +42,7 @@ nvm install $DEPLOYED_WITH_NODE_VERSION
 nvm use $DEPLOYED_WITH_NODE_VERSION
 yarn install
 
-PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost
+PRODUCTION=true VERSION=$DEPLOYED_VERSION yarn hardhat run migrations/deploy.ts --network localhost
 # No need to handle manifests using hardhat node, saved in cache not in .openzeppelin folder
 CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
 # TODO: copy contracts.json file when deployed version starts supporting it
@@ -65,4 +65,4 @@ export IMA="$SKALE_MANAGER_ADDRESS"
 export MARIONETTE="$SKALE_MANAGER_ADDRESS"
 export PAYMASTER="$SKALE_MANAGER_ADDRESS"
 # End of TODO
-npx hardhat run migrations/upgrade.ts --network localhost
+yarn hardhat run migrations/upgrade.ts --network localhost

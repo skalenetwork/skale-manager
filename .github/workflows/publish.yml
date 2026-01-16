@@ -49,7 +49,7 @@ jobs:
           echo "PRERELEASE=$PRERELEASE" >> $GITHUB_ENV
 
       - name: Generate ABI
-        run: npx hardhat run scripts/generateAbi.ts
+        run: yarn hardhat run scripts/generateAbi.ts
 
       - name: Store artifacts
         uses: actions/upload-artifact@v4

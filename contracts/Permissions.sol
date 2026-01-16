@@ -125,7 +125,7 @@ contract Permissions is AccessControlUpgradeableLegacy, IPermissions {
         _permissionsInit(contractManagerAddress);
     }
 
-    function _permissionsInit(address contractManagerAddress) internal onlyInitializing {
+    function _permissionsInit(address contractManagerAddress) internal {
         AccessControlUpgradeableLegacy.__AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setContractManager(contractManagerAddress);
