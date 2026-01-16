@@ -40,6 +40,7 @@ trap cleanup EXIT
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
 nvm use $DEPLOYED_WITH_NODE_VERSION
+corepack enable
 yarn install --frozen-lockfile
 
 # TODO: change to yarn hardhat when deployed version starts supporting it
@@ -54,6 +55,7 @@ cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data"
 cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
+corepack enable
 
 # TODO: use contracts.json file when deployed version starts supporting it
 # SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
