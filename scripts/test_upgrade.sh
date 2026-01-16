@@ -40,7 +40,8 @@ git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPL
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
 nvm use $DEPLOYED_WITH_NODE_VERSION
-corepack prepare yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e --activate
+corepack disable
+corepack use yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e
 yarn install
 
 # TODO: change to yarn hardhat when deployed version starts supporting it
