@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# cspell:words corepack
+# cspell:words corepack yarnrc
 set -e
 
 if [ -z $GITHUB_WORKSPACE ]
