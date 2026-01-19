@@ -114,8 +114,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       accounts: getAccounts(),
       blockGasLimit: 12000000,
-      allowUnlimitedContractSize: true,
-      gasPrice: 20000
+      allowUnlimitedContractSize: true
     },
     custom: {
       url: getCustomUrl(process.env.ENDPOINT),
