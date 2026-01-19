@@ -62,7 +62,12 @@ cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data"
 cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
+
+## Restore settings
+# 1. Unset the ignore flag so we respect the local .yarnrc.yml again
+unset YARN_IGNORE_PATH
 corepack enable
+corepack install
 
 # TODO: use contracts.json file when deployed version starts supporting it
 # SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
