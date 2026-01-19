@@ -2629,7 +2629,7 @@ __metadata:
     "@skalenetwork/paymaster-interfaces": "npm:^1.0.1"
     "@skalenetwork/skale-contracts-ethers-v6": "npm:^2.0.0-develop.6"
     "@skalenetwork/skale-manager-interfaces": "npm:3.2.0"
-    "@skalenetwork/upgrade-tools": "npm:4.0.0-fix-test-deployments.0"
+    "@skalenetwork/upgrade-tools": "npm:4.0.0-fix-test-deployments.1"
     "@typechain/ethers-v6": "npm:^0.5.1"
     "@typechain/hardhat": "npm:^9.1.0"
     "@types/chai": "npm:^4.3.6"
@@ -2675,9 +2675,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@skalenetwork/upgrade-tools@npm:4.0.0-fix-test-deployments.0":
-  version: 4.0.0-fix-test-deployments.0
-  resolution: "@skalenetwork/upgrade-tools@npm:4.0.0-fix-test-deployments.0"
+"@skalenetwork/upgrade-tools@npm:4.0.0-fix-test-deployments.1":
+  version: 4.0.0-fix-test-deployments.1
+  resolution: "@skalenetwork/upgrade-tools@npm:4.0.0-fix-test-deployments.1"
   dependencies:
     "@nomicfoundation/hardhat-ethers": "npm:^3.0.0"
     "@nomicfoundation/hardhat-verify": "npm:2.1.1"
@@ -2692,7 +2692,7 @@ __metadata:
     ethereumjs-util: "npm:^7.1.4"
     hardhat: "npm:^2.9.9"
     semaphore-async-await: "npm:^1.5.1"
-  checksum: 10c0/ccb85d3ffd7c073102cf179b6225777fa2bb4a2de659440e4cd59ea082004163ca10dd452a171cc69c72721fe315186b9219e50fa92a9bcf648a450923c99354
+  checksum: 10c0/3f9a6937582acf0a09659a672db55fdff06e22ea62b2a03877b7d8ee6fedfdd11cd8507e8814f6b0c6b7a5c4d600ca9c24395e314208fa57f2fa1d223d2e3f4c
   languageName: node
   linkType: hard
 
