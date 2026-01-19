@@ -54,10 +54,7 @@ async function reimbursed(transaction: ContractTransactionResponse, operation?: 
         const shortageEth = balanceBefore - balanceAfter;
         const shortageGas = shortageEth / receipt.gasPrice;
 
-        console.log("Reimbursement failed.")
-        console.log(`${shortageGas.toString()} gas units was not reimbursed`);
         if (operation !== undefined) {
-            console.log(`During ${operation}`);
         }
     }
     balanceAfter.should.be.least(balanceBefore);
@@ -456,6 +453,7 @@ describe("SkaleDKG", () => {
                     }]
                 ));
 
+
                 let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
                 schainName = "d2";
                 await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
@@ -478,6 +476,7 @@ describe("SkaleDKG", () => {
                                 options: []
                             }]
                         ));
+
                     nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
                     await wallets.rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 }
@@ -1368,7 +1367,6 @@ describe("SkaleDKG", () => {
                                 name: "d202",
                                 domainName: "some.domain.name"
                         });
-
                         await reimbursed(
                             await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                                 stringKeccak256(schainName),
@@ -1390,7 +1388,6 @@ describe("SkaleDKG", () => {
 
                         const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation;
                         assert.equal(BigInt(await currentTime()), leavingTimeOfNode);
-
                         (await skaleToken.getAndUpdateLockedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount);
                         (await skaleToken.getAndUpdateDelegatedAmount.staticCall(validator1.address))
@@ -1432,7 +1429,6 @@ describe("SkaleDKG", () => {
 
         it("should reopen channel correctly", async () => {
             const deposit = await schains.getSchainPrice(4, 5);
-
             await schains.addSchain(
                 validator1.address,
                 deposit,
@@ -1447,7 +1443,6 @@ describe("SkaleDKG", () => {
                         options: []
                     }]
                 ));
-
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
             let index = 3;
@@ -1474,7 +1469,6 @@ describe("SkaleDKG", () => {
 
             let rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "0");
-
             await nodes.createNode(validators[0].nodeAddress.address,
                 {
                     port: 8545,
@@ -1485,7 +1479,6 @@ describe("SkaleDKG", () => {
                     name: "d203",
                     domainName: "some.domain.name"
                 });
-
             await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
             await reimbursed(
                 await skaleDKG.connect(validators[0].nodeAddress).broadcast(
@@ -1536,7 +1529,6 @@ describe("SkaleDKG", () => {
                 ),
                 "Pre response"
             );
-
             const responseTx = await skaleDKG.connect(validators[0].nodeAddress).response(
                 stringKeccak256(schainName),
                 0,
@@ -1548,7 +1540,6 @@ describe("SkaleDKG", () => {
             await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(0);
             await responseTx.should.emit(skaleDKG, "NewGuy").withArgs(2);
             await responseTx.should.emit(skaleDKG, "FailedDKG").withArgs(stringKeccak256(schainName));
-
             const receipt = await responseTx.wait()
             if (!receipt) {
                 throw new Error();
@@ -1561,7 +1552,6 @@ describe("SkaleDKG", () => {
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
-
             const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256(schainName),
                 2,
@@ -1569,7 +1559,6 @@ describe("SkaleDKG", () => {
             );
             await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Node is not in this group");
             await reimbursed(complaint, "Complaint");
-
             let res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
                 stringKeccak256(schainName),
                 2
@@ -1584,7 +1573,6 @@ describe("SkaleDKG", () => {
                 badEncryptedSecretKeyContributions[indexes[0]],
                 rotCounter.rotationCounter
                 );
-
             res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                 stringKeccak256(schainName),
                 1
@@ -1598,24 +1586,20 @@ describe("SkaleDKG", () => {
                 encryptedSecretKeyContributions[indexes[1]],
                 rotCounter.rotationCounter
             );
-
             res = await skaleDKG.connect(validators[0].nodeAddress).isAlrightPossible(
                 stringKeccak256(schainName),
                 2,
             );
             assert.equal(res, true);
-
             await skaleDKG.connect(validators[0].nodeAddress).alright(
                 stringKeccak256(schainName),
                 2
             );
-
             res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
                 stringKeccak256(schainName),
                 1
             );
             assert.equal(res, true);
-
             await skaleDKG.connect(validators[1].nodeAddress).alright(
                 stringKeccak256(schainName),
                 1
