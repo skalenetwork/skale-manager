@@ -88,8 +88,7 @@ const config: HardhatUserConfig = {
             enabled: true,
             runs: 100,
             details: {
-              yul: true,
-              cse: true,
+              yul: true
             }
           }
         }
@@ -101,8 +100,7 @@ const config: HardhatUserConfig = {
             enabled: true,
             runs: 300,
             details: {
-              yul: true,
-              cse: true,
+              yul: true
             }
           }
         }
