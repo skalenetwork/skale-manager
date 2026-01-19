@@ -86,7 +86,11 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer:{
             enabled: true,
-            runs: 100
+            runs: 100,
+            details: {
+              yul: true,
+              cse: true,
+            }
           }
         }
       },
@@ -95,7 +99,11 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 300
+            runs: 300,
+            details: {
+              yul: true,
+              cse: true,
+            }
           }
         }
       }
@@ -108,7 +116,8 @@ const config: HardhatUserConfig = {
     hardhat: {
       accounts: getAccounts(),
       blockGasLimit: 12000000,
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
+      gasPrice: 20000
     },
     custom: {
       url: getCustomUrl(process.env.ENDPOINT),
