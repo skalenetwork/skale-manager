@@ -54,7 +54,10 @@ async function reimbursed(transaction: ContractTransactionResponse, operation?: 
         const shortageEth = balanceBefore - balanceAfter;
         const shortageGas = shortageEth / receipt.gasPrice;
 
+        console.log("Reimbursement failed.")
+        console.log(`${shortageGas.toString()} gas units was not reimbursed`);
         if (operation !== undefined) {
+            console.log(`During ${operation}`);
         }
     }
     balanceAfter.should.be.least(balanceBefore);
