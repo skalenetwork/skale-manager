@@ -12,27 +12,24 @@ env:
   PYTHON_VERSION: 3.9
 
 jobs:
-  test:
+  build-and-static-analysis:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [20.x, 22.x, 24.x]
 
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install NODE JS
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: "yarn"
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
@@ -49,6 +46,28 @@ jobs:
       - name: lint
         run: yarn fullCheck
 
+      - name: Test ABI generation
+        run: npx hardhat run scripts/generateAbi.ts
+
+  test-deployments:
+    runs-on: ubuntu-latest
+    needs: build-and-static-analysis
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x, 24.x]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install NODE JS
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+
+      - name: Install project
+        run: yarn install
+
       - name: Test deployment
         run: ./scripts/test_deploy.sh
 
@@ -60,15 +79,67 @@ jobs:
       - name: Test transfer ownership
         run: TEST_MODE=true ./scripts/test_change_ownership.sh
 
-      - name: Test ABI generation
-        run: npx hardhat run scripts/generateAbi.ts
+  tests:
+    runs-on: ubuntu-latest
+    needs: build-and-static-analysis
+
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x, 24.x]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install NODE JS
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+
+      - name: Install project
+        run: yarn install
 
       - name: Run tests
         env:
           NODE_OPTIONS: --max-old-space-size=12288
-        run: npx hardhat coverage --solcoverjs .solcover.js
+        run: yarn test
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs: build-and-static-analysis
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+        shard:
+          - name: DKG
+            files: "test/SkaleDKG.ts"
+          - name: Schains
+            files: "test/Schains.ts"
+          - name: SkaleManager and Delegation
+            files: "test/**/{SkaleManager,Delegation}.ts"
+          - name: All Contracts
+            files: "test/**/!(SkaleManager|SkaleDKG|Schains|Delegation).ts"
+    env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install NODE JS
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+
+      - name: Install project
+        run: yarn install
+
+      - name: Run tests
+        env:
+          NODE_OPTIONS: --max-old-space-size=12288
+        run: npx hardhat coverage --solcoverjs .solcover.js --testfiles "${{ matrix.shard.files }}"
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
