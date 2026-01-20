@@ -18,7 +18,8 @@ import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
 import {expect, assert} from "chai";
-import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
+
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -38,7 +39,7 @@ describe("DelegationController", () => {
 
     const month = BigInt(60 * 60 * 24 * 31);
 
-    let snapshot: number;
+    let snapshot: SnapshotRestorer;
 
     before(async () => {
         [owner, holder1, holder2, validator, validator2] = await ethers.getSigners();
@@ -55,11 +56,11 @@ describe("DelegationController", () => {
     });
 
     beforeEach(async () => {
-        snapshot = await makeSnapshot();
+        snapshot = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(snapshot);
+        await snapshot.restore();
     });
 
     describe("when arguments for delegation initialized", () => {
@@ -68,10 +69,9 @@ describe("DelegationController", () => {
         let delegationPeriod: bigint;
         let info: string;
         let delegationId: number;
-        let cleanContracts: number;
-
+        let cleanContracts: SnapshotRestorer;
         before(async () => {
-            cleanContracts = await makeSnapshot();
+            cleanContracts = await takeSnapshot();
             validatorId = 1n;
             amount = 100;
             delegationPeriod = 2n;
@@ -85,7 +85,7 @@ describe("DelegationController", () => {
         });
 
         after(async () => {
-            await applySnapshot(cleanContracts);
+            await cleanContracts.restore();
         });
 
         it("should reject delegation if validator with such id does not exist", async () => {
@@ -155,9 +155,9 @@ describe("DelegationController", () => {
         });
 
         describe("when delegation request was created", () => {
-            let validatorEnabled: number;
+            let validatorEnabled: SnapshotRestorer;
             before(async () => {
-                validatorEnabled = await makeSnapshot();
+                validatorEnabled = await takeSnapshot();
                 await skaleToken.mint(holder1.address, amount, "0x", "0x");
                 await delegationController.connect(holder1).delegate(
                     validatorId, amount, delegationPeriod, info);
@@ -165,7 +165,7 @@ describe("DelegationController", () => {
             });
 
             after(async () => {
-                await applySnapshot(validatorEnabled);
+                await validatorEnabled.restore();
             });
 
             it("should reject canceling request if it isn't actually holder of tokens", async () => {
@@ -251,17 +251,17 @@ describe("DelegationController", () => {
             });
 
             describe("when delegation is accepted", () => {
-                let holder1DelegatedToValidator: number;
+                let holder1DelegatedToValidator: SnapshotRestorer;
                 before(async () => {
                     delegationId = 0;
-                    holder1DelegatedToValidator = await makeSnapshot();
+                    holder1DelegatedToValidator = await takeSnapshot();
                     await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
                     await nextMonth(contractManager);
                 });
 
                 after(async () => {
-                    await applySnapshot(holder1DelegatedToValidator);
+                    await holder1DelegatedToValidator.restore();
                 });
 
                 it("should allow validator to request undelegation", async () => {

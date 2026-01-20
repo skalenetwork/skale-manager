@@ -86,7 +86,10 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer:{
             enabled: true,
-            runs: 100
+            runs: 100,
+            details: {
+              yul: true
+            }
           }
         }
       },
@@ -95,7 +98,10 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 300
+            runs: 300,
+            details: {
+              yul: true
+            }
           }
         }
       }

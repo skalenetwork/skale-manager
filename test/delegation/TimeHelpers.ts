@@ -5,8 +5,8 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {deployTimeHelpersWithDebug} from "../tools/deploy/test/timeHelpersWithDebug";
 import {currentTime} from "../tools/time";
-import {makeSnapshot, applySnapshot} from "../tools/snapshot";
 import {bigintAbs} from "../tools/math";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -14,7 +14,7 @@ chai.use(chaiAsPromised);
 describe("TimeHelpers", () => {
     let contractManager: ContractManager;
     let timeHelpers: TimeHelpers;
-    let snapshot: number;
+    let snapshot: SnapshotRestorer;
 
     before(async () => {
         contractManager = await deployContractManager();
@@ -22,11 +22,11 @@ describe("TimeHelpers", () => {
     });
 
     beforeEach(async () => {
-        snapshot = await makeSnapshot();
+        snapshot = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(snapshot);
+        await snapshot.restore();
     });
 
     it("must convert timestamps to months correctly", async () => {

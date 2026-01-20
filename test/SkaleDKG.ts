@@ -31,11 +31,11 @@ import {deployWallets} from "./tools/deploy/wallets";
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert, expect} from "chai";
-import {makeSnapshot, applySnapshot} from "./tools/snapshot";
 import {BytesLike, ContractTransactionResponse, Wallet} from "ethers";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {schainParametersType, SchainType} from "./tools/types";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -86,7 +86,7 @@ describe("SkaleDKG", () => {
     let wallets: Wallets;
 
     const failedDkgPenalty = 5;
-    let snapshot: number;
+    let snapshot: SnapshotRestorer;
     let validators: {nodeAddress: Wallet}[];
     before(async() => {
         [owner, validator1, validator2] = await ethers.getSigners();
@@ -132,11 +132,11 @@ describe("SkaleDKG", () => {
     });
 
     beforeEach(async () => {
-        snapshot = await makeSnapshot();
+        snapshot = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(snapshot);
+        await snapshot.restore();
     });
 
     describe("when 2 nodes are created", () => {
@@ -321,9 +321,9 @@ describe("SkaleDKG", () => {
         let schainName = "";
         const delegatedAmount = 1e7;
 
-        let cleanContracts: number;
+        let cleanContracts: SnapshotRestorer;
         before(async () => {
-            cleanContracts = await makeSnapshot();
+            cleanContracts = await takeSnapshot();
 
             validatorsPublicKey = [getPublicKey(nodeAddress1), getPublicKey(nodeAddress2)];
 
@@ -363,7 +363,7 @@ describe("SkaleDKG", () => {
         });
 
         after(async () => {
-            await applySnapshot(cleanContracts);
+            await cleanContracts.restore();
         });
 
         it("should create schain and open a DKG channel", async () => {
@@ -435,10 +435,10 @@ describe("SkaleDKG", () => {
         });
 
         describe("when 2-node schain is created", () => {
-            let twoNodesAreCreated: number;
-            let twoSchainAreCreated: number;
+            let twoNodesAreCreated: SnapshotRestorer;
+            let twoSchainAreCreated: SnapshotRestorer;
             before(async () => {
-                twoNodesAreCreated = await makeSnapshot();
+                twoNodesAreCreated = await takeSnapshot();
                 const deposit = await schains.getSchainPrice(4, 5);
 
                 await schains.addSchain(
@@ -455,6 +455,7 @@ describe("SkaleDKG", () => {
                         options: []
                     }]
                 ));
+
 
                 let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
                 schainName = "d2";
@@ -478,13 +479,14 @@ describe("SkaleDKG", () => {
                                 options: []
                             }]
                         ));
+
                     nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
                     await wallets.rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 }
             });
 
             after(async () => {
-                await applySnapshot(twoNodesAreCreated);
+                await twoNodesAreCreated.restore();
             });
 
             it("should broadcast data from 1 node", async () => {
@@ -775,7 +777,7 @@ describe("SkaleDKG", () => {
 
             describe("should not front run complaint with missing broadcast", () => {
                 before(async () => {
-                    twoSchainAreCreated = await makeSnapshot();
+                    twoSchainAreCreated = await takeSnapshot();
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -808,13 +810,13 @@ describe("SkaleDKG", () => {
                 });
 
                 after(async () => {
-                    await applySnapshot(twoSchainAreCreated);
+                    await twoSchainAreCreated.restore();
                 });
             });
 
             describe("should not front run complaint with missing alright", () => {
                 before(async () => {
-                    twoSchainAreCreated = await makeSnapshot();
+                    twoSchainAreCreated = await takeSnapshot();
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -855,13 +857,13 @@ describe("SkaleDKG", () => {
                 });
 
                 after(async () => {
-                    await applySnapshot(twoSchainAreCreated);
+                    await twoSchainAreCreated.restore();
                 });
             });
 
             describe("should not front run complaint with missing response", () => {
                 before(async () => {
-                    twoSchainAreCreated = await makeSnapshot();
+                    twoSchainAreCreated = await takeSnapshot();
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -912,14 +914,14 @@ describe("SkaleDKG", () => {
                 });
 
                 after(async () => {
-                    await applySnapshot(twoSchainAreCreated);
+                    await twoSchainAreCreated.restore();
                 });
             });
 
 
             describe("after sending complaint after missing broadcast", () => {
                 before(async () => {
-                    twoSchainAreCreated = await makeSnapshot();
+                    twoSchainAreCreated = await takeSnapshot();
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -939,7 +941,7 @@ describe("SkaleDKG", () => {
                 });
 
                 after(async () => {
-                    await applySnapshot(twoSchainAreCreated);
+                    await twoSchainAreCreated.restore();
                 });
 
                 it("channel should be closed", async () => {
@@ -1010,7 +1012,7 @@ describe("SkaleDKG", () => {
 
             describe("when correct broadcasts sent", () => {
                 before(async () => {
-                    twoSchainAreCreated = await makeSnapshot();
+                    twoSchainAreCreated = await takeSnapshot();
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -1030,7 +1032,7 @@ describe("SkaleDKG", () => {
                 });
 
                 after(async () => {
-                    await applySnapshot(twoSchainAreCreated);
+                    await twoSchainAreCreated.restore();
                 });
                 it("should send alright from 1 node", async () => {
                     await expect(skaleDKG.connect(validators[0].nodeAddress).alright(
@@ -1086,9 +1088,9 @@ describe("SkaleDKG", () => {
                 });
 
                 describe("when 2 node sent incorrect complaint", () => {
-                    let correctBroadcastIsSent: number;
+                    let correctBroadcastIsSent: SnapshotRestorer;
                     before(async () => {
-                        correctBroadcastIsSent = await makeSnapshot();
+                        correctBroadcastIsSent = await takeSnapshot();
                         await reimbursed(
                             await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                                 stringKeccak256(schainName),
@@ -1099,7 +1101,7 @@ describe("SkaleDKG", () => {
                     });
 
                     after(async () => {
-                        await applySnapshot(correctBroadcastIsSent);
+                        await correctBroadcastIsSent.restore();
                     });
 
                     it("should check is possible to send complaint", async () => {
@@ -1256,7 +1258,7 @@ describe("SkaleDKG", () => {
 
             describe("when 1 node sent bad data", () => {
                 before(async () => {
-                    twoSchainAreCreated = await makeSnapshot();
+                    twoSchainAreCreated = await takeSnapshot();
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -1277,7 +1279,7 @@ describe("SkaleDKG", () => {
                 });
 
                 after(async () => {
-                    await applySnapshot(twoSchainAreCreated);
+                    await twoSchainAreCreated.restore();
                 });
 
                 it("should send complaint from 2 node", async () => {
@@ -1343,9 +1345,9 @@ describe("SkaleDKG", () => {
                 });
 
                 describe("when complaint successfully sent", () => {
-                    let nodeSentBadData: number;
+                    let nodeSentBadData: SnapshotRestorer;
                     before(async () => {
-                        nodeSentBadData = await makeSnapshot();
+                        nodeSentBadData = await takeSnapshot();
                         await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                             stringKeccak256(schainName),
                             1,
@@ -1354,7 +1356,7 @@ describe("SkaleDKG", () => {
                     });
 
                     after(async () => {
-                        await applySnapshot(nodeSentBadData);
+                        await nodeSentBadData.restore();
                     });
 
                     it("accused node should send correct response", async () => {
@@ -1368,7 +1370,6 @@ describe("SkaleDKG", () => {
                                 name: "d202",
                                 domainName: "some.domain.name"
                         });
-
                         await reimbursed(
                             await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                                 stringKeccak256(schainName),
@@ -1390,7 +1391,6 @@ describe("SkaleDKG", () => {
 
                         const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation;
                         assert.equal(BigInt(await currentTime()), leavingTimeOfNode);
-
                         (await skaleToken.getAndUpdateLockedAmount.staticCall(validator1.address))
                             .should.be.equal(delegatedAmount);
                         (await skaleToken.getAndUpdateDelegatedAmount.staticCall(validator1.address))
@@ -1432,7 +1432,6 @@ describe("SkaleDKG", () => {
 
         it("should reopen channel correctly", async () => {
             const deposit = await schains.getSchainPrice(4, 5);
-
             await schains.addSchain(
                 validator1.address,
                 deposit,
@@ -1447,7 +1446,6 @@ describe("SkaleDKG", () => {
                         options: []
                     }]
                 ));
-
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("d2"));
             schainName = "d2";
             let index = 3;
@@ -1474,7 +1472,6 @@ describe("SkaleDKG", () => {
 
             let rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "0");
-
             await nodes.createNode(validators[0].nodeAddress.address,
                 {
                     port: 8545,
@@ -1485,7 +1482,6 @@ describe("SkaleDKG", () => {
                     name: "d203",
                     domainName: "some.domain.name"
                 });
-
             await wallets.connect(owner).rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
             await reimbursed(
                 await skaleDKG.connect(validators[0].nodeAddress).broadcast(
@@ -1536,7 +1532,6 @@ describe("SkaleDKG", () => {
                 ),
                 "Pre response"
             );
-
             const responseTx = await skaleDKG.connect(validators[0].nodeAddress).response(
                 stringKeccak256(schainName),
                 0,
@@ -1548,7 +1543,6 @@ describe("SkaleDKG", () => {
             await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(0);
             await responseTx.should.emit(skaleDKG, "NewGuy").withArgs(2);
             await responseTx.should.emit(skaleDKG, "FailedDKG").withArgs(stringKeccak256(schainName));
-
             const receipt = await responseTx.wait()
             if (!receipt) {
                 throw new Error();
@@ -1561,7 +1555,6 @@ describe("SkaleDKG", () => {
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
-
             const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256(schainName),
                 2,
@@ -1569,7 +1562,6 @@ describe("SkaleDKG", () => {
             );
             await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Node is not in this group");
             await reimbursed(complaint, "Complaint");
-
             let res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
                 stringKeccak256(schainName),
                 2
@@ -1584,7 +1576,6 @@ describe("SkaleDKG", () => {
                 badEncryptedSecretKeyContributions[indexes[0]],
                 rotCounter.rotationCounter
                 );
-
             res = await skaleDKG.connect(validators[1].nodeAddress).isBroadcastPossible(
                 stringKeccak256(schainName),
                 1
@@ -1598,24 +1589,20 @@ describe("SkaleDKG", () => {
                 encryptedSecretKeyContributions[indexes[1]],
                 rotCounter.rotationCounter
             );
-
             res = await skaleDKG.connect(validators[0].nodeAddress).isAlrightPossible(
                 stringKeccak256(schainName),
                 2,
             );
             assert.equal(res, true);
-
             await skaleDKG.connect(validators[0].nodeAddress).alright(
                 stringKeccak256(schainName),
                 2
             );
-
             res = await skaleDKG.connect(validators[1].nodeAddress).isAlrightPossible(
                 stringKeccak256(schainName),
                 1
             );
             assert.equal(res, true);
-
             await skaleDKG.connect(validators[1].nodeAddress).alright(
                 stringKeccak256(schainName),
                 1
@@ -1842,860 +1829,812 @@ describe("SkaleDKG", () => {
             assert.equal(prevPubKey.y.b === allPrevPubKeys[0].y.b, true);
         });
 
-        it("16 nodes schain test", async () => {
-            for (let i = 3; i <= 16; i++) {
-                const hexIndex = ("0" + i.toString(16)).slice(-2);
+
+        describe("With 16 nodes", () => {
+            before(async () => {
+                for (let i = 3; i <= 16; i++) {
+                    const hexIndex = ("0" + i.toString(16)).slice(-2);
+                    await nodes.createNode(validators[0].nodeAddress.address,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: validatorsPublicKey[0],
+                            name: "d2" + hexIndex,
+                            domainName: "some.domain.name"
+                        }
+                    );
+                }
+            });
+
+            it("16 nodes schain test", async () => {
+                const deposit = await schains.getSchainPrice(3, 5);
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.LARGE,
+                            nonce: 0,
+                            name: "New16NodeSchain",
+                            originator: ethers.ZeroAddress,
+                            options: []
+                        }]
+                    ));
+
+                const secretKeyContributions = [];
+                for (let i = 0; i < 16; i++) {
+                    secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
+                }
+
+                const verificationVectorNew = [];
+                for (let i = 0; i < 11; i++) {
+                    verificationVectorNew[i] = verificationVectors[i % 2][0];
+                }
+
+                await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
+                for (let i = 0; i < 16; i++) {
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    let broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                        stringKeccak256("New16NodeSchain"),
+                        i
+                    );
+                    assert.equal(broadPoss, true);
+                    const rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
+                    await reimbursed(
+                        await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                            stringKeccak256("New16NodeSchain"),
+                            i,
+                            verificationVectorNew,
+                            secretKeyContributions,
+                            rotation.rotationCounter
+                    ),
+                        "Broadcast"
+                    );
+                    broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                        stringKeccak256("New16NodeSchain"),
+                        i
+                    );
+                    assert.equal(broadPoss, false);
+                }
+                let comPubKey;
+                for (let i = 0; i < 16; i++) {
+                    comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
+                    expect(comPubKey.x.a).to.be.equal(0);
+                    expect(comPubKey.x.b).to.be.equal(0);
+                    expect(comPubKey.y.a).to.be.equal(0);
+                    expect(comPubKey.y.b).to.be.equal(0);
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    let alrightPoss = await skaleDKG.connect(validators[index].nodeAddress).isAlrightPossible(
+                        stringKeccak256("New16NodeSchain"),
+                        i
+                    );
+                    assert.equal(alrightPoss, true);
+
+                    await reimbursed(
+                        await skaleDKG.connect(validators[index].nodeAddress).alright(
+                            stringKeccak256("New16NodeSchain"),
+                            i
+                        ),
+                        "Alright"
+                    );
+
+                    alrightPoss = await skaleDKG.connect(validators[index].nodeAddress).isAlrightPossible(
+                        stringKeccak256("New16NodeSchain"),
+                        i
+                    );
+                    assert.equal(alrightPoss, false);
+                }
+
+                comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
+                assert.equal(comPubKey.x.a.toString() !== "0", true);
+                assert.equal(comPubKey.x.b.toString() !== "0", true);
+                assert.equal(comPubKey.y.a.toString() !== "0", true);
+                assert.equal(comPubKey.y.b.toString() !== "0", true);
+
+                const prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256("New16NodeSchain"));
+                expect(prevPubKey.x.a).to.be.equal(0);
+                expect(prevPubKey.x.b).to.be.equal(0);
+                expect(prevPubKey.y.a).to.be.equal(1);
+                expect(prevPubKey.y.b).to.be.equal(0);
+            });
+
+            it("16 nodes schain test with incorrect complaint and response", async () => {
+                const deposit = await schains.getSchainPrice(3, 5);
+
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.LARGE,
+                            nonce: 0,
+                            name: "New16NodeSchain",
+                            originator: ethers.ZeroAddress,
+                            options: []
+                        }]
+                    ));
+
                 await nodes.createNode(validators[0].nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
-                        ip: "0x7f0000" + hexIndex,
-                        publicIp: "0x7f0000" + hexIndex,
+                        ip: "0x7f0000ff",
+                        publicIp: "0x7f0000ff",
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex,
+                        name: "d2ff",
                         domainName: "some.domain.name"
                     });
-            }
 
-            const deposit = await schains.getSchainPrice(3, 5);
-
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                ethers.AbiCoder.defaultAbiCoder().encode(
-                    [schainParametersType],
-                    [{
-                        lifetime: 5,
-                        typeOfSchain: SchainType.LARGE,
-                        nonce: 0,
-                        name: "New16NodeSchain",
-                        originator: ethers.ZeroAddress,
-                        options: []
-                    }]
-                ));
-
-            const secretKeyContributions = [];
-            for (let i = 0; i < 16; i++) {
-                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-            }
-
-            const verificationVectorNew = [];
-            for (let i = 0; i < 11; i++) {
-                verificationVectorNew[i] = verificationVectors[i % 2][0];
-            }
-
-            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
-            for (let i = 0; i < 16; i++) {
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
+                const secretKeyContributions = [];
+                for (let i = 0; i < 16; i++) {
+                    secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
                 }
-                let broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
-                    stringKeccak256("New16NodeSchain"),
-                    i
-                );
-                assert.equal(broadPoss, true);
+
+                const verificationVectorNew = [];
+                for (let i = 0; i < 11; i++) {
+                    verificationVectorNew[i] = verificationVectors[i % 2][0];
+                }
+
+                const verificationVectorMultiplicationNew = [
+                    {
+                        x: {
+                            a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                            b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                        },
+                        y: {
+                            a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                            b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                            b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                        },
+                        y: {
+                            a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                            b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                            b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                        },
+                        y: {
+                            a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                            b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                            b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                        },
+                        y: {
+                            a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                            b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                            b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                        },
+                        y: {
+                            a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                            b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                            b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                        },
+                        y: {
+                            a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                            b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                            b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                        },
+                        y: {
+                            a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                            b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                            b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                        },
+                        y: {
+                            a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                            b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                            b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                        },
+                        y: {
+                            a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                            b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                            b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                        },
+                        y: {
+                            a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                            b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                            b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                        },
+                        y: {
+                            a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                            b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                        }
+                    }
+                ];
+
+                const badVerificationVectorMultiplicationNew = [
+                    {
+                        x: {
+                            a: "10154228958897272268223398244445374804407241158746898754006080773714557731510",
+                            b: "7112863543807919636475650744510902904523209938129155195039100133389638393549",
+                        },
+                        y: {
+                            a: "21768438699801937267178734343536352529284837452234631851378657019248743330246",
+                            b: "14882110352786150224152801061494378526163517092877366497614600338997657740082"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "1248667632695062670561268931617774077806084650378129379256669532859564508029",
+                            b: "17452053616248801946480735259763848198940239014150780455387001867946296308759"
+                        },
+                        y: {
+                            a: "16485540817409047841232455331735423476271139132513408791308272320095885297565",
+                            b: "1653133216675488580463747086102609772036158366008438638939181371452419103385"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "11675558950119196450024929752469377063058436384926761101313724839160807593665",
+                            b: "17732768720607214514486094192491344793116072928491953239486763000133907186438",
+                        },
+                        y: {
+                            a: "13432298756653034185833211678944163140142717623005437121784472737292262373101",
+                            b: "14110339253414843301684494933373858527368231010405277993851079519384397169197"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "9584019064829844444009198489581486711814097906659839681226801906009940572463",
+                            b: "12107824998643851242827918509306463216168355067370393221191193070485279779390",
+                        },
+                        y: {
+                            a: "19580566472357013186763924574192000207594597645107117809373083056842914940490",
+                            b: "8794679904479452539164306519974903816512888205806864056397579905980954785401"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "2130209935019246155549995246903886828740438246396827711445645653390332117156",
+                            b: "13221912120875807075515478876428331631581853949878600923256053337594207398617",
+                        },
+                        y: {
+                            a: "21603354201215582016047966890012820144395350508101251242982378867147366901144",
+                            b: "16523634804376948498364139221051541163051742172209882011772363864208807274034"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "12082915188531472921205529175994123445068975555965469829521765007130391593923",
+                            b: "21543158686763553685556612813816902284906145524238469375329415638954493610201",
+                        },
+                        y: {
+                            a: "17937091031791764762290837097925474025829773862624475660486320902321269115193",
+                            b: "9264536753314031966650651143683040304188265631134293156508248502436789516089"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "18972811942945532508043129775798931760980250101980721732797902183102044469897",
+                            b: "13083412181754810692648967245538916513638311335557149623191133098732454174457",
+                        },
+                        y: {
+                            a: "7783468601658690845202523178165606772061182311960130648248521022973136884234",
+                            b: "19157965566238242224666363778051148326455113870986844626792660777950813555743"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "3933335548630886279504438859061157265256033428483255147101535321284926484518",
+                            b: "14556207322551605974643458945348566952340163178377445459387289633705550923433",
+                        },
+                        y: {
+                            a: "17429391977463766585376970754776755784689292622817820026995318775879257372068",
+                            b: "11085146587637456148546675651254282228825219171107369550994865257942426199849"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "19885254956678720421922538248190466060955439589409913173031772478890463595589",
+                            b: "3477999361824866105752930035142603151450418578875228261007525825292639122461",
+                        },
+                        y: {
+                            a: "6910227192094283780657808901626891939343655323795413586540729175567672213741",
+                            b: "18652368631073485100242070980550333440902236504389106897804818069903542308265"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "19445404794705556904703016485229974761006671718631182178881183244971227244347",
+                            b: "7194332561175437391157323777441541676799555741519656066727586527888924962767",
+                        },
+                        y: {
+                            a: "7475823720353602259020867009312071705248782801369325384093990021516350877236",
+                            b: "8254372800693092114855311272350222920712119088638713174193194242010612663394"
+                        }
+                    },
+                    {
+                        x: {
+                            a: "8241625745229820895588185827411423204661272509389284927127735803006700323777",
+                            b: "7285820856111603999669759733195534113879041779892849070055429879350957214964",
+                        },
+                        y: {
+                            a: "4302675421566250512738497103370123257586342322106869428719422803216115368388",
+                            b: "3515306631210980987236988275133120807890918260406845205305216104406265259179"
+                        }
+                    }
+                ];
+
+                await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
                 const rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
-                await reimbursed(
+                for (let i = 0; i < 16; i++) {
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                        stringKeccak256("New16NodeSchain"),
+                        i
+                    );
+                    assert.equal(broadPoss, true);
                     await skaleDKG.connect(validators[index].nodeAddress).broadcast(
                         stringKeccak256("New16NodeSchain"),
                         i,
                         verificationVectorNew,
                         secretKeyContributions,
                         rotation.rotationCounter
-                ),
-                    "Broadcast"
-                );
-                broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
-                    stringKeccak256("New16NodeSchain"),
-                    i
-                );
-                assert.equal(broadPoss, false);
-            }
-            let comPubKey;
-            for (let i = 0; i < 16; i++) {
-                comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
-                expect(comPubKey.x.a).to.be.equal(0);
-                expect(comPubKey.x.b).to.be.equal(0);
-                expect(comPubKey.y.a).to.be.equal(0);
-                expect(comPubKey.y.b).to.be.equal(0);
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
+                    );
                 }
-                let alrightPoss = await skaleDKG.connect(validators[index].nodeAddress).isAlrightPossible(
+                const nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("New16NodeSchain"));
+                const accusedNode = nodesInGroup[14];
+                const complaintNode = nodesInGroup[0].toString();
+                const someNode = nodesInGroup[7].toString();
+                let indexToSend = 0;
+                if (complaintNode === "1") {
+                    indexToSend = 1;
+                }
+                await skaleDKG.connect(validators[indexToSend].nodeAddress).complaintBadData(
                     stringKeccak256("New16NodeSchain"),
-                    i
+                    complaintNode,
+                    accusedNode
                 );
-                assert.equal(alrightPoss, true);
+                const complaint = await skaleDKG.connect(validators[indexToSend].nodeAddress).complaint(
+                    stringKeccak256("New16NodeSchain"),
+                    complaintNode,
+                    someNode
+                );
+                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("One complaint is already sent");
+                await reimbursed(complaint);
+
+                if (accusedNode === 1n) {
+                    indexToSend = 1;
+                } else {
+                    indexToSend = 0;
+                }
+                await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
+                    stringKeccak256("New16NodeSchain"),
+                    accusedNode,
+                    verificationVectorNew,
+                    verificationVectorMultiplication[indexes[indexToSend]],
+                    secretKeyContributions
+                ).should.be.eventually.rejectedWith("Incorrect length of multiplied verification vector");
+                await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
+                    stringKeccak256("New16NodeSchain"),
+                    accusedNode,
+                    verificationVectorNew,
+                    badVerificationVectorMultiplicationNew,
+                    secretKeyContributions
+                ).should.be.eventually.rejectedWith("Multiplied verification vector is incorrect");
+                const resPreResp = await (await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
+                    stringKeccak256("New16NodeSchain"),
+                    accusedNode,
+                    verificationVectorNew,
+                    verificationVectorMultiplicationNew,
+                    secretKeyContributions
+                )).wait();
+                assert(resPreResp);
+                const responseTx = await skaleDKG.connect(validators[indexToSend].nodeAddress).response(
+                    stringKeccak256("New16NodeSchain"),
+                    accusedNode,
+                    secretNumbers[indexes[indexToSend]],
+                    multipliedShares[indexes[indexToSend]]
+                );
+                const receipt = await responseTx.wait();
+                assert(receipt);
+                await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(accusedNode);
+                expect(receipt.gasUsed + resPreResp.gasUsed).to.be.greaterThanOrEqual(5000000);
+            });
+
+            it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
+                const deposit = await schains.getSchainPrice(3, 5);
+
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.LARGE,
+                            nonce: 0,
+                            name: "New16NodeSchain",
+                            originator: ethers.ZeroAddress,
+                            options: []
+                        }]
+                    )
+                );
+
+                const secretKeyContributions = [];
+                for (let i = 0; i < 16; i++) {
+                    secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
+                }
+
+                const verificationVectorNew = [];
+                for (let i = 0; i < 11; i++) {
+                    verificationVectorNew[i] = verificationVectors[i % 2][0];
+                }
+
+                await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
+                const rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
+                for (let i = 0; i < 15; i++) {
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                        stringKeccak256("New16NodeSchain"),
+                        i
+                    );
+                    assert.equal(broadPoss, true);
+                    await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                        stringKeccak256("New16NodeSchain"),
+                        i,
+                        verificationVectorNew,
+                        secretKeyContributions,
+                        rotation.rotationCounter
+                    );
+                }
+                const accusedNode = "15";
+                const complaintNode = "7";
+                await skipTime(1800);
 
                 await reimbursed(
+                    await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                        stringKeccak256("New16NodeSchain"),
+                        complaintNode,
+                        accusedNode
+                    )
+                );
+
+                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                    stringKeccak256("New16NodeSchain"),
+                    8,
+                    accusedNode
+                );
+                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
+                await skaleManager.connect(validator1).deleteSchain("New16NodeSchain");
+            });
+
+            it("16 nodes schain test with incorrect complaint and restart Schain creation", async () => {
+                const deposit = await schains.getSchainPrice(3, 5);
+
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.LARGE,
+                            nonce: 0,
+                            name: "New16NodeSchain",
+                            originator: ethers.ZeroAddress,
+                            options: []
+                        }]
+                    )
+                );
+
+                const secretKeyContributions = [];
+                for (let i = 0; i < 16; i++) {
+                    secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
+                }
+
+                const verificationVectorNew = [];
+                for (let i = 0; i < 11; i++) {
+                    verificationVectorNew[i] = verificationVectors[i % 2][0];
+                }
+
+                await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
+                let rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
+                for (let i = 0; i < 15; i++) {
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                        stringKeccak256("New16NodeSchain"),
+                        i
+                    );
+                    assert.equal(broadPoss, true);
+                    await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                        stringKeccak256("New16NodeSchain"),
+                        i,
+                        verificationVectorNew,
+                        secretKeyContributions,
+                        rotation.rotationCounter
+                    );
+                }
+                const accusedNode = 15;
+                const complaintNode = 7;
+                await skipTime(1800);
+                await reimbursed(
+                    await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                        stringKeccak256("New16NodeSchain"),
+                        complaintNode,
+                        accusedNode
+                    )
+                );
+                const space = await nodes.spaceOfNodes(accusedNode);
+                // The node is still a part of schain because can't be replaced
+                space.freeSpace.should.be.equal(0);
+
+                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                    stringKeccak256("New16NodeSchain"),
+                    8,
+                    accusedNode
+                );
+                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
+                await reimbursed(complaint);
+
+                await nodes.createNode(validators[0].nodeAddress.address,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000ff",
+                        publicIp: "0x7f0000ff",
+                        publicKey: validatorsPublicKey[0],
+                        name: "d2ff",
+                        domainName: "some.domain.name"
+                    }
+                );
+                const createdNode = 16;
+                await schains.restartSchainCreation("New16NodeSchain");
+
+
+                rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
+
+                expect(rotation.rotationCounter).to.be.equal(1);
+                expect(rotation.nodeIndex).to.be.equal(accusedNode);
+                expect(rotation.newNodeIndex).to.be.equal(createdNode);
+
+                for (let i = 0; i < 17; i++) {
+                    if (i === accusedNode) {
+                        continue;
+                    }
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                        stringKeccak256("New16NodeSchain"),
+                        i,
+                        verificationVectorNew,
+                        secretKeyContributions,
+                        rotation.rotationCounter
+                    );
+                }
+                let comPubKey;
+                for (let i = 0; i < 17; i++) {
+                    if (i === accusedNode) {
+                        continue;
+                    }
+                    comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
+                    expect(comPubKey.x.a).to.be.equal(0);
+                    expect(comPubKey.x.b).to.be.equal(0);
+                    expect(comPubKey.y.a).to.be.equal(0);
+                    expect(comPubKey.y.b).to.be.equal(0);
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
                     await skaleDKG.connect(validators[index].nodeAddress).alright(
                         stringKeccak256("New16NodeSchain"),
                         i
-                    ),
-                    "Alright"
-                );
-
-                alrightPoss = await skaleDKG.connect(validators[index].nodeAddress).isAlrightPossible(
-                    stringKeccak256("New16NodeSchain"),
-                    i
-                );
-                assert.equal(alrightPoss, false);
-            }
-
-            comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
-            assert.equal(comPubKey.x.a.toString() !== "0", true);
-            assert.equal(comPubKey.x.b.toString() !== "0", true);
-            assert.equal(comPubKey.y.a.toString() !== "0", true);
-            assert.equal(comPubKey.y.b.toString() !== "0", true);
-
-            const prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256("New16NodeSchain"));
-            expect(prevPubKey.x.a).to.be.equal(0);
-            expect(prevPubKey.x.b).to.be.equal(0);
-            expect(prevPubKey.y.a).to.be.equal(1);
-            expect(prevPubKey.y.b).to.be.equal(0);
-        });
-
-        it("16 nodes schain test with incorrect complaint and response", async () => {
-            for (let i = 3; i <= 16; i++) {
-                const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validators[0].nodeAddress.address,
-                    {
-                        port: 8545,
-                        nonce: 0,
-                        ip: "0x7f0000" + hexIndex,
-                        publicIp: "0x7f0000" + hexIndex,
-                        publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex,
-                        domainName: "some.domain.name"
-                    });
-            }
-
-            const deposit = await schains.getSchainPrice(3, 5);
-
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                ethers.AbiCoder.defaultAbiCoder().encode(
-                    [schainParametersType],
-                    [{
-                        lifetime: 5,
-                        typeOfSchain: SchainType.LARGE,
-                        nonce: 0,
-                        name: "New16NodeSchain",
-                        originator: ethers.ZeroAddress,
-                        options: []
-                    }]
-                ));
-
-            await nodes.createNode(validators[0].nodeAddress.address,
-                {
-                    port: 8545,
-                    nonce: 0,
-                    ip: "0x7f0000ff",
-                    publicIp: "0x7f0000ff",
-                    publicKey: validatorsPublicKey[0],
-                    name: "d2ff",
-                    domainName: "some.domain.name"
-                });
-
-            const secretKeyContributions = [];
-            for (let i = 0; i < 16; i++) {
-                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-            }
-
-            const verificationVectorNew = [];
-            for (let i = 0; i < 11; i++) {
-                verificationVectorNew[i] = verificationVectors[i % 2][0];
-            }
-
-            const verificationVectorMultiplicationNew = [
-                {
-                    x: {
-                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-                    },
-                    y: {
-                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-                    }
-                },
-                {
-                    x: {
-                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-                    },
-                    y: {
-                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-                    }
-                },
-                {
-                    x: {
-                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-                    },
-                    y: {
-                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-                    }
-                },
-                {
-                    x: {
-                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-                    },
-                    y: {
-                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-                    }
-                },
-                {
-                    x: {
-                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-                    },
-                    y: {
-                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-                    }
-                },
-                {
-                    x: {
-                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-                    },
-                    y: {
-                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-                    }
-                },
-                {
-                    x: {
-                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-                    },
-                    y: {
-                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-                    }
-                },
-                {
-                    x: {
-                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-                    },
-                    y: {
-                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-                    }
-                },
-                {
-                    x: {
-                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-                    },
-                    y: {
-                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-                    }
-                },
-                {
-                    x: {
-                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-                    },
-                    y: {
-                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-                    }
-                },
-                {
-                    x: {
-                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-                    },
-                    y: {
-                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-                    }
+                    );
                 }
-            ];
 
-            const badVerificationVectorMultiplicationNew = [
-                {
-                    x: {
-                        a: "10154228958897272268223398244445374804407241158746898754006080773714557731510",
-                        b: "7112863543807919636475650744510902904523209938129155195039100133389638393549",
-                    },
-                    y: {
-                        a: "21768438699801937267178734343536352529284837452234631851378657019248743330246",
-                        b: "14882110352786150224152801061494378526163517092877366497614600338997657740082"
-                    }
-                },
-                {
-                    x: {
-                        a: "1248667632695062670561268931617774077806084650378129379256669532859564508029",
-                        b: "17452053616248801946480735259763848198940239014150780455387001867946296308759"
-                    },
-                    y: {
-                        a: "16485540817409047841232455331735423476271139132513408791308272320095885297565",
-                        b: "1653133216675488580463747086102609772036158366008438638939181371452419103385"
-                    }
-                },
-                {
-                    x: {
-                        a: "11675558950119196450024929752469377063058436384926761101313724839160807593665",
-                        b: "17732768720607214514486094192491344793116072928491953239486763000133907186438",
-                    },
-                    y: {
-                        a: "13432298756653034185833211678944163140142717623005437121784472737292262373101",
-                        b: "14110339253414843301684494933373858527368231010405277993851079519384397169197"
-                    }
-                },
-                {
-                    x: {
-                        a: "9584019064829844444009198489581486711814097906659839681226801906009940572463",
-                        b: "12107824998643851242827918509306463216168355067370393221191193070485279779390",
-                    },
-                    y: {
-                        a: "19580566472357013186763924574192000207594597645107117809373083056842914940490",
-                        b: "8794679904479452539164306519974903816512888205806864056397579905980954785401"
-                    }
-                },
-                {
-                    x: {
-                        a: "2130209935019246155549995246903886828740438246396827711445645653390332117156",
-                        b: "13221912120875807075515478876428331631581853949878600923256053337594207398617",
-                    },
-                    y: {
-                        a: "21603354201215582016047966890012820144395350508101251242982378867147366901144",
-                        b: "16523634804376948498364139221051541163051742172209882011772363864208807274034"
-                    }
-                },
-                {
-                    x: {
-                        a: "12082915188531472921205529175994123445068975555965469829521765007130391593923",
-                        b: "21543158686763553685556612813816902284906145524238469375329415638954493610201",
-                    },
-                    y: {
-                        a: "17937091031791764762290837097925474025829773862624475660486320902321269115193",
-                        b: "9264536753314031966650651143683040304188265631134293156508248502436789516089"
-                    }
-                },
-                {
-                    x: {
-                        a: "18972811942945532508043129775798931760980250101980721732797902183102044469897",
-                        b: "13083412181754810692648967245538916513638311335557149623191133098732454174457",
-                    },
-                    y: {
-                        a: "7783468601658690845202523178165606772061182311960130648248521022973136884234",
-                        b: "19157965566238242224666363778051148326455113870986844626792660777950813555743"
-                    }
-                },
-                {
-                    x: {
-                        a: "3933335548630886279504438859061157265256033428483255147101535321284926484518",
-                        b: "14556207322551605974643458945348566952340163178377445459387289633705550923433",
-                    },
-                    y: {
-                        a: "17429391977463766585376970754776755784689292622817820026995318775879257372068",
-                        b: "11085146587637456148546675651254282228825219171107369550994865257942426199849"
-                    }
-                },
-                {
-                    x: {
-                        a: "19885254956678720421922538248190466060955439589409913173031772478890463595589",
-                        b: "3477999361824866105752930035142603151450418578875228261007525825292639122461",
-                    },
-                    y: {
-                        a: "6910227192094283780657808901626891939343655323795413586540729175567672213741",
-                        b: "18652368631073485100242070980550333440902236504389106897804818069903542308265"
-                    }
-                },
-                {
-                    x: {
-                        a: "19445404794705556904703016485229974761006671718631182178881183244971227244347",
-                        b: "7194332561175437391157323777441541676799555741519656066727586527888924962767",
-                    },
-                    y: {
-                        a: "7475823720353602259020867009312071705248782801369325384093990021516350877236",
-                        b: "8254372800693092114855311272350222920712119088638713174193194242010612663394"
-                    }
-                },
-                {
-                    x: {
-                        a: "8241625745229820895588185827411423204661272509389284927127735803006700323777",
-                        b: "7285820856111603999669759733195534113879041779892849070055429879350957214964",
-                    },
-                    y: {
-                        a: "4302675421566250512738497103370123257586342322106869428719422803216115368388",
-                        b: "3515306631210980987236988275133120807890918260406845205305216104406265259179"
-                    }
-                }
-            ];
-
-            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
-            const rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
-            for (let i = 0; i < 16; i++) {
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
-                }
-                const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
-                    stringKeccak256("New16NodeSchain"),
-                    i
-                );
-                assert.equal(broadPoss, true);
-                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
-                    stringKeccak256("New16NodeSchain"),
-                    i,
-                    verificationVectorNew,
-                    secretKeyContributions,
-                    rotation.rotationCounter
-                );
-            }
-            const nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256("New16NodeSchain"));
-            const accusedNode = nodesInGroup[14];
-            const complaintNode = nodesInGroup[0].toString();
-            const someNode = nodesInGroup[7].toString();
-            let indexToSend = 0;
-            if (complaintNode === "1") {
-                indexToSend = 1;
-            }
-            await skaleDKG.connect(validators[indexToSend].nodeAddress).complaintBadData(
-                stringKeccak256("New16NodeSchain"),
-                complaintNode,
-                accusedNode
-            );
-            const complaint = await skaleDKG.connect(validators[indexToSend].nodeAddress).complaint(
-                stringKeccak256("New16NodeSchain"),
-                complaintNode,
-                someNode
-            );
-            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("One complaint is already sent");
-            await reimbursed(complaint);
-
-            if (accusedNode === 1n) {
-                indexToSend = 1;
-            } else {
-                indexToSend = 0;
-            }
-            await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
-                stringKeccak256("New16NodeSchain"),
-                accusedNode,
-                verificationVectorNew,
-                verificationVectorMultiplication[indexes[indexToSend]],
-                secretKeyContributions
-            ).should.be.eventually.rejectedWith("Incorrect length of multiplied verification vector");
-            await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
-                stringKeccak256("New16NodeSchain"),
-                accusedNode,
-                verificationVectorNew,
-                badVerificationVectorMultiplicationNew,
-                secretKeyContributions
-            ).should.be.eventually.rejectedWith("Multiplied verification vector is incorrect");
-            const resPreResp = await (await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
-                stringKeccak256("New16NodeSchain"),
-                accusedNode,
-                verificationVectorNew,
-                verificationVectorMultiplicationNew,
-                secretKeyContributions
-            )).wait();
-            assert(resPreResp);
-            const responseTx = await skaleDKG.connect(validators[indexToSend].nodeAddress).response(
-                stringKeccak256("New16NodeSchain"),
-                accusedNode,
-                secretNumbers[indexes[indexToSend]],
-                multipliedShares[indexes[indexToSend]]
-            );
-            const receipt = await responseTx.wait();
-            assert(receipt);
-            await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(accusedNode);
-            expect(receipt.gasUsed + resPreResp.gasUsed).to.be.greaterThanOrEqual(5000000);
-        });
-
-        it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
-            for (let i = 3; i <= 16; i++) {
-                const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validators[0].nodeAddress.address,
-                    {
-                        port: 8545,
-                        nonce: 0,
-                        ip: "0x7f0000" + hexIndex,
-                        publicIp: "0x7f0000" + hexIndex,
-                        publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex,
-                        domainName: "some.domain.name"
-                    });
-            }
-
-            const deposit = await schains.getSchainPrice(3, 5);
-
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                ethers.AbiCoder.defaultAbiCoder().encode(
-                    [schainParametersType],
-                    [{
-                        lifetime: 5,
-                        typeOfSchain: SchainType.LARGE,
-                        nonce: 0,
-                        name: "New16NodeSchain",
-                        originator: ethers.ZeroAddress,
-                        options: []
-                    }]
-                ));
-
-            const secretKeyContributions = [];
-            for (let i = 0; i < 16; i++) {
-                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-            }
-
-            const verificationVectorNew = [];
-            for (let i = 0; i < 11; i++) {
-                verificationVectorNew[i] = verificationVectors[i % 2][0];
-            }
-
-            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
-            const rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
-            for (let i = 0; i < 15; i++) {
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
-                }
-                const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
-                    stringKeccak256("New16NodeSchain"),
-                    i
-                );
-                assert.equal(broadPoss, true);
-                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
-                    stringKeccak256("New16NodeSchain"),
-                    i,
-                    verificationVectorNew,
-                    secretKeyContributions,
-                    rotation.rotationCounter
-                );
-            }
-            const accusedNode = "15";
-            const complaintNode = "7";
-            await skipTime(1800);
-
-            await reimbursed(
-                await skaleDKG.connect(validators[0].nodeAddress).complaint(
-                    stringKeccak256("New16NodeSchain"),
-                    complaintNode,
-                    accusedNode
-                )
-            );
-
-            const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
-                stringKeccak256("New16NodeSchain"),
-                8,
-                accusedNode
-            );
-            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-            await skaleManager.connect(validator1).deleteSchain("New16NodeSchain");
-        });
-
-        it("16 nodes schain test with incorrect complaint and restart Schain creation", async () => {
-            for (let i = 3; i <= 16; i++) {
-                const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validators[0].nodeAddress.address,
-                    {
-                        port: 8545,
-                        nonce: 0,
-                        ip: "0x7f0000" + hexIndex,
-                        publicIp: "0x7f0000" + hexIndex,
-                        publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex,
-                        domainName: "some.domain.name"
-                    });
-            }
-
-            const deposit = await schains.getSchainPrice(3, 5);
-
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                ethers.AbiCoder.defaultAbiCoder().encode(
-                    [schainParametersType],
-                    [{
-                        lifetime: 5,
-                        typeOfSchain: SchainType.LARGE,
-                        nonce: 0,
-                        name: "New16NodeSchain",
-                        originator: ethers.ZeroAddress,
-                        options: []
-                    }]
-                ));
-
-            const secretKeyContributions = [];
-            for (let i = 0; i < 16; i++) {
-                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-            }
-
-            const verificationVectorNew = [];
-            for (let i = 0; i < 11; i++) {
-                verificationVectorNew[i] = verificationVectors[i % 2][0];
-            }
-
-            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
-            let rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
-            for (let i = 0; i < 15; i++) {
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
-                }
-                const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
-                    stringKeccak256("New16NodeSchain"),
-                    i
-                );
-                assert.equal(broadPoss, true);
-                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
-                    stringKeccak256("New16NodeSchain"),
-                    i,
-                    verificationVectorNew,
-                    secretKeyContributions,
-                    rotation.rotationCounter
-                );
-            }
-            const accusedNode = 15;
-            const complaintNode = 7;
-            await skipTime(1800);
-            await reimbursed(
-                await skaleDKG.connect(validators[0].nodeAddress).complaint(
-                    stringKeccak256("New16NodeSchain"),
-                    complaintNode,
-                    accusedNode
-                )
-            );
-            const space = await nodes.spaceOfNodes(accusedNode);
-            // The node is still a part of schain because can't be replaced
-            space.freeSpace.should.be.equal(0);
-
-            const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
-                stringKeccak256("New16NodeSchain"),
-                8,
-                accusedNode
-            );
-            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-            await reimbursed(complaint);
-
-            await nodes.createNode(validators[0].nodeAddress.address,
-                {
-                    port: 8545,
-                    nonce: 0,
-                    ip: "0x7f0000ff",
-                    publicIp: "0x7f0000ff",
-                    publicKey: validatorsPublicKey[0],
-                    name: "d2ff",
-                    domainName: "some.domain.name"
-                }
-            );
-            const createdNode = 16;
-            await schains.restartSchainCreation("New16NodeSchain");
-
-
-            rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
-
-            expect(rotation.rotationCounter).to.be.equal(1);
-            expect(rotation.nodeIndex).to.be.equal(accusedNode);
-            expect(rotation.newNodeIndex).to.be.equal(createdNode);
-
-            for (let i = 0; i < 17; i++) {
-                if (i === accusedNode) {
-                    continue;
-                }
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
-                }
-                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
-                    stringKeccak256("New16NodeSchain"),
-                    i,
-                    verificationVectorNew,
-                    secretKeyContributions,
-                    rotation.rotationCounter
-                );
-            }
-            let comPubKey;
-            for (let i = 0; i < 17; i++) {
-                if (i === accusedNode) {
-                    continue;
-                }
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
-                expect(comPubKey.x.a).to.be.equal(0);
-                expect(comPubKey.x.b).to.be.equal(0);
-                expect(comPubKey.y.a).to.be.equal(0);
-                expect(comPubKey.y.b).to.be.equal(0);
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
+                assert.equal(comPubKey.x.a.toString() !== "0", true);
+                assert.equal(comPubKey.x.b.toString() !== "0", true);
+                assert.equal(comPubKey.y.a.toString() !== "0", true);
+                assert.equal(comPubKey.y.b.toString() !== "0", true);
+            });
+
+            it("16 nodes schain test with incorrect complaint and creating new schain", async () => {
+                const deposit = await schains.getSchainPrice(3, 5);
+
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.SMALL,
+                            nonce: 0,
+                            name: "New16NodeSchain",
+                            originator: ethers.ZeroAddress,
+                            options: []
+                        }]
+                    )
+                );
+
+                const secretKeyContributions = [];
+                for (let i = 0; i < 16; i++) {
+                    secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
                 }
-                await skaleDKG.connect(validators[index].nodeAddress).alright(
-                    stringKeccak256("New16NodeSchain"),
-                    i
-                );
-            }
 
-            comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain"));
-            assert.equal(comPubKey.x.a.toString() !== "0", true);
-            assert.equal(comPubKey.x.b.toString() !== "0", true);
-            assert.equal(comPubKey.y.a.toString() !== "0", true);
-            assert.equal(comPubKey.y.b.toString() !== "0", true);
-        });
-
-        it("16 nodes schain test with incorrect complaint and creating new schain", async () => {
-            for (let i = 3; i <= 16; i++) {
-                const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validators[0].nodeAddress.address,
-                    {
-                        port: 8545,
-                        nonce: 0,
-                        ip: "0x7f0000" + hexIndex,
-                        publicIp: "0x7f0000" + hexIndex,
-                        publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex,
-                        domainName: "some.domain.name"
-                    });
-            }
-
-            const deposit = await schains.getSchainPrice(3, 5);
-
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                ethers.AbiCoder.defaultAbiCoder().encode(
-                    [schainParametersType],
-                    [{
-                        lifetime: 5,
-                        typeOfSchain: SchainType.SMALL,
-                        nonce: 0,
-                        name: "New16NodeSchain",
-                        originator: ethers.ZeroAddress,
-                        options: []
-                    }]
-                ));
-
-            const secretKeyContributions = [];
-            for (let i = 0; i < 16; i++) {
-                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-            }
-
-            const verificationVectorNew = [];
-            for (let i = 0; i < 11; i++) {
-                verificationVectorNew[i] = verificationVectors[i % 2][0];
-            }
-
-            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
-            let rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
-            for (let i = 0; i < 15; i++) {
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
+                const verificationVectorNew = [];
+                for (let i = 0; i < 11; i++) {
+                    verificationVectorNew[i] = verificationVectors[i % 2][0];
                 }
-                const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
-                    stringKeccak256("New16NodeSchain"),
-                    i
+
+                await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain"), {value: 1e20.toString()});
+                let rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
+                for (let i = 0; i < 15; i++) {
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    const broadPoss = await skaleDKG.connect(validators[index].nodeAddress).isBroadcastPossible(
+                        stringKeccak256("New16NodeSchain"),
+                        i
+                    );
+                    assert.equal(broadPoss, true);
+                    await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                        stringKeccak256("New16NodeSchain"),
+                        i,
+                        verificationVectorNew,
+                        secretKeyContributions,
+                        rotation.rotationCounter
+                    );
+                }
+                const accusedNode = "15";
+                const complaintNode = "7";
+                await skipTime(1800);
+                await reimbursed(
+                    await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                        stringKeccak256("New16NodeSchain"),
+                        complaintNode,
+                        accusedNode
+                    )
                 );
-                assert.equal(broadPoss, true);
-                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+
+                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256("New16NodeSchain"),
-                    i,
-                    verificationVectorNew,
-                    secretKeyContributions,
-                    rotation.rotationCounter
-                );
-            }
-            const accusedNode = "15";
-            const complaintNode = "7";
-            await skipTime(1800);
-            await reimbursed(
-                await skaleDKG.connect(validators[0].nodeAddress).complaint(
-                    stringKeccak256("New16NodeSchain"),
-                    complaintNode,
+                    8,
                     accusedNode
-                )
-            );
-
-            const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
-                stringKeccak256("New16NodeSchain"),
-                8,
-                accusedNode
-            );
-            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-            await reimbursed(complaint);
-            // await nodes.createNode(validators[0].nodeAddress.address,
-            //     {
-            //         port: 8545,
-            //         nonce: 0,
-            //         ip: "0x7f0000ff",
-            //         publicIp: "0x7f0000ff",
-            //         publicKey: validatorsPublicKey[0],
-            //         name: "d2ff",
-            //         domainName: "some.domain.name"
-            //     }
-            // );
-
-            await schains.addSchain(
-                validator1.address,
-                deposit,
-                ethers.AbiCoder.defaultAbiCoder().encode(
-                    [schainParametersType],
-                    [{
-                        lifetime: 5,
-                        typeOfSchain: SchainType.SMALL,
-                        nonce: 0,
-                        name: "New16NodeSchain1",
-                        originator: ethers.ZeroAddress,
-                        options: []
-                    }]
-                )
-            );
-
-            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain1"), {value: 1e20.toString()});
-
-            rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
-            for (let i = 0; i < 16; i++) {
-                // if (i.toString() === accusedNode) {
-                //     continue;
-                // }
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
-                }
-                await skaleDKG.connect(validators[index].nodeAddress).broadcast(
-                    stringKeccak256("New16NodeSchain1"),
-                    i,
-                    verificationVectorNew,
-                    secretKeyContributions,
-                    rotation.rotationCounter
                 );
-            }
-            let comPubKey;
-            for (let i = 0; i < 16; i++) {
+                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
+                await reimbursed(complaint);
+                // await nodes.createNode(validators[0].nodeAddress.address,
+                //     {
+                //         port: 8545,
+                //         nonce: 0,
+                //         ip: "0x7f0000ff",
+                //         publicIp: "0x7f0000ff",
+                //         publicKey: validatorsPublicKey[0],
+                //         name: "d2ff",
+                //         domainName: "some.domain.name"
+                //     }
+                // );
+
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.SMALL,
+                            nonce: 0,
+                            name: "New16NodeSchain1",
+                            originator: ethers.ZeroAddress,
+                            options: []
+                        }]
+                    )
+                );
+
+                await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("New16NodeSchain1"), {value: 1e20.toString()});
+
+                rotation = await nodeRotation.getRotation(stringKeccak256("New16NodeSchain"));
+                for (let i = 0; i < 16; i++) {
+                    // if (i.toString() === accusedNode) {
+                    //     continue;
+                    // }
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    await skaleDKG.connect(validators[index].nodeAddress).broadcast(
+                        stringKeccak256("New16NodeSchain1"),
+                        i,
+                        verificationVectorNew,
+                        secretKeyContributions,
+                        rotation.rotationCounter
+                    );
+                }
+                let comPubKey;
+                for (let i = 0; i < 16; i++) {
+                    comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain1"));
+                    expect(comPubKey.x.a).to.be.equal(0);
+                    expect(comPubKey.x.b).to.be.equal(0);
+                    expect(comPubKey.y.a).to.be.equal(0);
+                    expect(comPubKey.y.b).to.be.equal(0);
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    await skaleDKG.connect(validators[index].nodeAddress).alright(
+                        stringKeccak256("New16NodeSchain1"),
+                        i
+                    );
+                }
+
                 comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain1"));
-                expect(comPubKey.x.a).to.be.equal(0);
-                expect(comPubKey.x.b).to.be.equal(0);
-                expect(comPubKey.y.a).to.be.equal(0);
-                expect(comPubKey.y.b).to.be.equal(0);
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
-                }
-                await skaleDKG.connect(validators[index].nodeAddress).alright(
-                    stringKeccak256("New16NodeSchain1"),
-                    i
-                );
-            }
-
-            comPubKey = await keyStorage.getCommonPublicKey(stringKeccak256("New16NodeSchain1"));
-            assert.equal(comPubKey.x.a.toString() !== "0", true);
-            assert.equal(comPubKey.x.b.toString() !== "0", true);
-            assert.equal(comPubKey.y.a.toString() !== "0", true);
-            assert.equal(comPubKey.y.b.toString() !== "0", true);
+                assert.equal(comPubKey.x.a.toString() !== "0", true);
+                assert.equal(comPubKey.x.b.toString() !== "0", true);
+                assert.equal(comPubKey.y.a.toString() !== "0", true);
+                assert.equal(comPubKey.y.b.toString() !== "0", true);
+            });
         });
     });
 });

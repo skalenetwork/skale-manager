@@ -15,8 +15,9 @@ import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert} from "chai";
-import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+
 import {getValidatorIdSignature} from "../tools/signatures";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -32,7 +33,7 @@ describe("ValidatorService", () => {
     let validatorService: ValidatorService;
     let skaleToken: SkaleToken;
     let delegationController: DelegationController;
-    let snapshot: number;
+    let snapshot: SnapshotRestorer;
 
     before(async () => {
         [owner, holder, validator1, validator2, validator3, nodeAddress] = await ethers.getSigners();
@@ -49,11 +50,11 @@ describe("ValidatorService", () => {
     });
 
     beforeEach(async () => {
-        snapshot = await makeSnapshot();
+        snapshot = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(snapshot);
+        await snapshot.restore();
     });
 
     it("should register new validator", async () => {
@@ -90,9 +91,9 @@ describe("ValidatorService", () => {
     });
 
     describe("when validator registered", () => {
-        let cleanContracts: number;
+        let cleanContracts: SnapshotRestorer;
         before(async () => {
-            cleanContracts = await makeSnapshot();
+            cleanContracts = await takeSnapshot();
             await validatorService.connect(validator1).registerValidator(
                 "ValidatorName",
                 "Really good validator",
@@ -103,7 +104,7 @@ describe("ValidatorService", () => {
         });
 
         after(async () => {
-            await applySnapshot(cleanContracts);
+            await cleanContracts.restore();
         });
 
         it("should reject when validator tried to register new one with the same address", async () => {
@@ -208,14 +209,14 @@ describe("ValidatorService", () => {
         });
 
         describe("when validator requests for a new address", () => {
-            let validatorLinkedNode: number;
+            let validatorLinkedNode: SnapshotRestorer;
             before(async () => {
-                validatorLinkedNode = await makeSnapshot();
+                validatorLinkedNode = await takeSnapshot();
                 await validatorService.connect(validator1).requestForNewAddress(validator3.address);
             });
 
             after(async () => {
-                await applySnapshot(validatorLinkedNode);
+                await validatorLinkedNode.restore();
             });
 
             it("should reject when hacker tries to change validator address", async () => {
@@ -306,9 +307,9 @@ describe("ValidatorService", () => {
             let amount: number;
             let delegationPeriod: number;
             let info: string;
-            let validatorLinkedNode: number;
+            let validatorLinkedNode: SnapshotRestorer;
             before(async () => {
-                validatorLinkedNode = await makeSnapshot();
+                validatorLinkedNode = await takeSnapshot();
                 validatorId = 1;
                 amount = 100;
                 delegationPeriod = 2;
@@ -318,7 +319,7 @@ describe("ValidatorService", () => {
             });
 
             after(async () => {
-                await applySnapshot(validatorLinkedNode);
+                await validatorLinkedNode.restore();
             });
 
             it("should allow to enable validator in whitelist", async () => {

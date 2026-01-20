@@ -32,11 +32,11 @@ import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert} from "chai";
 import {deployWallets} from "./tools/deploy/wallets";
-import {makeSnapshot, applySnapshot} from "./tools/snapshot";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {schainParametersType, SchainType} from "./tools/types";
 import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -62,7 +62,7 @@ describe("SkaleDkgFakeComplaint", () => {
 
     const failedDkgPenalty = 5;
 
-    let snapshot: number;
+    let snapshot: SnapshotRestorer;
 
     const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
         [
@@ -632,17 +632,17 @@ describe("SkaleDkgFakeComplaint", () => {
     });
 
     beforeEach(async () => {
-        snapshot = await makeSnapshot();
+        snapshot = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(snapshot);
+        await snapshot.restore();
     });
 
     describe("when 4-node schain is created", () => {
-        let cleanContracts: number;
+        let cleanContracts: SnapshotRestorer;
         before(async () => {
-            cleanContracts = await makeSnapshot();
+            cleanContracts = await takeSnapshot();
             const deposit = await schains.getSchainPrice(5, 5);
 
             await schains.addSchain(
@@ -688,7 +688,7 @@ describe("SkaleDkgFakeComplaint", () => {
         });
 
         after(async () => {
-            await applySnapshot(cleanContracts);
+            await cleanContracts.restore();
         });
 
         describe("when correct broadcasts sent", () => {

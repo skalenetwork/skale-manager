@@ -2,27 +2,28 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {deployContractManager} from "../tools/deploy/contractManager";
 import {deploySegmentTreeTester} from "../tools/deploy/test/segmentTreeTester";
-import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+
 import {SegmentTreeTester} from "../../typechain-types";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
 
 chai.should();
 chai.use(chaiAsPromised);
 
 describe("SegmentTree", () => {
     let segmentTree: SegmentTreeTester;
-    let snapshot: number;
-    let cleanContracts: number;
+    let snapshot: SnapshotRestorer;
+    let cleanContracts: SnapshotRestorer;
     before(async () => {
         const contractManager = await deployContractManager();
         segmentTree = await deploySegmentTreeTester(contractManager);
     });
 
     beforeEach(async () => {
-        snapshot = await makeSnapshot();
+        snapshot = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(snapshot);
+        await snapshot.restore();
     });
 
     describe("initialization", () => {
@@ -97,13 +98,13 @@ describe("SegmentTree", () => {
 
     describe("when initialized", () => {
         before(async () => {
-            cleanContracts = await makeSnapshot();
+            cleanContracts = await takeSnapshot();
             await segmentTree.addElemInPlaces(128, 150);
             await segmentTree.initTree();
         });
 
         after(async () => {
-            await applySnapshot(cleanContracts);
+            await cleanContracts.restore();
         });
 
         describe("move elements", () => {

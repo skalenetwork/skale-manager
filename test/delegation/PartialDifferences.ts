@@ -3,7 +3,8 @@ import {deployPartialDifferencesTester} from "../tools/deploy/test/partialDiffer
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {PartialDifferencesTester} from "../../typechain-types";
-import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
+
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -11,7 +12,7 @@ chai.use(chaiAsPromised);
 describe("PartialDifferences", () => {
     let contractManager;
     let partialDifferencesTester: PartialDifferencesTester;
-    let snapshot: number;
+    let snapshot: SnapshotRestorer;
 
     before(async () => {
         contractManager = await deployContractManager();
@@ -19,11 +20,11 @@ describe("PartialDifferences", () => {
     })
 
     beforeEach(async () => {
-        snapshot = await makeSnapshot();
+        snapshot = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(snapshot);
+        await snapshot.restore();
     });
 
     it("should calculate sequences correctly", async () => {
