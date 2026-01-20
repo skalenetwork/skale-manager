@@ -97,10 +97,13 @@ jobs:
         shard:
           - name: DKG
             files: "test/SkaleDKG.ts"
+            tag: dkg
           - name: Schains
             files: "test/Schains.ts"
+            tag: schains
           - name: Other Contracts
             files: "test/!(SkaleDKG|Schains).ts"
+            tag: others
     env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
@@ -123,4 +126,6 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
+          # use tags so that no override occurs - merge
+          flags: ${{ matrix.shard.tag }}
           token: ${{ secrets.CODECOV_TOKEN }}
