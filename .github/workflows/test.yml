@@ -1,4 +1,4 @@
-name: Build and test
+name: Test
 
 on:
   push:
@@ -50,7 +50,7 @@ jobs:
       - name: Test ABI generation
         run: npx hardhat run scripts/generateAbi.ts
 
-  tests:
+  deployments-and-tests:
     runs-on: ubuntu-latest
     needs: build-and-static-analysis
     strategy:
