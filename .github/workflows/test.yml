@@ -99,7 +99,7 @@ jobs:
             files: "test/SkaleDKG.ts"
           - name: Schains
             files: "test/Schains.ts"
-          - name: Other Contracts
+          - name: Others
             files: "test/!(SkaleDKG|Schains).ts"
     env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
