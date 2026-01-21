@@ -162,6 +162,9 @@ jobs:
           # Merge all JSONs into one
           npx nyc merge ./all-reports coverage/coverage-final.json
 
+          # Clean up so that next step does not include merged reports
+          rm -rf ./all-reports
+
       # 3. Upload the file to Codecov
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4
