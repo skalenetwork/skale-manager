@@ -28,14 +28,12 @@ import {
     IOptimismMintableERC20
 } from "@eth-optimism/contracts-bedrock/src/universal/IOptimismMintableERC20.sol";
 import { SkaleToken } from "../SkaleToken.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /**
  * @title SkaleTokenL2
  * @dev Contract defines the SKALE token for L1-L2 interaction.
  */
 contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
-    using SafeMath for uint;
 
     /**
      * @dev Address of the L1 SKALE token contract.
@@ -71,7 +69,7 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
      * @dev Mints tokens on L2 when deposited from L1.
      */
     function mint(address account, uint256 amount) external override onlyMinter {
-        require(amount <= CAP.sub(totalSupply()), "Amount is too big");
+        require(amount <= CAP - totalSupply(), "Amount is too big");
         _mint(account, amount, "", "");
     }
 
