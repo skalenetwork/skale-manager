@@ -160,7 +160,7 @@ jobs:
           mkdir -p coverage
 
           # Merge all JSONs into one
-          nyc merge ./all-reports coverage/coverage-final.json
+          npx nyc merge ./all-reports coverage/coverage-final.json
 
       # 3. Upload the file to Codecov
       - name: Upload to Codecov
