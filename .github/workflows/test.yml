@@ -100,7 +100,7 @@ jobs:
           - name: Schains
             files: "test/Schains.ts"
           - name: Others
-            files: "test/!(SkaleDKG|Schains).ts"
+            files: "test/**/!(SkaleDKG|Schains).ts"
     env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
