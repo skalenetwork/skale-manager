@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.33;
 
 import {IERC777} from "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 

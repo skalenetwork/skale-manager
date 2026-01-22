@@ -18,7 +18,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
-pragma solidity 0.8.17;
+pragma solidity 0.8.33;
 
 import { Permissions } from "../Permissions.sol";
 import { INodesMock } from "./interfaces/INodesMock.sol";

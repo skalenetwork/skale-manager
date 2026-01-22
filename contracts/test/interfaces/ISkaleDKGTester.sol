@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.33;
 
 interface ISkaleDKGTester {
     function setSuccessfulDKGPublic(bytes32 schainHash) external;

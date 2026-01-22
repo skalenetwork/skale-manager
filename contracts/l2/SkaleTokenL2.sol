@@ -21,7 +21,7 @@
 
 // cspell:ignore IERC
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.33;
 
 import {
     IERC165,

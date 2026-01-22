@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.33;
 
 import {
     AddressUpgradeable
@@ -147,7 +147,7 @@ contract Wallets is Permissions, IWallets {
             );
             _validatorWallets[validatorId] -= amount;
                 emit NodeRefundedByValidator(spender, validatorId, amount);
-                spender.transfer(amount);
+                spender.sendValue(amount);
         }
     }
 
@@ -211,7 +211,7 @@ contract Wallets is Permissions, IWallets {
         require(amount <= _schainWallets[schainHash], "Schain wallet has not enough funds");
         _schainWallets[schainHash] = _schainWallets[schainHash] - amount;
         emit NodeRefundedBySchain(spender, schainHash, amount);
-        spender.transfer(amount);
+        spender.sendValue(amount);
     }
 
     /**
@@ -246,7 +246,7 @@ contract Wallets is Permissions, IWallets {
         require(amount <= _validatorWallets[validatorId], "Balance is too low");
         _validatorWallets[validatorId] = _validatorWallets[validatorId] - amount;
         emit WithdrawFromValidatorWallet(validatorId, amount);
-        payable(msg.sender).transfer(amount);
+        payable(msg.sender).sendValue(amount);
     }
 
     /**
