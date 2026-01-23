@@ -9,7 +9,7 @@ on:
       - "docs-*"
 
 env:
-  PYTHON_VERSION: 3.9
+  PYTHON_VERSION: 3.11
 
 jobs:
   build-and-static-analysis:
@@ -53,10 +53,6 @@ jobs:
   deployments-and-tests:
     runs-on: ubuntu-latest
     needs: build-and-static-analysis
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [20.x, 22.x, 24.x]
 
     steps:
       - uses: actions/checkout@v6
@@ -64,7 +60,8 @@ jobs:
       - name: Install NODE JS
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          # Used for publish. Support until Apr 2027
+          node-version: 22.x
           cache: "yarn"
 
       - name: Install project
@@ -75,7 +72,7 @@ jobs:
 
       - name: Test upgrade
         env:
-          NODE_VERSION: ${{ matrix.node-version }}
+          NODE_VERSION: 22.x
         run: ./scripts/test_upgrade.sh
 
       - name: Test transfer ownership
@@ -139,8 +136,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24.x
-      - name: Install dependencies
-        run: yarn install
+
       - name: Download All Reports
         uses: actions/download-artifact@v4
         with:
@@ -150,24 +146,18 @@ jobs:
 
       - name: Merge Reports
         run: |
-          echo "Merging the following reports:"
-          ls -l ./all-reports
-
-          # Install nyc temporarily
-          yarn add -D nyc
-
           # Create a temp directory for the output
           mkdir -p coverage
 
           # Merge all JSONs into one
-          npx nyc merge ./all-reports coverage/coverage-final.json
+          npx -y nyc merge ./all-reports coverage/coverage-final.json
 
-          # Clean up so that next step does not include merged reports
+          # Clean up old reports
           rm -rf ./all-reports
 
-      # 3. Upload the file to Codecov
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/coverage-final.json
+          fail_ci_if_error: true
