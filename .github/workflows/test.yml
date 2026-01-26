@@ -9,7 +9,7 @@ on:
       - "docs-*"
 
 env:
-  NODE_ACTIVE_VERSION: 24.x # In active LTS until Oct 2026
+  NODE_VERSION: 24.x # In Active LTS until Oct 2026
   PYTHON_VERSION: 3.11
 
 jobs:
@@ -61,7 +61,7 @@ jobs:
       - name: Install NODE JS
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
 
       - name: Install project
@@ -72,7 +72,7 @@ jobs:
 
       - name: Test upgrade
         env:
-          NODE_VERSION: ${{ env.NODE_ACTIVE_VERSION }}
+          NODE_VERSION: ${{ env.NODE_VERSION }}
         run: ./scripts/test_upgrade.sh
 
       - name: Test transfer ownership
@@ -106,7 +106,7 @@ jobs:
       - name: Install NODE JS
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
 
       - name: Install project
