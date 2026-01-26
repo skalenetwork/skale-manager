@@ -4,26 +4,16 @@ import {deployContractManager} from "../tools/deploy/contractManager";
 import {deploySegmentTreeTester} from "../tools/deploy/test/segmentTreeTester";
 
 import {SegmentTreeTester} from "../../typechain-types";
-import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
+import {fastBeforeEach} from "../tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
 
 describe("SegmentTree", () => {
     let segmentTree: SegmentTreeTester;
-    let snapshot: SnapshotRestorer;
-    let cleanContracts: SnapshotRestorer;
-    before(async () => {
+    fastBeforeEach(async () => {
         const contractManager = await deployContractManager();
         segmentTree = await deploySegmentTreeTester(contractManager);
-    });
-
-    beforeEach(async () => {
-        snapshot = await takeSnapshot();
-    });
-
-    afterEach(async () => {
-        await snapshot.restore();
     });
 
     describe("initialization", () => {
@@ -97,14 +87,9 @@ describe("SegmentTree", () => {
     });
 
     describe("when initialized", () => {
-        before(async () => {
-            cleanContracts = await takeSnapshot();
+        fastBeforeEach(async () => {
             await segmentTree.addElemInPlaces(128, 150);
             await segmentTree.initTree();
-        });
-
-        after(async () => {
-            await cleanContracts.restore();
         });
 
         describe("move elements", () => {

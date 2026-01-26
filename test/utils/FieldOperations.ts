@@ -3,7 +3,7 @@ import chaiAsPromised from "chai-as-promised";
 import {FieldOperationsTester} from "../../typechain-types";
 import {deployContractManager} from "../tools/deploy/contractManager";
 import {deployFieldOperationsTester} from "../tools/deploy/test/fieldOperationsTester";
-import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
+import {fastBeforeEach} from "../tools/mocha";
 
 
 chai.should();
@@ -11,18 +11,10 @@ chai.use(chaiAsPromised);
 
 describe("FieldOperations", () => {
     let fieldOperations: FieldOperationsTester;
-    let snapshot: SnapshotRestorer;
-    before(async () => {
+
+    fastBeforeEach(async () => {
         const contractManager = await deployContractManager();
         fieldOperations = await deployFieldOperationsTester(contractManager);
-    });
-
-    beforeEach(async () => {
-        snapshot = await takeSnapshot();
-    });
-
-    afterEach(async () => {
-        await snapshot.restore();
     });
 
     describe("Math test", () => {

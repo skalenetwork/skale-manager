@@ -36,7 +36,7 @@ import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {schainParametersType, SchainType} from "./tools/types";
 import {deployNodeRotation} from "./tools/deploy/nodeRotation";
-import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -61,8 +61,6 @@ describe("SkaleDkgFakeComplaint", () => {
     let nodeRotation: NodeRotation;
 
     const failedDkgPenalty = 5;
-
-    let snapshot: SnapshotRestorer;
 
     const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
         [
@@ -554,7 +552,7 @@ describe("SkaleDkgFakeComplaint", () => {
 
     let validators: {nodePublicKey: curve.base.BasePoint, nodeAddress: Wallet}[];
 
-    before(async () => {
+    fastBeforeEach(async () => {
         [owner, validator1, validator2] = await ethers.getSigners();
 
         nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
@@ -631,18 +629,8 @@ describe("SkaleDkgFakeComplaint", () => {
         }
     });
 
-    beforeEach(async () => {
-        snapshot = await takeSnapshot();
-    });
-
-    afterEach(async () => {
-        await snapshot.restore();
-    });
-
     describe("when 4-node schain is created", () => {
-        let cleanContracts: SnapshotRestorer;
-        before(async () => {
-            cleanContracts = await takeSnapshot();
+        fastBeforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
 
             await schains.addSchain(
@@ -685,10 +673,6 @@ describe("SkaleDkgFakeComplaint", () => {
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
                 await wallets.rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
             }
-        });
-
-        after(async () => {
-            await cleanContracts.restore();
         });
 
         describe("when correct broadcasts sent", () => {

@@ -17,7 +17,7 @@ import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert} from "chai";
 
 import {getValidatorIdSignature} from "../tools/signatures";
-import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
+import {fastBeforeEach} from "../tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -33,9 +33,8 @@ describe("ValidatorService", () => {
     let validatorService: ValidatorService;
     let skaleToken: SkaleToken;
     let delegationController: DelegationController;
-    let snapshot: SnapshotRestorer;
 
-    before(async () => {
+    fastBeforeEach(async () => {
         [owner, holder, validator1, validator2, validator3, nodeAddress] = await ethers.getSigners();
         contractManager = await deployContractManager();
 
@@ -47,14 +46,6 @@ describe("ValidatorService", () => {
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
-    });
-
-    beforeEach(async () => {
-        snapshot = await takeSnapshot();
-    });
-
-    afterEach(async () => {
-        await snapshot.restore();
     });
 
     it("should register new validator", async () => {
@@ -91,9 +82,7 @@ describe("ValidatorService", () => {
     });
 
     describe("when validator registered", () => {
-        let cleanContracts: SnapshotRestorer;
-        before(async () => {
-            cleanContracts = await takeSnapshot();
+        fastBeforeEach(async () => {
             await validatorService.connect(validator1).registerValidator(
                 "ValidatorName",
                 "Really good validator",
@@ -101,10 +90,6 @@ describe("ValidatorService", () => {
                 100);
             const validatorId = await validatorService.getValidatorId(validator1.address);
             await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, await getValidatorIdSignature(validatorId, nodeAddress));
-        });
-
-        after(async () => {
-            await cleanContracts.restore();
         });
 
         it("should reject when validator tried to register new one with the same address", async () => {
@@ -209,14 +194,8 @@ describe("ValidatorService", () => {
         });
 
         describe("when validator requests for a new address", () => {
-            let validatorLinkedNode: SnapshotRestorer;
-            before(async () => {
-                validatorLinkedNode = await takeSnapshot();
+            fastBeforeEach(async () => {
                 await validatorService.connect(validator1).requestForNewAddress(validator3.address);
-            });
-
-            after(async () => {
-                await validatorLinkedNode.restore();
             });
 
             it("should reject when hacker tries to change validator address", async () => {
@@ -307,19 +286,13 @@ describe("ValidatorService", () => {
             let amount: number;
             let delegationPeriod: number;
             let info: string;
-            let validatorLinkedNode: SnapshotRestorer;
-            before(async () => {
-                validatorLinkedNode = await takeSnapshot();
+            fastBeforeEach(async () => {
                 validatorId = 1;
                 amount = 100;
                 delegationPeriod = 2;
                 info = "NICE";
                 await skaleToken.mint(holder.address, 200, "0x", "0x");
                 await skaleToken.mint(validator3.address, 200, "0x", "0x");
-            });
-
-            after(async () => {
-                await validatorLinkedNode.restore();
             });
 
             it("should allow to enable validator in whitelist", async () => {

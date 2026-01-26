@@ -35,7 +35,7 @@ import {BytesLike, ContractTransactionResponse, Wallet} from "ethers";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {schainParametersType, SchainType} from "./tools/types";
-import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
+import {fastBeforeEach} from "./tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -86,9 +86,9 @@ describe("SkaleDKG", () => {
     let wallets: Wallets;
 
     const failedDkgPenalty = 5;
-    let snapshot: SnapshotRestorer;
     let validators: {nodeAddress: Wallet}[];
-    before(async() => {
+
+    fastBeforeEach(async() => {
         [owner, validator1, validator2] = await ethers.getSigners();
 
         nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
@@ -129,14 +129,6 @@ describe("SkaleDKG", () => {
         const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
         await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
-    });
-
-    beforeEach(async () => {
-        snapshot = await takeSnapshot();
-    });
-
-    afterEach(async () => {
-        await snapshot.restore();
     });
 
     describe("when 2 nodes are created", () => {
@@ -321,10 +313,7 @@ describe("SkaleDKG", () => {
         let schainName = "";
         const delegatedAmount = 1e7;
 
-        let cleanContracts: SnapshotRestorer;
-        before(async () => {
-            cleanContracts = await takeSnapshot();
-
+        fastBeforeEach(async () => {
             validatorsPublicKey = [getPublicKey(nodeAddress1), getPublicKey(nodeAddress2)];
 
             await validatorService.connect(validator1).registerValidator("Validator1", "D2 is even", 0, 0);
@@ -360,10 +349,6 @@ describe("SkaleDKG", () => {
                         domainName: "some.domain.name"
                     });
             }
-        });
-
-        after(async () => {
-            await cleanContracts.restore();
         });
 
         it("should create schain and open a DKG channel", async () => {
@@ -435,10 +420,7 @@ describe("SkaleDKG", () => {
         });
 
         describe("when 2-node schain is created", () => {
-            let twoNodesAreCreated: SnapshotRestorer;
-            let twoSchainAreCreated: SnapshotRestorer;
-            before(async () => {
-                twoNodesAreCreated = await takeSnapshot();
+            fastBeforeEach(async () => {
                 const deposit = await schains.getSchainPrice(4, 5);
 
                 await schains.addSchain(
@@ -483,10 +465,6 @@ describe("SkaleDKG", () => {
                     nodesInGroup = await schainsInternal.getNodesInGroup(stringKeccak256(schainName));
                     await wallets.rechargeSchainWallet(stringKeccak256(schainName), {value: 1e20.toString()});
                 }
-            });
-
-            after(async () => {
-                await twoNodesAreCreated.restore();
             });
 
             it("should broadcast data from 1 node", async () => {
@@ -776,8 +754,7 @@ describe("SkaleDKG", () => {
             });
 
             describe("should not front run complaint with missing broadcast", () => {
-                before(async () => {
-                    twoSchainAreCreated = await takeSnapshot();
+                fastBeforeEach(async () => {
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -808,15 +785,10 @@ describe("SkaleDKG", () => {
                     ).should.emit(skaleDKG, "BadGuy")
                         .withArgs(1);
                 });
-
-                after(async () => {
-                    await twoSchainAreCreated.restore();
-                });
             });
 
             describe("should not front run complaint with missing alright", () => {
-                before(async () => {
-                    twoSchainAreCreated = await takeSnapshot();
+                fastBeforeEach(async () => {
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -855,15 +827,10 @@ describe("SkaleDKG", () => {
                     ).should.emit(skaleDKG, "BadGuy")
                         .withArgs(1);
                 });
-
-                after(async () => {
-                    await twoSchainAreCreated.restore();
-                });
             });
 
             describe("should not front run complaint with missing response", () => {
-                before(async () => {
-                    twoSchainAreCreated = await takeSnapshot();
+                fastBeforeEach(async () => {
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -912,16 +879,11 @@ describe("SkaleDKG", () => {
                     ).should.emit(skaleDKG, "BadGuy")
                         .withArgs(0);
                 });
-
-                after(async () => {
-                    await twoSchainAreCreated.restore();
-                });
             });
 
 
             describe("after sending complaint after missing broadcast", () => {
-                before(async () => {
-                    twoSchainAreCreated = await takeSnapshot();
+                fastBeforeEach(async () => {
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -938,10 +900,6 @@ describe("SkaleDKG", () => {
                             1
                         )
                     );
-                });
-
-                after(async () => {
-                    await twoSchainAreCreated.restore();
                 });
 
                 it("channel should be closed", async () => {
@@ -1011,8 +969,7 @@ describe("SkaleDKG", () => {
             });
 
             describe("when correct broadcasts sent", () => {
-                before(async () => {
-                    twoSchainAreCreated = await takeSnapshot();
+                fastBeforeEach(async () => {
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -1031,9 +988,6 @@ describe("SkaleDKG", () => {
                     );
                 });
 
-                after(async () => {
-                    await twoSchainAreCreated.restore();
-                });
                 it("should send alright from 1 node", async () => {
                     await expect(skaleDKG.connect(validators[0].nodeAddress).alright(
                         stringKeccak256(schainName),
@@ -1088,9 +1042,7 @@ describe("SkaleDKG", () => {
                 });
 
                 describe("when 2 node sent incorrect complaint", () => {
-                    let correctBroadcastIsSent: SnapshotRestorer;
-                    before(async () => {
-                        correctBroadcastIsSent = await takeSnapshot();
+                    fastBeforeEach(async () => {
                         await reimbursed(
                             await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                                 stringKeccak256(schainName),
@@ -1098,10 +1050,6 @@ describe("SkaleDKG", () => {
                                 0
                             )
                         );
-                    });
-
-                    after(async () => {
-                        await correctBroadcastIsSent.restore();
                     });
 
                     it("should check is possible to send complaint", async () => {
@@ -1257,8 +1205,7 @@ describe("SkaleDKG", () => {
             });
 
             describe("when 1 node sent bad data", () => {
-                before(async () => {
-                    twoSchainAreCreated = await takeSnapshot();
+                fastBeforeEach(async () => {
                     const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
                     await skaleDKG.connect(validators[0].nodeAddress).broadcast(
                         stringKeccak256(schainName),
@@ -1276,10 +1223,6 @@ describe("SkaleDKG", () => {
                         encryptedSecretKeyContributions[indexes[1]],
                         rotation.rotationCounter
                     );
-                });
-
-                after(async () => {
-                    await twoSchainAreCreated.restore();
                 });
 
                 it("should send complaint from 2 node", async () => {
@@ -1345,18 +1288,12 @@ describe("SkaleDKG", () => {
                 });
 
                 describe("when complaint successfully sent", () => {
-                    let nodeSentBadData: SnapshotRestorer;
-                    before(async () => {
-                        nodeSentBadData = await takeSnapshot();
+                    fastBeforeEach(async () => {
                         await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                             stringKeccak256(schainName),
                             1,
                             0
                         );
-                    });
-
-                    after(async () => {
-                        await nodeSentBadData.restore();
                     });
 
                     it("accused node should send correct response", async () => {
@@ -1831,7 +1768,7 @@ describe("SkaleDKG", () => {
 
 
         describe("With 16 nodes", () => {
-            before(async () => {
+            fastBeforeEach(async () => {
                 for (let i = 3; i <= 16; i++) {
                     const hexIndex = ("0" + i.toString(16)).slice(-2);
                     await nodes.createNode(validators[0].nodeAddress.address,
