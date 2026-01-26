@@ -3,25 +3,18 @@ import chaiAsPromised from "chai-as-promised";
 import {FieldOperationsTester} from "../../typechain-types";
 import {deployContractManager} from "../tools/deploy/contractManager";
 import {deployFieldOperationsTester} from "../tools/deploy/test/fieldOperationsTester";
-import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+import {fastBeforeEach} from "../tools/mocha";
+
 
 chai.should();
 chai.use(chaiAsPromised);
 
 describe("FieldOperations", () => {
     let fieldOperations: FieldOperationsTester;
-    let snapshot: number;
-    before(async () => {
+
+    fastBeforeEach(async () => {
         const contractManager = await deployContractManager();
         fieldOperations = await deployFieldOperationsTester(contractManager);
-    });
-
-    beforeEach(async () => {
-        snapshot = await makeSnapshot();
-    });
-
-    afterEach(async () => {
-        await applySnapshot(snapshot);
     });
 
     describe("Math test", () => {

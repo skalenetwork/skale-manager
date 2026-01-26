@@ -18,7 +18,8 @@ import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
 import {expect, assert} from "chai";
-import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+import {fastBeforeEach} from "../tools/mocha";
+
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -38,9 +39,7 @@ describe("DelegationController", () => {
 
     const month = BigInt(60 * 60 * 24 * 31);
 
-    let snapshot: number;
-
-    before(async () => {
+    fastBeforeEach(async () => {
         [owner, holder1, holder2, validator, validator2] = await ethers.getSigners();
         contractManager = await deployContractManager();
 
@@ -54,24 +53,13 @@ describe("DelegationController", () => {
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
     });
 
-    beforeEach(async () => {
-        snapshot = await makeSnapshot();
-    });
-
-    afterEach(async () => {
-        await applySnapshot(snapshot);
-    });
-
     describe("when arguments for delegation initialized", () => {
         let validatorId: bigint;
         let amount: number;
         let delegationPeriod: bigint;
         let info: string;
         let delegationId: number;
-        let cleanContracts: number;
-
-        before(async () => {
-            cleanContracts = await makeSnapshot();
+        fastBeforeEach(async () => {
             validatorId = 1n;
             amount = 100;
             delegationPeriod = 2n;
@@ -82,10 +70,6 @@ describe("DelegationController", () => {
                 500,
                 100);
             await validatorService.enableValidator(validatorId);
-        });
-
-        after(async () => {
-            await applySnapshot(cleanContracts);
         });
 
         it("should reject delegation if validator with such id does not exist", async () => {
@@ -155,17 +139,11 @@ describe("DelegationController", () => {
         });
 
         describe("when delegation request was created", () => {
-            let validatorEnabled: number;
-            before(async () => {
-                validatorEnabled = await makeSnapshot();
+            fastBeforeEach(async () => {
                 await skaleToken.mint(holder1.address, amount, "0x", "0x");
                 await delegationController.connect(holder1).delegate(
                     validatorId, amount, delegationPeriod, info);
                 delegationId = 0;
-            });
-
-            after(async () => {
-                await applySnapshot(validatorEnabled);
             });
 
             it("should reject canceling request if it isn't actually holder of tokens", async () => {
@@ -251,17 +229,11 @@ describe("DelegationController", () => {
             });
 
             describe("when delegation is accepted", () => {
-                let holder1DelegatedToValidator: number;
-                before(async () => {
+                fastBeforeEach(async () => {
                     delegationId = 0;
-                    holder1DelegatedToValidator = await makeSnapshot();
                     await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
                     await nextMonth(contractManager);
-                });
-
-                after(async () => {
-                    await applySnapshot(holder1DelegatedToValidator);
                 });
 
                 it("should allow validator to request undelegation", async () => {
