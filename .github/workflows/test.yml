@@ -118,47 +118,14 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=12288
         run: npx hardhat coverage --solcoverjs .solcover.js --testfiles "${{ matrix.shard.files }}"
 
-      - name: Prepare Artifact
+      - name: Prepare Coverage Report
         run: |
           mv coverage/coverage-final.json coverage-${{ matrix.shard.name }}.json
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-part-${{ matrix.shard.name }}
-          path: coverage-${{ matrix.shard.name }}.json
-          retention-days: 1
-
-  upload-coverage:
-    runs-on: ubuntu-latest
-    needs: coverage
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_ACTIVE_VERSION }}
-
-      - name: Download All Reports
-        uses: actions/download-artifact@v4
-        with:
-          pattern: coverage-part-*
-          merge-multiple: true
-          path: ./all-reports
-
-      - name: Merge Reports
-        run: |
-          # Create a temp directory for the output
-          mkdir -p coverage
-
-          # Merge all JSONs into one
-          npx -y nyc merge ./all-reports coverage/coverage-final.json
-
-          # Clean up old reports
-          rm -rf ./all-reports
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/coverage-final.json
+          disable_search: true # Upload only the specified files
+          files: coverage-${{ matrix.shard.name }}.json
           fail_ci_if_error: true
