@@ -9,6 +9,8 @@ on:
       - "docs-*"
 
 env:
+  NODE_STABLE_VERSION: 22.x # Support until Apr 2027
+  NODE_ACTIVE_VERSION: 24.x # In active LTS until Oct 2026
   PYTHON_VERSION: 3.11
 
 jobs:
@@ -60,8 +62,7 @@ jobs:
       - name: Install NODE JS
         uses: actions/setup-node@v6
         with:
-          # Used for publish. Support until Apr 2027
-          node-version: 22.x
+          node-version: ${{ env.NODE_STABLE_VERSION }}
           cache: "yarn"
 
       - name: Install project
@@ -72,7 +73,7 @@ jobs:
 
       - name: Test upgrade
         env:
-          NODE_VERSION: 22.x
+          NODE_VERSION: ${{ env.NODE_STABLE_VERSION }}
         run: ./scripts/test_upgrade.sh
 
       - name: Test transfer ownership
@@ -106,7 +107,7 @@ jobs:
       - name: Install NODE JS
         uses: actions/setup-node@v6
         with:
-          node-version: 24.x
+          node-version: ${{ env.NODE_ACTIVE_VERSION }}
           cache: "yarn"
 
       - name: Install project
@@ -135,7 +136,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 24.x
+          node-version: ${{ env.NODE_ACTIVE_VERSION }}
 
       - name: Download All Reports
         uses: actions/download-artifact@v4
