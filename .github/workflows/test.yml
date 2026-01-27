@@ -92,7 +92,6 @@ jobs:
     needs: build-and-static-analysis
 
     strategy:
-      fail-fast: false
       matrix:
         shard:
           - name: DKG
