@@ -23,6 +23,7 @@ pragma solidity 0.8.17;
 
 
 interface ISchainsInternalMock {
+    function initializeTester(address contractManagerAddress) external;
     function removePlaceOfSchainOnNode(bytes32 schainHash, uint256 nodeIndex) external;
     function removeNodeToLocked(uint256 nodeIndex) external;
     function removeSchainToExceptionNode(bytes32 schainHash) external;
