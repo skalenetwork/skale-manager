@@ -66,4 +66,4 @@ export IMA="$SKALE_MANAGER_ADDRESS"
 export MARIONETTE="$SKALE_MANAGER_ADDRESS"
 export PAYMASTER="$SKALE_MANAGER_ADDRESS"
 # End of TODO
-npx hardhat run migrations/upgrade.ts --network localhost
+yarn hardhat run migrations/upgrade.ts --network localhost

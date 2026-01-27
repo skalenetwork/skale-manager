@@ -17,7 +17,7 @@ trap cleanup EXIT
 
 echo "Running deployment setup"
 
-DEPLOY_OUTPUT=$(PRODUCTION=true npx hardhat run migrations/deploy.ts --network localhost)
+DEPLOY_OUTPUT=$(PRODUCTION=true yarn hardhat run migrations/deploy.ts --network localhost)
 
 echo "Extracting SkaleManager address"
 SKALE_MANAGER_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Register SkaleManager as SkaleManager =>" | awk '{print $NF}')
@@ -25,4 +25,4 @@ SKALE_MANAGER_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Register SkaleManager as S
 echo "SkaleManager deployed at: $SKALE_MANAGER_ADDRESS"
 
 ALLOW_NOT_ATOMIC_UPGRADE=true TARGET=$SKALE_MANAGER_ADDRESS NEW_OWNER="0x000000000000000000000000000000000000dEaD" \
- npx hardhat run migrations/changeOwnership.ts --network localhost
+ yarn hardhat run migrations/changeOwnership.ts --network localhost
