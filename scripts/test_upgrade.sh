@@ -67,7 +67,8 @@ rm -r --interactive=never $DEPLOYED_DIR
 
 # Restore yarn settings of the main project
 unset YARN_IGNORE_PATH
-corepack prepare --activate
+YARN_VERSION=$(grep "yarnPath:" $GITHUB_WORKSPACE/.yarnrc.yml | sed 's/.*yarn-//' | sed 's/.cjs.*//')
+corepack use yarn@$YARN_VERSION
 yarn install
 
 # TODO: use contracts.json file when deployed version starts supporting it
