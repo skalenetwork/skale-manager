@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# cspell:words corepack
+
 set -e
 
 if [ -z $GITHUB_WORKSPACE ]
