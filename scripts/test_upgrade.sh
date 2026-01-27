@@ -42,8 +42,16 @@ git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPL
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
 nvm use $DEPLOYED_WITH_NODE_VERSION
+
+# Prevents using the parent folder's Yarn binary.
+export YARN_IGNORE_PATH=1
+
+# TODO: change when old version is specified in package.json - currently is not, we should use 1.22.22
+corepack use yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e
+
 yarn install
 
+# TODO: Change to `yarn hardhat` on next release
 PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost
 CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
 # TODO: copy contracts.json file when deployed version starts supporting it
@@ -54,6 +62,11 @@ cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data"
 cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
+
+# Restore yarn settings of the main project
+unset YARN_IGNORE_PATH
+corepack enable
+corepack install
 
 # TODO: use contracts.json file when deployed version starts supporting it
 # SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
