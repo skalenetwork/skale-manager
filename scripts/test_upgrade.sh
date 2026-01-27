@@ -67,8 +67,9 @@ rm -r --interactive=never $DEPLOYED_DIR
 
 # Restore yarn settings of the main project
 unset YARN_IGNORE_PATH
-corepack enable
+corepack cache clear
 corepack install
+yarn install
 
 # TODO: use contracts.json file when deployed version starts supporting it
 # SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
