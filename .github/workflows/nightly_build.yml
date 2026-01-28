@@ -33,7 +33,7 @@ jobs:
         NODE_OPTIONS: --max_old_space_size=6952
       run: |
         rm gas/nodeRotation.ts
-        npx hardhat test gas/*.ts
+        yarn hardhat test gas/*.ts
 
   nightly-build-gas-node-rotation:
     runs-on: ubuntu-latest
@@ -59,7 +59,7 @@ jobs:
     - name: Run gas measurements
       env:
         NODE_OPTIONS: --max_old_space_size=6952
-      run: npx hardhat test gas/nodeRotation.ts
+      run: yarn hardhat test gas/nodeRotation.ts
 
   nightly-build-long-tests:
     runs-on: ubuntu-latest
@@ -83,4 +83,4 @@ jobs:
       run: yarn install
 
     - name: Run long tests
-      run: npx hardhat test long-test/*
+      run: yarn hardhat test long-test/*

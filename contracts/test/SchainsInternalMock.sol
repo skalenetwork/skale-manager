@@ -31,6 +31,10 @@ contract SchainsInternalMock is SchainsInternal, ISchainsInternalMock {
 
     mapping (bytes32 => EnumerableSetUpgradeable.AddressSet) private _nodeAddressInSchainTest;
 
+    function initializeTester(address contractManagerAddress) external override initializer {
+        SchainsInternal.initialize(contractManagerAddress);
+    }
+
     function removePlaceOfSchainOnNode(bytes32 schainHash, uint256 nodeIndex) external override {
         delete placeOfSchainOnNode[schainHash][nodeIndex];
     }

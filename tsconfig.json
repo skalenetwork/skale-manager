@@ -4,7 +4,9 @@
     "module": "commonjs",
     "strict": true,
     "esModuleInterop": true,
-    "outDir": "dist"
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["./scripts", "./test", "./migrations/", "./gas", "./long-test"],
   "files": ["./hardhat.config.ts"]

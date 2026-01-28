@@ -7,8 +7,9 @@ import {
     verifyProxy,
     getContractFactory,
 } from '@skalenetwork/upgrade-tools';
-import {Contract, Interface, resolveAddress} from 'ethers';
+import {BaseContract, Interface, resolveAddress} from 'ethers';
 import {TransactionMinedTimeout} from "@openzeppelin/upgrades-core";
+import {SkaleManager} from '../typechain-types';
 
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
@@ -101,7 +102,7 @@ async function main() {
         const contractFactory = await getContractFactory(contract);
         console.log("Deploy", contract);
         let attempts = 5;
-        let proxy: Contract | undefined = undefined;
+        let proxy: BaseContract | undefined = undefined;
         while (attempts --> 0 && typeof proxy === "undefined") {
             try {
                 proxy = await upgrades.deployProxy(
@@ -134,7 +135,7 @@ async function main() {
         if (contract === "SkaleManager") {
             try {
                 console.log(`Set version ${version}`)
-                await (await proxy.setVersion(version)).wait();
+                await (await (proxy as SkaleManager).setVersion(version)).wait();
             } catch {
                 console.log("Failed to set skale-manager version");
             }
