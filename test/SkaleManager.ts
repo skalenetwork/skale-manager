@@ -346,7 +346,6 @@ describe("SkaleManager", () => {
                         schedule.push(bounty);
                     }
                 }
-
                 let mustBePaid = 0;
                 await nextMonth(contractManager);
                 for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timeLimit; ++year) {
