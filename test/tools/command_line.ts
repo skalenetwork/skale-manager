@@ -1,8 +1,18 @@
-import minimist from "minimist";
+import {parseArgs} from "node:util";
 
 const gasMultiplierParameter = "gas_multiplier";
 
-export const argv = minimist(process.argv.slice(2), {string: [gasMultiplierParameter]});
+const {values} = parseArgs({
+    args: process.argv.slice(2),
+    options: {
+        [gasMultiplierParameter]: {
+            type: "string",
+        },
+    },
+    strict: false, // allows other flags to exist without throwing an error
+});
 
 export const gasMultiplier: number =
-    argv[gasMultiplierParameter] === undefined ? 1 : Number(argv[gasMultiplierParameter]);
+  values[gasMultiplierParameter] === undefined
+    ? 1
+    : Number(values[gasMultiplierParameter]);

@@ -87,7 +87,7 @@ ETHERSCAN={etherscan API key to verify contracts} # optional
 2. deploy:
 
 ```bash
-npx hardhat run migrations/deploy.ts --network custom
+yarn hardhat run migrations/deploy.ts --network custom
 ```
 
 ### Official Deployments - Ethereum Mainnet
