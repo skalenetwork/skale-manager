@@ -55,13 +55,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-static-analysis
 
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x, 24.x]
+
     steps:
       - uses: actions/checkout@v6
 
       - name: Install NODE JS
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ matrix.node-version }}
           cache: "yarn"
 
       - name: Install project
