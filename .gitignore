@@ -2,6 +2,10 @@
 .idea
 .cache
 
+### Yarn ###
+
+.yarn/install-state.gz
+
 ### Solidity ###
 build/
 artifacts/

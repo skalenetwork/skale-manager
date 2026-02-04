@@ -66,7 +66,7 @@ async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
     const manifest = await Manifest.forNetwork(ethers.provider);
     const deployment = await manifest.getDeploymentFromAddress(implementationAddress);
     const storageLayout = deployment.layout.storage;
-    return storageLayout.find(storageItem => storageItem.label === "_timeShift") !== undefined;
+    return storageLayout.find((storageItem: { label: string; }) => storageItem.label === "_timeShift") !== undefined;
 }
 
 async function prepareContractsList(instance: Instance) {

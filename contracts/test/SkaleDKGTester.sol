@@ -26,6 +26,11 @@ import { ISkaleDKGTester } from "./interfaces/ISkaleDKGTester.sol";
 
 
 contract SkaleDKGTester is SkaleDKG, ISkaleDKGTester {
+
+    function initializeTester(address contractManagerAddress) external override initializer {
+        SkaleDKG.initialize(contractManagerAddress);
+    }
+
     function setSuccessfulDKGPublic(bytes32 schainHash) external override {
         lastSuccessfulDKG[schainHash] = block.timestamp;
         channels[schainHash].active = false;
