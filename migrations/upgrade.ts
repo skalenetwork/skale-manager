@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import {contracts} from "./deploy";
+import {calculateGasSpent, contracts, shouldCalculateGas} from "./deploy";
 import {ethers} from "hardhat";
 import {Upgrader, Submitter} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
@@ -94,6 +94,7 @@ async function prepareContractsList(instance: Instance) {
 
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
+    const startBlock = await ethers.provider.getBlockNumber();
     let contractsToUpgrade: string[] = [
     ];
     if (process.env.UPGRADE_ALL) {
@@ -105,6 +106,13 @@ async function main() {
         contractsToUpgrade
     );
     await upgrader.upgrade();
+
+    if (await shouldCalculateGas()) {
+        const finalBlock = await ethers.provider.getBlockNumber();
+        const gasSpent = await calculateGasSpent(startBlock, finalBlock, (await ethers.getSigners())[0].address);
+        console.log("NOTE: This calculation includes cost of upgradeAndCall transactions!!");
+        console.log(`Gas spent for the upgrade: ${gasSpent}`);
+    }
 }
 
 if (require.main === module) {
