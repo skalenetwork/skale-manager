@@ -12,6 +12,10 @@ import {isDevelopmentNetwork, TransactionMinedTimeout} from "@openzeppelin/upgra
 import {SkaleManager} from '../typechain-types';
 
 
+export async function shouldCalculateGas() {
+    return await isLocalNetwork() || process.env.CALCULATE_GAS === "true";
+}
+
 export async function isLocalNetwork() {
     let result = false;
     try {
@@ -30,7 +34,7 @@ export async function calculateGasSpent(startBlock: number, endBlock: number, us
         for (const txHash of block.transactions) {
             const tx = await ethers.provider.getTransactionReceipt(txHash);
             if (tx === null) throw new Error(`Transaction ${txHash} not found`);
-            if (tx.from.toLowerCase() === user.toLowerCase()) {
+            if (ethers.getAddress(tx.from) === ethers.getAddress(user)) {
                 totalGasUsed += BigInt(tx.gasUsed);
             }
         }
@@ -226,7 +230,7 @@ async function main() {
 
     console.log("Done");
 
-    if (await isLocalNetwork()) {
+    if (await shouldCalculateGas()) {
         console.log("Calculating gas used by deployer", owner.address);
         const endBlock = await ethers.provider.getBlockNumber();
         const gasUsed = await calculateGasSpent(startBlock, endBlock, owner.address);

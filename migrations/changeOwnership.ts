@@ -1,5 +1,5 @@
 import {skaleContracts} from "@skalenetwork/skale-contracts-ethers-v6";
-import {calculateGasSpent, contracts, isLocalNetwork} from "./deploy";
+import {calculateGasSpent, contracts, shouldCalculateGas} from "./deploy";
 import {ethers} from "hardhat";
 import {EoaSubmitter, InstanceAdmin, InstanceAdminOptions, SafeSubmitter} from "@skalenetwork/upgrade-tools";
 
@@ -86,7 +86,7 @@ async function main() {
     );
     await admin.executeOwnershipTransfer();
 
-    if (await isLocalNetwork()) {
+    if (await shouldCalculateGas()) {
         console.log("Calculating gas used by owner", owner.address);
         const endBlock = await ethers.provider.getBlockNumber();
         const gasUsed = await calculateGasSpent(startBlock, endBlock, owner.address);
