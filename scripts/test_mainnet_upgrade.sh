@@ -15,10 +15,9 @@ else
 fi
 
 
-ANVIL_SESSION="anvil-node"
-yarn pm2 start "anvil --fork-url $MAINNET_ENDPOINT --chain-id 31337 --gas-price 1 --block-base-fee-per-gas 0" \
-  --name "$ANVIL_SESSION"
-
+HARDHAT_FORK="hardhat-node"
+yarn pm2 start "yarn hardhat node --fork $MAINNET_ENDPOINT" \
+  --name "$HARDHAT_FORK"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -26,13 +25,13 @@ cp "$PROJECT_ROOT/.openzeppelin/mainnet.json" "$PROJECT_ROOT/.openzeppelin/unkno
 
 
 echo "Waiting for node to initialize..."
-sleep 5
+sleep 10
 
 echo "Node Initialized."
 
 cleanup() {
-    echo "Stopping Anvil Node"
-    yarn pm2 delete "$ANVIL_SESSION"
+    echo "Stopping Hardhat Node"
+    yarn pm2 delete "$HARDHAT_FORK"
     echo "Removing temporary OpenZeppelin manifest"
     rm -f "$PROJECT_ROOT/.openzeppelin/unknown-31337.json"
 }
@@ -41,6 +40,6 @@ trap cleanup EXIT
 
 echo "Running upgrade check"
 
-TARGET=$TARGET npx hardhat run scripts/checkMainnetUpgrade.ts --network localhost
+TARGET=$TARGET yarn hardhat run scripts/checkMainnetUpgrade.ts --network localhost
 
 echo "SUCCESS: Upgrade check completed successfully."

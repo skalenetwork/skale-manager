@@ -33,11 +33,6 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
 
-      - name: Setup foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
       - name: Install project
         run: yarn install
 
