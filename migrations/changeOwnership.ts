@@ -1,5 +1,5 @@
 import {skaleContracts} from "@skalenetwork/skale-contracts-ethers-v6";
-import {contracts} from "./deploy";
+import {calculateGasSpent, contracts, shouldCalculateGas} from "./deploy";
 import {ethers} from "hardhat";
 import {EoaSubmitter, InstanceAdmin, InstanceAdminOptions, SafeSubmitter} from "@skalenetwork/upgrade-tools";
 
@@ -10,6 +10,8 @@ async function main() {
     let testMode = false;
     let oldOwner: string;
     let submitter: EoaSubmitter | SafeSubmitter;
+    const startBlock = await ethers.provider.getBlockNumber();
+    const [owner,] = await ethers.getSigners();
 
     if (!process.env.NEW_OWNER) {
         throw new Error("Please set NEW_OWNER env variable");
@@ -83,6 +85,13 @@ async function main() {
         instance
     );
     await admin.executeOwnershipTransfer();
+
+    if (await shouldCalculateGas()) {
+        console.log("Calculating gas used by owner", owner.address);
+        const endBlock = await ethers.provider.getBlockNumber();
+        const gasUsed = await calculateGasSpent(startBlock, endBlock, owner.address);
+        console.log(`Gas used by owner: ${gasUsed}`);
+    }
 }
 
 if (require.main === module) {

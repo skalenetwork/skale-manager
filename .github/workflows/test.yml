@@ -41,6 +41,9 @@ jobs:
       - name: Install project
         run: yarn install
 
+      - name: Compile contracts
+        run: yarn cleanCompile
+
       - name: Install slither
         run: pip3 install -r scripts/requirements.txt
 
@@ -51,7 +54,7 @@ jobs:
         run: yarn fullCheck
 
       - name: Test ABI generation
-        run: npx hardhat run scripts/generateAbi.ts
+        run: yarn hardhat run scripts/generateAbi.ts
 
   deployments-and-tests:
     runs-on: ubuntu-latest
@@ -68,6 +71,9 @@ jobs:
 
       - name: Install project
         run: yarn install
+
+      - name: Compile contracts
+        run: yarn cleanCompile
 
       - name: Test deployment
         run: ./scripts/test_deploy.sh
@@ -98,7 +104,6 @@ jobs:
     needs: build-and-static-analysis
 
     strategy:
-      fail-fast: false
       matrix:
         shard:
           - name: DKG
@@ -121,10 +126,13 @@ jobs:
       - name: Install project
         run: yarn install
 
+      - name: Compile contracts
+        run: yarn cleanCompile
+
       - name: Run tests
         env:
           NODE_OPTIONS: --max-old-space-size=12288
-        run: npx hardhat coverage --solcoverjs .solcover.js --testfiles "${{ matrix.shard.files }}"
+        run: yarn hardhat coverage --solcoverjs .solcover.js --testfiles "${{ matrix.shard.files }}"
 
       - name: Prepare Coverage Report
         run: |

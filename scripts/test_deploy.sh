@@ -3,4 +3,4 @@
 set -e
 
 echo "Deploy on hardhat node"
-PRODUCTION=true npx hardhat run migrations/deploy.ts
+PRODUCTION=true yarn hardhat run migrations/deploy.ts
