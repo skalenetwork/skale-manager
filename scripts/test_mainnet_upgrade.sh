@@ -5,7 +5,7 @@ set -e
 if [ -n "$INFURA_API_TOKEN" ]; then
     export MAINNET_ENDPOINT="https://mainnet.infura.io/v3/${INFURA_API_TOKEN}"
 else
-    export MAINNET_ENDPOINT="https://eth.llamarpc.com"
+    export MAINNET_ENDPOINT="https://ethereum-rpc.publicnode.com/"
 fi
 
 if [ -n "$TARGET" ]; then

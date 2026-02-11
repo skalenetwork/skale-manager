@@ -83,13 +83,6 @@ jobs:
           NODE_VERSION: ${{ env.NODE_VERSION }}
         run: ./scripts/test_upgrade.sh
 
-      # Run only for Node.js 22.x and on PRs to release-candidate or beta branches
-      - name: Test mainnet upgrade
-        if: ${{ github.event_name == 'pull_request' && (github.base_ref == 'release-candidate' || github.base_ref == 'beta' || github.base_ref == 'develop') && matrix.node-version == '22.x' }}
-        env:
-          INFURA_API_TOKEN: ${{ secrets.INFURA_API_TOKEN }}
-        run: ./scripts/test_mainnet_upgrade.sh
-
       - name: Test transfer ownership
         run: TEST_MODE=true ./scripts/test_change_ownership.sh
 
@@ -97,6 +90,9 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=12288
         run: yarn test
+
+      - name: Test mainnet upgrade
+        run: ./scripts/test_mainnet_upgrade.sh
 
   coverage:
     name: Coverage (${{ matrix.shard.name }})
