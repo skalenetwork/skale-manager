@@ -27,6 +27,8 @@ import {
 import {
     AddressUpgradeable
 } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 
 import { StringUtils } from "./utils/StringUtils.sol";
@@ -104,8 +106,8 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
         return getContract(DELEGATION_PERIOD_MANAGER);
     }
 
-    function getBounty() external view override returns (address bounty) {
-        return getContract(BOUNTY);
+    function getBounty() external view override returns (IBountyV2 bounty) {
+        return IBountyV2(getContract(BOUNTY));
     }
 
     function getValidatorService() external view override returns (address validatorService) {
@@ -116,8 +118,13 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
         return getContract(TIME_HELPERS);
     }
 
-    function getConstantsHolder() external view override returns (address constantsHolder) {
-        return getContract(CONSTANTS_HOLDER);
+    function getConstantsHolder()
+        external
+        view
+        override
+        returns (IConstantsHolder constantsHolder)
+    {
+        return IConstantsHolder(getContract(CONSTANTS_HOLDER));
     }
 
     function getSkaleToken() external view override returns (address skaleToken) {

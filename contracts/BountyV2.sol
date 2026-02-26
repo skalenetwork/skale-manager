@@ -227,6 +227,33 @@ contract BountyV2 is Permissions, IBountyV2 {
         return _effectiveDelegatedSum.getValues();
     }
 
+    function getRequiredNodesNumber(
+        uint256 delegatedValue
+    )
+        public
+        view
+        override
+        returns (uint256 requiredNodesNumber)
+    {
+        ConstantsHolder constantsHolder = ConstantsHolder(
+            contractManager.getContract("ConstantsHolder")
+        );
+        uint256 msr = constantsHolder.msr();
+        if (msr == 0) {
+            return 0;
+        }
+        requiredNodesNumber = 0;
+        uint256 threshold = 0;
+        for (uint256 i = 1;; ++i) {
+            threshold += msr * i;
+            if (delegatedValue < threshold) {
+                return requiredNodesNumber;
+            } else {
+                ++requiredNodesNumber;
+            }
+        }
+    }
+
     // private
 
     function _refillEpochPool(
@@ -310,7 +337,7 @@ contract BountyV2 is Permissions, IBountyV2 {
             monthBounty: epochPoolSize + bountyWasPaidInCurrentEpoch,
             effectiveDelegated: effectiveDelegated,
             effectiveDelegatedSum: effectiveDelegatedSum,
-            maxNodesAmount: delegated / constantsHolder.msr(),
+            maxNodesAmount: getRequiredNodesNumber(delegated),
             paidToValidator: bountyPaidToTheValidator
         });
 
