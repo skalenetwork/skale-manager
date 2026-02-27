@@ -240,7 +240,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         );
         uint256 msr = constantsHolder.msr();
         if (msr == 0) {
-            return 0;
+            return type(uint256).max;
         }
         requiredNodesNumber = 0;
         uint256 threshold = 0;
