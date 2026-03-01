@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.33;
 
 import { FractionUtils, PartialDifferences } from "../delegation/PartialDifferences.sol";
 import { IPartialDifferencesTester } from "./interfaces/IPartialDifferencesTester.sol";

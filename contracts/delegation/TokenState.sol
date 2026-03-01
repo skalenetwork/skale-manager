@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.33;
 
 import {ITokenState} from "@skalenetwork/skale-manager-interfaces/delegation/ITokenState.sol";
 import {ILocker} from "@skalenetwork/skale-manager-interfaces/delegation/ILocker.sol";
