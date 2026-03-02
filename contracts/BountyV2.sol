@@ -505,7 +505,7 @@ contract BountyV2 is Permissions, IBountyV2 {
             tooBigNumber *= 2;
         }
         while (requiredNodesNumber + 1 < tooBigNumber) {
-            uint256 middle = Math(requiredNodesNumber + tooBigNumber) / 2;
+            uint256 middle = (requiredNodesNumber + tooBigNumber) / 2;
             if (_getRequiredDelegationAmount(middle, msr) <= delegatedValue) {
                 requiredNodesNumber = middle;
             } else {
