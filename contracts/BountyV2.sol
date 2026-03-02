@@ -227,6 +227,20 @@ contract BountyV2 is Permissions, IBountyV2 {
         return _effectiveDelegatedSum.getValues();
     }
 
+    function getRequiredDelegationAmount(
+        uint256 nodesNumber
+    )
+        external
+        view
+        override
+        returns (uint256 requiredDelegationAmount)
+    {
+        ConstantsHolder constantsHolder = ConstantsHolder(
+            contractManager.getContract("ConstantsHolder")
+        );
+        return _getRequiredDelegationAmount(nodesNumber, constantsHolder.msr());
+    }
+
     function getRequiredNodesNumber(
         uint256 delegatedValue
     )
@@ -242,15 +256,23 @@ contract BountyV2 is Permissions, IBountyV2 {
         if (msr == 0) {
             return type(uint256).max;
         }
-        requiredNodesNumber = 0;
-        uint256 threshold = 0;
-        for (uint256 i = 1;; ++i) {
-            threshold += msr * i;
-            if (delegatedValue < threshold) {
-                return requiredNodesNumber;
-            } else {
-                ++requiredNodesNumber;
+        // this number was received experimentally
+        // to not run binary search for small numbers
+        // because straightforward sum calculation is cheaper in this case
+        uint256 bigValidator = 90;
+        if (delegatedValue < _getRequiredDelegationAmount(bigValidator, msr)) {
+            requiredNodesNumber = 0;
+            uint256 threshold = 0;
+            for (uint256 i = 1;; ++i) {
+                threshold += msr * i;
+                if (delegatedValue < threshold) {
+                    return requiredNodesNumber;
+                } else {
+                    ++requiredNodesNumber;
+                }
             }
+        } else {
+            return _getRequiredNodesNumberWithBinarySearch(delegatedValue, msr);
         }
     }
 
@@ -454,6 +476,41 @@ contract BountyV2 is Permissions, IBountyV2 {
         } else {
             uint256 currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
             return currentMonthStart + nodeCreationWindowSeconds;
+        }
+    }
+
+    function _getRequiredDelegationAmount(
+        uint256 nodesNumber,
+        uint256 msr
+    )
+        private
+        pure
+        returns (uint256 requiredDelegationAmount)
+    {
+        requiredDelegationAmount = msr * nodesNumber * (nodesNumber + 1) / 2;
+    }
+
+    function _getRequiredNodesNumberWithBinarySearch(
+        uint256 delegatedValue,
+        uint256 msr
+    )
+        private
+        pure
+        returns (uint256 requiredNodesNumber)
+    {
+        requiredNodesNumber = 0;
+        uint256 tooBigNumber = 1;
+        while (_getRequiredDelegationAmount(tooBigNumber, msr) <= delegatedValue) {
+            requiredNodesNumber = tooBigNumber;
+            tooBigNumber *= 2;
+        }
+        while (requiredNodesNumber + 1 < tooBigNumber) {
+            uint256 middle = Math(requiredNodesNumber + tooBigNumber) / 2;
+            if (_getRequiredDelegationAmount(middle, msr) <= delegatedValue) {
+                requiredNodesNumber = middle;
+            } else {
+                tooBigNumber = middle;
+            }
         }
     }
 
