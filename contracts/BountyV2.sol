@@ -21,6 +21,7 @@
 
 pragma solidity 0.8.17;
 
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 import {
     IDelegationController
@@ -256,23 +257,18 @@ contract BountyV2 is Permissions, IBountyV2 {
         if (msr == 0) {
             return type(uint256).max;
         }
-        // this number was received experimentally
-        // to not run binary search for small numbers
-        // because straightforward sum calculation is cheaper in this case
-        uint256 bigValidator = 90;
-        if (delegatedValue < _getRequiredDelegationAmount(bigValidator, msr)) {
-            requiredNodesNumber = 0;
-            uint256 threshold = 0;
-            for (uint256 i = 1;; ++i) {
-                threshold += msr * i;
-                if (delegatedValue < threshold) {
-                    return requiredNodesNumber;
-                } else {
-                    ++requiredNodesNumber;
-                }
-            }
+        if (delegatedValue < msr) {
+            return 0;
+        } else if (delegatedValue < 3 * msr) {
+            return 1;
+        } else if (delegatedValue < 6 * msr) {
+            return 2;
+        } else if (delegatedValue < 10 * msr) {
+            return 3;
+        } else if (delegatedValue < 15 * msr) {
+            return 4;
         } else {
-            return _getRequiredNodesNumberWithBinarySearch(delegatedValue, msr);
+            return (Math.sqrt(8 * delegatedValue / msr + 1) - 1) / 2;
         }
     }
 
@@ -461,7 +457,7 @@ contract BountyV2 is Permissions, IBountyV2 {
             if (lastRewardTimestamp < lastRewardMonthStart + nodeCreationWindowSeconds) {
                 return nextMonthStart - BOUNTY_WINDOW_SECONDS;
             } else {
-                return _min(
+                return Math.min(
                     nextMonthStart + timePassedAfterMonthStart,
                     nextMonthFinish - BOUNTY_WINDOW_SECONDS
                 );
@@ -469,8 +465,8 @@ contract BountyV2 is Permissions, IBountyV2 {
         } else if (lastRewardMonth + 1 == currentMonth) {
             uint256 currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
             uint256 currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth + 1);
-            return _min(
-                currentMonthStart + _max(timePassedAfterMonthStart, nodeCreationWindowSeconds),
+            return Math.min(
+                currentMonthStart + Math.max(timePassedAfterMonthStart, nodeCreationWindowSeconds),
                 currentMonthFinish - BOUNTY_WINDOW_SECONDS
             );
         } else {
@@ -490,30 +486,6 @@ contract BountyV2 is Permissions, IBountyV2 {
         requiredDelegationAmount = msr * nodesNumber * (nodesNumber + 1) / 2;
     }
 
-    function _getRequiredNodesNumberWithBinarySearch(
-        uint256 delegatedValue,
-        uint256 msr
-    )
-        private
-        pure
-        returns (uint256 requiredNodesNumber)
-    {
-        requiredNodesNumber = 0;
-        uint256 tooBigNumber = 1;
-        while (_getRequiredDelegationAmount(tooBigNumber, msr) <= delegatedValue) {
-            requiredNodesNumber = tooBigNumber;
-            tooBigNumber *= 2;
-        }
-        while (requiredNodesNumber + 1 < tooBigNumber) {
-            uint256 middle = (requiredNodesNumber + tooBigNumber) / 2;
-            if (_getRequiredDelegationAmount(middle, msr) <= delegatedValue) {
-                requiredNodesNumber = middle;
-            } else {
-                tooBigNumber = middle;
-            }
-        }
-    }
-
     function _calculateBountyShare(
         uint256 monthBounty,
         uint256 effectiveDelegated,
@@ -527,7 +499,7 @@ contract BountyV2 is Permissions, IBountyV2 {
     {
         if (maxNodesAmount > 0) {
             uint256 totalBountyShare = monthBounty * effectiveDelegated / effectiveDelegatedSum;
-            return _min(
+            return Math.min(
                 totalBountyShare / maxNodesAmount,
                 totalBountyShare - paidToValidator
             );
@@ -535,21 +507,4 @@ contract BountyV2 is Permissions, IBountyV2 {
             return 0;
         }
     }
-
-    function _min(uint256 a, uint256 b) private pure returns (uint256 min) {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
-    }
-
-    function _max(uint256 a, uint256 b) private pure returns (uint256 max) {
-        if (a < b) {
-            return b;
-        } else {
-            return a;
-        }
-    }
-
 }
