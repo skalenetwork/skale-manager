@@ -84,26 +84,6 @@ describe("Bounty", () => {
         await bountyContract.disableBountyReduction();
     });
 
-    // it.only("develop", async () => {
-    //     const msr = 1000n;
-    //     await constantsHolder.setMSR(msr);
-    //     const baseline = await bountyContract.getRequiredNodesNumber(0n);
-    //     for (let delegatedValue = 0n; delegatedValue <= 100n * msr; ++delegatedValue) {
-    //         console.log(delegatedValue);
-    //         const x1 = await bountyContract.getRequiredNodesNumber(delegatedValue);
-    //         const x2 = await bountyContract.getRequiredNodesNumber2(delegatedValue);
-    //         x2.should.be.equal(x1);
-    //         const gas1 = await bountyContract.getRequiredNodesNumber.estimateGas(delegatedValue);
-    //         const gas2 = await bountyContract.getRequiredNodesNumber2.estimateGas(delegatedValue);
-    //         gas2.should.be.lessThanOrEqual(gas1, `${gas1} < ${gas2}`);
-    //         // if (gas2 < gas1) {
-    //         //     console.log(delegatedValue);
-    //         //     break;
-    //         // }
-    //         console.log(gas1 * 100n / gas2, '%', `(${gas1 - gas2} gas saved)`);
-    //     }
-    // })
-
     describe("when validator is registered and has active delegations", () => {
         let skaleToken: SkaleToken;
         let delegationController: DelegationController;
