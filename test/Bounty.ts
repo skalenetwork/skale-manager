@@ -84,6 +84,24 @@ describe("Bounty", () => {
         await bountyContract.disableBountyReduction();
     });
 
+    it("should provide progressive staking requirements", async () => {
+        const msr = ethers.parseEther("20000000");
+        await constantsHolder.setMSR(msr);
+        let stakingRequirement = 0n;
+        for (let nodesNumber = 0n; nodesNumber <= 1000n; ++nodesNumber) {
+            console.log(nodesNumber);
+            stakingRequirement += msr * nodesNumber;
+            (await bountyContract.getRequiredDelegationAmount(nodesNumber))
+                .should.be.equal(stakingRequirement);
+            (await bountyContract.getRequiredNodesNumber(stakingRequirement))
+                .should.be.equal(nodesNumber);
+            if (stakingRequirement > 0) {
+                (await bountyContract.getRequiredNodesNumber(stakingRequirement - 1n))
+                    .should.be.equal(nodesNumber - 1n);
+            }
+        }
+    })
+
     describe("when validator is registered and has active delegations", () => {
         let skaleToken: SkaleToken;
         let delegationController: DelegationController;
