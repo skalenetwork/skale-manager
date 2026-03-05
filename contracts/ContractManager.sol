@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import {
     OwnableUpgradeable
@@ -32,7 +32,6 @@ import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConsta
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
-import { StringUtils } from "./utils/StringUtils.sol";
 import { InitializableWithGap } from "./thirdparty/openzeppelin/InitializableWithGap.sol";
 
 /**
@@ -41,7 +40,6 @@ import { InitializableWithGap } from "./thirdparty/openzeppelin/InitializableWit
  * (in the form of human-readable strings) to addresses.
  */
 contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractManager {
-    using StringUtils for string;
     using AddressUpgradeable for address;
 
     string public constant BOUNTY = "Bounty";
@@ -150,7 +148,7 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
     {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
         if (contractAddress == address(0)) {
-            revert(name.strConcat(" contract has not been found"));
+            revert(string.concat(name," contract has not been found"));
         }
     }
 }
