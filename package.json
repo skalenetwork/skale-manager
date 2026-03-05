@@ -50,7 +50,7 @@
     "@skalenetwork/ima-interfaces": "2.0.0-develop.67",
     "@skalenetwork/marionette-interfaces": "^0.0.0-main.6",
     "@skalenetwork/paymaster-interfaces": "^1.0.1",
-    "@skalenetwork/skale-manager-interfaces": "3.2.0-dsr.9",
+    "@skalenetwork/skale-manager-interfaces": "3.2.0-dsr.10",
     "@skalenetwork/upgrade-tools": "4.0.0-develop.8",
     "@typechain/hardhat": "^9.1.0",
     "dotenv": "^17.2.3",
