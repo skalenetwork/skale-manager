@@ -89,7 +89,6 @@ describe("Bounty", () => {
         await constantsHolder.setMSR(msr);
         let stakingRequirement = 0n;
         for (let nodesNumber = 0n; nodesNumber <= 1000n; ++nodesNumber) {
-            console.log(nodesNumber);
             stakingRequirement += msr * nodesNumber;
             (await bountyContract.getRequiredDelegationAmount(nodesNumber))
                 .should.be.equal(stakingRequirement);

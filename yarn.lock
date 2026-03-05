@@ -2547,10 +2547,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@skalenetwork/skale-manager-interfaces@npm:3.2.0-dsr.7":
-  version: 3.2.0-dsr.7
-  resolution: "@skalenetwork/skale-manager-interfaces@npm:3.2.0-dsr.7"
-  checksum: 10c0/cc2488fb379ee78d74592d409970b46b714367f591c99b1a3a4268b3ae0cae7b7514336b5dda54c81290d5452d1d2e1b54b4f7fe692ac4ce0aa293206fd9cfbf
+"@skalenetwork/skale-manager-interfaces@npm:3.2.0-dsr.9":
+  version: 3.2.0-dsr.9
+  resolution: "@skalenetwork/skale-manager-interfaces@npm:3.2.0-dsr.9"
+  checksum: 10c0/1f07bb099a64f30d5a89ff00bc3e2b8072f677d50ed1dca82ae78258288d795dffb9992f3d12b8117c79071b900e10157708e106f80a8a5dac9801d82184352a
   languageName: node
   linkType: hard
 
@@ -2586,7 +2586,7 @@ __metadata:
     "@skalenetwork/marionette-interfaces": "npm:^0.0.0-main.6"
     "@skalenetwork/paymaster-interfaces": "npm:^1.0.1"
     "@skalenetwork/skale-contracts-ethers-v6": "npm:^2.0.0-develop.6"
-    "@skalenetwork/skale-manager-interfaces": "npm:3.2.0-dsr.7"
+    "@skalenetwork/skale-manager-interfaces": "npm:3.2.0-dsr.9"
     "@skalenetwork/upgrade-tools": "npm:4.0.0-develop.8"
     "@typechain/ethers-v6": "npm:^0.5.1"
     "@typechain/hardhat": "npm:^9.1.0"

@@ -30,6 +30,7 @@ import {
 import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
 import { StringUtils } from "./utils/StringUtils.sol";
 import { InitializableWithGap } from "./thirdparty/openzeppelin/InitializableWithGap.sol";
@@ -114,8 +115,8 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
         return getContract(VALIDATOR_SERVICE);
     }
 
-    function getTimeHelpers() external view override returns (address timeHelpers) {
-        return getContract(TIME_HELPERS);
+    function getTimeHelpers() external view override returns (ITimeHelpers timeHelpers) {
+        return ITimeHelpers(getContract(TIME_HELPERS));
     }
 
     function getConstantsHolder()

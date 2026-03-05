@@ -70,6 +70,13 @@ contract BountyV2 is Permissions, IBountyV2 {
     // validatorId => BountyHistory
     mapping (uint256 => BountyHistory) private _bountyHistory;
 
+    uint256 public psrActivationMonth;
+
+    event PsrActivationMonthChanged(
+        uint256 oldValue,
+        uint256 newValue
+    );
+
     modifier onlyBountyReductionManager() {
         require(
             hasRole(BOUNTY_REDUCTION_MANAGER_ROLE, msg.sender),
@@ -85,6 +92,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         _bountyWasPaidInCurrentEpoch = 0;
         bountyReduction = false;
         nodeCreationWindowSeconds = 3 * SECONDS_PER_DAY;
+        psrActivationMonth = 0;
     }
 
     function calculateBounty(uint256 nodeIndex)
@@ -153,6 +161,11 @@ contract BountyV2 is Permissions, IBountyV2 {
     function setNodeCreationWindowSeconds(uint256 window) external override allow("Nodes") {
         emit NodeCreationWindowWasChanged(nodeCreationWindowSeconds, window);
         nodeCreationWindowSeconds = window;
+    }
+
+    function setPsrActivationMonth(uint256 month) external override onlyOwner {
+        emit PsrActivationMonthChanged(psrActivationMonth, month);
+        psrActivationMonth = month;
     }
 
     function handleDelegationAdd(
@@ -257,16 +270,21 @@ contract BountyV2 is Permissions, IBountyV2 {
         if (msr == 0) {
             return type(uint256).max;
         }
+
+        // TODO: remove this check after progressive MSR activation
+        if (psrActivationMonth > 0) {
+            if (psrActivationMonth <
+                contractManager.getTimeHelpers().getCurrentMonth()) {
+                return delegatedValue / msr;
+            }
+        }
+
         if (delegatedValue < msr) {
             return 0;
         } else if (delegatedValue < 3 * msr) {
             return 1;
         } else if (delegatedValue < 6 * msr) {
             return 2;
-        } else if (delegatedValue < 10 * msr) {
-            return 3;
-        } else if (delegatedValue < 15 * msr) {
-            return 4;
         } else {
             return (Math.sqrt(8 * delegatedValue / msr + 1) - 1) / 2;
         }
@@ -480,9 +498,16 @@ contract BountyV2 is Permissions, IBountyV2 {
         uint256 msr
     )
         private
-        pure
+        view
         returns (uint256 requiredDelegationAmount)
     {
+        // TODO: remove this check after progressive MSR activation
+        if (psrActivationMonth > 0) {
+            if (psrActivationMonth <
+                contractManager.getTimeHelpers().getCurrentMonth()) {
+                return nodesNumber * msr;
+            }
+        }
         requiredDelegationAmount = msr * nodesNumber * (nodesNumber + 1) / 2;
     }
 
