@@ -95,11 +95,7 @@ async function prepareContractsList(instance: Instance) {
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
     const startBlock = await ethers.provider.getBlockNumber();
-    let contractsToUpgrade: string[] = [
-    ];
-    if (process.env.UPGRADE_ALL) {
-        contractsToUpgrade = await prepareContractsList(skaleManager);
-    }
+    const contractsToUpgrade = await prepareContractsList(skaleManager);
     const upgrader = new SkaleManagerUpgrader(
         "1.12.0",
         skaleManager,
