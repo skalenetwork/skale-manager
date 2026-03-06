@@ -24,6 +24,7 @@ import {ethers} from "hardhat";
 import {deployPunisher} from "./tools/deploy/delegation/punisher";
 import {fastBeforeEach} from "./tools/mocha";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {deployTimeHelpers} from "./tools/deploy/delegation/timeHelpers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -90,6 +91,58 @@ describe("Bounty", () => {
         let stakingRequirement = 0n;
         for (let nodesNumber = 0n; nodesNumber <= 1000n; ++nodesNumber) {
             stakingRequirement += msr * nodesNumber;
+            (await bountyContract.getRequiredDelegationAmount(nodesNumber))
+                .should.be.equal(stakingRequirement);
+            (await bountyContract.getRequiredNodesNumber(stakingRequirement))
+                .should.be.equal(nodesNumber);
+            if (stakingRequirement > 0) {
+                (await bountyContract.getRequiredNodesNumber(stakingRequirement - 1n))
+                    .should.be.equal(nodesNumber - 1n);
+            }
+        }
+    })
+
+    it("should allow to activate progressive staking requirements", async () => {
+        const msr = ethers.parseEther("20000000");
+        await constantsHolder.setMSR(msr);
+
+        const timeHelpers = await deployTimeHelpers(contractManager);
+
+        let stakingRequirement = 0n;
+        let legacyStakingRequirement = 0n;
+        for (let nodesNumber = 0n; nodesNumber <= 1000n; ++nodesNumber) {
+            stakingRequirement += msr * nodesNumber;
+            if (nodesNumber > 0n) {
+                legacyStakingRequirement += msr;
+            }
+
+            // Progressive staking requirements should be activated by default
+            await bountyContract.setPsrActivationMonth(0);
+
+            (await bountyContract.getRequiredDelegationAmount(nodesNumber))
+                .should.be.equal(stakingRequirement);
+            (await bountyContract.getRequiredNodesNumber(stakingRequirement))
+                .should.be.equal(nodesNumber);
+            if (stakingRequirement > 0) {
+                (await bountyContract.getRequiredNodesNumber(stakingRequirement - 1n))
+                    .should.be.equal(nodesNumber - 1n);
+            }
+
+            // schedule activation next month
+            await bountyContract.setPsrActivationMonth(await timeHelpers.getCurrentMonth() + 1n);
+
+            (await bountyContract.getRequiredDelegationAmount(nodesNumber))
+                .should.be.equal(legacyStakingRequirement);
+            (await bountyContract.getRequiredNodesNumber(legacyStakingRequirement))
+                .should.be.equal(nodesNumber);
+            if (legacyStakingRequirement > 0) {
+                (await bountyContract.getRequiredNodesNumber(legacyStakingRequirement - 1n))
+                    .should.be.equal(nodesNumber - 1n);
+            }
+
+            // check next month
+            await nextMonth(contractManager);
+
             (await bountyContract.getRequiredDelegationAmount(nodesNumber))
                 .should.be.equal(stakingRequirement);
             (await bountyContract.getRequiredNodesNumber(stakingRequirement))

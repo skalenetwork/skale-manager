@@ -273,8 +273,8 @@ contract BountyV2 is Permissions, IBountyV2 {
 
         // TODO: remove this check after progressive MSR activation
         if (psrActivationMonth > 0) {
-            if (psrActivationMonth <
-                contractManager.getTimeHelpers().getCurrentMonth()) {
+            if (contractManager.getTimeHelpers().getCurrentMonth() <
+                psrActivationMonth) {
                 return delegatedValue / msr;
             }
         }
@@ -503,8 +503,8 @@ contract BountyV2 is Permissions, IBountyV2 {
     {
         // TODO: remove this check after progressive MSR activation
         if (psrActivationMonth > 0) {
-            if (psrActivationMonth <
-                contractManager.getTimeHelpers().getCurrentMonth()) {
+            if (contractManager.getTimeHelpers().getCurrentMonth() <
+                psrActivationMonth) {
                 return nodesNumber * msr;
             }
         }
