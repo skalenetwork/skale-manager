@@ -61,10 +61,10 @@ class SkaleManagerUpgrader extends Upgrader {
     }
 
     initialize = async () => {
-        const bounty = await this.instance.getContract("BountyV2");
         this.transactions.push(Transaction.from({
-            to: await ethers.resolveAddress(bounty),
-            data: bounty.interface.encodeFunctionData("setPsrActivationMonth", [ethers.MaxUint256])
+            to: await this.instance.getContractAddress("BountyV2"),
+            data: (await ethers.getContractFactory("BountyV2")).interface
+                .encodeFunctionData("setPsrActivationMonth", [ethers.MaxUint256])
         }));
     }
 }
