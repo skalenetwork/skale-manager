@@ -78,7 +78,7 @@ Observed totals and node split:
 | M3 | `~14.3M / ~14.3M` | `~28.5M` | `~16.0M / ~16.0M` | `~32.1M` | request path higher |
 
 Takeaway:
-- In this steup, undelegation request increases month2/month3 paid totals vs the no-request path.
+- In this setup, undelegation request increases month2/month3 paid totals vs the no-request path.
 - Under the 60M delegation, bounty is split by the 2 existing nodes. With 60M, bounty is split by 3 even though only 2 exist.
 
 ## D) Extra 20M setup: compare order (`0 → 1` vs `1 → 0`)
@@ -99,6 +99,6 @@ Takeaway:
 
 ## 3) Final practical conclusions
 
-- Penalty is **only** applied when nodes are **undercolaterized**, meaning there are more nodes than it should for a validator.
-- Penalty can **allways** be avoided by validators as long as bounties are collected from node 0 to node N.
-- If nodes are **overcolaterized**, the bounty is split by more nodes than existing ones, which leaves some bounty in the pool to be distributed in the next epoch. This creates a harsh loss for validators.
+- Penalty is **only** applied when nodes are **under-collateralized**, meaning there are more nodes than it should for a validator.
+- Penalty can **always** be avoided by validators as long as bounties are collected from node 0 to node N.
+- If nodes are **over-collateralized**, the bounty is split by more nodes than existing ones, which leaves some bounty in the pool to be distributed in the next epoch. This creates a harsh loss for validators.
