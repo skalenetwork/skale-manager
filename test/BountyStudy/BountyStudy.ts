@@ -8,36 +8,34 @@ import {
     DelegationPeriodManager,
     Distributor,
     Nodes,
-    Schains,
     SchainsInternalMock,
     SkaleDKGTester,
     SkaleManager,
     SkaleToken,
-    ValidatorService,
-    Wallets
+    ValidatorService
 } from "../../typechain-types";
-import { privateKeys } from "../tools/private-keys";
-import { deployBounty } from "../tools/deploy/bounty";
-import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
-import { deployContractManager } from "../tools/deploy/contractManager";
-import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployDelegationPeriodManager } from "../tools/deploy/delegation/delegationPeriodManager";
-import { deployDistributor } from "../tools/deploy/delegation/distributor";
-import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
-import { deployNodes } from "../tools/deploy/nodes";
-import { deploySchains } from "../tools/deploy/schains";
-import { deploySchainsInternalMock } from "../tools/deploy/test/schainsInternalMock";
-import { deploySkaleDKGTester } from "../tools/deploy/test/skaleDKGTester";
-import { deploySkaleManager } from "../tools/deploy/skaleManager";
-import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { deployWallets } from "../tools/deploy/wallets";
-import { fastBeforeEach } from "../tools/mocha";
-import { getPublicKey } from "../tools/signatures";
-import { currentTime, nextMonth, skipTime } from "../tools/time";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { Wallet } from "ethers";
-import { takeSnapshot } from "@nomicfoundation/hardhat-network-helpers";
+import {privateKeys} from "../tools/private-keys";
+import {deployBounty} from "../tools/deploy/bounty";
+import {deployConstantsHolder} from "../tools/deploy/constantsHolder";
+import {deployContractManager} from "../tools/deploy/contractManager";
+import {deployDelegationController} from "../tools/deploy/delegation/delegationController";
+import {deployDelegationPeriodManager} from "../tools/deploy/delegation/delegationPeriodManager";
+import {deployDistributor} from "../tools/deploy/delegation/distributor";
+import {deployValidatorService} from "../tools/deploy/delegation/validatorService";
+import {deployNodes} from "../tools/deploy/nodes";
+import {deploySchains} from "../tools/deploy/schains";
+import {deploySchainsInternalMock} from "../tools/deploy/test/schainsInternalMock";
+import {deploySkaleDKGTester} from "../tools/deploy/test/skaleDKGTester";
+import {deploySkaleManager} from "../tools/deploy/skaleManager";
+import {deploySkaleToken} from "../tools/deploy/skaleToken";
+import {deployWallets} from "../tools/deploy/wallets";
+import {fastBeforeEach} from "../tools/mocha";
+import {getPublicKey} from "../tools/signatures";
+import {currentTime, nextMonth, skipTime} from "../tools/time";
+import {ethers} from "hardhat";
+import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {Wallet} from "ethers";
+import {takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -73,8 +71,6 @@ describe("BountyStudy", () => {
     const nodeIndexes = [0, 1];
 
     let owner: SignerWithAddress;
-    let developer: SignerWithAddress;
-    let hacker: SignerWithAddress;
     let validator: Wallet;
     let nodeAddress: Wallet;
 
@@ -84,14 +80,12 @@ describe("BountyStudy", () => {
     let skaleManager: SkaleManager;
     let skaleToken: SkaleToken;
     let schainsInternal: SchainsInternalMock;
-    let schains: Schains;
     let validatorService: ValidatorService;
     let delegationController: DelegationController;
     let delegationPeriodManager: DelegationPeriodManager;
     let distributor: Distributor;
     let skaleDKG: SkaleDKGTester;
     let bountyContract: BountyV2;
-    let wallets: Wallets;
 
     const moveToBountyReadyTime = async (indexes: number[] = nodeIndexes) => {
         let readyAt = 0n;
@@ -123,27 +117,16 @@ describe("BountyStudy", () => {
             console.log(`  node ${nodeIndex}: ${formatSkl(nodeBounty)}`);
         }
         console.log(`  total:   ${formatSkl(total)}`);
-        return { total, perNode };
-    };
-
-    const requestUndelegationAndMoveToEffectiveMonth = async () => {
-        await delegationController.connect(owner).requestUndelegation(smallDelegationId);
-        const delegation = await delegationController.getDelegation(smallDelegationId);
-        const timeHelpers = await ethers.getContractAt("TimeHelpers", await contractManager.getTimeHelpers());
-        const finishedMonthTs = await timeHelpers.monthToTimestamp(delegation.finished);
-        const now = await currentTime();
-        if (now < finishedMonthTs) {
-            await skipTime(finishedMonthTs - now + 1n);
-        }
+        return {total, perNode};
     };
 
     fastBeforeEach(async () => {
-        [owner, developer, hacker] = await ethers.getSigners();
+        [owner,] = await ethers.getSigners();
 
         validator = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress = new Wallet(String(privateKeys[4])).connect(ethers.provider);
-        await owner.sendTransaction({ to: nodeAddress.address, value: ethers.parseEther("10000") });
-        await owner.sendTransaction({ to: validator.address, value: ethers.parseEther("10000") });
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.parseEther("10000")});
+        await owner.sendTransaction({to: validator.address, value: ethers.parseEther("10000")});
 
         contractManager = await deployContractManager();
 
@@ -151,7 +134,7 @@ describe("BountyStudy", () => {
         constantsHolder = await deployConstantsHolder(contractManager);
         nodesContract = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternalMock(contractManager);
-        schains = await deploySchains(contractManager);
+        await deploySchains(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
@@ -161,7 +144,7 @@ describe("BountyStudy", () => {
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
         await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
         bountyContract = await deployBounty(contractManager);
-        wallets = await deployWallets(contractManager);
+        await deployWallets(contractManager);
 
         const constantsHolderManagerRole = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
         await constantsHolder.grantRole(constantsHolderManagerRole, owner.address);
@@ -404,6 +387,7 @@ describe("BountyStudy", () => {
             order01Month3.perNode.get(1)!.should.be.closeTo(order10Month3.perNode.get(1)!, 1n);
         });
     });
+
     /*
     describe("with high psrActivationMonth and MSR=20M", () => {
         fastBeforeEach(async () => {
