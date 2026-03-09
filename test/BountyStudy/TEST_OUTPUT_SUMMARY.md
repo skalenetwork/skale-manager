@@ -1,3 +1,4 @@
+<!-- cspell:words collateralized -->
 # BountyStudy — Findings Summary (from latest run)
 
 Source: `yarn test test/BountyStudy/BountyStudy.ts`
