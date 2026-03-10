@@ -10,7 +10,10 @@ const name = "SkaleToken";
 
 async function deploy(contractManager: ContractManager) {
     const factory = await ethers.getContractFactory(name);
-    return await factory.deploy(contractManager, []) as unknown as SkaleToken;
+    const skaleToken = await factory.deploy(contractManager, []) as unknown as SkaleToken;
+    // Owner has minter role by default in tests
+    await skaleToken.grantRole(await skaleToken.MINTER_ROLE(), (await ethers.getSigners())[0].getAddress());
+    return skaleToken;
 }
 
 async function deployDependencies(contractManager: ContractManager) {
@@ -18,6 +21,15 @@ async function deployDependencies(contractManager: ContractManager) {
     await deployDelegationController(contractManager);
     await deployPunisher(contractManager);
     await deploySkaleManager(contractManager);
+
+    const skaleToken = await ethers.getContractAt(
+        "SkaleToken",
+        await contractManager.getContract("SkaleToken")
+    ) as unknown as SkaleToken;
+    await skaleToken.grantRole(
+        await skaleToken.MINTER_ROLE(),
+        await contractManager.getContract("SkaleManager")
+    );
 }
 
 export const deploySkaleToken = deployFunctionFactory<SkaleToken>(

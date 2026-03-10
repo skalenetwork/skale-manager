@@ -34,8 +34,6 @@ describe("SkaleToken", () => {
     [owner, holder, receiver, nilAddress, accountWith99] = await ethers.getSigners();
 
     contractManager = await deployContractManager();
-
-    contractManager = await deployContractManager();
     skaleToken = await deploySkaleToken(contractManager);
 
     const skaleManagerMock = await deploySkaleManagerMock(contractManager);
@@ -215,6 +213,13 @@ describe("SkaleToken", () => {
 
     (await skaleToken.balanceOf(holder.address)).should.be.equal(amount);
     (await skaleToken.balanceOf(skaleToken)).should.be.equal(0);
+  });
+  it("should allow only minter role to mint tokens", async () => {
+    const minter = receiver;
+    const mintAmount = ethers.parseEther("1");
+    await skaleToken.connect(minter).mint(minter.address, mintAmount, "0x", "0x")
+      .should.be.eventually.rejectedWith("Caller does not have MINTER_ROLE");
+    await skaleToken.grantRole(await skaleToken.MINTER_ROLE(), minter.address);
   });
 
   it("should not allow to delegate burned tokens", async () => {

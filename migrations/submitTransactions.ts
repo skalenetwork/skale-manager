@@ -7,7 +7,7 @@ async function main() {
         console.log("Example of usage:");
         console.log("SAFE=0x13fD1622F0E7e50A87B79cb296cbAf18362631C0",
             "TRANSACTIONS=data/transactions-1.8.0-mainnet.json",
-            "npx hardhat run migrations/submitTransactions.ts --network mainnet");
+            "yarn hardhat run migrations/submitTransactions.ts --network mainnet");
         process.exit(1);
     }
     if (!process.env.PRIVATE_KEY) {

@@ -1,6 +1,6 @@
 import {task, HardhatUserConfig} from "hardhat/config";
 import "@nomicfoundation/hardhat-chai-matchers";
-import "@nomiclabs/hardhat-etherscan";
+import "@nomicfoundation/hardhat-verify";
 import "@openzeppelin/hardhat-upgrades";
 import '@typechain/hardhat'
 import "hardhat-dependency-compiler";
@@ -70,6 +70,13 @@ function getGasPrice(gasPrice: string | undefined) {
   }
 }
 
+function normalizeUrl(url: string | undefined): string {
+  if (!url) {
+    return "";
+  }
+  return url.replace(/\/+$/, "");
+}
+
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   solidity: {
@@ -79,7 +86,10 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer:{
             enabled: true,
-            runs: 100
+            runs: 100,
+            details: {
+              yul: true
+            }
           }
         }
       },
@@ -88,7 +98,10 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 300
+            runs: 300,
+            details: {
+              yul: true
+            }
           }
         }
       }
@@ -110,7 +123,19 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN
+    apiKey: {
+      custom: process.env.ETHERSCAN || ""
+    },
+    customChains: [
+      {
+        network: "custom",
+        chainId: Number(process.env.CHAIN_ID),
+        urls: {
+          apiURL: `${normalizeUrl(process.env.EXPLORER_URL)}/api`,
+          browserURL: normalizeUrl(process.env.EXPLORER_URL)
+        }
+      }
+    ]
   },
   typechain: {
     externalArtifacts: [

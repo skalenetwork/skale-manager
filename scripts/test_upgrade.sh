@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# cspell:words corepack yarnrc
+
 set -e
 
 if [ -z $GITHUB_WORKSPACE ]
@@ -22,24 +24,37 @@ DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 DEPLOYED_WITH_NODE_VERSION="lts/hydrogen"
 CURRENT_NODE_VERSION=$(nvm current)
 
-git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
+## Start hardhat node setup
+HARDHAT_NODE_SESSION="hardhat-node"
+yarn pm2 start "yarn hardhat node" --name "$HARDHAT_NODE_SESSION"
 
-# Have to set --miner.blockTime 1
-# because there is a bug in ganache
-# https://github.com/trufflesuite/ganache/issues/4165
-# TODO: remove --miner.blockTime 1
-# when ganache processes pending queue correctly
-# to speed up testing process
-GANACHE_SESSION=$(npx ganache --😈 --miner.blockGasLimit 8000000 --miner.blockTime 1)
+echo "Node Initialized."
+
+cleanup() {
+    echo "Stopping Hardhat Node"
+    yarn pm2 delete "$HARDHAT_NODE_SESSION"
+    echo "SUCCESS"
+}
+
+trap cleanup EXIT
+## End of node setup
+
+git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 
 cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
 nvm use $DEPLOYED_WITH_NODE_VERSION
+
+# Prevents using the parent folder's Yarn binary.
+export YARN_IGNORE_PATH=1
+
+# TODO: change when old version is specified in package.json - currently is not, we should use 1.22.22
+corepack use yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e
+
 yarn install
 
+# TODO: Change to `yarn hardhat` on next release
 PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost
-rm $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json || true
-cp .openzeppelin/unknown-*.json $GITHUB_WORKSPACE/.openzeppelin
 CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
 # TODO: copy contracts.json file when deployed version starts supporting it
 # cp "data/$CONTRACTS_FILENAME" "$GITHUB_WORKSPACE/data"
@@ -49,6 +64,12 @@ cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data"
 cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
+
+# Restore yarn settings of the main project
+unset YARN_IGNORE_PATH
+YARN_VERSION=$(grep "yarnPath:" $GITHUB_WORKSPACE/.yarnrc.yml | sed 's/.*yarn-//' | sed 's/.cjs.*//')
+corepack use yarn@$YARN_VERSION
+yarn install
 
 # TODO: use contracts.json file when deployed version starts supporting it
 # SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
@@ -61,6 +82,4 @@ export IMA="$SKALE_MANAGER_ADDRESS"
 export MARIONETTE="$SKALE_MANAGER_ADDRESS"
 export PAYMASTER="$SKALE_MANAGER_ADDRESS"
 # End of TODO
-npx hardhat run migrations/upgrade.ts --network localhost
-
-npx ganache instances stop $GANACHE_SESSION
+yarn hardhat run migrations/upgrade.ts --network localhost
