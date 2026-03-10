@@ -439,7 +439,7 @@ describe("NodesFunctionality", () => {
             await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
             const delegationId1 = 0;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId1);
-            await delegationController.connect(validator3).delegate(validatorId, amount, delegationPeriod, info);
+            await delegationController.connect(validator3).delegate(validatorId, 2 * amount, delegationPeriod, info);
             const delegationId2 = 1;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId2);
 

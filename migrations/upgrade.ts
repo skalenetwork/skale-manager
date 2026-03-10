@@ -59,6 +59,14 @@ class SkaleManagerUpgrader extends Upgrader {
             data: skaleManager.interface.encodeFunctionData("setVersion", [newVersion])
         }));
     }
+
+    initialize = async () => {
+        this.transactions.push(Transaction.from({
+            to: await this.instance.getContractAddress("BountyV2"),
+            data: (await ethers.getContractFactory("BountyV2")).interface
+                .encodeFunctionData("setPsrActivationMonth", [ethers.MaxUint256])
+        }));
+    }
 }
 
 async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
@@ -95,11 +103,7 @@ async function prepareContractsList(instance: Instance) {
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
     const startBlock = await ethers.provider.getBlockNumber();
-    let contractsToUpgrade: string[] = [
-    ];
-    if (process.env.UPGRADE_ALL) {
-        contractsToUpgrade = await prepareContractsList(skaleManager);
-    }
+    const contractsToUpgrade = await prepareContractsList(skaleManager);
     const upgrader = new SkaleManagerUpgrader(
         "1.12.0",
         skaleManager,

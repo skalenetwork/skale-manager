@@ -78,12 +78,12 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
 
     uint256 public constant BOUNTY_LOCKUP_MONTHS = 2;
 
-    uint256 public constant ALRIGHT_DELTA = 134161;
-    uint256 public constant BROADCAST_DELTA = 177490;
-    uint256 public constant COMPLAINT_BAD_DATA_DELTA = 80995;
-    uint256 public constant PRE_RESPONSE_DELTA = 114620;
-    uint256 public constant COMPLAINT_DELTA = 203463;
-    uint256 public constant RESPONSE_DELTA = 55111;
+    uint256 public constant override ALRIGHT_DELTA = 134161;
+    uint256 public constant override BROADCAST_DELTA = 177490;
+    uint256 public constant override COMPLAINT_BAD_DATA_DELTA = 80995;
+    uint256 public constant override PRE_RESPONSE_DELTA = 114620;
+    uint256 public constant override COMPLAINT_DELTA = 203463;
+    uint256 public constant override RESPONSE_DELTA = 55111;
 
     // MSR - Minimum staking requirement
     uint256 public msr;
@@ -371,9 +371,5 @@ contract ConstantsHolder is Permissions, IConstantsHolder {
             uint(newMinNodeBalance)
         );
         minNodeBalance = newMinNodeBalance;
-    }
-
-    function reinitialize() external override reinitializer(2) {
-        minNodeBalance = 1.5 ether;
     }
 }

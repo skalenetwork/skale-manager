@@ -21,6 +21,7 @@
 
 pragma solidity 0.8.17;
 
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 import {
     IDelegationController
@@ -69,6 +70,13 @@ contract BountyV2 is Permissions, IBountyV2 {
     // validatorId => BountyHistory
     mapping (uint256 => BountyHistory) private _bountyHistory;
 
+    uint256 public psrActivationMonth;
+
+    event PsrActivationMonthChanged(
+        uint256 oldValue,
+        uint256 newValue
+    );
+
     modifier onlyBountyReductionManager() {
         require(
             hasRole(BOUNTY_REDUCTION_MANAGER_ROLE, msg.sender),
@@ -84,6 +92,7 @@ contract BountyV2 is Permissions, IBountyV2 {
         _bountyWasPaidInCurrentEpoch = 0;
         bountyReduction = false;
         nodeCreationWindowSeconds = 3 * SECONDS_PER_DAY;
+        psrActivationMonth = 0;
     }
 
     function calculateBounty(uint256 nodeIndex)
@@ -152,6 +161,11 @@ contract BountyV2 is Permissions, IBountyV2 {
     function setNodeCreationWindowSeconds(uint256 window) external override allow("Nodes") {
         emit NodeCreationWindowWasChanged(nodeCreationWindowSeconds, window);
         nodeCreationWindowSeconds = window;
+    }
+
+    function setPsrActivationMonth(uint256 month) external override onlyOwner {
+        emit PsrActivationMonthChanged(psrActivationMonth, month);
+        psrActivationMonth = month;
     }
 
     function handleDelegationAdd(
@@ -225,6 +239,55 @@ contract BountyV2 is Permissions, IBountyV2 {
 
     function getEffectiveDelegatedSum() external view override returns (uint256[] memory amount) {
         return _effectiveDelegatedSum.getValues();
+    }
+
+    function getRequiredDelegationAmount(
+        uint256 nodesNumber
+    )
+        external
+        view
+        override
+        returns (uint256 requiredDelegationAmount)
+    {
+        ConstantsHolder constantsHolder = ConstantsHolder(
+            contractManager.getContract("ConstantsHolder")
+        );
+        return _getRequiredDelegationAmount(nodesNumber, constantsHolder.msr());
+    }
+
+    function getRequiredNodesNumber(
+        uint256 delegatedValue
+    )
+        public
+        view
+        override
+        returns (uint256 requiredNodesNumber)
+    {
+        ConstantsHolder constantsHolder = ConstantsHolder(
+            contractManager.getContract("ConstantsHolder")
+        );
+        uint256 msr = constantsHolder.msr();
+        if (msr == 0) {
+            return type(uint256).max;
+        }
+
+        // TODO: remove this check after progressive MSR activation
+        if (psrActivationMonth > 0) {
+            if (contractManager.getTimeHelpers().getCurrentMonth() <
+                psrActivationMonth) {
+                return delegatedValue / msr;
+            }
+        }
+
+        if (delegatedValue < msr) {
+            return 0;
+        } else if (delegatedValue < 3 * msr) {
+            return 1;
+        } else if (delegatedValue < 6 * msr) {
+            return 2;
+        } else {
+            return (Math.sqrt(8 * delegatedValue / msr + 1) - 1) / 2;
+        }
     }
 
     // private
@@ -310,7 +373,7 @@ contract BountyV2 is Permissions, IBountyV2 {
             monthBounty: epochPoolSize + bountyWasPaidInCurrentEpoch,
             effectiveDelegated: effectiveDelegated,
             effectiveDelegatedSum: effectiveDelegatedSum,
-            maxNodesAmount: delegated / constantsHolder.msr(),
+            maxNodesAmount: getRequiredNodesNumber(delegated),
             paidToValidator: bountyPaidToTheValidator
         });
 
@@ -412,7 +475,7 @@ contract BountyV2 is Permissions, IBountyV2 {
             if (lastRewardTimestamp < lastRewardMonthStart + nodeCreationWindowSeconds) {
                 return nextMonthStart - BOUNTY_WINDOW_SECONDS;
             } else {
-                return _min(
+                return Math.min(
                     nextMonthStart + timePassedAfterMonthStart,
                     nextMonthFinish - BOUNTY_WINDOW_SECONDS
                 );
@@ -420,14 +483,32 @@ contract BountyV2 is Permissions, IBountyV2 {
         } else if (lastRewardMonth + 1 == currentMonth) {
             uint256 currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
             uint256 currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth + 1);
-            return _min(
-                currentMonthStart + _max(timePassedAfterMonthStart, nodeCreationWindowSeconds),
+            return Math.min(
+                currentMonthStart + Math.max(timePassedAfterMonthStart, nodeCreationWindowSeconds),
                 currentMonthFinish - BOUNTY_WINDOW_SECONDS
             );
         } else {
             uint256 currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
             return currentMonthStart + nodeCreationWindowSeconds;
         }
+    }
+
+    function _getRequiredDelegationAmount(
+        uint256 nodesNumber,
+        uint256 msr
+    )
+        private
+        view
+        returns (uint256 requiredDelegationAmount)
+    {
+        // TODO: remove this check after progressive MSR activation
+        if (psrActivationMonth > 0) {
+            if (contractManager.getTimeHelpers().getCurrentMonth() <
+                psrActivationMonth) {
+                return nodesNumber * msr;
+            }
+        }
+        requiredDelegationAmount = msr * nodesNumber * (nodesNumber + 1) / 2;
     }
 
     function _calculateBountyShare(
@@ -443,7 +524,7 @@ contract BountyV2 is Permissions, IBountyV2 {
     {
         if (maxNodesAmount > 0) {
             uint256 totalBountyShare = monthBounty * effectiveDelegated / effectiveDelegatedSum;
-            return _min(
+            return Math.min(
                 totalBountyShare / maxNodesAmount,
                 totalBountyShare - paidToValidator
             );
@@ -451,21 +532,4 @@ contract BountyV2 is Permissions, IBountyV2 {
             return 0;
         }
     }
-
-    function _min(uint256 a, uint256 b) private pure returns (uint256 min) {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
-    }
-
-    function _max(uint256 a, uint256 b) private pure returns (uint256 max) {
-        if (a < b) {
-            return b;
-        } else {
-            return a;
-        }
-    }
-
 }
