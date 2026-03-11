@@ -1,7 +1,32 @@
 import {skaleContracts} from "@skalenetwork/skale-contracts-ethers-v6";
-import {calculateGasSpent, contracts, shouldCalculateGas} from "./deploy";
+import {calculateGasSpent, contracts, isLocalNetwork, shouldCalculateGas} from "./deploy";
 import {ethers} from "hardhat";
-import {EoaSubmitter, InstanceAdmin, InstanceAdminOptions, SafeSubmitter} from "@skalenetwork/upgrade-tools";
+import {EoaSubmitter, getVersion, InstanceAdmin, InstanceAdminOptions, SafeSubmitter} from "@skalenetwork/upgrade-tools";
+import {readFile} from "fs/promises";
+import {execSync} from "child_process";
+
+async function ensureAndLoadLocalAbi(version: string): Promise<Record<string, ReadonlyArray<{}>>> {
+    const fileName = `data/skale-manager-${version}-abi.json`;
+
+    try {
+        const fileContent = await readFile(fileName, "utf8");
+        const abi = JSON.parse(fileContent) as Record<string, ReadonlyArray<{}>>;
+        console.log(`Loaded ABI file ${fileName} (${Object.keys(abi).length} contracts)`);
+        return abi;
+    } catch (error) {
+        const fsError = error as NodeJS.ErrnoException;
+        if (fsError.code !== "ENOENT") {
+            throw error;
+        }
+    }
+
+    console.log(`${fileName} does not exist, generating ABIs...`);
+    execSync("yarn hardhat run scripts/generateAbi.ts", { stdio: "inherit" });
+
+    const generatedFileContent = await readFile(fileName, "utf8");
+    const generatedAbi = JSON.parse(generatedFileContent) as Record<string, ReadonlyArray<{}>>;
+    return generatedAbi;
+}
 
 async function main() {
     const contractsWithOwnershipToChange = contracts;
@@ -11,7 +36,7 @@ async function main() {
     let oldOwner: string;
     let submitter: EoaSubmitter | SafeSubmitter;
     const startBlock = await ethers.provider.getBlockNumber();
-    const [owner,] = await ethers.getSigners();
+    const [owner] = await ethers.getSigners();
 
     if (!process.env.NEW_OWNER) {
         throw new Error("Please set NEW_OWNER env variable");
@@ -40,7 +65,7 @@ async function main() {
         oldOwner = process.env.MULTISIG_OWNER;
         submitter = new SafeSubmitter(oldOwner);
     } else {
-        oldOwner = (await ethers.getSigners())[0].address;
+        oldOwner = owner.address;
         submitter = new EoaSubmitter();
     }
 
@@ -50,6 +75,14 @@ async function main() {
     const network = await skaleContracts.getNetworkByProvider(ethers.provider);
     const project = network.getProject("skale-manager");
     const instance = await project.getInstance(process.env.TARGET);
+
+    // If test mode and local network, get version and set the local ABI manually to avoid inexistent ABIs
+    if (testMode && await isLocalNetwork()) {
+        const version = await getVersion();
+        const abi = await ensureAndLoadLocalAbi(version);
+        instance.abi = abi; // Set the ABI manually for test mode
+    }
+
     await instance.getContract("SkaleToken"); // to ensure that the instance is initialized correctly
     const configs: InstanceAdminOptions = {
         newOwner,
