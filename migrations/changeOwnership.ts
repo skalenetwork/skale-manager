@@ -5,12 +5,12 @@ import {EoaSubmitter, getVersion, InstanceAdmin, InstanceAdminOptions, SafeSubmi
 import {readFile} from "fs/promises";
 import {execSync} from "child_process";
 
-async function ensureAndLoadLocalAbi(version: string): Promise<Record<string, ReadonlyArray<{}>>> {
+async function ensureAndLoadLocalAbi(version: string): Promise<Record<string, ReadonlyArray<object>>> {
     const fileName = `data/skale-manager-${version}-abi.json`;
 
     try {
         const fileContent = await readFile(fileName, "utf8");
-        const abi = JSON.parse(fileContent) as Record<string, ReadonlyArray<{}>>;
+        const abi = JSON.parse(fileContent) as Record<string, ReadonlyArray<object>>;
         console.log(`Loaded ABI file ${fileName} (${Object.keys(abi).length} contracts)`);
         return abi;
     } catch (error) {
@@ -21,10 +21,10 @@ async function ensureAndLoadLocalAbi(version: string): Promise<Record<string, Re
     }
 
     console.log(`${fileName} does not exist, generating ABIs...`);
-    execSync("yarn hardhat run scripts/generateAbi.ts", { stdio: "inherit" });
+    execSync("yarn hardhat run scripts/generateAbi.ts", {stdio: "inherit"});
 
     const generatedFileContent = await readFile(fileName, "utf8");
-    const generatedAbi = JSON.parse(generatedFileContent) as Record<string, ReadonlyArray<{}>>;
+    const generatedAbi = JSON.parse(generatedFileContent) as Record<string, ReadonlyArray<object>>;
     return generatedAbi;
 }
 
