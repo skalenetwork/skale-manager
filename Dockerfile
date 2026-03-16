@@ -1,4 +1,4 @@
-# cspell:words corepack
+# cspell:words .yarnrc.yml
 
 FROM node:24-slim
 
@@ -8,10 +8,10 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y git build-essential python3 ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-RUN corepack enable
+COPY .yarn/releases ./.yarn/releases
+COPY package.json yarn.lock hardhat.config.ts tsconfig.json .yarnrc.yml ./
 
-COPY package.json yarn.lock hardhat.config.ts tsconfig.json ./
-RUN yarn install --frozen-lockfile
+RUN yarn install --immutable
 
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 

@@ -29,16 +29,16 @@
     "compile": "yarn hardhat compile",
     "cleanCompile": "yarn hardhat clean && yarn compile",
     "docs": "scripts/prepare-docs.sh",
-    "fullCheck": "yarn lint && yarn tsc && yarn eslint && yarn cspell && yarn slither",
+    "fullCheck": "yarn compile && yarn lint && yarn tsc && yarn eslint && yarn cspell && yarn slither",
     "hooks": "git config core.hooksPath .githooks || true",
     "no-hooks": "git config core.hooksPath .git/hooks",
-    "lint": "npx solhint \"contracts/**/*.sol\"",
+    "lint": "yarn solhint \"contracts/**/*.sol\"",
     "prepare": "yarn compile && yarn hooks",
     "slither": "slither .",
     "test": "yarn tsc && yarn hardhat test",
     "tsc": "tsc --noEmit",
-    "eslint": "npx eslint .",
-    "cspell": "npx cspell \"**/*\""
+    "eslint": "yarn exec eslint .",
+    "cspell": "yarn exec cspell \"**/*\""
   },
   "packageManager": "yarn@4.12.0",
   "dependencies": {
