@@ -2,9 +2,9 @@
 
 set -e
 
-if [[ $(npx cspell -- --no-summary $1 2> /dev/null) ]]
+if [[ $(yarn exec cspell -- --no-summary $1 2> /dev/null) ]]
 then
     echo "It looks like you have spell-checking errors in your commit message."
-    npx cspell -- --no-summary $1
+    yarn exec cspell -- --no-summary $1
     exit 1
 fi
