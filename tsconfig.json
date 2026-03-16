@@ -9,5 +9,9 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["./scripts", "./test", "./migrations/", "./gas", "./long-test"],
-  "files": ["./hardhat.config.ts"]
+  "files": ["./hardhat.config.ts"],
+  "exclude": [
+    "typechain-output",
+    "types-package"
+  ]
 }
