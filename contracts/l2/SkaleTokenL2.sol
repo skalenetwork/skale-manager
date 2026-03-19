@@ -27,13 +27,14 @@ import {
     IERC165,
     IOptimismMintableERC20
 } from "@eth-optimism/contracts-bedrock/src/universal/IOptimismMintableERC20.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import { SkaleToken } from "../SkaleToken.sol";
 
 /**
  * @title SkaleTokenL2
  * @dev Contract defines the SKALE token for L1-L2 interaction.
  */
-contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
+contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20, IERC777Recipient {
 
     /**
      * @dev Address of the L1 SKALE token contract.
@@ -63,6 +64,8 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
             revert ZeroAddress("bridge");
         remoteToken = _remoteToken;
         bridge = _bridge;
+
+        _ERC1820_REGISTRY.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
     /**
@@ -70,7 +73,8 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
      */
     function mint(address account, uint256 amount) external override onlyMinter {
         require(amount <= CAP - totalSupply(), "Amount is too big");
-        _mint(account, amount, "", "");
+        _mint(address(this), amount, "", "");
+        this.transfer(account, amount);
     }
 
     /**
@@ -87,6 +91,20 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20 {
      function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
         bytes4 interfaceERC165 = type(IERC165).interfaceId;
         bytes4 interfaceOptimismMintableERC20 = type(IOptimismMintableERC20).interfaceId;
-        return interfaceId == interfaceERC165 || interfaceId == interfaceOptimismMintableERC20;
+        bytes4 interfaceERC777Recipient = type(IERC777Recipient).interfaceId;
+        return interfaceId == interfaceERC165
+            || interfaceId == interfaceOptimismMintableERC20
+            || interfaceId == interfaceERC777Recipient;
     }
+
+    /// @dev IERC777Recipient implementation
+    /// @dev Required to allow minting to itself
+    function tokensReceived(
+        address /* operator */,
+        address /* from */,
+        address /* to */,
+        uint256 /* amount */,
+        bytes calldata /* userData */,
+        bytes calldata /* operatorData */
+    ) external pure override {}
 }
