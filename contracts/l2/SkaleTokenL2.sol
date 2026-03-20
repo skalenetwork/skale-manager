@@ -49,6 +49,7 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20, IERC777Recipient {
     address public immutable bridge;
 
     error ZeroAddress(string param);
+    error MintingFailed();
 
     constructor(
         address _contractManager,
@@ -78,7 +79,9 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20, IERC777Recipient {
     function mint(address account, uint256 amount) external override onlyMinter {
         require(amount <= CAP - totalSupply(), "Amount is too big");
         _mint(address(this), amount, "", "");
-        this.transfer(account, amount);
+        if(!this.transfer(account, amount)) {
+            revert MintingFailed();
+        }
     }
 
     /**
