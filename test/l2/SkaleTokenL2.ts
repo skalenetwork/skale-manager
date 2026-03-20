@@ -5,11 +5,10 @@ import {ContractManager,
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {deployContractManager} from "../tools/deploy/contractManager";
-import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {fastBeforeEach} from "../tools/mocha";
-import { deployTokenState } from "../tools/deploy/delegation/tokenState";
+import {deployTokenState} from "../tools/deploy/delegation/tokenState";
 
 chai.should();
 chai.use(chaiAsPromised);
