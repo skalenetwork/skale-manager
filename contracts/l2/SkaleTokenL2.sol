@@ -27,7 +27,7 @@ import {
     IERC165,
     IOptimismMintableERC20
 } from "@eth-optimism/contracts-bedrock/src/universal/IOptimismMintableERC20.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import { SkaleToken } from "../SkaleToken.sol";
 
 /**
@@ -65,7 +65,11 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20, IERC777Recipient {
         remoteToken = _remoteToken;
         bridge = _bridge;
 
-        _ERC1820_REGISTRY.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
+        _ERC1820_REGISTRY.setInterfaceImplementer(
+            address(this),
+            keccak256("ERC777TokensRecipient"),
+            address(this)
+        );
     }
 
     /**
@@ -106,5 +110,9 @@ contract SkaleTokenL2 is SkaleToken, IOptimismMintableERC20, IERC777Recipient {
         uint256 /* amount */,
         bytes calldata /* userData */,
         bytes calldata /* operatorData */
-    ) external pure override {}
+    ) external pure override
+    // The callback has to be implemented to allow minting to itself
+    // but there is no need to do anything in it
+    // solhint-disable-next-line no-empty-blocks
+    {}
 }
