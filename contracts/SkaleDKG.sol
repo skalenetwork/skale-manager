@@ -31,7 +31,6 @@ import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
 
 import { Permissions } from "./Permissions.sol";
-import { ConstantsHolder } from "./ConstantsHolder.sol";
 import { Fp2Operations } from "./utils/fieldOperations/Fp2Operations.sol";
 import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 import { SkaleDkgAlright } from "./dkg/SkaleDkgAlright.sol";
@@ -128,7 +127,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         refundGasBySchain(schainHash,
             Context({
                 isDebt: false,
-                delta: ConstantsHolder(contractManager.getConstantsHolder()).ALRIGHT_DELTA(),
+                delta: contractManager.getConstantsHolder().ALRIGHT_DELTA(),
                 dkgFunction: DkgFunction.Alright
         }))
         correctGroup(schainHash)
@@ -158,7 +157,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         refundGasBySchain(schainHash,
             Context({
                 isDebt: false,
-                delta: ConstantsHolder(contractManager.getConstantsHolder()).BROADCAST_DELTA(),
+                delta: contractManager.getConstantsHolder().BROADCAST_DELTA(),
                 dkgFunction: DkgFunction.Broadcast
         }))
         correctGroup(schainHash)
@@ -185,8 +184,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainHash,
             Context({
                 isDebt: true,
-                delta: ConstantsHolder(contractManager.getConstantsHolder())
-                    .COMPLAINT_BAD_DATA_DELTA(),
+                delta: contractManager.getConstantsHolder().COMPLAINT_BAD_DATA_DELTA(),
                 dkgFunction: DkgFunction.ComplaintBadData
         }))
         correctGroupWithoutRevert(schainHash)
@@ -216,7 +214,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainHash,
             Context({
                 isDebt: true,
-                delta: ConstantsHolder(contractManager.getConstantsHolder()).PRE_RESPONSE_DELTA(),
+                delta: contractManager.getConstantsHolder().PRE_RESPONSE_DELTA(),
                 dkgFunction: DkgFunction.PreResponse
         }))
         correctGroup(schainHash)
@@ -241,7 +239,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainHash,
             Context({
                 isDebt: true,
-                delta: ConstantsHolder(contractManager.getConstantsHolder()).COMPLAINT_DELTA(),
+                delta: contractManager.getConstantsHolder().COMPLAINT_DELTA(),
                 dkgFunction: DkgFunction.Complaint
         }))
         correctGroupWithoutRevert(schainHash)
@@ -271,7 +269,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         refundGasByValidatorToSchain(
             schainHash,
             Context({isDebt: true,
-                delta: ConstantsHolder(contractManager.getConstantsHolder()).RESPONSE_DELTA(),
+                delta: contractManager.getConstantsHolder().RESPONSE_DELTA(),
                 dkgFunction: DkgFunction.Response
         }))
         correctGroup(schainHash)
@@ -797,6 +795,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _getComplaintTimeLimit() private view returns (uint256 timeLimit) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
+        return contractManager.getConstantsHolder().complaintTimeLimit();
     }
 }

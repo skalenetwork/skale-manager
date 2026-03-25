@@ -7,9 +7,40 @@ import {
     verifyProxy,
     getContractFactory,
 } from '@skalenetwork/upgrade-tools';
-import {Contract, Interface, resolveAddress} from 'ethers';
-import {TransactionMinedTimeout} from "@openzeppelin/upgrades-core";
+import {BaseContract, Interface, resolveAddress} from 'ethers';
+import {isDevelopmentNetwork, TransactionMinedTimeout} from "@openzeppelin/upgrades-core";
+import {SkaleManager} from '../typechain-types';
 
+
+export async function shouldCalculateGas() {
+    return await isLocalNetwork() || process.env.CALCULATE_GAS === "true";
+}
+
+export async function isLocalNetwork() {
+    let result = false;
+    try {
+        result = await isDevelopmentNetwork(ethers.provider);
+    } catch {
+        console.error("Failed to detect network type, assuming non-development network");
+    }
+    return result;
+}
+
+export async function calculateGasSpent(startBlock: number, endBlock: number, user: string) {
+    let totalGasUsed = BigInt(0);
+    for (let blockNumber = startBlock; blockNumber <= endBlock; blockNumber++) {
+        const block = await ethers.provider.getBlock(blockNumber, true);
+        if (block === null) throw new Error(`Block ${blockNumber} not found`);
+        for (const txHash of block.transactions) {
+            const tx = await ethers.provider.getTransactionReceipt(txHash);
+            if (tx === null) throw new Error(`Transaction ${txHash} not found`);
+            if (ethers.getAddress(tx.from) === ethers.getAddress(user)) {
+                totalGasUsed += BigInt(tx.gasUsed);
+            }
+        }
+    }
+    return totalGasUsed;
+}
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
@@ -72,7 +103,7 @@ async function main() {
     if (await ethers.provider.getCode("0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24") === "0x") {
         await run("erc1820");
     }
-
+    const startBlock = await ethers.provider.getBlockNumber();
     let production = false;
 
     if (process.env.PRODUCTION === "true") {
@@ -101,7 +132,7 @@ async function main() {
         const contractFactory = await getContractFactory(contract);
         console.log("Deploy", contract);
         let attempts = 5;
-        let proxy: Contract | undefined = undefined;
+        let proxy: BaseContract | undefined = undefined;
         while (attempts --> 0 && typeof proxy === "undefined") {
             try {
                 proxy = await upgrades.deployProxy(
@@ -134,7 +165,7 @@ async function main() {
         if (contract === "SkaleManager") {
             try {
                 console.log(`Set version ${version}`)
-                await (await proxy.setVersion(version)).wait();
+                await (await (proxy as SkaleManager).setVersion(version)).wait();
             } catch {
                 console.log("Failed to set skale-manager version");
             }
@@ -152,9 +183,14 @@ async function main() {
 
     if (!production) {
         console.log("Do actions for non production deployment");
+        // In non-production environment, owner has minter role by default and mints some tokens to himself
+        await (await skaleToken.grantRole(await skaleToken.MINTER_ROLE(), owner.address)).wait();
         const money = "5000000000000000000000000000"; // 5e9 * 1e18
         await skaleToken.mint(owner.address, money, "0x", "0x");
     }
+
+    // Grant MINTER_ROLE to SkaleManager
+    await (await skaleToken.grantRole(await skaleToken.MINTER_ROLE(), await contractManager.getContract("SkaleManager"))).wait();
 
     console.log("Store addresses");
 
@@ -181,13 +217,25 @@ async function main() {
     console.log("Verify contracts");
     for (const artifact of contractArtifacts) {
         if (artifact.contract === skaleTokenName) {
-            await verify(skaleTokenName, await skaleToken.getAddress(), [contractManager.address, []]);
+            // Encode constructor arguments: address contractsAddress, address[] memory defOps
+            const constructorArguments = ethers.AbiCoder.defaultAbiCoder().encode(
+                ["address", "address[]"],
+                [await contractManager.getAddress(), []]
+            );
+            await verify(skaleTokenName, await skaleToken.getAddress(), constructorArguments);
         } else {
-            await verifyProxy(artifact.contract, artifact.address, [])
+            await verifyProxy(artifact.contract, artifact.address)
         }
     }
 
     console.log("Done");
+
+    if (await shouldCalculateGas()) {
+        console.log("Calculating gas used by deployer", owner.address);
+        const endBlock = await ethers.provider.getBlockNumber();
+        const gasUsed = await calculateGasSpent(startBlock, endBlock, owner.address);
+        console.log(`Gas used by deployer: ${gasUsed}`);
+    }
 }
 
 if (require.main === module) {

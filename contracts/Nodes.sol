@@ -34,7 +34,6 @@ import {
 import {
     IValidatorService
 } from "@skalenetwork/skale-manager-interfaces/delegation/IValidatorService.sol";
-import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 import {
     IPaymasterController
 } from "@skalenetwork/skale-manager-interfaces/IPaymasterController.sol";
@@ -586,9 +585,7 @@ contract Nodes is Permissions, INodes {
         checkNodeExists(nodeIndex)
         returns (bool timeForReward)
     {
-        return IBountyV2(
-            contractManager.getBounty()
-        ).getNextRewardTimestamp(nodeIndex) <= block.timestamp;
+        return contractManager.getBounty().getNextRewardTimestamp(nodeIndex) <= block.timestamp;
     }
 
     /**
@@ -728,7 +725,7 @@ contract Nodes is Permissions, INodes {
         checkNodeExists(nodeIndex)
         returns (uint256 timestamp)
     {
-        return IBountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex);
+        return contractManager.getBounty().getNextRewardTimestamp(nodeIndex);
     }
 
     /**
@@ -1030,8 +1027,7 @@ contract Nodes is Permissions, INodes {
         );
         uint256 delegationsTotal =
             delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint256 msr = IConstantsHolder(contractManager.getConstantsHolder()).msr();
-        return (position + 1) * msr <= delegationsTotal;
+        return position < contractManager.getBounty().getRequiredNodesNumber(delegationsTotal);
     }
 
     function _addNode(

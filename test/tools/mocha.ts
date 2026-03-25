@@ -1,23 +1,22 @@
-import {applySnapshot, makeSnapshot} from "./snapshot";
-
+import {SnapshotRestorer, takeSnapshot} from "@nomicfoundation/hardhat-network-helpers";
 export function fastBeforeEach(fn: Mocha.AsyncFunc) {
-    let initialState: number
-    let stateBeforeTest: number;
+    let initialState: SnapshotRestorer
+    let stateBeforeTest: SnapshotRestorer;
 
     before(async function (this: Mocha.Context) {
-        initialState = await makeSnapshot();
+        initialState = await takeSnapshot();
         await fn.apply(this);
     });
 
     beforeEach(async () => {
-        stateBeforeTest = await makeSnapshot();
+        stateBeforeTest = await takeSnapshot();
     });
 
     afterEach(async () => {
-        await applySnapshot(stateBeforeTest);
+        await stateBeforeTest.restore();
     });
 
     after(async () => {
-        await applySnapshot(initialState);
+        await initialState.restore();
     })
 }

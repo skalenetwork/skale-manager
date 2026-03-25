@@ -2,27 +2,18 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {deployContractManager} from "../tools/deploy/contractManager";
 import {deploySegmentTreeTester} from "../tools/deploy/test/segmentTreeTester";
-import {makeSnapshot, applySnapshot} from "../tools/snapshot";
+
 import {SegmentTreeTester} from "../../typechain-types";
+import {fastBeforeEach} from "../tools/mocha";
 
 chai.should();
 chai.use(chaiAsPromised);
 
 describe("SegmentTree", () => {
     let segmentTree: SegmentTreeTester;
-    let snapshot: number;
-    let cleanContracts: number;
-    before(async () => {
+    fastBeforeEach(async () => {
         const contractManager = await deployContractManager();
         segmentTree = await deploySegmentTreeTester(contractManager);
-    });
-
-    beforeEach(async () => {
-        snapshot = await makeSnapshot();
-    });
-
-    afterEach(async () => {
-        await applySnapshot(snapshot);
     });
 
     describe("initialization", () => {
@@ -96,14 +87,9 @@ describe("SegmentTree", () => {
     });
 
     describe("when initialized", () => {
-        before(async () => {
-            cleanContracts = await makeSnapshot();
+        fastBeforeEach(async () => {
             await segmentTree.addElemInPlaces(128, 150);
             await segmentTree.initTree();
-        });
-
-        after(async () => {
-            await applySnapshot(cleanContracts);
         });
 
         describe("move elements", () => {

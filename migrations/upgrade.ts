@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import {contracts} from "./deploy";
+import {calculateGasSpent, contracts, shouldCalculateGas} from "./deploy";
 import {ethers} from "hardhat";
 import {Upgrader, Submitter} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
@@ -59,6 +59,14 @@ class SkaleManagerUpgrader extends Upgrader {
             data: skaleManager.interface.encodeFunctionData("setVersion", [newVersion])
         }));
     }
+
+    initialize = async () => {
+        this.transactions.push(Transaction.from({
+            to: await this.instance.getContractAddress("BountyV2"),
+            data: (await ethers.getContractFactory("BountyV2")).interface
+                .encodeFunctionData("setPsrActivationMonth", [ethers.MaxUint256])
+        }));
+    }
 }
 
 async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
@@ -66,7 +74,7 @@ async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
     const manifest = await Manifest.forNetwork(ethers.provider);
     const deployment = await manifest.getDeploymentFromAddress(implementationAddress);
     const storageLayout = deployment.layout.storage;
-    return storageLayout.find(storageItem => storageItem.label === "_timeShift") !== undefined;
+    return storageLayout.find((storageItem: { label: string; }) => storageItem.label === "_timeShift") !== undefined;
 }
 
 async function prepareContractsList(instance: Instance) {
@@ -94,17 +102,21 @@ async function prepareContractsList(instance: Instance) {
 
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
-    let contractsToUpgrade: string[] = [
-    ];
-    if (process.env.UPGRADE_ALL) {
-        contractsToUpgrade = await prepareContractsList(skaleManager);
-    }
+    const startBlock = await ethers.provider.getBlockNumber();
+    const contractsToUpgrade = await prepareContractsList(skaleManager);
     const upgrader = new SkaleManagerUpgrader(
         "1.12.0",
         skaleManager,
         contractsToUpgrade
     );
     await upgrader.upgrade();
+
+    if (await shouldCalculateGas()) {
+        const finalBlock = await ethers.provider.getBlockNumber();
+        const gasSpent = await calculateGasSpent(startBlock, finalBlock, (await ethers.getSigners())[0].address);
+        console.log("NOTE: This calculation includes cost of upgradeAndCall transactions!!");
+        console.log(`Gas spent for the upgrade: ${gasSpent}`);
+    }
 }
 
 if (require.main === module) {
