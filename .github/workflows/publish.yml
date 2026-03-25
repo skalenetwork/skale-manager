@@ -63,6 +63,7 @@ jobs:
           tag: ${{ env.VERSION }}
           prerelease: ${{ env.PRERELEASE }}
           artifacts: "data/skale-manager-*-abi.json"
+          commit: ${{ github.sha }}
 
   docker:
     runs-on: ubuntu-latest
