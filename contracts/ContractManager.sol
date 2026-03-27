@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.26;
 
 import {
     OwnableUpgradeable
@@ -27,9 +27,11 @@ import {
 import {
     AddressUpgradeable
 } from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
+import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
-import { StringUtils } from "./utils/StringUtils.sol";
 import { InitializableWithGap } from "./thirdparty/openzeppelin/InitializableWithGap.sol";
 
 /**
@@ -38,7 +40,6 @@ import { InitializableWithGap } from "./thirdparty/openzeppelin/InitializableWit
  * (in the form of human-readable strings) to addresses.
  */
 contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractManager {
-    using StringUtils for string;
     using AddressUpgradeable for address;
 
     string public constant BOUNTY = "Bounty";
@@ -104,20 +105,25 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
         return getContract(DELEGATION_PERIOD_MANAGER);
     }
 
-    function getBounty() external view override returns (address bounty) {
-        return getContract(BOUNTY);
+    function getBounty() external view override returns (IBountyV2 bounty) {
+        return IBountyV2(getContract(BOUNTY));
     }
 
     function getValidatorService() external view override returns (address validatorService) {
         return getContract(VALIDATOR_SERVICE);
     }
 
-    function getTimeHelpers() external view override returns (address timeHelpers) {
-        return getContract(TIME_HELPERS);
+    function getTimeHelpers() external view override returns (ITimeHelpers timeHelpers) {
+        return ITimeHelpers(getContract(TIME_HELPERS));
     }
 
-    function getConstantsHolder() external view override returns (address constantsHolder) {
-        return getContract(CONSTANTS_HOLDER);
+    function getConstantsHolder()
+        external
+        view
+        override
+        returns (IConstantsHolder constantsHolder)
+    {
+        return IConstantsHolder(getContract(CONSTANTS_HOLDER));
     }
 
     function getSkaleToken() external view override returns (address skaleToken) {
@@ -142,7 +148,7 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
     {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
         if (contractAddress == address(0)) {
-            revert(name.strConcat(" contract has not been found"));
+            revert(string.concat(name," contract has not been found"));
         }
     }
 }

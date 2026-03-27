@@ -22,7 +22,6 @@
 pragma solidity 0.8.17;
 
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {
     ContextUpgradeable
 } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
@@ -48,7 +47,6 @@ import { Permissions } from "./Permissions.sol";
  * implementation.
  */
 contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, IMintableToken {
-    using SafeMath for uint;
 
     string public constant NAME = "SKALE";
 
@@ -58,6 +56,16 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
 
     // the maximum amount of tokens that can ever be created
     uint256 public constant CAP = 7 * 1e9 * (10 ** DECIMALS);
+
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
+    modifier onlyMinter() {
+        require(
+            hasRole(MINTER_ROLE, msg.sender),
+            "Caller does not have MINTER_ROLE"
+        );
+        _;
+    }
 
     constructor(address contractsAddress, address[] memory defOps)
     ERC777("SKALE", "SKL", defOps)
@@ -83,11 +91,10 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
     )
         external
         override
-        allow("SkaleManager")
-        //onlyAuthorized
+        onlyMinter
         returns (bool successful)
     {
-        require(amount <= CAP.sub(totalSupply()), "Amount is too big");
+        require(amount <= CAP - totalSupply(), "Amount is too big");
         _mint(
             account,
             amount,
@@ -132,13 +139,13 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         address, // operator
         address from,
         address, // to
-        uint256 tokenId)
+        uint256 amount)
         internal override
     {
         uint256 locked = getAndUpdateLockedAmount(from);
         if (locked > 0) {
             require(
-                balanceOf(from) >= locked.add(tokenId),
+                balanceOf(from) >= locked + amount,
                 "Token should be unlocked for transferring"
             );
         }

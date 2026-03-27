@@ -12,6 +12,6 @@ then
 fi
 
 files=$(git diff --cached --name-only)
-npx cspell -- --no-summary $files
+yarn exec cspell -- --no-summary $files
 
 yarn fullCheck

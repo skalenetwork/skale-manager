@@ -316,7 +316,7 @@ describe("Schains", () => {
         });
 
         describe("when 2 nodes are registered (Node rotation test)", () => {
-            it("should create 2 nodes, and play with schains", async () => {
+            fastBeforeEach(async () => {
                 const nodesCount = 2;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
@@ -329,7 +329,9 @@ describe("Schains", () => {
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
+            });
 
+            it("should create 2 nodes, and play with schains", async () => {
                 const deposit = await schains.getSchainPrice(4, 5);
 
                 const verificationVector = [{
@@ -491,19 +493,6 @@ describe("Schains", () => {
             });
 
             it("should get previous nodes after nodeExit",  async () => {
-                const nodesCount = 2;
-                for (const index of Array.from(Array(nodesCount).keys())) {
-                    const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress1).createNode(
-                        8545, // port
-                        0, // nonce
-                        "0x7f0000" + hexIndex, // ip
-                        "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress1), // public key
-                        "D2-" + hexIndex, // name
-                        "some.domain.name");
-                }
-
                 const schainName = "d2";
                 const schainHash = ethers.solidityPackedKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
@@ -578,19 +567,6 @@ describe("Schains", () => {
             });
 
             it("should get previous nodes after DKG failure",  async () => {
-                const nodesCount = 2;
-                for (const index of Array.from(Array(nodesCount).keys())) {
-                    const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await skaleManager.connect(nodeAddress1).createNode(
-                        8545, // port
-                        0, // nonce
-                        "0x7f0000" + hexIndex, // ip
-                        "0x7f0000" + hexIndex, // public ip
-                        getPublicKey(nodeAddress1), // public key
-                        "D2-" + hexIndex, // name
-                        "some.domain.name");
-                }
-
                 const schainName = "d2";
                 const schainHash = ethers.solidityPackedKeccak256(["string"], [schainName]);
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);

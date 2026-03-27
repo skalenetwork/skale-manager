@@ -1,9 +1,9 @@
 import chalk from "chalk";
-import {contracts} from "./deploy";
-import {ethers, upgrades} from "hardhat";
+import {calculateGasSpent, contracts, shouldCalculateGas} from "./deploy";
+import {ethers} from "hardhat";
 import {Upgrader, Submitter} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
-import {ContractManager, PaymasterController, SkaleManager} from "../typechain-types";
+import {SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
 import {Transaction} from "ethers";
 
@@ -60,69 +60,13 @@ class SkaleManagerUpgrader extends Upgrader {
         }));
     }
 
-    deployNewContracts = async () => {
-        const [deployer] = await ethers.getSigners();
-
-        const contractManager = await this.instance.getContract("ContractManager") as ContractManager;
-
-        const paymasterControllerFactory = await ethers.getContractFactory("PaymasterController");
-        console.log("Deploy PaymasterController");
-        const paymasterController = await upgrades.deployProxy(
-            paymasterControllerFactory,
-            [await ethers.resolveAddress(contractManager)],
-            {
-                initialOwner: await this.getOwner()
-            }
-        ) as unknown as PaymasterController;
-        await paymasterController.deploymentTransaction()?.wait();
-
-        // Register in the ContractManager
+    initialize = async () => {
         this.transactions.push(Transaction.from({
-            to: await contractManager.getAddress(),
-            data: contractManager.interface.encodeFunctionData(
-                "setContractsAddress",
-                ["PaymasterController", await paymasterController.getAddress()]
-            )
+            to: await this.instance.getContractAddress("BountyV2"),
+            data: (await ethers.getContractFactory("BountyV2")).interface
+                .encodeFunctionData("setPsrActivationMonth", [ethers.MaxUint256])
         }));
-
-        const ima = process.env.IMA ?? "0x8629703a9903515818C2FeB45a6f6fA5df8Da404";
-        const marionette = process.env.MARIONETTE ?? "0xef777804e94eac176bbdbb3b3c9da06de87227ba";
-        const paymaster = process.env.PAYMASTER ?? "0x0d66cA00CbAD4219734D7FDF921dD7Caadc1F78D";
-        const paymasterChainHash = process.env.PAYMASTER_CHAIN_HASH ?? ethers.solidityPackedKeccak256(["string"], ["elated-tan-skat"]); // Europa
-
-        console.log(`Set IMA address to ${ima}`);
-        await (await paymasterController.setImaAddress(ima)).wait();
-
-        console.log(`Set Marionette address to ${marionette}`);
-        await (await paymasterController.setMarionetteAddress(marionette)).wait();
-
-        console.log(`Set Paymaster address to ${paymaster}`);
-        await (await paymasterController.setPaymasterAddress(paymaster)).wait();
-
-        console.log(`Set Paymaster schain hash to ${paymasterChainHash}`);
-        await (await paymasterController.setPaymasterChainHash(paymasterChainHash)).wait();
-
-        console.log("Revoke PAYMASTER_SETTER_ROLE");
-        await (await paymasterController.revokeRole(
-            await paymasterController.PAYMASTER_SETTER_ROLE(),
-            deployer
-        )).wait();
-
-        const owner = await contractManager.owner();
-        if (!await paymasterController.hasRole(await paymasterController.DEFAULT_ADMIN_ROLE(), owner)) {
-            console.log(`Grant ownership to ${owner}`);
-            await (await paymasterController.grantRole(
-                await paymasterController.DEFAULT_ADMIN_ROLE(),
-                owner
-            )).wait();
-
-            console.log(`Revoke ownership from ${ethers.resolveAddress(deployer)}`);
-            await (await paymasterController.revokeRole(
-                await paymasterController.DEFAULT_ADMIN_ROLE(),
-                deployer
-            )).wait();
-        }
-    };
+    }
 }
 
 async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
@@ -130,7 +74,7 @@ async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
     const manifest = await Manifest.forNetwork(ethers.provider);
     const deployment = await manifest.getDeploymentFromAddress(implementationAddress);
     const storageLayout = deployment.layout.storage;
-    return storageLayout.find(storageItem => storageItem.label === "_timeShift") !== undefined;
+    return storageLayout.find((storageItem: { label: string; }) => storageItem.label === "_timeShift") !== undefined;
 }
 
 async function prepareContractsList(instance: Instance) {
@@ -158,24 +102,21 @@ async function prepareContractsList(instance: Instance) {
 
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
-    let contractsToUpgrade = [
-        "Distributor",
-        "Nodes",
-        "Schains",
-        "ValidatorService"
-    ];
-    if (process.env.UPGRADE_ALL) {
-        contractsToUpgrade = await prepareContractsList(skaleManager);
-    }
-    // TODO: remove after 1.12.0 release
-    contractsToUpgrade = contractsToUpgrade.filter((contract) => contract !== "PaymasterController")
-    // End of TODO
+    const startBlock = await ethers.provider.getBlockNumber();
+    const contractsToUpgrade = await prepareContractsList(skaleManager);
     const upgrader = new SkaleManagerUpgrader(
-        "1.11.0",
+        "1.12.0",
         skaleManager,
         contractsToUpgrade
     );
     await upgrader.upgrade();
+
+    if (await shouldCalculateGas()) {
+        const finalBlock = await ethers.provider.getBlockNumber();
+        const gasSpent = await calculateGasSpent(startBlock, finalBlock, (await ethers.getSigners())[0].address);
+        console.log("NOTE: This calculation includes cost of upgradeAndCall transactions!!");
+        console.log(`Gas spent for the upgrade: ${gasSpent}`);
+    }
 }
 
 if (require.main === module) {
