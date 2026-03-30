@@ -50,8 +50,7 @@ export YARN_IGNORE_PATH=1
 
 yarn install
 
-# TODO: Change to `yarn hardhat` on next release
-PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost
+PRODUCTION=true VERSION=$DEPLOYED_VERSION yarn hardhat run migrations/deploy.ts --network localhost
 CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
 # TODO: copy contracts.json file when deployed version starts supporting it
 # cp "data/$CONTRACTS_FILENAME" "$GITHUB_WORKSPACE/data"
