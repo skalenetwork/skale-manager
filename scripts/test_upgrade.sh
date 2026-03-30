@@ -48,6 +48,7 @@ nvm use $DEPLOYED_WITH_NODE_VERSION
 # Prevents using the parent folder's Yarn binary.
 export YARN_IGNORE_PATH=1
 
+corepack enable
 yarn install
 
 PRODUCTION=true VERSION=$DEPLOYED_VERSION yarn hardhat run migrations/deploy.ts --network localhost
