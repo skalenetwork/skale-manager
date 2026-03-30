@@ -45,10 +45,6 @@ cd $DEPLOYED_DIR
 nvm install $DEPLOYED_WITH_NODE_VERSION
 nvm use $DEPLOYED_WITH_NODE_VERSION
 
-# Prevents using the parent folder's Yarn binary.
-export YARN_IGNORE_PATH=1
-
-corepack enable
 yarn install
 
 PRODUCTION=true VERSION=$DEPLOYED_VERSION yarn hardhat run migrations/deploy.ts --network localhost
@@ -60,8 +56,7 @@ cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
 rm -r --interactive=never $DEPLOYED_DIR
 
-# Restore yarn settings of the main project
-unset YARN_IGNORE_PATH
+# Ensure install
 yarn install
 
 SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
