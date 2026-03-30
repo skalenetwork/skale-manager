@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# cspell:words corepack yarnrc
+# cspell:words corepack
 
 set -e
 
@@ -53,10 +53,8 @@ yarn install
 
 PRODUCTION=true VERSION=$DEPLOYED_VERSION yarn hardhat run migrations/deploy.ts --network localhost
 CONTRACTS_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-contracts.json"
-# TODO: copy contracts.json file when deployed version starts supporting it
-# cp "data/$CONTRACTS_FILENAME" "$GITHUB_WORKSPACE/data"
-ABI_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-abi.json"
-cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data"
+
+cp "data/$CONTRACTS_FILENAME" "$GITHUB_WORKSPACE/data"
 
 cd $GITHUB_WORKSPACE
 nvm use $CURRENT_NODE_VERSION
@@ -66,9 +64,7 @@ rm -r --interactive=never $DEPLOYED_DIR
 unset YARN_IGNORE_PATH
 yarn install
 
-# TODO: use contracts.json file when deployed version starts supporting it
-# SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
-SKALE_MANAGER_ADDRESS=$(cat data/$ABI_FILENAME | jq -r .skale_manager_address)
+SKALE_MANAGER_ADDRESS=$(cat data/$CONTRACTS_FILENAME | jq -r .SkaleManager)
 export ALLOW_NOT_ATOMIC_UPGRADE="OK"
 export TARGET="$SKALE_MANAGER_ADDRESS"
 export UPGRADE_ALL=true
