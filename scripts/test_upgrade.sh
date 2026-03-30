@@ -21,7 +21,7 @@ DEPLOYED_TAG=$(cat $GITHUB_WORKSPACE/DEPLOYED)
 DEPLOYED_VERSION=$(echo $DEPLOYED_TAG | xargs ) # trim
 DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
-DEPLOYED_WITH_NODE_VERSION="lts/hydrogen"
+DEPLOYED_WITH_NODE_VERSION="lts/krypton"
 CURRENT_NODE_VERSION=$(nvm current)
 
 ## Start hardhat node setup
@@ -48,9 +48,6 @@ nvm use $DEPLOYED_WITH_NODE_VERSION
 # Prevents using the parent folder's Yarn binary.
 export YARN_IGNORE_PATH=1
 
-# TODO: change when old version is specified in package.json - currently is not, we should use 1.22.22
-corepack use yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e
-
 yarn install
 
 # TODO: Change to `yarn hardhat` on next release
@@ -67,8 +64,6 @@ rm -r --interactive=never $DEPLOYED_DIR
 
 # Restore yarn settings of the main project
 unset YARN_IGNORE_PATH
-YARN_VERSION=$(grep "yarnPath:" $GITHUB_WORKSPACE/.yarnrc.yml | sed 's/.*yarn-//' | sed 's/.cjs.*//')
-corepack use yarn@$YARN_VERSION
 yarn install
 
 # TODO: use contracts.json file when deployed version starts supporting it
@@ -77,9 +72,4 @@ SKALE_MANAGER_ADDRESS=$(cat data/$ABI_FILENAME | jq -r .skale_manager_address)
 export ALLOW_NOT_ATOMIC_UPGRADE="OK"
 export TARGET="$SKALE_MANAGER_ADDRESS"
 export UPGRADE_ALL=true
-# TODO: Remove after release 1.12.0
-export IMA="$SKALE_MANAGER_ADDRESS"
-export MARIONETTE="$SKALE_MANAGER_ADDRESS"
-export PAYMASTER="$SKALE_MANAGER_ADDRESS"
-# End of TODO
 yarn hardhat run migrations/upgrade.ts --network localhost
