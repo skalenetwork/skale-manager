@@ -1048,7 +1048,7 @@ describe("SkaleDKG", () => {
                         await skaleDKG.connect(validators[1].nodeAddress).alright(stringKeccak256(schainName), 1);
                     });
 
-                    it.only("should not allow anyone to send complaint", async () => {
+                    it("should not allow anyone to send complaint", async () => {
                         await expect(skaleDKG.connect(hacker).complaint(
                             stringKeccak256(schainName),
                             0,
