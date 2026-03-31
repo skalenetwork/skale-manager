@@ -68,6 +68,7 @@ describe("SkaleDKG", () => {
     let owner: SignerWithAddress;
     let validator1: SignerWithAddress;
     let validator2: SignerWithAddress;
+    let hacker: SignerWithAddress;
     let nodeAddress1: Wallet;
     let nodeAddress2: Wallet;
 
@@ -89,7 +90,7 @@ describe("SkaleDKG", () => {
     let validators: {nodeAddress: Wallet}[];
 
     fastBeforeEach(async() => {
-        [owner, validator1, validator2] = await ethers.getSigners();
+        [owner, validator1, validator2, hacker] = await ethers.getSigners();
 
         nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         nodeAddress2 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
@@ -1039,6 +1040,26 @@ describe("SkaleDKG", () => {
                     );
                     await expect(complaint).to.emit(skaleDKG, "BadGuy").withArgs(1);
                     await reimbursed(complaint);
+                });
+
+                describe("when DKG is successful", () => {
+                    fastBeforeEach(async () => {
+                        await skaleDKG.connect(validators[0].nodeAddress).alright(stringKeccak256(schainName), 0);
+                        await skaleDKG.connect(validators[1].nodeAddress).alright(stringKeccak256(schainName), 1);
+                    });
+
+                    it.only("should not allow anyone to send complaint", async () => {
+                        await expect(skaleDKG.connect(hacker).complaint(
+                            stringKeccak256(schainName),
+                            0,
+                            1
+                        )).to.be.revertedWith("Node does not exist for message sender");
+                        await expect(skaleDKG.connect(hacker).complaintBadData(
+                            stringKeccak256(schainName),
+                            0,
+                            1
+                        )).to.be.revertedWith("Node does not exist for message sender");
+                    })
                 });
 
                 describe("when 2 node sent incorrect complaint", () => {
