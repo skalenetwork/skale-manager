@@ -187,10 +187,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 delta: contractManager.getConstantsHolder().COMPLAINT_BAD_DATA_DELTA(),
                 dkgFunction: DkgFunction.ComplaintBadData
         }))
-        correctGroupWithoutRevert(schainHash)
-        correctNode(schainHash, fromNodeIndex)
-        correctNodeWithoutRevert(schainHash, toNodeIndex)
         onlyNodeOwner(fromNodeIndex)
+        correctNode(schainHash, fromNodeIndex)
+        correctGroupWithoutRevert(schainHash)
+        correctNodeWithoutRevert(schainHash, toNodeIndex)
     {
         SkaleDkgComplaint.complaintBadData({
             schainHash: schainHash,
@@ -242,10 +242,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 delta: contractManager.getConstantsHolder().COMPLAINT_DELTA(),
                 dkgFunction: DkgFunction.Complaint
         }))
-        correctGroupWithoutRevert(schainHash)
-        correctNode(schainHash, fromNodeIndex)
-        correctNodeWithoutRevert(schainHash, toNodeIndex)
         onlyNodeOwner(fromNodeIndex)
+        correctNode(schainHash, fromNodeIndex)
+        correctGroupWithoutRevert(schainHash)
+        correctNodeWithoutRevert(schainHash, toNodeIndex)
     {
         SkaleDkgComplaint.complaint({
             schainHash: schainHash,
