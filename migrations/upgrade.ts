@@ -99,7 +99,7 @@ async function main() {
     const startBlock = await ethers.provider.getBlockNumber();
     const contractsToUpgrade = await prepareContractsList(skaleManager);
     const upgrader = new SkaleManagerUpgrader(
-        "1.13.0",
+        "1.13.1",
         skaleManager,
         contractsToUpgrade
     );
