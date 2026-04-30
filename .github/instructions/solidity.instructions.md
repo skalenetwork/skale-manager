@@ -3,10 +3,11 @@ applyTo: "**/*.sol"
 ---
 
 When reviewing Solidity files in this repository, apply these rules.
-Files under `contracts/test/` are mock/test helpers — NatSpec and access-control rules do not apply to them.
+Files under `contracts/test/` are excluded from stricter rules rules.
+Files under  `contracts/thirdparty/` do not need to be checked - Ideally they should never have ANY changes. If a PR includes changes to third-party code, flag that it.
 
 **Upgrade safety**
-- Never add a `constructor` that writes state. Use `initialize` + `initializer` modifier.
+- For contracts deployed behind a proxy, never add a `constructor` that writes state. Use `initialize` + `initializer` modifier. Non-proxied contracts (e.g., `SkaleToken`) may use constructors.
 - Never reorder, rename, or remove existing storage variables. New variables go in a new storage gap slot or at the end of variable declarations. If layouts are reused, ensure they are 100% compatible.
 - If a contract inherits `Permissions`, confirm `initialize` calls `Permissions.initialize(contractManagerAddress)`.
 - Confirm existence and safety of reinitializers if there are any.
@@ -26,7 +27,7 @@ Files under `contracts/test/` are mock/test helpers — NatSpec and access-contr
 - Flag storage reads inside loops (cache in memory), redundant SLOADs, and unbounded iterations over dynamic arrays.
 
 **Style**
-- License: `SPDX-License-Identifier: AGPL-3.0-only`.
+- License: `SPDX-License-Identifier: AGPL-3.0-only` for first-party contracts.
 - Use named imports: `import { Foo } from "./Foo.sol";`
 - NatSpec is required on all public/external functions and events.
 - Follow the module pattern: `contract Name is Permissions, IName { ... }`.

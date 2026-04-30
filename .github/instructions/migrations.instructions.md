@@ -5,9 +5,9 @@ applyTo: "migrations/**/*.ts"
 When reviewing migration scripts, apply these rules:
 
 **Deploy scripts (`deploy.ts`)**
-- Every new contract must be deployed via `upgrades.deployProxy` and registered in ContractManager with `setContractsAddress(name, address)`.
+- Every new upgradeable contract must be deployed via `upgrades.deployProxy` and registered in ContractManager with `setContractsAddress(name, address)`. Non-proxied contracts (e.g., `SkaleToken`) use `factory.deploy` instead.
 - The name passed to `setContractsAddress` must match the string key that `Permissions` modifiers use in `allow("Name")`. Check `getNameInContractManager` for aliases (e.g., `BountyV2` → `Bounty`).
-- Verify `getInitializerParameters` returns the correct arguments for new contracts.
+- For proxy-deployed contracts, verify `getInitializerParameters` returns the correct arguments.
 
 **Upgrade scripts (`upgrade.ts`)**
 - If a contract adds new storage variables, confirm the upgrade preserves layout compatibility (no reorder/removal).

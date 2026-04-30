@@ -13,7 +13,7 @@ When reviewing TypeScript test files, apply these rules:
 - After deploying, register contracts in ContractManager with the exact string key expected by `Permissions` modifiers.
 
 **Assertions**
-- Use `revertedWithCustomError(contract, "ErrorName")` for expected reverts — not `.rejectedWith("string")`.
+- Use `revertedWithCustomError(contract, "ErrorName")` when the contract reverts with a custom error. For string-based revert reasons, use `revertedWith("reason")` or `rejectedWith("reason")`.
 - Use `chai-as-promised` patterns: `await expect(tx).to.be...`.
 
 **Coverage expectations**
