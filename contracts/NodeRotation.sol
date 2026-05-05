@@ -21,8 +21,8 @@
 
 pragma solidity 0.8.17;
 
-import { EnumerableSetUpgradeable }
-from "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import { EnumerableSet }
+from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
@@ -39,7 +39,7 @@ import { Permissions } from "./Permissions.sol";
  * @dev This contract handles all node rotation functionality.
  */
 contract NodeRotation is Permissions, INodeRotation {
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
+    using EnumerableSet for EnumerableSet.UintSet;
     using Random for IRandom.RandomGenerator;
 
 
@@ -58,8 +58,10 @@ contract NodeRotation is Permissions, INodeRotation {
         uint256 rotationCounter;
         //    schainHash =>        nodeIndex => nodeIndex
         mapping (uint256 => uint256) previousNodes;
-        EnumerableSetUpgradeable.UintSet newNodeIndexes;
+        EnumerableSet.UintSet newNodeIndexes;
         mapping (uint256 => uint256) indexInLeavingHistory;
+        EnumerableSet.UintSet broadcastSenders;
+        EnumerableSet.UintSet spareBroadcastSenders;
     }
 
     mapping (bytes32 => RotationWithPreviousNodes) private _rotations;
@@ -74,6 +76,8 @@ contract NodeRotation is Permissions, INodeRotation {
      * @dev Emitted when rotation delay skipped.
      */
     event RotationDelaySkipped(bytes32 indexed schainHash);
+
+    error PreviousRotationIsNotComplete(bytes32 schainHash);
 
     modifier onlyDebugger() {
         require(hasRole(DEBUGGER_ROLE, msg.sender), "DEBUGGER_ROLE is required");
@@ -142,6 +146,11 @@ contract NodeRotation is Permissions, INodeRotation {
         emit RotationDelaySkipped(schainHash);
     }
 
+    function finalizeRotation(bytes32 schain) external override allow("SkaleDKG") {
+        _clearSet(_rotations[schain].broadcastSenders);
+        _clearSet(_rotations[schain].spareBroadcastSenders);
+    }
+
     /**
      * @dev Returns rotation details for a given schain.
      */
@@ -191,6 +200,22 @@ contract NodeRotation is Permissions, INodeRotation {
             _rotations[schainHash].freezeUntil >= block.timestamp;
     }
 
+    function isSchainCreation(bytes32 schainHash) external view override returns (bool) {
+        return _rotations[schainHash].broadcastSenders.length() == 0;
+    }
+
+    function shouldSendBroadcast(
+        bytes32 schainHash,
+        uint256 node
+    )
+        external
+        view
+        override
+        returns (bool)
+    {
+        return _rotations[schainHash].broadcastSenders.contains(node);
+    }
+
     /**
      * @dev Returns a previous node of the node in schain.
      * If there is no previous node for given node would return an error:
@@ -227,7 +252,27 @@ contract NodeRotation is Permissions, INodeRotation {
         ISchainsInternal schainsInternal =
             ISchainsInternal(contractManager.getContract("SchainsInternal"));
         schainsInternal.removeNodeFromSchain(nodeIndex, schainHash);
-        if (!isBadNode) {
+        if (isBadNode) {
+            if (_rotations[schainHash].broadcastSenders.contains(nodeIndex)) {
+                require(
+                    _rotations[schainHash].spareBroadcastSenders.length() != 0,
+                    "No nodes to replace bad node"
+                );
+                require(
+                    _rotations[schainHash].broadcastSenders.remove(nodeIndex),
+                    "No broadcast sender to remove"
+                );
+                uint256 spareNode = _rotations[schainHash].spareBroadcastSenders.at(0);
+                require(
+                    _rotations[schainHash].broadcastSenders.add(spareNode),
+                    "Spare sender is already in broadcast senders"
+                );
+                require(
+                    _rotations[schainHash].spareBroadcastSenders.remove(spareNode),
+                    "No spare sender to remove"
+                );
+            }
+        } else {
             schainsInternal.removeNodeFromExceptions(schainHash, nodeIndex);
         }
         newNode = selectNodeToGroup(schainHash);
@@ -284,8 +329,29 @@ contract NodeRotation is Permissions, INodeRotation {
      * @dev Initiates rotation of a node from an schain.
      */
     function _startRotation(bytes32 schainHash, uint256 nodeIndex) private {
+        if(_rotations[schainHash].broadcastSenders.length() != 0) {
+            revert PreviousRotationIsNotComplete(schainHash);
+        }
         _rotations[schainHash].newNodeIndex = nodeIndex;
         waitForNewNode[schainHash] = true;
+        uint256 nValue = _rotations[schainHash].newNodeIndexes.length();
+        uint256 tValue = _getT(nValue);
+        for (uint256 i = 0; i < tValue; ++i) {
+            require(
+                _rotations[schainHash].broadcastSenders.add(
+                    _rotations[schainHash].newNodeIndexes.at(i)
+                ),
+                "Broadcast sender is already in broadcast senders"
+            );
+        }
+        for (uint256 i = tValue; i < nValue; ++i) {
+            require(
+                _rotations[schainHash].spareBroadcastSenders.add(
+                    _rotations[schainHash].newNodeIndexes.at(i)
+                ),
+                "Spare sender is already in spare broadcast senders"
+            );
+        }
     }
 
     function _startWaiting(bytes32 schainHash, uint256 nodeIndex) private {
@@ -361,5 +427,18 @@ contract NodeRotation is Permissions, INodeRotation {
                 "Occupied by rotation on Schain"
             );
         }
+    }
+
+    // TODO: remove this function
+    // after migration to openzeppelin-contracts v5+
+    function _clearSet(EnumerableSet.UintSet storage set) private {
+        uint256 len = set.length();
+        for (uint256 i = 0; i < len; ++i) {
+            assert(set.remove(set.at(0)));
+        }
+    }
+
+    function _getT(uint256 n) private pure returns (uint256 t) {
+        return (n * 2 + 1) / 3;
     }
 }

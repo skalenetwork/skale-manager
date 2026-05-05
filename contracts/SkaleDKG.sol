@@ -168,7 +168,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             nodeIndex: nodeIndex,
             verificationVector: verificationVector,
             secretKeyContribution: secretKeyContribution,
-            contractManager: contractManager,
+            contracts: SkaleDkgBroadcast.Contracts({
+                constantsHolder: contractManager.getConstantsHolder(),
+                keyStorage: IKeyStorage(contractManager.getContract("KeyStorage")),
+                nodeRotation: INodeRotation(contractManager.getContract("NodeRotation")),
+                skaleDKG: ISkaleDKG(contractManager.getContract("SkaleDKG"))
+            }),
             channels: channels,
             dkgProcess: dkgProcess,
             hashedData: hashedData,

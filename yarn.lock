@@ -2017,7 +2017,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts@npm:^4.9.3":
+"@openzeppelin/contracts@npm:4.9.3":
   version: 4.9.3
   resolution: "@openzeppelin/contracts@npm:4.9.3"
   checksum: 10c0/3d22eca3a13314f1950bde5738b12a56ebb0a2538a07769ea68a1130bbb21e28a46961130d1acce6e9bd3c40ff81cddd88b6644e10e12c2efec31b37ed6afc81
@@ -2547,10 +2547,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@skalenetwork/skale-manager-interfaces@npm:3.3.0":
-  version: 3.3.0
-  resolution: "@skalenetwork/skale-manager-interfaces@npm:3.3.0"
-  checksum: 10c0/a429d7f14a9074bf732887755e18e2c14a4be65aa0b14e9af717a6779b31663cbfb0f6f91f31b18b8ec8dc4041cf7dc28b944aaf9721178cae8f2ce6933ad57f
+"@skalenetwork/skale-manager-interfaces@npm:3.3.0-bite-dkg.3":
+  version: 3.3.0-bite-dkg.3
+  resolution: "@skalenetwork/skale-manager-interfaces@npm:3.3.0-bite-dkg.3"
+  checksum: 10c0/20805f3bf3298769304ca9863793288fb8fcd02c5adb29df9ebfc450ffd6e16e9eb6129ab626aeea346e1aead8bcbff65aaf9aef950e6b9d206b20f86f9414f9
   languageName: node
   linkType: hard
 
@@ -2577,7 +2577,7 @@ __metadata:
     "@nomicfoundation/hardhat-ethers": "npm:^3.1.0"
     "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.0"
     "@nomicfoundation/hardhat-verify": "npm:^2.0.14"
-    "@openzeppelin/contracts": "npm:^4.9.3"
+    "@openzeppelin/contracts": "npm:4.9.3"
     "@openzeppelin/contracts-upgradeable": "npm:^4.9.6"
     "@openzeppelin/hardhat-upgrades": "npm:^3.9.0"
     "@openzeppelin/upgrades-core": "npm:^1.38.0"
@@ -2586,7 +2586,7 @@ __metadata:
     "@skalenetwork/marionette-interfaces": "npm:^0.0.0-main.6"
     "@skalenetwork/paymaster-interfaces": "npm:^1.0.1"
     "@skalenetwork/skale-contracts-ethers-v6": "npm:^2.0.0-develop.6"
-    "@skalenetwork/skale-manager-interfaces": "npm:3.3.0"
+    "@skalenetwork/skale-manager-interfaces": "npm:3.3.0-bite-dkg.3"
     "@skalenetwork/upgrade-tools": "npm:4.0.0-develop.8"
     "@typechain/ethers-v6": "npm:^0.5.1"
     "@typechain/hardhat": "npm:^9.1.0"

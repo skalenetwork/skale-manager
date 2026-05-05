@@ -27,6 +27,7 @@ import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
 import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import {INodeRotation} from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 
 import {GroupIndexIsInvalid} from "../CommonErrors.sol";
 
@@ -83,12 +84,22 @@ library SkaleDkgAlright {
         dkgProcess[schainHash].numberOfCompleted++;
         emit AllDataReceived(schainHash, fromNodeIndex);
         if (dkgProcess[schainHash].numberOfCompleted == numberOfParticipant) {
-            lastSuccessfulDKG[schainHash] = block.timestamp;
-            channels[schainHash].active = false;
-            IKeyStorage(contractManager.getContract("KeyStorage"))
-                .finalizePublicKey(schainHash);
-            emit SuccessfulDKG(schainHash);
+            _finalizeDKG(schainHash, contractManager, channels, lastSuccessfulDKG);
         }
+    }
+
+    function _finalizeDKG(
+        bytes32 schainHash,
+        IContractManager contractManager,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels,
+        mapping(bytes32 => uint256) storage lastSuccessfulDKG
+    ) private {
+        lastSuccessfulDKG[schainHash] = block.timestamp;
+        channels[schainHash].active = false;
+        emit SuccessfulDKG(schainHash);
+        IKeyStorage(contractManager.getContract("KeyStorage"))
+            .finalizePublicKey(schainHash);
+        INodeRotation(contractManager.getContract("NodeRotation")).finalizeRotation(schainHash);
     }
 
     function _getComplaintTimeLimit(
