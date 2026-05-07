@@ -452,6 +452,21 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return startAlrightTimestamp[schainHash];
     }
 
+    function getTargetBroadcastNumber(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (uint256 targetBroadcastNumber)
+    {
+        return SkaleDkgBroadcast.getTargetBroadcastNumber(
+            schainHash,
+            INodeRotation(contractManager.getContract("NodeRotation")),
+            channels
+        );
+    }
+
     /**
      * @dev Checks whether channel is opened.
      */
@@ -482,9 +497,17 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         override
         returns (bool possible)
     {
-        (uint256 index, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
+        (uint256 index, bool belongsToGroup) = checkAndReturnIndexInGroup(
+            schainHash,
+            nodeIndex,
+            false
+        );
+        INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
+        bool shouldSendBroadcast = nodeRotation.isSchainCreation(schainHash) ||
+            nodeRotation.shouldSendBroadcast(schainHash, nodeIndex);
         return channels[schainHash].active &&
-            check &&
+            belongsToGroup &&
+            shouldSendBroadcast &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
             channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit()
                 > block.timestamp &&
@@ -559,10 +582,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         returns (bool possible)
     {
         (uint256 index, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
+        uint256 targetBroadcastNumber = SkaleDkgBroadcast.getTargetBroadcastNumber(
+            schainHash,
+            INodeRotation(contractManager.getContract("NodeRotation")),
+            channels
+        );
         return channels[schainHash].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
-            channels[schainHash].n == dkgProcess[schainHash].numberOfBroadcasted &&
+            dkgProcess[schainHash].numberOfBroadcasted == targetBroadcastNumber &&
             (complaints[schainHash].fromNodeToComplaint != nodeIndex ||
             (nodeIndex == 0 && complaints[schainHash].startComplaintBlockTimestamp == 0)) &&
             startAlrightTimestamp[schainHash] + _getComplaintTimeLimit() > block.timestamp &&

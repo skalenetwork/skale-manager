@@ -341,9 +341,15 @@ contract NodeRotation is Permissions, INodeRotation {
         _rotations[schainHash].newNodeIndex = nodeIndex;
         waitForNewNode[schainHash] = true;
         uint256[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
-        uint256 nValue = nodesInGroup.length;
-        uint256 tValue = _getT(nValue);
-        for (uint256 i = 0; i < tValue; ++i) {
+        uint256 groupSize = nodesInGroup.length;
+        uint256 broadcastSendersNumber = _getT(groupSize);
+        for (uint256 i = 0; i < groupSize; ++i) {
+            if (nodesInGroup[i] == nodeIndex) {
+                nodesInGroup[i] = nodesInGroup[groupSize - 1];
+                break;
+            }
+        }
+        for (uint256 i = 0; i < broadcastSendersNumber; ++i) {
             require(
                 _rotations[schainHash].broadcastSenders.add(
                     nodesInGroup[i]
@@ -351,7 +357,7 @@ contract NodeRotation is Permissions, INodeRotation {
                 "Broadcast sender is already in broadcast senders"
             );
         }
-        for (uint256 i = tValue; i < nValue; ++i) {
+        for (uint256 i = broadcastSendersNumber; i < groupSize - 1; ++i) {
             require(
                 _rotations[schainHash].spareBroadcastSenders.add(
                     nodesInGroup[i]

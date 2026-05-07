@@ -61,7 +61,9 @@ library SkaleDkgAlright {
         }
         uint256 numberOfParticipant = channels[schainHash].n;
         require(
-            numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted,
+            dkgProcess[schainHash].numberOfBroadcasted == skaleDKG.getTargetBroadcastNumber(
+                schainHash
+            ),
             "Still Broadcasting phase"
         );
         require(

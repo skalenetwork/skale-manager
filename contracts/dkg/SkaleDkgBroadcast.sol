@@ -77,7 +77,6 @@ library SkaleDkgBroadcast {
         mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData,
         uint256 rotationCounter
     ) external {
-        uint256 n = channels[schainHash].n;
         _verifyData({
             schainHash: schainHash,
             nodeIndex: nodeIndex,
@@ -85,8 +84,7 @@ library SkaleDkgBroadcast {
             secretKeyContribution: secretKeyContribution,
             contracts: contracts,
             channels: channels,
-            rotationCounter: rotationCounter,
-            n: n
+            rotationCounter: rotationCounter
         });
         (uint256 index, bool valid) = contracts.skaleDKG.checkAndReturnIndexInGroup(
             schainHash,
@@ -99,10 +97,11 @@ library SkaleDkgBroadcast {
         require(!dkgProcess[schainHash].broadcasted[index], "This node has already broadcasted");
         dkgProcess[schainHash].broadcasted[index] = true;
         dkgProcess[schainHash].numberOfBroadcasted++;
-        uint256 targetBroadcastNumber = n;
-        if (!contracts.nodeRotation.isSchainCreation(schainHash)) {
-            targetBroadcastNumber = getT(n);
-        }
+        uint256 targetBroadcastNumber = getTargetBroadcastNumber(
+            schainHash,
+            contracts.nodeRotation,
+            channels
+        );
         if (dkgProcess[schainHash].numberOfBroadcasted == targetBroadcastNumber) {
             contracts.skaleDKG.setStartAlrightTimestamp(schainHash);
         }
@@ -110,13 +109,30 @@ library SkaleDkgBroadcast {
             secretKeyContribution,
             verificationVector
         );
-        contracts.keyStorage.adding( schainHash, verificationVector[0]);
+        contracts.keyStorage.adding(schainHash, verificationVector[0]);
         emit BroadcastAndKeyShare(
             schainHash,
             nodeIndex,
             verificationVector,
             secretKeyContribution
         );
+    }
+
+    function getTargetBroadcastNumber(
+        bytes32 schainHash,
+        INodeRotation nodeRotation,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels
+    )
+        public
+        view
+        returns (uint256 targetBroadcastNumber)
+    {
+        uint256 n = channels[schainHash].n;
+        if (nodeRotation.isSchainCreation(schainHash)) {
+            return n;
+        } else {
+            return getT(n);
+        }
     }
 
     function getT(uint256 n) public pure returns (uint256 t) {
@@ -130,12 +146,12 @@ library SkaleDkgBroadcast {
         ISkaleDKG.KeyShare[] memory secretKeyContribution,
         Contracts memory contracts,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels,
-        uint256 rotationCounter,
-        uint256 n
+        uint256 rotationCounter
     )
     private
     view
     {
+        uint256 n = channels[schainHash].n;
         require(
             contracts.nodeRotation.getRotation(schainHash).rotationCounter == rotationCounter,
             "Incorrect rotation counter"
