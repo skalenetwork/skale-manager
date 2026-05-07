@@ -3017,9 +3017,7 @@ describe("Schains", () => {
             const rotIndex = 0;
             await nodes.initExit(rotIndex);
             await skaleManager.connect(nodeAddress1).nodeExit(rotIndex);
-            await skaleDKG.setSuccessfulDKGPublic(
-                stringKeccak256("d1"),
-            );
+            await skaleDKG.setSuccessfulDKGPublic(schainHash);
             await skipTime(46200);
             await schains.addSchain(
                 holder.address,
@@ -3065,9 +3063,9 @@ describe("Schains", () => {
                 "D2-fd", // name
                 "some.domain.name");
 
-            const rotation = await nodeRotation.getRotation(stringKeccak256("d1"));
+            const rotation = await nodeRotation.getRotation(schainHash);
             await skaleDKG.connect(nodeAddress1).broadcast(
-                stringKeccak256("d1"),
+                schainHash,
                 2,
                 verificationVectorNew,
                 secretKeyContributions,
@@ -3075,12 +3073,12 @@ describe("Schains", () => {
             );
             await skipTime(1800);
             await skaleDKG.connect(nodeAddress1).complaint(
-                stringKeccak256("d1"),
+                schainHash,
                 2,
                 16
             );
             await skaleDKG.setSuccessfulDKGPublic(
-                stringKeccak256("d1"),
+                schainHash,
             );
 
             for(let i = 2; i < 18; i++) {

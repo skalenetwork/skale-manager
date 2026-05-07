@@ -111,7 +111,7 @@ contract NodeRotation is Permissions, INodeRotation {
             return (true, false);
         }
         _checkBeforeRotation(schainHash, nodeIndex);
-        _startRotation(schainHash, nodeIndex);
+        _startRotation(schainHash, nodeIndex, schainsInternal);
         rotateNode(nodeIndex, schainHash, true, false);
         return (schainsInternal.getActiveSchain(nodeIndex) == bytes32(0) ? true : false, true);
     }
@@ -328,18 +328,25 @@ contract NodeRotation is Permissions, INodeRotation {
     /**
      * @dev Initiates rotation of a node from an schain.
      */
-    function _startRotation(bytes32 schainHash, uint256 nodeIndex) private {
+    function _startRotation(
+        bytes32 schainHash,
+        uint256 nodeIndex,
+        ISchainsInternal schainsInternal
+    )
+        private
+    {
         if(_rotations[schainHash].broadcastSenders.length() != 0) {
             revert PreviousRotationIsNotComplete(schainHash);
         }
         _rotations[schainHash].newNodeIndex = nodeIndex;
         waitForNewNode[schainHash] = true;
-        uint256 nValue = _rotations[schainHash].newNodeIndexes.length();
+        uint256[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
+        uint256 nValue = nodesInGroup.length;
         uint256 tValue = _getT(nValue);
         for (uint256 i = 0; i < tValue; ++i) {
             require(
                 _rotations[schainHash].broadcastSenders.add(
-                    _rotations[schainHash].newNodeIndexes.at(i)
+                    nodesInGroup[i]
                 ),
                 "Broadcast sender is already in broadcast senders"
             );
@@ -347,7 +354,7 @@ contract NodeRotation is Permissions, INodeRotation {
         for (uint256 i = tValue; i < nValue; ++i) {
             require(
                 _rotations[schainHash].spareBroadcastSenders.add(
-                    _rotations[schainHash].newNodeIndexes.at(i)
+                    nodesInGroup[i]
                 ),
                 "Spare sender is already in spare broadcast senders"
             );
