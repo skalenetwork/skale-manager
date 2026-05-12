@@ -1607,6 +1607,12 @@ describe("Schains", () => {
         const LEFT = 2n;
         let nodeStatus;
 
+        const schain1Name = "d2";
+        const schain1Hash = stringKeccak256(schain1Name);
+        const schain2Name = "d3";
+        const schain2Hash = stringKeccak256(schain2Name);
+
+
         fastBeforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 4;
@@ -1630,14 +1636,14 @@ describe("Schains", () => {
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
-                            name: "d2",
+                            name: schain1Name,
                             originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
             );
             await skaleDKG.setSuccessfulDKGPublic(
-                stringKeccak256("d2"),
+                schain1Hash,
             );
 
             await schains.addSchain(
@@ -1649,14 +1655,14 @@ describe("Schains", () => {
                             lifetime: 5,
                             typeOfSchain: SchainType.MEDIUM_TEST,
                             nonce: 0,
-                            name: "d3",
+                            name: schain2Name,
                             originator: ethers.ZeroAddress,
                             options: []
                         }]
                     )
             );
             await skaleDKG.setSuccessfulDKGPublic(
-                stringKeccak256("d3"),
+                schain2Hash,
             );
             await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
@@ -2062,14 +2068,18 @@ describe("Schains", () => {
         });
 
         it("should be possible to process dkg after node rotation", async () => {
-            let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
-            assert.equal(res, false);
+            expect(
+                await skaleDKG.isChannelOpened(schain2Hash)
+            ).to.be.false;
             await nodes.initExit(0)
             await skaleManager.connect(nodeAddress1).nodeExit(0);
-            const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
-            const nodeRot = res1[3];
-            let resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
-            assert.equal(resS, true);
+            const nodesInGroup = await schainsInternal.getNodesInGroup(schain2Hash);
+            const rotation = await nodeRotation.getRotation(schain2Hash);
+            const incomingNode = rotation.newNodeIndex;
+            // New node should not be able to send broadcast
+            expect(
+                await skaleDKG.connect(nodeAddress1).isBroadcastPossible(schain2Hash, incomingNode)
+            ).to.be.false;
 
             const verificationVector = [
                 {
@@ -2135,104 +2145,45 @@ describe("Schains", () => {
                 }
             ];
 
-            // let res10 = await keyStorage.getBroadcastedData(stringKeccak256("d3"), res1[0]);
-            resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), res1[0]);
-            assert.equal(resS, true);
-            await wallets.connect(owner).rechargeSchainWallet(stringKeccak256("d3"), {value: 1e20.toString()});
-            const rotation = await nodeRotation.getRotation(stringKeccak256("d3"));
-            await skaleDKG.connect(nodeAddress1).broadcast(
-                stringKeccak256("d3"),
-                res1[0],
-                verificationVector,
-                // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContribution,
-                rotation.rotationCounter
-            );
-            // res10 = await keyStorage.getBroadcastedData(stringKeccak256("d3"), res1[1]);
-            resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), res1[1]);
-            assert.equal(resS, true);
-            await skaleDKG.connect(nodeAddress1).broadcast(
-                stringKeccak256("d3"),
-                res1[1],
-                verificationVector,
-                // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContribution,
-                rotation.rotationCounter
-            );
-            resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), res1[2]);
-            assert.equal(resS, true);
-            await skaleDKG.connect(nodeAddress1).broadcast(
-                stringKeccak256("d3"),
-                res1[2],
-                verificationVector,
-                // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContribution,
-                rotation.rotationCounter
-            );
-            await skaleDKG.connect(nodeAddress1).broadcast(
-                stringKeccak256("d3"),
-                res1[3],
-                verificationVector,
-                // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContribution,
-                rotation.rotationCounter
-            );
+            await wallets.connect(owner).rechargeSchainWallet(schain2Hash, {value: 1e20.toString()});
+            // All nodes but the incoming one should be able to send broadcast
+            for (const node of nodesInGroup) {
+                expect(
+                    await skaleDKG.connect(nodeAddress1).isBroadcastPossible(schain2Hash, node)
+                ).to.be.equal(node !== incomingNode);
+                if (node !== incomingNode) {
+                    await skaleDKG.connect(nodeAddress1).broadcast(
+                        schain2Hash,
+                        node,
+                        verificationVector,
+                        // the last symbol is spoiled in parameter below
+                        encryptedSecretKeyContribution,
+                        rotation.rotationCounter
+                    );
+                }
+                expect(
+                    await skaleDKG.isChannelOpened(schain2Hash)
+                ).to.be.true;
+            }
 
-            res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
-            assert.equal(res, true);
+            for (const node of nodesInGroup) {
+                expect(
+                    await skaleDKG.connect(nodeAddress1).isAlrightPossible(
+                        schain2Hash,
+                        node
+                    )
+                ).to.be.true;
 
-            resS = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
-                stringKeccak256("d3"),
-                res1[0]
-            );
-            assert.equal(resS, true);
+                await skaleDKG.connect(nodeAddress1).alright(
+                    schain2Hash,
+                    node
+                );
 
-            await skaleDKG.connect(nodeAddress1).alright(
-                stringKeccak256("d3"),
-                res1[0]
-            );
-
-            res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
-            assert.equal(res, true);
-
-            resS = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
-                stringKeccak256("d3"),
-                res1[1]
-            );
-            assert.equal(resS, true);
-
-            await skaleDKG.connect(nodeAddress1).alright(
-                stringKeccak256("d3"),
-                res1[1]
-            );
-
-            res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
-            assert.equal(res, true);
-
-            resS = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
-                stringKeccak256("d3"),
-                res1[2]
-            );
-            assert.equal(resS, true);
-
-            await skaleDKG.connect(nodeAddress1).alright(
-                stringKeccak256("d3"),
-                res1[2]
-            );
-
-            res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
-            assert.equal(res, true);
-
-            resS = await skaleDKG.connect(nodeAddress1).isAlrightPossible(
-                stringKeccak256("d3"),
-                res1[3]
-            );
-            assert.equal(resS, true);
-
-            await skaleDKG.connect(nodeAddress1).alright(
-                stringKeccak256("d3"),
-                res1[3]
-            );
+                const channelOpened = node !== nodesInGroup[3];
+                expect(
+                    await skaleDKG.isChannelOpened(schain2Hash)
+                ).to.be.equal(channelOpened);
+            }
         });
     });
 
