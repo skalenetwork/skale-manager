@@ -1709,13 +1709,16 @@ describe("SkaleDKG", () => {
                 rotCounter.rotationCounter
             );
 
-            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
-                stringKeccak256(schainName),
-                2,
-                verificationVectors[indexes[0]],
-                encryptedSecretKeyContributions[indexes[0]],
-                rotCounter.rotationCounter
-            );
+            // The incoming node does not participate in broadcast
+            await expect(
+                skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
+                    2,
+                    verificationVectors[indexes[0]],
+                    encryptedSecretKeyContributions[indexes[0]],
+                    rotCounter.rotationCounter
+                )
+            ).to.be.revertedWith("This node should not send broadcast");
 
             await skaleDKG.connect(validators[0].nodeAddress).alright(
                 stringKeccak256(schainName),
@@ -1761,13 +1764,15 @@ describe("SkaleDKG", () => {
                 rotCounter.rotationCounter
             );
 
-            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
-                stringKeccak256(schainName),
-                3,
-                verificationVectors[indexes[0]],
-                encryptedSecretKeyContributions[indexes[0]],
-                rotCounter.rotationCounter
-            );
+            await expect(
+                skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                    stringKeccak256(schainName),
+                    3,
+                    verificationVectors[indexes[0]],
+                    encryptedSecretKeyContributions[indexes[0]],
+                    rotCounter.rotationCounter
+                )
+            ).to.be.revertedWith("This node should not send broadcast");
 
             await skaleDKG.connect(validators[0].nodeAddress).alright(
                 stringKeccak256(schainName),
