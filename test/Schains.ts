@@ -32,6 +32,7 @@ import {fastBeforeEach} from "./tools/mocha";
 import {stringKeccak256} from "./tools/hashes";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {schainParametersType, SchainType} from "./tools/types";
+import { getBroadcastingNodes } from "./tools/rotation";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -2855,9 +2856,12 @@ describe("Schains", () => {
                 "D2-fe", // name
                 "some.domain.name");
             const rotation = await nodeRotation.getRotation(stringKeccak256("d1"));
+            const broadcastingNode = (
+                await getBroadcastingNodes(stringKeccak256("d1"), schainsInternal, nodeRotation)
+            )[0];
             await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
-                1,
+                broadcastingNode,
                 verificationVectorNew,
                 secretKeyContributions,
                 rotation.rotationCounter
@@ -2865,7 +2869,7 @@ describe("Schains", () => {
             await skipTime(1800);
             await skaleDKG.connect(nodeAddress1).complaint(
                 stringKeccak256("d1"),
-                1,
+                broadcastingNode,
                 16
             );
             await skaleDKG.setSuccessfulDKGPublic(
@@ -2894,9 +2898,12 @@ describe("Schains", () => {
                 "D2-fe", // name
                 "some.domain.name");
             const rotation = await nodeRotation.getRotation(stringKeccak256("d1"));
+            const broadcastingNode = (
+                await getBroadcastingNodes(stringKeccak256("d1"), schainsInternal, nodeRotation)
+            )[0];
             await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
-                1,
+                broadcastingNode,
                 verificationVectorNew,
                 secretKeyContributions,
                 rotation.rotationCounter
@@ -2904,7 +2911,7 @@ describe("Schains", () => {
             await skipTime(1800);
             await skaleDKG.connect(nodeAddress1).complaint(
                 stringKeccak256("d1"),
-                1,
+                broadcastingNode,
                 16
             );
             await skaleDKG.setSuccessfulDKGPublic(
@@ -2935,9 +2942,12 @@ describe("Schains", () => {
                 "some.domain.name");
 
             const rotation = await nodeRotation.getRotation(stringKeccak256("d1"));
+            const broadcastingNode = (
+                await getBroadcastingNodes(stringKeccak256("d1"), schainsInternal, nodeRotation)
+            )[0];
             await skaleDKG.connect(nodeAddress1).broadcast(
                 stringKeccak256("d1"),
-                1,
+                broadcastingNode,
                 verificationVectorNew,
                 secretKeyContributions,
                 rotation.rotationCounter
@@ -2945,7 +2955,7 @@ describe("Schains", () => {
             await skipTime(1800);
             await skaleDKG.connect(nodeAddress1).complaint(
                 stringKeccak256("d1"),
-                1,
+                broadcastingNode,
                 16
             );
             await skaleDKG.setSuccessfulDKGPublic(
