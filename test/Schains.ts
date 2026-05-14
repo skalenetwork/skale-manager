@@ -1994,13 +1994,13 @@ describe("Schains", () => {
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, false);
-            await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress1).nodeExit(0);
-            const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
-            const nodeRot = res1[3];
+            const exitNode = 0;
+            await nodes.initExit(exitNode);
+            await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
+            const stayedNode = 1;
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
-            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
+            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), stayedNode);
             assert.equal(resS, true);
         });
 
@@ -2027,16 +2027,16 @@ describe("Schains", () => {
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, false);
-            await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress1).nodeExit(0);
-            const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
-            const nodeRot = res1[3];
+            const exitNode = 0;
+            await nodes.initExit(exitNode);
+            await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
+            const stayedNode = 1;
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
-            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
+            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), stayedNode);
             assert.equal(resS, true);
             await skipTime(43260);
-            await skaleManager.connect(nodeAddress1).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
 
             await nodes.initExit(1).should.be.eventually.rejectedWith("DKG did not finish on Schain");
         });
@@ -2044,27 +2044,27 @@ describe("Schains", () => {
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, false);
-            await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress1).nodeExit(0);
-            const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
-            const nodeRot = res1[3];
+            const exitNode = 0;
+            await nodes.initExit(exitNode);
+            await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
+            const stayedNode = 1;
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
-            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
+            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), stayedNode);
             assert.equal(resS, true);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
-            await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            await skaleManager.connect(nodeAddress1).nodeExit(0);
+            await nodes.initExit(stayedNode).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
             );
 
             await skipTime(43260);
 
-            await nodes.initExit(1)
-            await skaleManager.connect(nodeAddress1).nodeExit(1);
+            await nodes.initExit(stayedNode)
+            await skaleManager.connect(nodeAddress1).nodeExit(stayedNode);
         });
 
         it("should be possible to process dkg after node rotation", async () => {
