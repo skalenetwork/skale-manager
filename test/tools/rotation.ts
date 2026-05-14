@@ -1,4 +1,4 @@
-import { NodeRotation, SchainsInternal } from "../../typechain-types"
+import {NodeRotation, SchainsInternal} from "../../typechain-types"
 
 export const getBroadcastingNodes = async (schainHash: string, schainsInternal: SchainsInternal, nodeRotation: NodeRotation) => {
     const nodes = await schainsInternal.getNodesInGroup(schainHash);

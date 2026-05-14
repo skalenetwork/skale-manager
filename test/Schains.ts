@@ -32,7 +32,7 @@ import {fastBeforeEach} from "./tools/mocha";
 import {stringKeccak256} from "./tools/hashes";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {schainParametersType, SchainType} from "./tools/types";
-import { getBroadcastingNodes } from "./tools/rotation";
+import {getBroadcastingNodes} from "./tools/rotation";
 
 chai.should();
 chai.use(chaiAsPromised);
