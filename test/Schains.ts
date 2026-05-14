@@ -2008,17 +2008,19 @@ describe("Schains", () => {
         it("should revert if dkg not finished", async () => {
             let res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, false);
-            await nodes.initExit(0);
-            await skaleManager.connect(nodeAddress1).nodeExit(0);
-            const res1 = await schainsInternal.getNodesInGroup(stringKeccak256("d3"));
-            const nodeRot = res1[3];
+            const exitNode = 0;
+            await nodes.initExit(exitNode);
+            await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
+            const broadcastingNode = (
+                await getBroadcastingNodes(stringKeccak256("d3"), schainsInternal, nodeRotation)
+            )[0];
             res = await skaleDKG.isChannelOpened(stringKeccak256("d3"));
             assert.equal(res, true);
-            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), nodeRot);
+            const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), broadcastingNode);
             assert.equal(resS, true);
 
             await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            await skaleManager.connect(nodeAddress1).nodeExit(0);
+            await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
 
             await skipTime(43260);
 
