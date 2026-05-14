@@ -3024,9 +3024,12 @@ describe("Schains", () => {
                 "some.domain.name");
 
             const rotation = await nodeRotation.getRotation(schainHash);
+            const broadcastingNode = (
+                await getBroadcastingNodes(schainHash, schainsInternal, nodeRotation)
+            )[0];
             await skaleDKG.connect(nodeAddress1).broadcast(
                 schainHash,
-                2,
+                broadcastingNode,
                 verificationVectorNew,
                 secretKeyContributions,
                 rotation.rotationCounter
@@ -3034,7 +3037,7 @@ describe("Schains", () => {
             await skipTime(1800);
             await skaleDKG.connect(nodeAddress1).complaint(
                 schainHash,
-                2,
+                broadcastingNode,
                 16
             );
             await skaleDKG.setSuccessfulDKGPublic(
