@@ -2821,12 +2821,12 @@ describe("Schains", () => {
             );
             await wallets.rechargeSchainWallet(schainHash, {value: schainWalletValue});
             await skaleDKG.setSuccessfulDKGPublic(schainHash);
-            await skaleManager.connect(nodeAddress2).createNode(
+            await skaleManager.connect(nodeAddress1).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000ff", // ip
                 "0x7f0000ff", // public ip
-                getPublicKey(nodeAddress2), // public key
+                getPublicKey(nodeAddress1), // public key
                 "D2-ff", // name
                 "some.domain.name");
 
