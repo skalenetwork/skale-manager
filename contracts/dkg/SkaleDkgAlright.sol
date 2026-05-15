@@ -23,11 +23,11 @@
 
 pragma solidity 0.8.17;
 
-import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
-import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
 import {INodeRotation} from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
+import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
 import {GroupIndexIsInvalid} from "../CommonErrors.sol";
 
