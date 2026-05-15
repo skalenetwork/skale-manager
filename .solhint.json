@@ -1,6 +1,7 @@
 {
   "extends": "solhint:all",
   "rules": {
+    "foundry-test-functions": "off",
     "not-rely-on-time": "off",
 
     "compiler-version": ["warn","0.8.26"],

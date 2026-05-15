@@ -37,7 +37,7 @@ import {GroupIndexIsInvalid} from "../CommonErrors.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgAlright {
-    event AllDataReceived(bytes32 indexed schainHash, uint256 nodeIndex);
+    event AllDataReceived(bytes32 indexed schainHash, uint256 indexed nodeIndex);
     event SuccessfulDKG(bytes32 indexed schainHash);
 
     function alright(
@@ -83,7 +83,7 @@ library SkaleDkgAlright {
             "Node is already alright"
         );
         dkgProcess[schainHash].completed[index] = true;
-        dkgProcess[schainHash].numberOfCompleted++;
+        ++dkgProcess[schainHash].numberOfCompleted;
         emit AllDataReceived(schainHash, fromNodeIndex);
         if (dkgProcess[schainHash].numberOfCompleted == numberOfParticipant) {
             _finalizeDKG(schainHash, contractManager, channels, lastSuccessfulDKG);
