@@ -4,7 +4,7 @@
     "foundry-test-functions": "off",
     "not-rely-on-time": "off",
 
-    "compiler-version": ["warn","0.8.26"],
+    "compiler-version": ["warn","0.8.35"],
 
     "avoid-tx-origin": "error",
     "check-send-result": "error",
