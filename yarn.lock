@@ -2547,10 +2547,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@skalenetwork/skale-manager-interfaces@npm:3.3.0-bite-dkg.4":
-  version: 3.3.0-bite-dkg.4
-  resolution: "@skalenetwork/skale-manager-interfaces@npm:3.3.0-bite-dkg.4"
-  checksum: 10c0/cbb330f295ec6d5c901e8f52209668037b1e7c9c5b72bfb7bf9083b857abd82fa70a469629b918494d209abbb3dd087f0b2d3117c815b0b66a6e67af29f27f0d
+"@skalenetwork/skale-manager-interfaces@npm:3.3.0-bite-dkg.5":
+  version: 3.3.0-bite-dkg.5
+  resolution: "@skalenetwork/skale-manager-interfaces@npm:3.3.0-bite-dkg.5"
+  checksum: 10c0/1f9e3778eee48df15a040247463681bed4b4769630ae81898cea15c58a7cc78bd63eb92c9f9394c386e1d0172529a818c0dc000aace4532636286a6084ab313f
   languageName: node
   linkType: hard
 
@@ -2586,7 +2586,7 @@ __metadata:
     "@skalenetwork/marionette-interfaces": "npm:^0.0.0-main.6"
     "@skalenetwork/paymaster-interfaces": "npm:^1.0.1"
     "@skalenetwork/skale-contracts-ethers-v6": "npm:^2.0.0-develop.6"
-    "@skalenetwork/skale-manager-interfaces": "npm:3.3.0-bite-dkg.4"
+    "@skalenetwork/skale-manager-interfaces": "npm:3.3.0-bite-dkg.5"
     "@skalenetwork/upgrade-tools": "npm:4.0.0-develop.8"
     "@typechain/ethers-v6": "npm:^0.5.1"
     "@typechain/hardhat": "npm:^9.1.0"

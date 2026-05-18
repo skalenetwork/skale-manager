@@ -37,8 +37,6 @@ import {GroupIndexIsInvalid} from "../CommonErrors.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgAlright {
-    event AllDataReceived(bytes32 indexed schainHash, uint256 indexed nodeIndex);
-    event SuccessfulDKG(bytes32 indexed schainHash);
 
     error BroadcastingPhaseIsNotOver(bytes32 schainHash);
     error IncorrectTimeForAlright(bytes32 schainHash, uint256 timeout);
@@ -89,7 +87,7 @@ library SkaleDkgAlright {
         );
         dkgProcess[schainHash].completed[index] = true;
         ++dkgProcess[schainHash].numberOfCompleted;
-        emit AllDataReceived(schainHash, fromNodeIndex);
+        emit ISkaleDKG.AllDataReceived(schainHash, fromNodeIndex);
         if (dkgProcess[schainHash].numberOfCompleted == channels[schainHash].n) {
             _finalizeDKG(schainHash, contractManager, channels, lastSuccessfulDKG);
         }
@@ -103,7 +101,7 @@ library SkaleDkgAlright {
     ) private {
         lastSuccessfulDKG[schainHash] = block.timestamp;
         channels[schainHash].active = false;
-        emit SuccessfulDKG(schainHash);
+        emit ISkaleDKG.SuccessfulDKG(schainHash);
         IKeyStorage(contractManager.getContract("KeyStorage"))
             .finalizePublicKey(schainHash);
         INodeRotation(contractManager.getContract("NodeRotation")).finalizeRotation(schainHash);

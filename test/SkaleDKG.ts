@@ -1011,10 +1011,15 @@ describe("SkaleDKG", () => {
                 });
 
                 it("should send alright from 2 node", async () => {
-                    await expect(skaleDKG.connect(validators[1].nodeAddress).alright(
-                        stringKeccak256(schainName),
-                        1
-                    )).to.emit(skaleDKG, "AllDataReceived").withArgs(stringKeccak256(schainName), 1);
+                    await expect(
+                        skaleDKG.connect(validators[1].nodeAddress).alright(
+                            stringKeccak256(schainName),
+                            1
+                        )
+                    ).to.emit(
+                        skaleDKG,
+                        "AllDataReceived"
+                    ).withArgs(stringKeccak256(schainName), 1);
                 });
 
                 it("should not send alright from 2 node with incorrect sender", async () => {
@@ -1270,10 +1275,15 @@ describe("SkaleDKG", () => {
                         1
                     );
                     res.should.be.false;
-                    await skaleDKG.connect(validators[1].nodeAddress).alright(
-                        stringKeccak256(schainName),
-                        1
-                    ).should.be.eventually.rejectedWith("Node has already sent complaint");
+                    await expect(
+                        skaleDKG.connect(validators[1].nodeAddress).alright(
+                            stringKeccak256(schainName),
+                            1
+                        )
+                    ).to.be.revertedWithCustomError(
+                        await ethers.getContractFactory("SkaleDkgAlright"),
+                        "ComplaintWasSent"
+                    ).withArgs(stringKeccak256(schainName), 1);
                 });
 
                 it("should not send 2 complaints from 1 node", async () => {
