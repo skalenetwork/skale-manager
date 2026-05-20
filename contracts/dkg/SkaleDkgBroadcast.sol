@@ -23,10 +23,10 @@
 
 pragma solidity 0.8.35;
 
-import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
 import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
 import {INodeRotation} from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
+import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
 import {GroupIndexIsInvalid} from "../CommonErrors.sol";
 
@@ -44,15 +44,12 @@ library SkaleDkgBroadcast {
         ISkaleDKG skaleDKG;
     }
 
-    /**
-     * @dev Emitted when a node broadcasts key share.
-     */
-    event BroadcastAndKeyShare(
-        bytes32 indexed schainHash,
-        uint256 indexed fromNode,
-        ISkaleDKG.G2Point[] verificationVector,
-        ISkaleDKG.KeyShare[] secretKeyContribution
-    );
+    error NodeIsAlreadyBroadcasted(bytes32 schainHash, uint256 nodeIndex);
+    error IncorrectRotationCounter(uint256 actual, uint256 expected);
+    error IncorrectNumberOfVerificationVectors(uint256 actual, uint256 expected);
+    error IncorrectNumberOfSecretKeyShares(uint256 actual, uint256 expected);
+    error IncorrectTimeForBroadcast(uint256 timelimit);
+    error NodeShouldNotSendBroadcast(bytes32 schainHash, uint256 nodeIndex);
 
     /**
      * @dev Broadcasts verification vector and secret key contribution to all
@@ -91,12 +88,13 @@ library SkaleDkgBroadcast {
             nodeIndex,
             true
         );
-        if (!valid) {
-            revert GroupIndexIsInvalid(index);
-        }
-        require(!dkgProcess[schainHash].broadcasted[index], "This node has already broadcasted");
+        require(valid, GroupIndexIsInvalid(index));
+        require(
+            !dkgProcess[schainHash].broadcasted[index],
+            NodeIsAlreadyBroadcasted(schainHash, nodeIndex)
+        );
         dkgProcess[schainHash].broadcasted[index] = true;
-        dkgProcess[schainHash].numberOfBroadcasted++;
+        ++dkgProcess[schainHash].numberOfBroadcasted;
         uint256 targetBroadcastNumber = getTargetBroadcastNumber(
             schainHash,
             contracts.nodeRotation,
@@ -110,7 +108,7 @@ library SkaleDkgBroadcast {
             verificationVector
         );
         contracts.keyStorage.adding(schainHash, verificationVector[0]);
-        emit BroadcastAndKeyShare(
+        emit ISkaleDKG.BroadcastAndKeyShare(
             schainHash,
             nodeIndex,
             verificationVector,
@@ -152,22 +150,30 @@ library SkaleDkgBroadcast {
     view
     {
         uint256 n = channels[schainHash].n;
+        uint256 currentRotationCounter =
+            contracts.nodeRotation.getRotation(schainHash).rotationCounter;
         require(
-            contracts.nodeRotation.getRotation(schainHash).rotationCounter == rotationCounter,
-            "Incorrect rotation counter"
+            currentRotationCounter == rotationCounter,
+            IncorrectRotationCounter(rotationCounter, currentRotationCounter)
         );
-        require(verificationVector.length == getT(n), "Incorrect number of verification vectors");
-        require(secretKeyContribution.length == n, "Incorrect number of secret key shares");
         require(
-            channels[schainHash].startedBlockTimestamp +
-                contracts.constantsHolder.complaintTimeLimit() >
-                    block.timestamp,
-            "Incorrect time for broadcast"
+            verificationVector.length == getT(n),
+            IncorrectNumberOfVerificationVectors(verificationVector.length, getT(n))
+        );
+        require(
+            secretKeyContribution.length == n,
+            IncorrectNumberOfSecretKeyShares(secretKeyContribution.length, n)
+        );
+        uint256 broadcastTimeLimit = channels[schainHash].startedBlockTimestamp +
+                contracts.constantsHolder.complaintTimeLimit();
+        require(
+            block.timestamp < broadcastTimeLimit,
+            IncorrectTimeForBroadcast(broadcastTimeLimit)
         );
         if (!contracts.nodeRotation.isSchainCreation(schainHash)) {
             require(
                 contracts.nodeRotation.shouldSendBroadcast(schainHash, nodeIndex),
-                "This node should not send broadcast"
+                NodeShouldNotSendBroadcast(schainHash, nodeIndex)
             );
         }
     }
