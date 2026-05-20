@@ -532,13 +532,18 @@ describe("SkaleDKG", () => {
 
             it("should rejected broadcast with incorrect rotation counter", async () => {
                 const incorrectRotationCounter = 1;
-                await skaleDKG.connect(validators[0].nodeAddress).broadcast(
-                    stringKeccak256(schainName),
-                    0,
-                    verificationVectors[indexes[0]],
-                    encryptedSecretKeyContributions[indexes[0]],
-                    incorrectRotationCounter
-                ).should.be.eventually.rejectedWith("Incorrect rotation counter");
+                await expect(
+                    skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
+                        0,
+                        verificationVectors[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]],
+                        incorrectRotationCounter
+                    )
+                ).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SkaleDkgBroadcast"),
+                    "IncorrectRotationCounter"
+                ).withArgs(incorrectRotationCounter, 0);
             });
 
             it("should rejected broadcast data from 2 node with incorrect sender", async () => {
@@ -1728,7 +1733,10 @@ describe("SkaleDKG", () => {
                     encryptedSecretKeyContributions[indexes[0]],
                     rotCounter.rotationCounter
                 )
-            ).to.be.revertedWith("This node should not send broadcast");
+            ).to.be.revertedWithCustomError(
+                await ethers.getContractFactory("SkaleDkgBroadcast"),
+                "NodeShouldNotSendBroadcast"
+            ).withArgs(stringKeccak256(schainName), 2);
 
             await skaleDKG.connect(validators[0].nodeAddress).alright(
                 stringKeccak256(schainName),
@@ -1782,7 +1790,10 @@ describe("SkaleDKG", () => {
                     encryptedSecretKeyContributions[indexes[0]],
                     rotCounter.rotationCounter
                 )
-            ).to.be.revertedWith("This node should not send broadcast");
+            ).to.be.revertedWithCustomError(
+                await ethers.getContractFactory("SkaleDkgBroadcast"),
+                "NodeShouldNotSendBroadcast"
+            ).withArgs(stringKeccak256(schainName), 3);
 
             await skaleDKG.connect(validators[0].nodeAddress).alright(
                 stringKeccak256(schainName),
