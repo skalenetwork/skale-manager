@@ -1307,7 +1307,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0,
                         1
-                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint has already been processed");
+                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint is processed");
                 });
 
                 it("should not send 2 complaints from 2 node", async () => {
@@ -1320,7 +1320,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1,
                         0,
-                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint has already been processed");
+                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint is processed");
                 });
 
                 describe("when complaint successfully sent", () => {
