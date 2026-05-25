@@ -128,6 +128,9 @@ library SkaleDkgComplaint {
             if (
                 skaleDKG.isEveryoneBroadcasted(schainHash) &&
                 !skaleDKG.isAllDataReceived(schainHash, toNodeIndex) &&
+                // The value is not a constant
+                // so no ability to save some gas here
+                // solhint-disable-next-line gas-strict-inequalities
                 startAlrightTimestamp[schainHash] +
                     _getComplaintTimeLimit(contractManager) <=
                 block.timestamp
@@ -145,6 +148,9 @@ library SkaleDkgComplaint {
         } else if (complaints[schainHash].nodeToComplaint == toNodeIndex) {
             // 30 min after incorrect data complaint
             if (
+                // The value is not a constant
+                // so no ability to save some gas here
+                // solhint-disable-next-line gas-strict-inequalities
                 complaints[schainHash].startComplaintBlockTimestamp +
                     _getComplaintTimeLimit(contractManager) <=
                 block.timestamp
@@ -168,6 +174,9 @@ library SkaleDkgComplaint {
         mapping(bytes32 => ISkaleDKG.Channel) storage channels
     ) private {
         if (
+            // The value is not a constant
+            // so no ability to save some gas here
+            // solhint-disable-next-line gas-strict-inequalities
             channels[schainHash].startedBlockTimestamp +
                 _getComplaintTimeLimit(contractManager) <=
             block.timestamp
