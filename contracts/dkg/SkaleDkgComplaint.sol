@@ -33,19 +33,9 @@ import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContract
  * Joint-Feldman protocol.
  */
 library SkaleDkgComplaint {
-    /**
-     * @dev Emitted when an incorrect complaint is sent.
-     */
-    event ComplaintError(string error);
 
-    /**
-     * @dev Emitted when a complaint is sent.
-     */
-    event ComplaintSent(
-        bytes32 indexed schainHash,
-        uint256 indexed fromNodeIndex,
-        uint256 indexed toNodeIndex
-    );
+    error NodeHasNotBroadcasted(bytes32 schainHash, uint256 nodeIndex);
+    error NodeHasSentAlright(bytes32 schainHash, uint256 nodeIndex);
 
     /**
      * @dev Creates a complaint from a node (accuser) to a given node.
@@ -69,7 +59,7 @@ library SkaleDkgComplaint {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         require(
             skaleDKG.isNodeBroadcasted(schainHash, fromNodeIndex),
-            "Node has not broadcasted"
+            NodeHasNotBroadcasted(schainHash, fromNodeIndex)
         );
         if (skaleDKG.isNodeBroadcasted(schainHash, toNodeIndex)) {
             _handleComplaintWhenBroadcasted({
@@ -102,24 +92,24 @@ library SkaleDkgComplaint {
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         require(
             skaleDKG.isNodeBroadcasted(schainHash, fromNodeIndex),
-            "Node has not broadcasted"
+            NodeHasNotBroadcasted(schainHash, fromNodeIndex)
         );
         require(
             skaleDKG.isNodeBroadcasted(schainHash, toNodeIndex),
-            "Accused node has not broadcasted"
+            NodeHasNotBroadcasted(schainHash, toNodeIndex)
         );
         require(
             !skaleDKG.isAllDataReceived(schainHash, fromNodeIndex),
-            "Node has already sent alright"
+            NodeHasSentAlright(schainHash, fromNodeIndex)
         );
         if (complaints[schainHash].nodeToComplaint == type(uint256).max) {
             complaints[schainHash].nodeToComplaint = toNodeIndex;
             complaints[schainHash].fromNodeToComplaint = fromNodeIndex;
             complaints[schainHash].startComplaintBlockTimestamp = block
                 .timestamp;
-            emit ComplaintSent(schainHash, fromNodeIndex, toNodeIndex);
+            emit ISkaleDKG.ComplaintSent(schainHash, fromNodeIndex, toNodeIndex);
         } else {
-            emit ComplaintError("First complaint has already been processed");
+            emit ISkaleDKG.ComplaintError("First complaint is processed");
         }
     }
 
@@ -149,7 +139,7 @@ library SkaleDkgComplaint {
                 skaleDKG.finalizeSlashing(schainHash, fromNodeIndex);
                 return;
             }
-            emit ComplaintError("Has already sent alright");
+            emit ISkaleDKG.ComplaintError("Has already sent alright");
             return;
         } else if (complaints[schainHash].nodeToComplaint == toNodeIndex) {
             // 30 min after incorrect data complaint
@@ -164,10 +154,10 @@ library SkaleDkgComplaint {
                 );
                 return;
             }
-            emit ComplaintError("The same complaint rejected");
+            emit ISkaleDKG.ComplaintError("The same complaint rejected");
             return;
         }
-        emit ComplaintError("One complaint is already sent");
+        emit ISkaleDKG.ComplaintError("One complaint is already sent");
     }
 
     function _handleComplaintWhenNotBroadcasted(
@@ -187,7 +177,7 @@ library SkaleDkgComplaint {
                 );
             return;
         }
-        emit ComplaintError("Complaint sent too early");
+        emit ISkaleDKG.ComplaintError("Complaint sent too early");
     }
 
     function _getComplaintTimeLimit(
