@@ -23,13 +23,13 @@
 
 pragma solidity 0.8.35;
 
-import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import {ISchainsInternal} from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import {IDecryption} from "@skalenetwork/skale-manager-interfaces/IDecryption.sol";
 import {INodes} from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import {ISchainsInternal} from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IECDH} from "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
-import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
-import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
 import {G1Operations} from "../utils/fieldOperations/G1Operations.sol";
 import {G2Operations} from "../utils/fieldOperations/G2Operations.sol";
