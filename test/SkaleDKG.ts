@@ -1163,12 +1163,17 @@ describe("SkaleDKG", () => {
                         );
                         res.should.be.true;
 
-                        await skaleDKG.connect(validators[0].nodeAddress).response(
-                            stringKeccak256(schainName),
-                            0,
-                            secretNumbers[indexes[0]],
-                            multipliedShares[indexes[0]]
-                        ).should.be.eventually.rejectedWith("Have not submitted pre-response data");
+                        await expect(
+                            skaleDKG.connect(validators[0].nodeAddress).response(
+                                stringKeccak256(schainName),
+                                0,
+                                secretNumbers[indexes[0]],
+                                multipliedShares[indexes[0]]
+                            )
+                        ).to.be.revertedWithCustomError(
+                            await ethers.getContractFactory("SkaleDkgResponse"),
+                            "PreResponseWasNotSubmitted"
+                        ).withArgs(stringKeccak256(schainName));
 
                         await expect(
                             skaleDKG.connect(validators[0].nodeAddress).preResponse(
