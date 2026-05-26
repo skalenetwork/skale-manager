@@ -23,13 +23,13 @@
 
 pragma solidity 0.8.35;
 
-import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import {ISchainsInternal} from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import {IDecryption} from "@skalenetwork/skale-manager-interfaces/IDecryption.sol";
 import {INodes} from "@skalenetwork/skale-manager-interfaces/INodes.sol";
+import {ISchainsInternal} from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IECDH} from "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
-import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
-import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
 import {G1Operations} from "../utils/fieldOperations/G1Operations.sol";
 import {G2Operations} from "../utils/fieldOperations/G2Operations.sol";
@@ -43,11 +43,18 @@ import {Precompiled} from "../utils/Precompiled.sol";
 library SkaleDkgResponse {
     using G2Operations for ISkaleDKG.G2Point;
 
+    error NodeIsNotInGroup(uint256 node);
+    error WrongNode(uint256 node, uint256 expectedNode);
+    error IncorrectTimeForResponse();
+    error PreResponseWasNotSubmitted(bytes32 schainHash);
+    error ShareIsNotValid();
+    error MulShareIsNotInG1();
+
     function response(
         bytes32 schainHash,
         uint256 fromNodeIndex,
         uint256 secretNumber,
-        ISkaleDKG.G2Point memory multipliedShare,
+        ISkaleDKG.G2Point calldata multipliedShare,
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
@@ -55,20 +62,20 @@ library SkaleDkgResponse {
         uint256 index = ISchainsInternal(
             contractManager.getContract("SchainsInternal")
         ).getNodeIndexInGroup(schainHash, fromNodeIndex);
-        require(index < channels[schainHash].n, "Node is not in this group");
+        require(index < channels[schainHash].n, NodeIsNotInGroup(fromNodeIndex));
         require(
             complaints[schainHash].nodeToComplaint == fromNodeIndex,
-            "Not this Node"
+            WrongNode(fromNodeIndex, complaints[schainHash].nodeToComplaint)
         );
         require(
             complaints[schainHash].startComplaintBlockTimestamp +
                 _getComplaintTimeLimit(contractManager) >
                 block.timestamp,
-            "Incorrect time for response"
+            IncorrectTimeForResponse()
         );
         require(
             complaints[schainHash].isResponse,
-            "Have not submitted pre-response data"
+            PreResponseWasNotSubmitted(schainHash)
         );
         uint256 badNode = _verifyDataAndSlash({
             schainHash: schainHash,
@@ -135,10 +142,10 @@ library SkaleDkgResponse {
         ISkaleDKG.Fp2Point memory g1 = G1Operations.getG1Generator();
         ISkaleDKG.Fp2Point memory share = ISkaleDKG.Fp2Point({a: 0, b: 0});
         (share.a, share.b) = Precompiled.bn256ScalarMul(g1.a, g1.b, secret);
-        require(G1Operations.checkRange(share), "share is not valid");
+        require(G1Operations.checkRange(share), ShareIsNotValid());
         share.b = G1Operations.negate(share.b);
 
-        require(G1Operations.isG1(share), "mulShare not in G1");
+        require(G1Operations.isG1(share), MulShareIsNotInG1());
 
         ISkaleDKG.G2Point memory g2 = G2Operations.getG2Generator();
 

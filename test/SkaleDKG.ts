@@ -1163,20 +1163,30 @@ describe("SkaleDKG", () => {
                         );
                         res.should.be.true;
 
-                        await skaleDKG.connect(validators[0].nodeAddress).response(
-                            stringKeccak256(schainName),
-                            0,
-                            secretNumbers[indexes[0]],
-                            multipliedShares[indexes[0]]
-                        ).should.be.eventually.rejectedWith("Have not submitted pre-response data");
+                        await expect(
+                            skaleDKG.connect(validators[0].nodeAddress).response(
+                                stringKeccak256(schainName),
+                                0,
+                                secretNumbers[indexes[0]],
+                                multipliedShares[indexes[0]]
+                            )
+                        ).to.be.revertedWithCustomError(
+                            await ethers.getContractFactory("SkaleDkgResponse"),
+                            "PreResponseWasNotSubmitted"
+                        ).withArgs(stringKeccak256(schainName));
 
-                        await skaleDKG.connect(validators[0].nodeAddress).preResponse(
-                            stringKeccak256(schainName),
-                            0,
-                            verificationVectors[indexes[0]],
-                            verificationVectorMultiplication[indexes[0]],
-                            badEncryptedSecretKeyContributions[indexes[0]]
-                        ).should.be.eventually.rejectedWith("Broadcasted Data is not correct");
+                        await expect(
+                            skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                                stringKeccak256(schainName),
+                                0,
+                                verificationVectors[indexes[0]],
+                                verificationVectorMultiplication[indexes[0]],
+                                badEncryptedSecretKeyContributions[indexes[0]]
+                            )
+                        ).to.be.revertedWithCustomError(
+                            await ethers.getContractFactory("SkaleDkgPreResponse"),
+                            "BroadcastedDataIsNotCorrect"
+                        ).withArgs(stringKeccak256(schainName));
 
                         await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                             stringKeccak256(schainName),
@@ -2243,20 +2253,30 @@ describe("SkaleDKG", () => {
                 } else {
                     indexToSend = 0;
                 }
-                await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
-                    stringKeccak256("New16NodeSchain"),
-                    accusedNode,
-                    verificationVectorNew,
-                    verificationVectorMultiplication[indexes[indexToSend]],
-                    secretKeyContributions
-                ).should.be.eventually.rejectedWith("Incorrect length of multiplied verification vector");
-                await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
-                    stringKeccak256("New16NodeSchain"),
-                    accusedNode,
-                    verificationVectorNew,
-                    badVerificationVectorMultiplicationNew,
-                    secretKeyContributions
-                ).should.be.eventually.rejectedWith("Multiplied verification vector is incorrect");
+                await expect(
+                    skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
+                        stringKeccak256("New16NodeSchain"),
+                        accusedNode,
+                        verificationVectorNew,
+                        verificationVectorMultiplication[indexes[indexToSend]],
+                        secretKeyContributions
+                    )
+                ).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SkaleDkgPreResponse"),
+                    "IncorrectLengthOfMultipliedVerificationVector"
+                ).withArgs(stringKeccak256("New16NodeSchain"));
+                await expect(
+                    skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
+                        stringKeccak256("New16NodeSchain"),
+                        accusedNode,
+                        verificationVectorNew,
+                        badVerificationVectorMultiplicationNew,
+                        secretKeyContributions
+                    )
+                ).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SkaleDkgPreResponse"),
+                    "MultipliedVerificationVectorIsNotCorrect"
+                ).withArgs(stringKeccak256("New16NodeSchain"));
                 const resPreResp = await (await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
                     stringKeccak256("New16NodeSchain"),
                     accusedNode,
