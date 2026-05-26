@@ -42,9 +42,9 @@ library SkaleDkgPreResponse {
     function preResponse(
         bytes32 schainHash,
         uint256 fromNodeIndex,
-        ISkaleDKG.G2Point[] memory verificationVector,
-        ISkaleDKG.G2Point[] memory verificationVectorMultiplication,
-        ISkaleDKG.KeyShare[] memory secretKeyContribution,
+        ISkaleDKG.G2Point[] calldata verificationVector,
+        ISkaleDKG.G2Point[] calldata verificationVectorMultiplication,
+        ISkaleDKG.KeyShare[] calldata secretKeyContribution,
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData
