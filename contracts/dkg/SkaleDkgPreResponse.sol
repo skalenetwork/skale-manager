@@ -138,7 +138,8 @@ library SkaleDkgPreResponse {
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication
     ) private view returns (ISkaleDKG.G2Point memory result) {
         ISkaleDKG.G2Point memory value = G2Operations.getG2Zero();
-        for (uint256 i = 0; i < verificationVectorMultiplication.length; i++) {
+        uint256 length = verificationVectorMultiplication.length;
+        for (uint256 i = 0; i < length; ++i) {
             value = value.addG2(verificationVectorMultiplication[i]);
         }
         return value;
@@ -151,7 +152,8 @@ library SkaleDkgPreResponse {
     ) private view returns (bool correct) {
         ISkaleDKG.Fp2Point memory value = G1Operations.getG1Generator();
         ISkaleDKG.Fp2Point memory tmp = G1Operations.getG1Generator();
-        for (uint256 i = 0; i < verificationVector.length; i++) {
+        uint256 length = verificationVector.length;
+        for (uint256 i = 0; i < length; ++i) {
             (tmp.a, tmp.b) = Precompiled.bn256ScalarMul(
                 value.a,
                 value.b,
