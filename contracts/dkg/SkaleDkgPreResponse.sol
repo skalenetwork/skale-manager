@@ -23,12 +23,12 @@
 
 pragma solidity 0.8.35;
 
-import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
+import {GroupIndexIsInvalid} from "../CommonErrors.sol";
 import {G1Operations} from "../utils/fieldOperations/G1Operations.sol";
 import {G2Operations} from "../utils/fieldOperations/G2Operations.sol";
-import {GroupIndexIsInvalid} from "../CommonErrors.sol";
 import {Precompiled} from "../utils/Precompiled.sol";
 
 /**
