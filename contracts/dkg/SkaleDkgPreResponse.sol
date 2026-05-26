@@ -39,6 +39,12 @@ import {Precompiled} from "../utils/Precompiled.sol";
 library SkaleDkgPreResponse {
     using G2Operations for ISkaleDKG.G2Point;
 
+    error WrongNode(uint256 node, uint256 expectedNode);
+    error PreResponseWasAlreadySubmitted(bytes32 schainHash);
+    error BroadcastedDataIsNotCorrect(bytes32 schainHash);
+    error IncorrectLengthOfMultipliedVerificationVector(bytes32 schainHash);
+    error MultipliedVerificationVectorIsNotCorrect(bytes32 schainHash);
+
     function preResponse(
         bytes32 schainHash,
         uint256 fromNodeIndex,
@@ -93,42 +99,38 @@ library SkaleDkgPreResponse {
     ) private view returns (uint256 index) {
         (uint256 indexOnSchain, bool valid) = skaleDKG
             .checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
-        if (!valid) {
-            revert GroupIndexIsInvalid(index);
-        }
+        require(valid, GroupIndexIsInvalid(index));
         require(
             complaints[schainHash].nodeToComplaint == fromNodeIndex,
-            "Not this Node"
+            WrongNode(fromNodeIndex, complaints[schainHash].nodeToComplaint)
         );
         require(
             !complaints[schainHash].isResponse,
-            "Already submitted pre response data"
+            PreResponseWasAlreadySubmitted(schainHash)
         );
         require(
             hashedData[schainHash][indexOnSchain] ==
                 skaleDKG.hashData(secretKeyContribution, verificationVector),
-            "Broadcasted Data is not correct"
+            BroadcastedDataIsNotCorrect(schainHash)
         );
         require(
             verificationVector.length ==
                 verificationVectorMultiplication.length,
-            "Incorrect length of multiplied verification vector"
+            IncorrectLengthOfMultipliedVerificationVector(schainHash)
         );
         (index, valid) = skaleDKG.checkAndReturnIndexInGroup(
             schainHash,
             complaints[schainHash].fromNodeToComplaint,
             true
         );
-        if (!valid) {
-            revert GroupIndexIsInvalid(index);
-        }
+        require(valid, GroupIndexIsInvalid(index));
         require(
             _checkCorrectVectorMultiplication(
                 index,
                 verificationVector,
                 verificationVectorMultiplication
             ),
-            "Multiplied verification vector is incorrect"
+            MultipliedVerificationVectorIsNotCorrect(schainHash)
         );
     }
 
