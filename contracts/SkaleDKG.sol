@@ -21,23 +21,23 @@
 
 pragma solidity 0.8.35;
 
-import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import { ISlashingTable } from "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
-import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
+import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
 import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
+import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { ISlashingTable } from "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
 import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
-import { IPunisher } from "@skalenetwork/skale-manager-interfaces/delegation/IPunisher.sol";
 
-import { Permissions } from "./Permissions.sol";
-import { Fp2Operations } from "./utils/fieldOperations/Fp2Operations.sol";
-import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 import { SkaleDkgAlright } from "./dkg/SkaleDkgAlright.sol";
 import { SkaleDkgBroadcast } from "./dkg/SkaleDkgBroadcast.sol";
 import { SkaleDkgComplaint } from "./dkg/SkaleDkgComplaint.sol";
 import { SkaleDkgPreResponse } from "./dkg/SkaleDkgPreResponse.sol";
 import { SkaleDkgResponse } from "./dkg/SkaleDkgResponse.sol";
+import { Permissions } from "./Permissions.sol";
+import { Fp2Operations } from "./utils/fieldOperations/Fp2Operations.sol";
+import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 
 /**
  * @title SkaleDKG
