@@ -44,6 +44,13 @@ library SkaleDkgBroadcast {
         ISkaleDKG skaleDKG;
     }
 
+    struct BroadcastParams {
+        bytes32 schainHash;
+        uint256 nodeIndex;
+        uint256 rotationCounter;
+        Contracts contracts;
+    }
+
     error NodeIsAlreadyBroadcasted(bytes32 schainHash, uint256 nodeIndex);
     error IncorrectRotationCounter(uint256 actual, uint256 expected);
     error IncorrectNumberOfVerificationVectors(uint256 actual, uint256 expected);
@@ -64,53 +71,47 @@ library SkaleDkgBroadcast {
      * - `secretKeyContribution` length must be equal to number of nodes in group.
      */
     function broadcast(
-        bytes32 schainHash,
-        uint256 nodeIndex,
-        ISkaleDKG.G2Point[] memory verificationVector,
-        ISkaleDKG.KeyShare[] memory secretKeyContribution,
-        Contracts memory contracts,
+        BroadcastParams calldata params,
+        ISkaleDKG.G2Point[] calldata verificationVector,
+        ISkaleDKG.KeyShare[] calldata secretKeyContribution,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels,
         mapping(bytes32 => ISkaleDKG.ProcessDKG) storage dkgProcess,
-        mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData,
-        uint256 rotationCounter
+        mapping(bytes32 => mapping(uint256 => bytes32)) storage hashedData
     ) external {
         _verifyData({
-            schainHash: schainHash,
-            nodeIndex: nodeIndex,
+            params: params,
             verificationVector: verificationVector,
             secretKeyContribution: secretKeyContribution,
-            contracts: contracts,
-            channels: channels,
-            rotationCounter: rotationCounter
+            channels: channels
         });
-        (uint256 index, bool valid) = contracts.skaleDKG.checkAndReturnIndexInGroup(
-            schainHash,
-            nodeIndex,
+        (uint256 index, bool valid) = params.contracts.skaleDKG.checkAndReturnIndexInGroup(
+            params.schainHash,
+            params.nodeIndex,
             true
         );
         require(valid, GroupIndexIsInvalid(index));
         require(
-            !dkgProcess[schainHash].broadcasted[index],
-            NodeIsAlreadyBroadcasted(schainHash, nodeIndex)
+            !dkgProcess[params.schainHash].broadcasted[index],
+            NodeIsAlreadyBroadcasted(params.schainHash, params.nodeIndex)
         );
-        dkgProcess[schainHash].broadcasted[index] = true;
-        ++dkgProcess[schainHash].numberOfBroadcasted;
+        dkgProcess[params.schainHash].broadcasted[index] = true;
+        ++dkgProcess[params.schainHash].numberOfBroadcasted;
         uint256 targetBroadcastNumber = getTargetBroadcastNumber(
-            schainHash,
-            contracts.nodeRotation,
+            params.schainHash,
+            params.contracts.nodeRotation,
             channels
         );
-        if (dkgProcess[schainHash].numberOfBroadcasted == targetBroadcastNumber) {
-            contracts.skaleDKG.setStartAlrightTimestamp(schainHash);
+        if (dkgProcess[params.schainHash].numberOfBroadcasted == targetBroadcastNumber) {
+            params.contracts.skaleDKG.setStartAlrightTimestamp(params.schainHash);
         }
-        hashedData[schainHash][index] = contracts.skaleDKG.hashData(
+        hashedData[params.schainHash][index] = params.contracts.skaleDKG.hashData(
             secretKeyContribution,
             verificationVector
         );
-        contracts.keyStorage.adding(schainHash, verificationVector[0]);
+        params.contracts.keyStorage.adding(params.schainHash, verificationVector[0]);
         emit ISkaleDKG.BroadcastAndKeyShare(
-            schainHash,
-            nodeIndex,
+            params.schainHash,
+            params.nodeIndex,
             verificationVector,
             secretKeyContribution
         );
@@ -138,23 +139,20 @@ library SkaleDkgBroadcast {
     }
 
     function _verifyData(
-        bytes32 schainHash,
-        uint256 nodeIndex,
-        ISkaleDKG.G2Point[] memory verificationVector,
-        ISkaleDKG.KeyShare[] memory secretKeyContribution,
-        Contracts memory contracts,
-        mapping(bytes32 => ISkaleDKG.Channel) storage channels,
-        uint256 rotationCounter
+        BroadcastParams calldata params,
+        ISkaleDKG.G2Point[] calldata verificationVector,
+        ISkaleDKG.KeyShare[] calldata secretKeyContribution,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels
     )
     private
     view
     {
-        uint256 n = channels[schainHash].n;
+        uint256 n = channels[params.schainHash].n;
         uint256 currentRotationCounter =
-            contracts.nodeRotation.getRotation(schainHash).rotationCounter;
+            params.contracts.nodeRotation.getRotation(params.schainHash).rotationCounter;
         require(
-            currentRotationCounter == rotationCounter,
-            IncorrectRotationCounter(rotationCounter, currentRotationCounter)
+            currentRotationCounter == params.rotationCounter,
+            IncorrectRotationCounter(params.rotationCounter, currentRotationCounter)
         );
         require(
             verificationVector.length == getT(n),
@@ -164,16 +162,19 @@ library SkaleDkgBroadcast {
             secretKeyContribution.length == n,
             IncorrectNumberOfSecretKeyShares(secretKeyContribution.length, n)
         );
-        uint256 broadcastTimeLimit = channels[schainHash].startedBlockTimestamp +
-                contracts.constantsHolder.complaintTimeLimit();
+        uint256 broadcastTimeLimit = channels[params.schainHash].startedBlockTimestamp +
+                params.contracts.constantsHolder.complaintTimeLimit();
         require(
             block.timestamp < broadcastTimeLimit,
             IncorrectTimeForBroadcast(broadcastTimeLimit)
         );
-        if (!contracts.nodeRotation.isSchainCreation(schainHash)) {
+        if (!params.contracts.nodeRotation.isSchainCreation(params.schainHash)) {
             require(
-                contracts.nodeRotation.shouldSendBroadcast(schainHash, nodeIndex),
-                NodeShouldNotSendBroadcast(schainHash, nodeIndex)
+                params.contracts.nodeRotation.shouldSendBroadcast(
+                    params.schainHash,
+                    params.nodeIndex
+                ),
+                NodeShouldNotSendBroadcast(params.schainHash, params.nodeIndex)
             );
         }
     }

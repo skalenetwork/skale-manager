@@ -148,8 +148,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     function broadcast(
         bytes32 schainHash,
         uint256 nodeIndex,
-        ISkaleDKG.G2Point[] memory verificationVector,
-        KeyShare[] memory secretKeyContribution,
+        ISkaleDKG.G2Point[] calldata verificationVector,
+        KeyShare[] calldata secretKeyContribution,
         uint256 rotationCounter
     )
         external
@@ -163,24 +163,16 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainHash)
         onlyNodeOwner(nodeIndex)
     {
-        SkaleDkgBroadcast.broadcast({
+        SkaleDkgBroadcast.Contracts memory contracts = _getContractsForBroadcast();
+        SkaleDkgBroadcast.BroadcastParams memory params = SkaleDkgBroadcast.BroadcastParams({
             schainHash: schainHash,
             nodeIndex: nodeIndex,
-            verificationVector: verificationVector,
-            secretKeyContribution: secretKeyContribution,
-            contracts: SkaleDkgBroadcast.Contracts({
-                constantsHolder: contractManager.getConstantsHolder(),
-                keyStorage: IKeyStorage(contractManager.getContract("KeyStorage")),
-                nodeRotation: INodeRotation(contractManager.getContract("NodeRotation")),
-                skaleDKG: ISkaleDKG(contractManager.getContract("SkaleDKG"))
-            }),
-            channels: channels,
-            dkgProcess: dkgProcess,
-            hashedData: hashedData,
+            contracts: contracts,
             rotationCounter: rotationCounter
         });
-    }
 
+        _callBroadcast(params, verificationVector, secretKeyContribution);
+    }
 
     function complaintBadData(bytes32 schainHash, uint256 fromNodeIndex, uint256 toNodeIndex)
         external
@@ -209,9 +201,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     function preResponse(
         bytes32 schainHash,
         uint256 fromNodeIndex,
-        ISkaleDKG.G2Point[] memory verificationVector,
-        ISkaleDKG.G2Point[] memory verificationVectorMultiplication,
-        KeyShare[] memory secretKeyContribution
+        ISkaleDKG.G2Point[] calldata verificationVector,
+        ISkaleDKG.G2Point[] calldata verificationVectorMultiplication,
+        KeyShare[] calldata secretKeyContribution
     )
         external
         override
@@ -225,16 +217,19 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainHash)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDkgPreResponse.preResponse({
-            schainHash: schainHash,
-            fromNodeIndex: fromNodeIndex,
-            verificationVector: verificationVector,
-            verificationVectorMultiplication: verificationVectorMultiplication,
-            secretKeyContribution: secretKeyContribution,
-            contractManager: contractManager,
-            complaints: complaints,
-            hashedData: hashedData
-        });
+        SkaleDkgPreResponse.PreResponseParams memory params =
+            SkaleDkgPreResponse.PreResponseParams({
+                schainHash: schainHash,
+                fromNode: fromNodeIndex,
+                skaleDKG: ISkaleDKG(contractManager.getContract("SkaleDKG"))
+            });
+
+        _callPreResponse(
+            params,
+            verificationVector,
+            verificationVectorMultiplication,
+            secretKeyContribution
+        );
     }
 
     function complaint(bytes32 schainHash, uint256 fromNodeIndex, uint256 toNodeIndex)
@@ -267,7 +262,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bytes32 schainHash,
         uint256 fromNodeIndex,
         uint256 secretNumber,
-        ISkaleDKG.G2Point memory multipliedShare
+        ISkaleDKG.G2Point calldata multipliedShare
     )
         external
         override
@@ -482,6 +477,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         override
         returns (bool successful)
     {
+        // The value is not a constant
+        // so no ability to save some gas here
+        // solhint-disable-next-line gas-strict-inequalities
         return channels[schainHash].startedBlockTimestamp <= lastSuccessfulDKG[schainHash];
     }
 
@@ -540,29 +538,30 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         if (!checkFrom || !checkTo)
             return false;
         bool complaintSending = (
-                complaints[schainHash].nodeToComplaint == type(uint256).max &&
-                dkgProcess[schainHash].broadcasted[indexTo] &&
-                !dkgProcess[schainHash].completed[indexFrom]
-            ) ||
-            (
-                dkgProcess[schainHash].broadcasted[indexTo] &&
-                complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit()
-                    <= block.timestamp &&
-                complaints[schainHash].nodeToComplaint == toNodeIndex
-            ) ||
-            (
-                !dkgProcess[schainHash].broadcasted[indexTo] &&
-                complaints[schainHash].nodeToComplaint == type(uint256).max &&
-                channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit()
-                    <= block.timestamp
-            ) ||
-            (
-                complaints[schainHash].nodeToComplaint == type(uint256).max &&
-                isEveryoneBroadcasted(schainHash) &&
-                dkgProcess[schainHash].completed[indexFrom] &&
-                !dkgProcess[schainHash].completed[indexTo] &&
-                startAlrightTimestamp[schainHash] + _getComplaintTimeLimit() <= block.timestamp
-            );
+            dkgProcess[schainHash].broadcasted[indexTo] &&
+            // The value is not a constant so no ability to save some gas here
+            // solhint-disable-next-line gas-strict-inequalities
+            complaints[schainHash].startComplaintBlockTimestamp + _getComplaintTimeLimit()
+                <= block.timestamp &&
+            complaints[schainHash].nodeToComplaint == toNodeIndex
+        ) || ( complaints[schainHash].nodeToComplaint == type(uint256).max && ((
+                    dkgProcess[schainHash].broadcasted[indexTo] &&
+                    !dkgProcess[schainHash].completed[indexFrom]
+                ) || (
+                    !dkgProcess[schainHash].broadcasted[indexTo] &&
+                    // The value is not a constant so no ability to save some gas here
+                    // solhint-disable-next-line gas-strict-inequalities
+                    channels[schainHash].startedBlockTimestamp + _getComplaintTimeLimit()
+                        <= block.timestamp
+                ) || (
+                    isEveryoneBroadcasted(schainHash) &&
+                    dkgProcess[schainHash].completed[indexFrom] &&
+                    !dkgProcess[schainHash].completed[indexTo] &&
+                    // The value is not a constant so no ability to save some gas here
+                    // solhint-disable-next-line gas-strict-inequalities
+                    startAlrightTimestamp[schainHash] + _getComplaintTimeLimit() <= block.timestamp
+            ))
+        );
         return channels[schainHash].active &&
             dkgProcess[schainHash].broadcasted[indexFrom] &&
             _isNodeOwnedByMessageSender(fromNodeIndex, msg.sender) &&
@@ -671,8 +670,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function hashData(
-        KeyShare[] memory secretKeyContribution,
-        ISkaleDKG.G2Point[] memory verificationVector
+        KeyShare[] calldata secretKeyContribution,
+        ISkaleDKG.G2Point[] calldata verificationVector
     )
         external
         pure
@@ -680,14 +679,16 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         returns (bytes32 hash)
     {
         bytes memory data;
-        for (uint256 i = 0; i < secretKeyContribution.length; i++) {
+        uint256 length = secretKeyContribution.length;
+        for (uint256 i = 0; i < length; ++i) {
             data = abi.encodePacked(
                 data,
                 secretKeyContribution[i].publicKey,
                 secretKeyContribution[i].share
             );
         }
-        for (uint256 i = 0; i < verificationVector.length; i++) {
+        length = verificationVector.length;
+        for (uint256 i = 0; i < length; ++i) {
             // Named arguments cannot be used for functions that take arbitrary parameters
             // solhint-disable-next-line func-named-parameters
             data = abi.encodePacked(
@@ -709,14 +710,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         public
         view
         override
-        returns (uint256 groupIndex, bool valid)
+        returns (uint256 indexInGroup, bool valid)
     {
-        uint256 index = ISchainsInternal(contractManager.getContract("SchainsInternal"))
+        indexInGroup = ISchainsInternal(contractManager.getContract("SchainsInternal"))
             .getNodeIndexInGroup(schainHash, nodeIndex);
-        if (index >= channels[schainHash].n && revertCheck) {
-            revert("Node is not in this group");
-        }
-        return (index, index < channels[schainHash].n);
+        valid = indexInGroup < channels[schainHash].n;
+        require(!revertCheck || valid, "Node is not in this group");
     }
 
     function isEveryoneBroadcasted(
@@ -809,6 +808,43 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit ChannelOpened(schainHash);
     }
 
+    // @dev This function is needed to avoid "Stack too deep" error
+    function _callBroadcast(
+        SkaleDkgBroadcast.BroadcastParams memory params,
+        ISkaleDKG.G2Point[] calldata verificationVector,
+        KeyShare[] calldata secretKeyContribution
+    )
+        private
+    {
+        SkaleDkgBroadcast.broadcast({
+            params: params,
+            verificationVector: verificationVector,
+            secretKeyContribution: secretKeyContribution,
+            channels: channels,
+            dkgProcess: dkgProcess,
+            hashedData: hashedData
+        });
+    }
+
+    // @dev This function is needed to avoid "Stack too deep" error
+    function _callPreResponse(
+        SkaleDkgPreResponse.PreResponseParams memory params,
+        ISkaleDKG.G2Point[] calldata verificationVector,
+        ISkaleDKG.G2Point[] calldata verificationVectorMultiplication,
+        KeyShare[] calldata secretKeyContribution
+    )
+        private
+    {
+        SkaleDkgPreResponse.preResponse({
+            params: params,
+            verificationVector: verificationVector,
+            verificationVectorMultiplication: verificationVectorMultiplication,
+            secretKeyContribution: secretKeyContribution,
+            complaints: complaints,
+            hashedData: hashedData
+        });
+    }
+
     function _isNodeOwnedByMessageSender(
         uint256 nodeIndex,
         address from
@@ -829,5 +865,18 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function _getComplaintTimeLimit() private view returns (uint256 timeLimit) {
         return contractManager.getConstantsHolder().complaintTimeLimit();
+    }
+
+    function _getContractsForBroadcast()
+    private
+    view
+    returns (SkaleDkgBroadcast.Contracts memory contracts)
+    {
+        return SkaleDkgBroadcast.Contracts({
+            constantsHolder: contractManager.getConstantsHolder(),
+            keyStorage: IKeyStorage(contractManager.getContract("KeyStorage")),
+            nodeRotation: INodeRotation(contractManager.getContract("NodeRotation")),
+            skaleDKG: ISkaleDKG(contractManager.getContract("SkaleDKG"))
+        });
     }
 }
