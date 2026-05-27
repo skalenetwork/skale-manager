@@ -56,21 +56,21 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         DkgFunction dkgFunction;
     }
 
-    mapping(bytes32 => Channel) public channels;
+    mapping(bytes32 schain => Channel channel) public channels;
 
-    mapping(bytes32 => uint256) public lastSuccessfulDKG;
+    mapping(bytes32 schain => uint256 timestamp) public lastSuccessfulDKG;
 
-    mapping(bytes32 => ProcessDKG) public dkgProcess;
+    mapping(bytes32 schain => ProcessDKG process) public dkgProcess;
 
-    mapping(bytes32 => ComplaintData) public complaints;
+    mapping(bytes32 schain => ComplaintData complaint) public complaints;
 
-    mapping(bytes32 => uint256) public startAlrightTimestamp;
+    mapping(bytes32 schain => uint256 timestamp) public startAlrightTimestamp;
 
-    mapping(bytes32 => mapping(uint256 => bytes32)) public hashedData;
+    mapping(bytes32 schain => mapping(uint256 indexInGroup => bytes32 hashData)) public hashedData;
 
-    mapping(bytes32 => uint256) private _badNodes;
+    mapping(bytes32 schain => uint256 node) private _badNodes;
 
-    mapping(bytes32 => uint256) public override pendingToBeReplaced;
+    mapping(bytes32 schain => uint256 node) public override pendingToBeReplaced;
 
     modifier correctGroup(bytes32 schainHash) {
         require(channels[schainHash].active, "Group is not created");
