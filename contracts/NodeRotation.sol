@@ -64,11 +64,11 @@ contract NodeRotation is Permissions, INodeRotation {
         EnumerableSet.UintSet spareBroadcastSenders;
     }
 
-    mapping (bytes32 => RotationWithPreviousNodes) private _rotations;
+    mapping (bytes32 schain => RotationWithPreviousNodes rotation) private _rotations;
 
-    mapping (uint256 => INodeRotation.LeavingHistory[]) public leavingHistory;
+    mapping (uint256 nodeIndex => INodeRotation.LeavingHistory[] history ) public leavingHistory;
 
-    mapping (bytes32 => bool) public waitForNewNode;
+    mapping (bytes32 schain => bool wait) public waitForNewNode;
 
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
 
