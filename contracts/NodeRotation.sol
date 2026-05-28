@@ -123,7 +123,8 @@ contract NodeRotation is Permissions, INodeRotation {
         bytes32[] memory schains = ISchainsInternal(
             contractManager.getContract("SchainsInternal")
         ).getActiveSchains(nodeIndex);
-        for (uint256 i = 0; i < schains.length; i++) {
+        uint256 length = schains.length;
+        for (uint256 i = 0; i < length; ++i) {
             _checkBeforeRotation(schains[i], nodeIndex);
         }
     }
@@ -194,13 +195,26 @@ contract NodeRotation is Permissions, INodeRotation {
     {
         bool foundNewNode = isNewNodeFound(schainHash);
         return foundNewNode ?
+            // The value is not a constant
+            // so no ability to save some gas here
+            // solhint-disable-next-line gas-strict-inequalities
             leavingHistory[_rotations[schainHash].nodeIndex][
                 _rotations[schainHash].indexInLeavingHistory[_rotations[schainHash].nodeIndex]
             ].finishedRotation >= block.timestamp :
+            // The value is not a constant
+            // so no ability to save some gas here
+            // solhint-disable-next-line gas-strict-inequalities
             _rotations[schainHash].freezeUntil >= block.timestamp;
     }
 
-    function isSchainCreation(bytes32 schainHash) external view override returns (bool) {
+    function isSchainCreation(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (bool schainCreation)
+    {
         return _rotations[schainHash].broadcastSenders.length() == 0;
     }
 
@@ -211,7 +225,7 @@ contract NodeRotation is Permissions, INodeRotation {
         external
         view
         override
-        returns (bool)
+        returns (bool shouldSend)
     {
         return _rotations[schainHash].broadcastSenders.contains(node);
     }
@@ -419,7 +433,7 @@ contract NodeRotation is Permissions, INodeRotation {
         );
         _rotations[schainHash].nodeIndex = nodeIndex;
         _rotations[schainHash].newNodeIndex = newNodeIndex;
-        _rotations[schainHash].rotationCounter++;
+        ++_rotations[schainHash].rotationCounter;
         _rotations[schainHash].previousNodes[newNodeIndex] = nodeIndex;
         _rotations[schainHash].indexInLeavingHistory[nodeIndex] =
             leavingHistory[nodeIndex].length - 1;
