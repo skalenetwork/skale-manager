@@ -72,8 +72,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     mapping(bytes32 schain => uint256 node) public override pendingToBeReplaced;
 
+    error GroupIsNotCreated(bytes32 schainHash);
+    error NodeIsNotInGroup(bytes32 schainHash, uint256 node);
+    error SenderIsNotNodeOwner(address sender, uint256 node);
+
     modifier correctGroup(bytes32 schainHash) {
-        require(channels[schainHash].active, "Group is not created");
+        require(channels[schainHash].active, GroupIsNotCreated(schainHash));
         _;
     }
 
@@ -715,7 +719,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         indexInGroup = ISchainsInternal(contractManager.getContract("SchainsInternal"))
             .getNodeIndexInGroup(schainHash, nodeIndex);
         valid = indexInGroup < channels[schainHash].n;
-        require(!revertCheck || valid, "Node is not in this group");
+        require(!revertCheck || valid, NodeIsNotInGroup(schainHash, nodeIndex));
     }
 
     function isEveryoneBroadcasted(
@@ -859,7 +863,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     function _checkMsgSenderIsNodeOwner(uint256 nodeIndex) private view {
         require(
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender),
-            "Node does not exist for message sender"
+            SenderIsNotNodeOwner(msg.sender, nodeIndex)
         );
     }
 
