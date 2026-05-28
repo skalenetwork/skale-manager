@@ -516,9 +516,15 @@ describe("Schains", () => {
 
 
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
-                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 3).should.be.eventually.rejectedWith("No previous node");
+                await expect(nodeRotation.getPreviousNode(schainHash, 1))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 1);
+                await expect(nodeRotation.getPreviousNode(schainHash, 0))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 0);
+                await expect(nodeRotation.getPreviousNode(schainHash, 3))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 3);
 
                 await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
@@ -538,9 +544,15 @@ describe("Schains", () => {
 
                 (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
-                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 4).should.be.eventually.rejectedWith("No previous node");
+                await expect(nodeRotation.getPreviousNode(schainHash, 1))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 1);
+                await expect(nodeRotation.getPreviousNode(schainHash, 0))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 0);
+                await expect(nodeRotation.getPreviousNode(schainHash, 4))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 4);
 
                 await skaleManager.connect(nodeAddress1).createNode(
                     8545, // port
@@ -561,9 +573,15 @@ describe("Schains", () => {
                 (await nodeRotation.getPreviousNode(schainHash, 4)).should.be.equal(1);
                 (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
-                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 5).should.be.eventually.rejectedWith("No previous node");
+                await expect(nodeRotation.getPreviousNode(schainHash, 1))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 1);
+                await expect(nodeRotation.getPreviousNode(schainHash, 0))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 0);
+                await expect(nodeRotation.getPreviousNode(schainHash, 5))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 5);
             });
 
             it("should get previous nodes after DKG failure",  async () => {
@@ -643,9 +661,15 @@ describe("Schains", () => {
                 );
 
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
-                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 3).should.be.eventually.rejectedWith("No previous node");
+                await expect(nodeRotation.getPreviousNode(schainHash, 1))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 1);
+                await expect(nodeRotation.getPreviousNode(schainHash, 0))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 0);
+                await expect(nodeRotation.getPreviousNode(schainHash, 3))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 3);
 
                 rotation = await nodeRotation.getRotation(schainHash);
                 await skaleDKG.connect(nodeAddress1).broadcast(
@@ -689,9 +713,15 @@ describe("Schains", () => {
 
                 (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
-                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 4).should.be.eventually.rejectedWith("No previous node");
+                await expect(nodeRotation.getPreviousNode(schainHash, 1))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 1);
+                await expect(nodeRotation.getPreviousNode(schainHash, 0))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 0);
+                await expect(nodeRotation.getPreviousNode(schainHash, 4))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 4);
 
                 rotation = await nodeRotation.getRotation(schainHash);
                 await skaleDKG.connect(nodeAddress1).broadcast(
@@ -737,9 +767,15 @@ describe("Schains", () => {
                 (await nodeRotation.getPreviousNode(schainHash, 4)).should.be.equal(1);
                 (await nodeRotation.getPreviousNode(schainHash, 3)).should.be.equal(2);
                 (await nodeRotation.getPreviousNode(schainHash, 2)).should.be.equal(0);
-                await nodeRotation.getPreviousNode(schainHash, 1).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 0).should.be.eventually.rejectedWith("No previous node");
-                await nodeRotation.getPreviousNode(schainHash, 5).should.be.eventually.rejectedWith("No previous node");
+                await expect(nodeRotation.getPreviousNode(schainHash, 1))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 1);
+                await expect(nodeRotation.getPreviousNode(schainHash, 0))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 0);
+                await expect(nodeRotation.getPreviousNode(schainHash, 5))
+                    .to.be.revertedWithCustomError(nodeRotation, "NoPreviousNode")
+                    .withArgs(schainHash, 5);
             });
         });
 
@@ -1716,7 +1752,10 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
-            await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await expect(
+                nodes.initExit(1)
+            ).to.be.revertedWithCustomError(nodeRotation, "OccupiedByRotation")
+                .withArgs(stringKeccak256("d2"), 1);
             await skaleManager.connect(nodeAddress1).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),
@@ -1733,7 +1772,10 @@ describe("Schains", () => {
 
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, ACTIVE);
-            await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await expect(
+                nodes.initExit(1)
+            ).to.be.revertedWithCustomError(nodeRotation, "OccupiedByRotation")
+                .withArgs(stringKeccak256("d2"), 1);
             await skipTime(43260);
 
             await nodes.initExit(1);
@@ -1890,7 +1932,10 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
-            await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await expect(
+                nodes.initExit(1)
+            ).to.be.revertedWithCustomError(nodeRotation, "OccupiedByRotation")
+                .withArgs(stringKeccak256("d2"), 1);
             await skipTime(43260);
             await nodes.initExit(1);
             await skaleManager.connect(nodeAddress1).nodeExit(1);
@@ -1898,7 +1943,10 @@ describe("Schains", () => {
                 stringKeccak256("d3"),
             );
 
-            await skaleManager.connect(nodeAddress1).nodeExit(0).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await expect(
+                skaleManager.connect(nodeAddress1).nodeExit(0)
+            ).to.be.revertedWithCustomError(nodeRotation, "OccupiedByRotation")
+                .withArgs(stringKeccak256("d2"), 0);
 
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEAVING);
@@ -2019,12 +2067,18 @@ describe("Schains", () => {
             const resS = await skaleDKG.connect(nodeAddress1).isBroadcastPossible(stringKeccak256("d3"), broadcastingNode);
             assert.equal(resS, true);
 
-            await nodes.initExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await expect(
+                nodes.initExit(1)
+            ).to.be.revertedWithCustomError(nodeRotation, "OccupiedByRotation")
+                .withArgs(stringKeccak256("d2"), 1);
             await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
 
             await skipTime(43260);
 
-            await nodes.initExit(1).should.be.eventually.rejectedWith("DKG did not finish on Schain");
+            await expect(
+                nodes.initExit(1)
+            ).to.be.revertedWithCustomError(nodeRotation, "DKGDidNotFinish")
+                .withArgs(stringKeccak256("d2"));
         });
 
         it("should be possible to send broadcast", async () => {
@@ -2041,7 +2095,10 @@ describe("Schains", () => {
             await skipTime(43260);
             await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
 
-            await nodes.initExit(1).should.be.eventually.rejectedWith("DKG did not finish on Schain");
+            await expect(
+                nodes.initExit(1)
+            ).to.be.revertedWithCustomError(nodeRotation, "DKGDidNotFinish")
+                .withArgs(stringKeccak256("d2"));
         });
 
         it("should be possible to send broadcast", async () => {
@@ -2058,7 +2115,10 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d3"),
             );
-            await nodes.initExit(stayedNode).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await expect(
+                nodes.initExit(stayedNode)
+            ).to.be.revertedWithCustomError(nodeRotation, "OccupiedByRotation")
+                .withArgs(stringKeccak256("d2"), stayedNode);
             await skaleManager.connect(nodeAddress1).nodeExit(exitNode);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringKeccak256("d2"),

@@ -78,9 +78,22 @@ contract NodeRotation is Permissions, INodeRotation {
     event RotationDelaySkipped(bytes32 indexed schainHash);
 
     error PreviousRotationIsNotComplete(bytes32 schainHash);
+    error DebuggerRoleIsRequired(address account);
+    error NoPreviousNode(bytes32 schainHash, uint256 node);
+    error NoNodesToReplaceBadNode(bytes32 schainHash);
+    error BroadcastSenderRemovalError(bytes32 schainHash, uint256 node);
+    error BroadcastSenderIsAlreadyAdded(bytes32 schainHash, uint256 node);
+    error SpareBroadcastSenderRemovalError(bytes32 schainHash, uint256 node);
+    error SpareBroadcastSenderIsAlreadyAdded(bytes32 schainHash, uint256 node);
+    error GroupsIsNotActive(bytes32 schainHash);
+    error NoFreeNodes(bytes32 schainHash);
+    error CouldNotRemoveSpaceFromNode(uint256 node);
+    error NewNodeWasAlreadyAdded(bytes32 schainHash, uint256 node);
+    error DKGDidNotFinish(bytes32 schainHash);
+    error OccupiedByRotation(bytes32 schainHash, uint256 node);
 
     modifier onlyDebugger() {
-        require(hasRole(DEBUGGER_ROLE, msg.sender), "DEBUGGER_ROLE is required");
+        require(hasRole(DEBUGGER_ROLE, msg.sender), DebuggerRoleIsRequired(msg.sender));
         _;
     }
 
@@ -244,7 +257,10 @@ contract NodeRotation is Permissions, INodeRotation {
         override
         returns (uint256 node)
     {
-        require(_rotations[schainHash].newNodeIndexes.contains(nodeIndex), "No previous node");
+        require(
+            _rotations[schainHash].newNodeIndexes.contains(nodeIndex),
+            NoPreviousNode(schainHash, nodeIndex)
+        );
         return _rotations[schainHash].previousNodes[nodeIndex];
     }
 
@@ -270,20 +286,20 @@ contract NodeRotation is Permissions, INodeRotation {
             if (_rotations[schainHash].broadcastSenders.contains(nodeIndex)) {
                 require(
                     _rotations[schainHash].spareBroadcastSenders.length() != 0,
-                    "No nodes to replace bad node"
+                    NoNodesToReplaceBadNode(schainHash)
                 );
                 require(
                     _rotations[schainHash].broadcastSenders.remove(nodeIndex),
-                    "No broadcast sender to remove"
+                    BroadcastSenderRemovalError(schainHash, nodeIndex)
                 );
                 uint256 spareNode = _rotations[schainHash].spareBroadcastSenders.at(0);
                 require(
                     _rotations[schainHash].broadcastSenders.add(spareNode),
-                    "Spare sender is already in broadcast senders"
+                    BroadcastSenderIsAlreadyAdded(schainHash, spareNode)
                 );
                 require(
                     _rotations[schainHash].spareBroadcastSenders.remove(spareNode),
-                    "No spare sender to remove"
+                    SpareBroadcastSenderRemovalError(schainHash, spareNode)
                 );
             }
         } else {
@@ -312,17 +328,17 @@ contract NodeRotation is Permissions, INodeRotation {
         ISchainsInternal schainsInternal =
             ISchainsInternal(contractManager.getContract("SchainsInternal"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
-        require(schainsInternal.isSchainActive(schainHash), "Group is not active");
+        require(schainsInternal.isSchainActive(schainHash), GroupsIsNotActive(schainHash));
         uint8 space = schainsInternal.getSchainsPartOfNode(schainHash);
         schainsInternal.makeSchainNodesInvisible(schainHash);
-        require(schainsInternal.isAnyFreeNode(schainHash), "No free Nodes available for rotation");
+        require(schainsInternal.isAnyFreeNode(schainHash), NoFreeNodes(schainHash));
         IRandom.RandomGenerator memory randomGenerator = Random.createFromEntropy(
             abi.encodePacked(uint256(blockhash(block.number - 1)), schainHash)
         );
         nodeIndex = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
         require(
             nodes.removeSpaceFromNode(nodeIndex, space),
-            "Could not remove space from nodeIndex"
+            CouldNotRemoveSpaceFromNode(nodeIndex)
         );
         schainsInternal.makeSchainNodesVisible(schainHash);
         schainsInternal.addSchainForNode(nodes, nodeIndex, schainHash);
@@ -368,7 +384,7 @@ contract NodeRotation is Permissions, INodeRotation {
                 _rotations[schainHash].broadcastSenders.add(
                     nodesInGroup[i]
                 ),
-                "Broadcast sender is already in broadcast senders"
+                BroadcastSenderIsAlreadyAdded(schainHash, nodesInGroup[i])
             );
         }
         for (uint256 i = broadcastSendersNumber; i < groupSize - 1; ++i) {
@@ -376,14 +392,13 @@ contract NodeRotation is Permissions, INodeRotation {
                 _rotations[schainHash].spareBroadcastSenders.add(
                     nodesInGroup[i]
                 ),
-                "Spare sender is already in spare broadcast senders"
+                SpareBroadcastSenderIsAlreadyAdded(schainHash, nodesInGroup[i])
             );
         }
     }
 
     function _startWaiting(bytes32 schainHash, uint256 nodeIndex) private {
-        IConstantsHolder constants =
-            IConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        IConstantsHolder constants = contractManager.getConstantsHolder();
         _rotations[schainHash].nodeIndex = nodeIndex;
         _rotations[schainHash].freezeUntil = block.timestamp + constants.rotationDelay();
     }
@@ -408,9 +423,7 @@ contract NodeRotation is Permissions, INodeRotation {
         uint256 finishTimestamp;
         if (shouldDelay) {
             finishTimestamp = block.timestamp +
-                    IConstantsHolder(
-                        contractManager.getContract("ConstantsHolder")
-                    ).rotationDelay();
+                contractManager.getConstantsHolder().rotationDelay();
         } else {
             if(_rotations[schainHash].rotationCounter > 0) {
                 uint256 previousRotatedNode =
@@ -429,7 +442,7 @@ contract NodeRotation is Permissions, INodeRotation {
         }));
         require(
             _rotations[schainHash].newNodeIndexes.add(newNodeIndex),
-            "New node was already added"
+            NewNodeWasAlreadyAdded(schainHash, newNodeIndex)
         );
         _rotations[schainHash].nodeIndex = nodeIndex;
         _rotations[schainHash].newNodeIndex = newNodeIndex;
@@ -444,14 +457,14 @@ contract NodeRotation is Permissions, INodeRotation {
     function _checkBeforeRotation(bytes32 schainHash, uint256 nodeIndex) private {
         require(
             ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash),
-            "DKG did not finish on Schain"
+            DKGDidNotFinish(schainHash)
         );
         if (_rotations[schainHash].freezeUntil < block.timestamp) {
             _startWaiting(schainHash, nodeIndex);
         } else {
             require(
                 _rotations[schainHash].nodeIndex == nodeIndex,
-                "Occupied by rotation on Schain"
+                OccupiedByRotation(schainHash, nodeIndex)
             );
         }
     }
