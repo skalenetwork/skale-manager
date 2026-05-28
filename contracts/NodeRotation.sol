@@ -19,19 +19,19 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.35;
 
 import { EnumerableSet }
 from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
-import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
-import { IRandom } from "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
 import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
+import { IRandom } from "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
 
-import { Random } from "./utils/Random.sol";
 import { Permissions } from "./Permissions.sol";
+import { Random } from "./utils/Random.sol";
 
 
 /**
