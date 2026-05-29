@@ -548,13 +548,16 @@ describe("SkaleDKG", () => {
 
             it("should rejected broadcast data from 2 node with incorrect sender", async () => {
                 const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
-                await skaleDKG.connect(validators[0].nodeAddress).broadcast(
-                    stringKeccak256(schainName),
-                    1,
-                    verificationVectors[indexes[1]],
-                    encryptedSecretKeyContributions[indexes[1]],
-                    rotation.rotationCounter
-                ).should.be.eventually.rejectedWith("Node does not exist for message sender");
+                await expect(
+                        skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
+                        1,
+                        verificationVectors[indexes[1]],
+                        encryptedSecretKeyContributions[indexes[1]],
+                        rotation.rotationCounter
+                    )
+                ).to.be.revertedWithCustomError(skaleDKG, "SenderIsNotNodeOwner")
+                    .withArgs(validators[0].nodeAddress, 1);
             });
 
             it("should rejected early complaint after missing broadcast", async () => {
@@ -1028,10 +1031,13 @@ describe("SkaleDKG", () => {
                 });
 
                 it("should not send alright from 2 node with incorrect sender", async () => {
-                    await skaleDKG.connect(validators[0].nodeAddress).alright(
-                        stringKeccak256(schainName),
-                        1
-                    ).should.be.eventually.rejectedWith("Node does not exist for message sender");
+                    await expect(
+                        skaleDKG.connect(validators[0].nodeAddress).alright(
+                            stringKeccak256(schainName),
+                            1
+                        )
+                    ).to.be.revertedWithCustomError(skaleDKG, "SenderIsNotNodeOwner")
+                        .withArgs(validators[0].nodeAddress, 1);
                 });
 
                 it("should catch successful DKG event", async () => {
@@ -1063,12 +1069,14 @@ describe("SkaleDKG", () => {
                             stringKeccak256(schainName),
                             0,
                             1
-                        )).to.be.revertedWith("Node does not exist for message sender");
+                        )).to.be.revertedWithCustomError(skaleDKG, "SenderIsNotNodeOwner")
+                            .withArgs(hacker.address, 0);
                         await expect(skaleDKG.connect(hacker).complaintBadData(
                             stringKeccak256(schainName),
                             0,
                             1
-                        )).to.be.revertedWith("Node does not exist for message sender");
+                        )).to.be.revertedWithCustomError(skaleDKG, "SenderIsNotNodeOwner")
+                            .withArgs(hacker.address, 0);
                     })
                 });
 
