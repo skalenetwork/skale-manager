@@ -71,6 +71,12 @@ interface IDKR {
         DkrId id
     ) external;
 
+    function complaintTimeout(
+        uint256 node, // TODO: remove after Nodes upgrade
+        DkrId id,
+        uint256 accused
+    ) external;
+
     function setBroadcastTimelimit(uint256 newBroadcastTimelimit) external;
 }
 
@@ -139,6 +145,7 @@ contract DKR is Permissions, IDKR {
     error DuplicatesFound();
     error NotBroadcastPhase(DkrId id);
     error NotAlrightPhase(DkrId id);
+    error IncorrectPhase(DkrId id);
 
     modifier onlyParamsSetter() {
         require(
@@ -268,6 +275,36 @@ contract DKR is Permissions, IDKR {
         }
     }
 
+    function complaintTimeout(
+        uint256 node, // TODO: remove after Nodes upgrade
+        DkrId id,
+        uint256 accused
+    )
+        external
+        override
+    {
+        Round storage round = _getRound(id);
+        require(
+            contractManager.getNodes().isNodeExist(msg.sender, node),
+            NodeDoesNotExist(node)
+        );
+
+        if (round.status == Status.BROADCAST) {
+            if (round.startedAt + broadcastTimelimit <= block.timestamp) {
+                _failure(round, accused);
+            } else {
+                _failure(round, node);
+            }
+        } else if (round.status == Status.ALRIGHT) {
+            if (round.startedAt + alrightTimelimit <= block.timestamp) {
+                _failure(round, accused);
+            } else {
+                _failure(round, node);
+            }
+        } else {
+            revert IncorrectPhase(id);
+        }
+    }
 
     function setBroadcastTimelimit(uint256 newBroadcastTimelimit)
         external
