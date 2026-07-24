@@ -66,6 +66,11 @@ interface IDKR {
         ISkaleDKG.KeyShare[] calldata secretKeyContribution
     ) external;
 
+    function alright(
+        uint256 node, // TODO: remove after Nodes upgrade
+        DkrId id
+    ) external;
+
     function setBroadcastTimelimit(uint256 newBroadcastTimelimit) external;
 }
 
@@ -110,17 +115,30 @@ contract DKR is Permissions, IDKR {
         ISkaleDKG.G2Point[] verificationVector,
         ISkaleDKG.KeyShare[] secretKeyContribution
     );
+    event AllDataReceived(
+        DkrId indexed id,
+        uint256 indexed node
+    );
     event BadGuy(uint256 indexed node);
-    event BroadcastTimelimitUpdated(uint256 newBroadcastTimelimit, uint256 oldBroadcastTimelimit);
-    event AlrightTimelimitUpdated(uint256 newAlrightTimelimit, uint256 oldAlrightTimelimit);
+    event BroadcastTimelimitUpdated(
+        uint256 indexed newBroadcastTimelimit,
+        uint256 indexed oldBroadcastTimelimit
+    );
+    event AlrightTimelimitUpdated(
+        uint256 indexed newAlrightTimelimit,
+        uint256 indexed oldAlrightTimelimit
+    );
 
     error DkrRoundDoesNotExist(DkrId id);
     error IncorrectNumberOfVerificationVectors(uint256 actual, uint256 expected);
     error IncorrectNumberOfSecretKeyShares(uint256 actual, uint256 expected);
     error BroadcastNotNeeded(DkrId id, uint256 node);
+    error AlrightNotNeeded(DkrId id, uint256 node);
     error NodeDoesNotExist(uint256 node);
     error AccessDenied(address caller);
     error DuplicatesFound();
+    error NotBroadcastPhase(DkrId id);
+    error NotAlrightPhase(DkrId id);
 
     modifier onlyParamsSetter() {
         require(
@@ -186,6 +204,7 @@ contract DKR is Permissions, IDKR {
             contractManager.getNodes().isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        require(round.status == Status.BROADCAST, NotBroadcastPhase(id));
         require(
             verificationVector.length == round.threshold,
             IncorrectNumberOfVerificationVectors(verificationVector.length, round.threshold)
@@ -195,7 +214,7 @@ contract DKR is Permissions, IDKR {
             IncorrectNumberOfSecretKeyShares(secretKeyContribution.length, round.receivers.length())
         );
         if (round.startedAt + broadcastTimelimit <= block.timestamp) {
-            _failure(id, node);
+            _failure(round, node);
             return;
         }
 
@@ -218,6 +237,37 @@ contract DKR is Permissions, IDKR {
             secretKeyContribution
         );
     }
+
+    function alright(
+        uint256 node, // TODO: remove after Nodes upgrade
+        DkrId id
+    )
+        external
+        override
+    {
+        Round storage round = _getRound(id);
+        require(
+            contractManager.getNodes().isNodeExist(msg.sender, node),
+            NodeDoesNotExist(node)
+        );
+        require(round.status == Status.ALRIGHT, NotAlrightPhase(id));
+
+        if (round.startedAt + alrightTimelimit <= block.timestamp) {
+            _failure(round, node);
+            return;
+        }
+
+        require(
+            round.alrightNotSent.remove(node),
+            AlrightNotNeeded(id, node)
+        );
+
+        emit AllDataReceived(id, node);
+        if (round.alrightNotSent.length() == 0) {
+            _completeAlright(round);
+        }
+    }
+
 
     function setBroadcastTimelimit(uint256 newBroadcastTimelimit)
         external
@@ -250,15 +300,19 @@ contract DKR is Permissions, IDKR {
         lastDkrId = id;
     }
 
-    function _failure(DkrId id, uint256 guiltyNode) private {
-        Round storage round = _getRound(id);
+    function _failure(Round storage round, uint256 guiltyNode) private {
         round.status = Status.FAILED;
         round.guiltyNode = guiltyNode;
         emit BadGuy(guiltyNode);
     }
 
     function _completeBroadcast(Round storage round) private {
+        round.startedAt = block.timestamp;
         round.status = Status.ALRIGHT;
+    }
+
+    function _completeAlright(Round storage round) private {
+        round.status = Status.SUCCESS;
     }
 
     function _getRound(DkrId id) private view returns (Round storage round) {
