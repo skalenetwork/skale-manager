@@ -30,6 +30,7 @@ import {
 import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
 import { InitializableWithGap } from "./thirdparty/openzeppelin/InitializableWithGap.sol";
@@ -50,6 +51,7 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
     string public constant TIME_HELPERS = "TimeHelpers";
     string public constant TOKEN_STATE = "TokenState";
     string public constant VALIDATOR_SERVICE = "ValidatorService";
+    string public constant NODES = "Nodes";
 
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public override contracts;
@@ -136,6 +138,10 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
 
     function getPunisher() external view override returns (address punisher) {
         return getContract(PUNISHER);
+    }
+
+    function getNodes() external view override returns (INodes nodes) {
+        return INodes(getContract(NODES));
     }
 
     function getContract(
