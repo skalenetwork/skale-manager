@@ -24,6 +24,9 @@
 pragma solidity 0.8.35;
 
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { IDecryption } from "@skalenetwork/skale-manager-interfaces/IDecryption.sol";
+import { IECDH } from "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
+import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 
 import { Permissions } from "./Permissions.sol";
@@ -49,6 +52,7 @@ interface IDKR {
         SUCCESS,
         BROADCAST,
         ALRIGHT,
+        COMPLAINT,
         FAILED
     }
 
@@ -100,6 +104,8 @@ contract DKR is Permissions, IDKR {
         EnumerableSet.UintSet broadcastNotSent;
         EnumerableSet.UintSet alrightNotSent;
         mapping(uint256 => bytes32) broadcastDataHash;
+        uint256 complainant;
+        uint256 accused;
         uint256 guiltyNode;
     }
 
@@ -114,6 +120,7 @@ contract DKR is Permissions, IDKR {
 
     uint256 public broadcastTimelimit;
     uint256 public alrightTimelimit;
+    uint256 public complaintTimelimit;
 
     event BroadcastAndKeyShare(
         DkrId indexed id,
@@ -139,13 +146,17 @@ contract DKR is Permissions, IDKR {
     error IncorrectNumberOfVerificationVectors(uint256 actual, uint256 expected);
     error IncorrectNumberOfSecretKeyShares(uint256 actual, uint256 expected);
     error BroadcastNotNeeded(DkrId id, uint256 node);
+    error BroadcastIsNotSent(DkrId id, uint256 node);
     error AlrightNotNeeded(DkrId id, uint256 node);
     error NodeDoesNotExist(uint256 node);
+    error NodeIsNotDealer(uint256 node);
+    error NodeIsNotAccused(uint256 node);
     error AccessDenied(address caller);
     error DuplicatesFound();
     error NotBroadcastPhase(DkrId id);
     error NotAlrightPhase(DkrId id);
     error IncorrectPhase(DkrId id);
+    error InvalidVerificationData();
 
     modifier onlyParamsSetter() {
         require(
@@ -290,20 +301,81 @@ contract DKR is Permissions, IDKR {
         );
 
         if (round.status == Status.BROADCAST) {
-            if (round.startedAt + broadcastTimelimit <= block.timestamp) {
+            if (round.broadcastNotSent.contains(accused)) {
+                _failure(round, node);
+            } else if (round.startedAt + broadcastTimelimit <= block.timestamp) {
                 _failure(round, accused);
             } else {
                 _failure(round, node);
             }
         } else if (round.status == Status.ALRIGHT) {
-            if (round.startedAt + alrightTimelimit <= block.timestamp) {
+            if (round.alrightNotSent.contains(accused)) {
+                _failure(round, node);
+            } else if (round.startedAt + alrightTimelimit <= block.timestamp) {
                 _failure(round, accused);
             } else {
                 _failure(round, node);
             }
+        } else if (round.status == Status.COMPLAINT) {
+            if (round.startedAt + complaintTimelimit <= block.timestamp) {
+                _failure(round, round.accused);
+            }
         } else {
             revert IncorrectPhase(id);
         }
+    }
+
+    function complaintSecret(
+        uint256 node,
+        DkrId id,
+        uint256 accused
+    )
+     external
+    {
+        Round storage round = _getRound(id);
+        require(
+            contractManager.getNodes().isNodeExist(msg.sender, node),
+            NodeDoesNotExist(node)
+        );
+        require(round.dealers.contains(accused), NodeIsNotDealer(accused));
+        require(!round.broadcastNotSent.contains(accused), BroadcastIsNotSent(id, accused));
+        require(round.status == Status.BROADCAST || round.status == Status.ALRIGHT, IncorrectPhase(id));
+
+        round.status = Status.COMPLAINT;
+        round.startedAt = block.timestamp;
+        round.complainant = node;
+        round.accused = accused;
+    }
+
+    function response(
+        uint256 node,
+        DkrId id,
+        uint256 secretKey,
+        ISkaleDKG.G2Point calldata multipliedSecret,
+        ISkaleDKG.KeyShare[] calldata secretKeyContribution,
+        ISkaleDKG.G2Point[] calldata verificationVector
+    )
+        external
+    {
+        Round storage round = _getRound(id);
+        INodes nodes = contractManager.getNodes();
+        require(
+            nodes.isNodeExist(msg.sender, node),
+            NodeDoesNotExist(node)
+        );
+        require(round.accused == node, NodeIsNotAccused(node));
+        require(round.status == Status.COMPLAINT, IncorrectPhase(id));
+        require(
+            round.broadcastDataHash[node] == _hashBroadcastData(secretKeyContribution, verificationVector),
+            InvalidVerificationData()
+        );
+
+        uint256 secret = _decryptSecret(
+            round,
+            secretKeyContribution[round.xCoordinate[round.complainant] - 1],
+            secretKey,
+            nodes
+        );
     }
 
     function setBroadcastTimelimit(uint256 newBroadcastTimelimit)
@@ -316,6 +388,42 @@ contract DKR is Permissions, IDKR {
     }
 
     // Private
+
+    function _decryptSecret(
+        Round storage round,
+        ISkaleDKG.KeyShare calldata secretKeyContribution,
+        uint256 secretKey,
+        INodes nodes
+    )
+        private
+        view
+        returns (uint256 secret)
+    {
+        bytes32[2] memory complainantPublicKey = nodes.getNodePublicKey(round.complainant);
+        ISkaleDKG.Fp2Point memory derivedKey;
+        (derivedKey.a, derivedKey.b) = IECDH(contractManager.getContract("ECDH")).deriveKey(
+            secretKey,
+            uint256(complainantPublicKey[0]),
+            uint256(complainantPublicKey[1])
+        );
+        bytes32 symmetricKey = bytes32(derivedKey.a);
+        return IDecryption(contractManager.getContract("Decryption"))
+            .decrypt(
+                secretKeyContribution.share,
+                sha256(abi.encodePacked(symmetricKey))
+            );
+    }
+
+    function correspondsToKeyShare(
+        uint256 secret,
+        ISkaleDKG.KeyShare memory keyShare
+    )
+        private
+        view
+        returns (bool)
+    {
+
+    }
 
     function _fillEnumerableSet(
         EnumerableSet.UintSet storage set,
