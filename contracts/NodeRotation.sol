@@ -80,7 +80,7 @@ contract NodeRotation is Permissions, INodeRotation {
      */
     event RotationDelaySkipped(bytes32 indexed schainHash);
 
-    error InitialKeyGenerationIsNotComplete(bytes32 schainHash);
+    error PreviousRotationIsNotComplete(bytes32 schainHash);
     error DebuggerRoleIsRequired(address account);
     error NoPreviousNode(bytes32 schainHash, uint256 node);
     error NoNodesToReplaceBadNode(bytes32 schainHash);
@@ -231,6 +231,19 @@ contract NodeRotation is Permissions, INodeRotation {
             _rotations[schainHash].freezeUntil >= block.timestamp;
     }
 
+
+    function isSchainCreation(
+        bytes32 schainHash
+    )
+        external
+        view
+        override
+        returns (bool schainCreation)
+    {
+        return _areBroadcastSendersEmpty(schainHash);
+    }
+
+
     function shouldSendBroadcast(
         bytes32 schainHash,
         uint256 node
@@ -346,17 +359,6 @@ contract NodeRotation is Permissions, INodeRotation {
         schainsInternal.setNodeInGroup(schainHash, nodeIndex);
     }
 
-    function isSchainCreation(
-        bytes32 schainHash
-    )
-        public
-        view
-        override
-        returns (bool schainCreation)
-    {
-        return _rotations[schainHash].broadcastSenders.length() == 0;
-    }
-
     function isNewNodeFound(bytes32 schainHash) public view override returns (bool found) {
         return _rotations[schainHash]
                     .newNodeIndexes.contains(_rotations[schainHash].newNodeIndex) &&
@@ -376,7 +378,10 @@ contract NodeRotation is Permissions, INodeRotation {
     )
         private
     {
-        require(!isSchainCreation(schainHash), InitialKeyGenerationIsNotComplete(schainHash));
+        require(
+            _areBroadcastSendersEmpty(schainHash),
+            PreviousRotationIsNotComplete(schainHash)
+        );
 
         _rotations[schainHash].newNodeIndex = nodeIndex;
         waitForNewNode[schainHash] = true;
@@ -470,7 +475,7 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     function _triggerKeyRotation(bytes32 schainHash) private {
-        if (isSchainCreation(schainHash)) {
+        if (_areBroadcastSendersEmpty(schainHash)) {
             // First DKG is started after schain creation - "Edge case"
             ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
         } else {
@@ -518,6 +523,11 @@ contract NodeRotation is Permissions, INodeRotation {
         for (uint256 i = 0; i < len; ++i) {
             assert(set.remove(set.at(0)));
         }
+    }
+
+
+    function _areBroadcastSendersEmpty(bytes32 schainHash) private view returns (bool empty) {
+        return _rotations[schainHash].broadcastSenders.length() == 0;
     }
 
     function _getT(uint256 n) private pure returns (uint256 t) {
