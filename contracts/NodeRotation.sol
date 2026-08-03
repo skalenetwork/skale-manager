@@ -154,6 +154,11 @@ contract NodeRotation is Permissions, INodeRotation {
         delete _rotations[schainHash].newNodeIndex;
         delete _rotations[schainHash].freezeUntil;
         delete _rotations[schainHash].rotationCounter;
+        _rotations[schainHash].activeDkrId = DkrId.wrap(0);
+        _rotations[schainHash].lastSuccessfulDkrId = DkrId.wrap(0);
+        _clearSet(_rotations[schainHash].broadcastSenders);
+        _clearSet(_rotations[schainHash].spareBroadcastSenders);
+        delete waitForNewNode[schainHash];
     }
 
     /**
@@ -461,6 +466,10 @@ contract NodeRotation is Permissions, INodeRotation {
             leavingHistory[nodeIndex].length - 1;
         delete waitForNewNode[schainHash];
 
+        _triggerKeyRotation(schainHash);
+    }
+
+    function _triggerKeyRotation(bytes32 schainHash) private {
         if (isSchainCreation(schainHash)) {
             // First DKG is started after schain creation - "Edge case"
             ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
@@ -489,7 +498,7 @@ contract NodeRotation is Permissions, INodeRotation {
             DKGDidNotFinish(schainHash)
         );
         require(
-            _rotations[schainHash].activeDkrId == DkrId.wrap(0), // Possibly add && check for lastSuccessful
+            _rotations[schainHash].activeDkrId == DkrId.wrap(0), // Possibly check lastSuccessful
             DKRDidNotFinish(schainHash) // TODO new error
         );
         if (_rotations[schainHash].freezeUntil < block.timestamp) {

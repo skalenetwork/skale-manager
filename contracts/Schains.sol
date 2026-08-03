@@ -275,15 +275,16 @@ contract Schains is Permissions, ISchains {
         returns (bool valid)
     {
         ISkaleVerifier skaleVerifier = ISkaleVerifier(contractManager.getContract("SkaleVerifier"));
-        ISkaleDKG.G2Point memory publicKey = G2Operations.getG2Zero();
         bytes32 schainHash = keccak256(abi.encodePacked(schainName));
 
-        require(ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash), "DKG was not successful");
-
         require(
-            ISkaleDKG(contractManager.getContract("SkaleDKG")).getTimeOfLastSuccessfulDKG(schainHash) != 0,
+            _getSkaleDkg().getTimeOfLastSuccessfulDKG(schainHash) != 0,
             FirstDKGNeverSucceeded(schainHash)
         );
+
+        ISkaleDKG.G2Point memory publicKey = IKeyStorage(
+            contractManager.getContract("KeyStorage")
+        ).getCommonPublicKey(schainHash);
 
         return skaleVerifier.verify({
             signature: ISkaleDKG.Fp2Point({
@@ -417,7 +418,7 @@ contract Schains is Permissions, ISchains {
             numberOfNodes,
             partOfNode
         );
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
+        _getSkaleDkg().openChannel(schainHash);
 
         emit SchainNodes(
             schainName,
@@ -561,6 +562,10 @@ contract Schains is Permissions, ISchains {
             revert OptionIsNotSet(schainHash, optionHash);
         }
         return _options[schainHash][optionHash].value;
+    }
+
+    function _getSkaleDkg() private view returns (ISkaleDKG skaleDkg) {
+        return ISkaleDKG(contractManager.getContract("SkaleDKG"));
     }
 
     function _checkOriginator(address from, SchainParameters memory schainParameters) private view {
