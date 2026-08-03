@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.35;
 
 import {
     AddressUpgradeable
@@ -79,6 +79,7 @@ contract Schains is Permissions, ISchains {
     error OptionIsAlreadySet(string optionName);
     error OptionRemovingError(bytes32 optionHash);
     error OptionIsNotSet(bytes32 schainHash, bytes32 optionHash);
+    error FirstDKGNeverSucceeded(bytes32 schainHash);
 
     modifier schainExists(ISchainsInternal schainsInternal, bytes32 schainHash) {
         if(!schainsInternal.isSchainExist(schainHash)) {
@@ -276,25 +277,14 @@ contract Schains is Permissions, ISchains {
         ISkaleVerifier skaleVerifier = ISkaleVerifier(contractManager.getContract("SkaleVerifier"));
         ISkaleDKG.G2Point memory publicKey = G2Operations.getG2Zero();
         bytes32 schainHash = keccak256(abi.encodePacked(schainName));
-        if (
-            INodeRotation(contractManager.getContract("NodeRotation")).isNewNodeFound(schainHash) &&
-            INodeRotation(
-                contractManager.getContract("NodeRotation")
-            ).isRotationInProgress(schainHash) &&
-            ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash)
-        ) {
-            publicKey = IKeyStorage(
-                contractManager.getContract("KeyStorage")
-            ).getPreviousPublicKey(
-                schainHash
-            );
-        } else {
-            publicKey = IKeyStorage(
-                contractManager.getContract("KeyStorage")
-            ).getCommonPublicKey(
-                schainHash
-            );
-        }
+
+        require(ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash), "DKG was not successful");
+
+        require(
+            ISkaleDKG(contractManager.getContract("SkaleDKG")).getTimeOfLastSuccessfulDKG(schainHash) != 0,
+            FirstDKGNeverSucceeded(schainHash)
+        );
+
         return skaleVerifier.verify({
             signature: ISkaleDKG.Fp2Point({
                 a: signatureA,

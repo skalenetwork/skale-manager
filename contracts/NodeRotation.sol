@@ -29,6 +29,7 @@ import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { IRandom } from "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
+import { DkrId, IDKR } from "./DKR.sol";
 
 import { Permissions } from "./Permissions.sol";
 import { Random } from "./utils/Random.sol";
@@ -62,6 +63,8 @@ contract NodeRotation is Permissions, INodeRotation {
         mapping (uint256 => uint256) indexInLeavingHistory;
         EnumerableSet.UintSet broadcastSenders;
         EnumerableSet.UintSet spareBroadcastSenders;
+        DkrId lastSuccessfulDkrId;
+        DkrId activeDkrId;
     }
 
     mapping (bytes32 schain => RotationWithPreviousNodes rotation) private _rotations;
@@ -77,7 +80,7 @@ contract NodeRotation is Permissions, INodeRotation {
      */
     event RotationDelaySkipped(bytes32 indexed schainHash);
 
-    error PreviousRotationIsNotComplete(bytes32 schainHash);
+    error InitialKeyGenerationIsNotComplete(bytes32 schainHash);
     error DebuggerRoleIsRequired(address account);
     error NoPreviousNode(bytes32 schainHash, uint256 node);
     error NoNodesToReplaceBadNode(bytes32 schainHash);
@@ -90,6 +93,7 @@ contract NodeRotation is Permissions, INodeRotation {
     error CouldNotRemoveSpaceFromNode(uint256 node);
     error NewNodeWasAlreadyAdded(bytes32 schainHash, uint256 node);
     error DKGDidNotFinish(bytes32 schainHash);
+    error DKRDidNotFinish(bytes32 schainHash);
     error OccupiedByRotation(bytes32 schainHash, uint256 node);
 
     modifier onlyDebugger() {
@@ -163,6 +167,8 @@ contract NodeRotation is Permissions, INodeRotation {
     function finalizeRotation(bytes32 schain) external override allow("SkaleDKG") {
         _clearSet(_rotations[schain].broadcastSenders);
         _clearSet(_rotations[schain].spareBroadcastSenders);
+        _rotations[schain].lastSuccessfulDkrId = _rotations[schain].activeDkrId;
+        _rotations[schain].activeDkrId = DkrId.wrap(0);
     }
 
     /**
@@ -218,17 +224,6 @@ contract NodeRotation is Permissions, INodeRotation {
             // so no ability to save some gas here
             // solhint-disable-next-line gas-strict-inequalities
             _rotations[schainHash].freezeUntil >= block.timestamp;
-    }
-
-    function isSchainCreation(
-        bytes32 schainHash
-    )
-        external
-        view
-        override
-        returns (bool schainCreation)
-    {
-        return _rotations[schainHash].broadcastSenders.length() == 0;
     }
 
     function shouldSendBroadcast(
@@ -346,6 +341,17 @@ contract NodeRotation is Permissions, INodeRotation {
         schainsInternal.setNodeInGroup(schainHash, nodeIndex);
     }
 
+    function isSchainCreation(
+        bytes32 schainHash
+    )
+        public
+        view
+        override
+        returns (bool schainCreation)
+    {
+        return _rotations[schainHash].broadcastSenders.length() == 0;
+    }
+
     function isNewNodeFound(bytes32 schainHash) public view override returns (bool found) {
         return _rotations[schainHash]
                     .newNodeIndexes.contains(_rotations[schainHash].newNodeIndex) &&
@@ -365,14 +371,15 @@ contract NodeRotation is Permissions, INodeRotation {
     )
         private
     {
-        if(_rotations[schainHash].broadcastSenders.length() != 0) {
-            revert PreviousRotationIsNotComplete(schainHash);
-        }
+        require(!isSchainCreation(schainHash), InitialKeyGenerationIsNotComplete(schainHash));
+
         _rotations[schainHash].newNodeIndex = nodeIndex;
         waitForNewNode[schainHash] = true;
         uint256[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
         uint256 groupSize = nodesInGroup.length;
         uint256 broadcastSendersNumber = _getT(groupSize);
+
+        // Remove for block when upgrading to V3.B
         for (uint256 i = 0; i < groupSize; ++i) {
             if (nodesInGroup[i] == nodeIndex) {
                 nodesInGroup[i] = nodesInGroup[groupSize - 1];
@@ -387,6 +394,7 @@ contract NodeRotation is Permissions, INodeRotation {
                 BroadcastSenderIsAlreadyAdded(schainHash, nodesInGroup[i])
             );
         }
+        // Remove -1 when upgrading to V3.B
         for (uint256 i = broadcastSendersNumber; i < groupSize - 1; ++i) {
             require(
                 _rotations[schainHash].spareBroadcastSenders.add(
@@ -410,7 +418,8 @@ contract NodeRotation is Permissions, INodeRotation {
         bytes32 schainHash,
         uint256 nodeIndex,
         uint256 newNodeIndex,
-        bool shouldDelay)
+        bool shouldDelay
+    )
         private
     {
         // During skaled config generation skale-admin relies on a fact that
@@ -451,13 +460,37 @@ contract NodeRotation is Permissions, INodeRotation {
         _rotations[schainHash].indexInLeavingHistory[nodeIndex] =
             leavingHistory[nodeIndex].length - 1;
         delete waitForNewNode[schainHash];
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
+
+        if (isSchainCreation(schainHash)) {
+            // First DKG is started after schain creation - "Edge case"
+            ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
+        } else {
+            // TODO: Double check if this can be optimized - for now should work
+            // I think it's externaly read twice in the entire process
+            uint256[] memory receivers = ISchainsInternal(
+                contractManager.getContract("SchainsInternal")
+            ).getNodesInGroup(schainHash);
+
+            _rotations[schainHash].activeDkrId = IDKR(
+                contractManager.getContract("DKR")
+            ).start(
+                _rotations[schainHash].broadcastSenders.values(),
+                receivers,
+                _getT(receivers.length),
+                _rotations[schainHash].lastSuccessfulDkrId
+            );
+        }
     }
 
     function _checkBeforeRotation(bytes32 schainHash, uint256 nodeIndex) private {
         require(
+            // Only checks the FIRST DKG after introduction of DKR
             ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash),
             DKGDidNotFinish(schainHash)
+        );
+        require(
+            _rotations[schainHash].activeDkrId == DkrId.wrap(0), // Possibly add && check for lastSuccessful
+            DKRDidNotFinish(schainHash) // TODO new error
         );
         if (_rotations[schainHash].freezeUntil < block.timestamp) {
             _startWaiting(schainHash, nodeIndex);
