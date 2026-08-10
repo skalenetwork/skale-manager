@@ -2,7 +2,9 @@ import {deployFunctionFactory} from "./factory";
 import {deployNodes} from "./nodes";
 import {deploySchainsInternal} from "./schainsInternal";
 import {deployConstantsHolder} from "./constantsHolder";
-import {ContractManager, NodeRotation} from "../../../typechain-types";
+import {ContractManager, DKR, NodeRotation} from "../../../typechain-types";
+
+const deployDKR = deployFunctionFactory<DKR>("DKR");
 
 export const deployNodeRotation = deployFunctionFactory<NodeRotation>(
     "NodeRotation",
@@ -10,5 +12,6 @@ export const deployNodeRotation = deployFunctionFactory<NodeRotation>(
         await deployNodes(contractManager);
         await deploySchainsInternal(contractManager);
         await deployConstantsHolder(contractManager);
+        await deployDKR(contractManager);
     }
 );

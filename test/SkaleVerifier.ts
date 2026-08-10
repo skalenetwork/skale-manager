@@ -284,6 +284,7 @@ describe("SkaleVerifier", () => {
                 );
 
                 await keyStorage.finalizePublicKey(bobHash);
+                await skaleDKG.setSuccessfulDKGTimestampPublic(bobHash);
                 const res = await schains.verifySchainSignature(
                     "2968563502518615975252640488966295157676313493262034332470965194448741452860",
                     "16493689853238003409059452483538012733393673636730410820890208241342865935903",
