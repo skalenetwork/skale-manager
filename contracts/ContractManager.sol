@@ -30,6 +30,7 @@ import {
 import { IBountyV2 } from "@skalenetwork/skale-manager-interfaces/IBountyV2.sol";
 import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
@@ -52,6 +53,7 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
     string public constant TOKEN_STATE = "TokenState";
     string public constant VALIDATOR_SERVICE = "ValidatorService";
     string public constant NODES = "Nodes";
+    string public constant NODE_ROTATION = "NodeRotation";
 
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public override contracts;
@@ -142,6 +144,10 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
 
     function getNodes() external view override returns (INodes nodes) {
         return INodes(getContract(NODES));
+    }
+
+    function getNodeRotation() external view override returns (INodeRotation nodeRotation) {
+        return INodeRotation(getContract(NODE_ROTATION));
     }
 
     function getContract(

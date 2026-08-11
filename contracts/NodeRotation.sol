@@ -165,6 +165,32 @@ contract NodeRotation is Permissions, INodeRotation {
         _clearSet(_rotations[schain].spareBroadcastSenders);
     }
 
+    function isValidData(
+        uint256 /* nextDkr */,
+        uint256 /* nodeIndex */,
+        ISkaleDKG.KeyShare[] calldata /* secretKeyContribution */,
+        ISkaleDKG.G2Point[] calldata /* verificationVector */
+    )
+        external
+        view
+        override
+        returns (bool valid)
+    {
+        revert("Not implemented");
+    }
+
+    function getPreviousNodeIndex(
+        uint256 /* nextDkr */,
+        uint256 /* nodeIndex */
+    )
+        external
+        view
+        override
+        returns (uint256 nodeIndex)
+    {
+        revert("Not implemented");
+    }
+
     /**
      * @dev Returns rotation details for a given schain.
      */

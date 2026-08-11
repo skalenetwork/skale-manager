@@ -25,6 +25,7 @@ pragma solidity 0.8.35;
 
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { IDecryption }   from "@skalenetwork/skale-manager-interfaces/IDecryption.sol";
+import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { INodes }        from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import { ISkaleDKG }     from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { IECDH }         from "@skalenetwork/skale-manager-interfaces/thirdparty/IECDH.sol";
@@ -55,15 +56,20 @@ interface IDKR {
         SUCCESS,
         BROADCAST,
         ALRIGHT,
-        COMPLAINT,
+        COMPLAINT_SECRET,
+        COMPLAINT_FREE_TERM,
         FAILED
     }
 
-    struct VerificationData {
+    struct PublishedData {
+        ISkaleDKG.G2Point[] verificationVector;
+        ISkaleDKG.KeyShare[] secretKeyContribution;
+    }
+
+    struct SecretVerificationData {
         ISkaleDKG.G2Point multipliedSecret;
         ISkaleDKG.G2Point[] multipliedVerificationVector;
-        ISkaleDKG.KeyShare[] secretKeyContribution;
-        ISkaleDKG.G2Point[] verificationVector;
+        PublishedData sent;
     }
 
     function start(
@@ -97,11 +103,24 @@ interface IDKR {
         uint256 accused
     ) external;
 
-    function response(
+    function responseSecret(
         uint256 node, // TODO: remove after Nodes upgrade
         DkrId id,
         uint256 secretKey,
-        VerificationData calldata verificationData
+        SecretVerificationData calldata verificationData
+    ) external;
+
+    function complaintFreeTerm(
+        uint256 node, // TODO: remove after Nodes upgrade
+        DkrId id,
+        uint256 accused
+    ) external;
+
+    function responseFreeTerm(
+        uint256 node, // TODO: remove after Nodes upgrade
+        DkrId id,
+        PublishedData[] calldata previousRoundData,
+        PublishedData calldata currentRoundData
     ) external;
 
     function setBroadcastTimelimit(uint256 newBroadcastTimelimit) external;
@@ -338,7 +357,11 @@ contract DKR is Permissions, IDKR {
             round.startedAt + alrightTimelimit <= block.timestamp)
         {
             _failure(round, accused);
-        } else if (round.status == Status.COMPLAINT &&
+        } else if (
+            (
+                round.status == Status.COMPLAINT_SECRET ||
+                round.status == Status.COMPLAINT_FREE_TERM
+            ) &&
             round.startedAt + complaintTimelimit <= block.timestamp
         ) {
             _failure(round, round.accused);
@@ -367,17 +390,17 @@ contract DKR is Permissions, IDKR {
             IncorrectPhase(id)
         );
 
-        round.status = Status.COMPLAINT;
+        round.status = Status.COMPLAINT_SECRET;
         round.startedAt = block.timestamp;
         round.complainant = node;
         round.accused = accused;
     }
 
-    function response(
+    function responseSecret(
         uint256 node,
         DkrId id,
         uint256 secretKey,
-        VerificationData calldata verificationData
+        SecretVerificationData calldata verificationData
     )
         external
         override
@@ -400,7 +423,7 @@ contract DKR is Permissions, IDKR {
         });
 
         ISkaleDKG.KeyShare calldata keyShare =
-            verificationData.secretKeyContribution[round.xCoordinate[round.complainant] - 1];
+            verificationData.sent.secretKeyContribution[round.xCoordinate[round.complainant] - 1];
 
         if (_isPublicKeyValid(keyShare.publicKey, secretKey, ecdh)) {
             _failure(round, node);
@@ -412,6 +435,80 @@ contract DKR is Permissions, IDKR {
             _failure(round, node);
         } else {
             _failure(round, round.complainant);
+        }
+    }
+
+    function complaintFreeTerm(
+        uint256 node, // TODO: remove after Nodes upgrade
+        DkrId id,
+        uint256 accused
+    )
+        external
+        override
+    {
+        Round storage round = _getRound(id);
+        require(
+            contractManager.getNodes().isNodeExist(msg.sender, node),
+            NodeDoesNotExist(node)
+        );
+        require(round.dealers.contains(accused), NodeIsNotDealer(accused));
+        require(!round.broadcastNotSent.contains(accused), BroadcastIsNotSent(id, accused));
+        require(
+            round.status == Status.BROADCAST || round.status == Status.ALRIGHT,
+            IncorrectPhase(id)
+        );
+
+        round.status = Status.COMPLAINT_FREE_TERM;
+        round.startedAt = block.timestamp;
+        round.complainant = node;
+        round.accused = accused;
+    }
+
+    function responseFreeTerm(
+        uint256 node, // TODO: remove after Nodes upgrade
+        DkrId id,
+        PublishedData[] calldata previousRoundData,
+        PublishedData calldata currentRoundData
+    )
+        external
+        override
+    {
+        Round storage round = _getRound(id);
+        INodes nodes = contractManager.getNodes();
+        INodeRotation nodeRotation = contractManager.getNodeRotation();
+        require(
+            nodes.isNodeExist(msg.sender, node),
+            NodeDoesNotExist(node)
+        );
+        _verifyResponseFreeTermInputData({
+            round: round,
+            node: node,
+            id: id,
+            previousRoundData: previousRoundData,
+            currentRoundData: currentRoundData,
+            nodeRotation: nodeRotation
+        });
+
+        uint256 previousIndex;
+        if (round.previousId != NO_DKR_ID) {
+            Round storage previousRound = _getRound(round.previousId);
+            previousIndex = previousRound.xCoordinate[round.accused] - 1;
+        } else {
+            previousIndex = nodeRotation.getPreviousNodeIndex(
+                DkrId.unwrap(round.id),
+                round.accused
+            );
+        }
+        ISkaleDKG.G2Point memory globalVerificationVectorTerm = G2Operations.getG2Zero();
+        for (uint256 i = 0; i < previousRoundData.length; ++i) {
+            globalVerificationVectorTerm = globalVerificationVectorTerm.addG2(
+                previousRoundData[i].verificationVector[previousIndex]
+            );
+        }
+        if (currentRoundData.verificationVector[0].isEqual(globalVerificationVectorTerm)) {
+            _failure(round, round.complainant);
+        } else {
+            _failure(round, node);
         }
     }
 
@@ -466,7 +563,7 @@ contract DKR is Permissions, IDKR {
         uint256 node,
         DkrId id,
         uint256 secretKey,
-        VerificationData calldata verificationData,
+        SecretVerificationData calldata verificationData,
         INodes nodes,
         IECDH ecdh
     )
@@ -474,25 +571,25 @@ contract DKR is Permissions, IDKR {
         view
     {
         require(round.accused == node, NodeIsNotAccused(node));
-        require(round.status == Status.COMPLAINT, IncorrectPhase(id));
+        require(round.status == Status.COMPLAINT_SECRET, IncorrectPhase(id));
         require(
             round.broadcastDataHash[node] == _hashBroadcastData(
-                verificationData.secretKeyContribution,
-                verificationData.verificationVector
+                verificationData.sent.secretKeyContribution,
+                verificationData.sent.verificationVector
             ),
             InvalidVerificationData()
         );
         require(
             _checkCorrectVectorMultiplication(
                 round.xCoordinate[round.complainant] - 1,
-                verificationData.verificationVector,
+                verificationData.sent.verificationVector,
                 verificationData.multipliedVerificationVector
             ),
             InvalidVerificationData()
         );
 
         ISkaleDKG.KeyShare calldata keyShare =
-            verificationData.secretKeyContribution[round.xCoordinate[round.complainant] - 1];
+            verificationData.sent.secretKeyContribution[round.xCoordinate[round.complainant] - 1];
 
         uint256 secret = _decryptSecret({
             round: round,
@@ -506,6 +603,54 @@ contract DKR is Permissions, IDKR {
             _checkCorrectMultipliedShare(verificationData.multipliedSecret, secret),
             InvalidVerificationData()
         );
+    }
+
+    function _verifyResponseFreeTermInputData(
+        Round storage round,
+        uint256 node,
+        DkrId id,
+        PublishedData[] calldata previousRoundData,
+        PublishedData calldata currentRoundData,
+        INodeRotation nodeRotation
+    )
+        private
+        view
+    {
+        require(round.accused == node, NodeIsNotAccused(node));
+        require(round.status == Status.COMPLAINT_FREE_TERM, IncorrectPhase(id));
+        require(
+            round.broadcastDataHash[node] == _hashBroadcastData(
+                currentRoundData.secretKeyContribution,
+                currentRoundData.verificationVector
+            ),
+            InvalidVerificationData()
+        );
+        if (round.previousId != NO_DKR_ID) {
+            Round storage previousRound = _getRound(round.previousId);
+            for (uint256 i = 0; i < previousRound.dealers.length(); ++i) {
+                uint256 dealer = previousRound.dealers.at(i);
+                uint256 previousIndex = previousRound.xCoordinate[dealer] - 1;
+                require(
+                    previousRound.broadcastDataHash[dealer] == _hashBroadcastData(
+                        previousRoundData[previousIndex].secretKeyContribution,
+                        previousRoundData[previousIndex].verificationVector
+                    ),
+                    InvalidVerificationData()
+                );
+            }
+        } else {
+            for (uint256 index = 0; index < previousRoundData.length; ++index) {
+                require(
+                    nodeRotation.isValidData(
+                        DkrId.unwrap(round.id),
+                        index,
+                        previousRoundData[index].secretKeyContribution,
+                        previousRoundData[index].verificationVector
+                    ),
+                    InvalidVerificationData()
+                );
+            }
+        }
     }
 
     function _isPublicKeyValid(
