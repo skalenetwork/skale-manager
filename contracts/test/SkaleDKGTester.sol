@@ -19,9 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.35;
 
-import { IKeyStorage, SkaleDKG } from "../SkaleDKG.sol";
+import { IKeyStorage, INodeRotation, SkaleDKG } from "../SkaleDKG.sol";
 import { ISkaleDKGTester } from "./interfaces/ISkaleDKGTester.sol";
 
 
@@ -35,6 +35,10 @@ contract SkaleDKGTester is SkaleDKG, ISkaleDKGTester {
         lastSuccessfulDKG[schainHash] = block.timestamp;
         channels[schainHash].active = false;
         IKeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
+        INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
+        if (!nodeRotation.isSchainCreation(schainHash)) {
+            nodeRotation.finalizeRotation(schainHash);
+        }
         emit SuccessfulDKG(schainHash);
     }
 }

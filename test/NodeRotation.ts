@@ -170,10 +170,15 @@ describe("NodeRotation", () => {
                         }
                         failingNode = node;
 
-                        node = _.sample(chainNodes.filter(chainNode => ![exitingNode, failingNode].includes(chainNode)));
-                        if (node === undefined) {
-                            throw new Error("Can't pick a node");
-                        }
+                        do {
+                            node = _.sample(chainNodes.filter(
+                                chainNode => ![exitingNode, failingNode, enteringNode].includes(chainNode)
+                            ));
+                            if (node === undefined) {
+                                throw new Error("Can't pick a node");
+                            }
+                        } while (! await nodeRotation.shouldSendBroadcast(schainHash, node.id));
+                        // The good node should be able to send broadcast
                         const goodNode = node;
 
                         // farther keys are not valid
