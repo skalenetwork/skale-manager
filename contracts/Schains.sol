@@ -35,7 +35,6 @@ import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.
 import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
-import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 import { NotEnoughFunds, RoleRequired } from "./CommonErrors.sol";
 import { PaymasterController } from "./PaymasterController.sol";
 import { Permissions } from "./Permissions.sol";

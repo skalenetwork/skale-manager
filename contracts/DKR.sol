@@ -203,6 +203,7 @@ contract DKR is Permissions, IDKR {
     error InvalidVerificationData();
     error ShareIsNotValid();
     error MulShareIsNotInG1();
+    error ArithmeticError();
 
     modifier onlyParamsSetter() {
         require(
@@ -489,22 +490,13 @@ contract DKR is Permissions, IDKR {
             nodeRotation: nodeRotation
         });
 
-        uint256 previousIndex;
-        if (round.previousId != NO_DKR_ID) {
-            Round storage previousRound = _getRound(round.previousId);
-            previousIndex = previousRound.xCoordinate[round.accused] - 1;
-        } else {
-            previousIndex = nodeRotation.getPreviousNodeIndex(
-                DkrId.unwrap(round.id),
-                round.accused
+        ISkaleDKG.G2Point memory globalVerificationVectorTerm =
+            _getPreviousGlobalVerificationVectorTerm(
+                round,
+                previousRoundData,
+                nodeRotation
             );
-        }
-        ISkaleDKG.G2Point memory globalVerificationVectorTerm = G2Operations.getG2Zero();
-        for (uint256 i = 0; i < previousRoundData.length; ++i) {
-            globalVerificationVectorTerm = globalVerificationVectorTerm.addG2(
-                previousRoundData[i].verificationVector[previousIndex]
-            );
-        }
+
         if (currentRoundData.verificationVector[0].isEqual(globalVerificationVectorTerm)) {
             _failure(round, round.complainant);
         } else {
@@ -556,6 +548,53 @@ contract DKR is Permissions, IDKR {
 
     function _completeAlright(Round storage round) private {
         round.status = Status.SUCCESS;
+    }
+
+    function _getPreviousGlobalVerificationVectorTerm(
+        Round storage round,
+        PublishedData[] calldata previousRoundData,
+        INodeRotation nodeRotation
+    )
+        private
+        view
+        returns (ISkaleDKG.G2Point memory globalVerificationVectorTerm)
+    {
+        uint256 previousIndex;
+        uint256 previousDealersNumber = previousRoundData.length;
+        globalVerificationVectorTerm = G2Operations.getG2Zero();
+        if (round.previousId != NO_DKR_ID) {
+            Round storage previousRound = _getRound(round.previousId);
+            previousIndex = previousRound.xCoordinate[round.accused] - 1;
+            uint256[] memory previousXCoordinates = new uint256[](previousRound.dealers.length());
+            for (uint256 i = 0; i < previousDealersNumber; ++i) {
+                uint256 dealer = previousRound.dealers.at(i);
+                previousXCoordinates[i] = previousRound.xCoordinate[dealer];
+            }
+            for (uint256 i = 0; i < previousDealersNumber; ++i) {
+                uint256 dealerXCoordinate = i + 1;
+                ISkaleDKG.G2Point memory component =
+                    previousRoundData[i].verificationVector[previousIndex].scalarMul(
+                        _lagrangeCoefficientAtZero(
+                            dealerXCoordinate,
+                            previousXCoordinates
+                        )
+                    );
+                globalVerificationVectorTerm = globalVerificationVectorTerm.addG2(
+                    component
+                );
+            }
+        } else {
+            previousIndex = nodeRotation.getPreviousNodeIndex(
+                DkrId.unwrap(round.id),
+                round.accused
+            );
+            for (uint256 i = 0; i < previousDealersNumber; ++i) {
+                globalVerificationVectorTerm = globalVerificationVectorTerm.addG2(
+                    previousRoundData[i].verificationVector[previousIndex]
+                );
+            }
+        }
+        return globalVerificationVectorTerm;
     }
 
     function _verifyInputData(
@@ -625,9 +664,14 @@ contract DKR is Permissions, IDKR {
             ),
             InvalidVerificationData()
         );
+        uint256 previousDealersNumber = previousRoundData.length;
         if (round.previousId != NO_DKR_ID) {
             Round storage previousRound = _getRound(round.previousId);
-            for (uint256 i = 0; i < previousRound.dealers.length(); ++i) {
+            require(
+                previousDealersNumber == previousRound.dealers.length(),
+                InvalidVerificationData()
+            );
+            for (uint256 i = 0; i < previousDealersNumber; ++i) {
                 uint256 dealer = previousRound.dealers.at(i);
                 uint256 previousIndex = previousRound.xCoordinate[dealer] - 1;
                 require(
@@ -639,7 +683,7 @@ contract DKR is Permissions, IDKR {
                 );
             }
         } else {
-            for (uint256 index = 0; index < previousRoundData.length; ++index) {
+            for (uint256 index = 0; index < previousDealersNumber; ++index) {
                 require(
                     nodeRotation.isValidData(
                         DkrId.unwrap(round.id),
@@ -651,21 +695,6 @@ contract DKR is Permissions, IDKR {
                 );
             }
         }
-    }
-
-    function _isPublicKeyValid(
-        bytes32[2] calldata publicKey,
-        uint256 secretKey,
-        IECDH ecdh
-    )
-        private
-        view
-        returns (bool valid)
-    {
-        uint256 x;
-        uint256 y;
-        (x, y) = ecdh.publicKey(secretKey);
-        return publicKey[0] == bytes32(x) && publicKey[1] == bytes32(y);
     }
 
     function _calculateSum(
@@ -811,6 +840,61 @@ contract DKR is Permissions, IDKR {
     function _getRound(DkrId id) private view returns (Round storage round) {
         round = _rounds[id];
         require(round.id != NO_DKR_ID, DkrRoundDoesNotExist(id));
+    }
+
+    function _lagrangeCoefficientAtZero(
+        uint256 index,
+        uint256[] memory xCoordinates
+    )
+        private
+        view
+        returns (uint256 coefficient)
+    {
+        uint256 p = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+        uint256 numerator = 1;
+        uint256 denominator = 1;
+        uint256 targetXCoordinate = index + 1;
+        uint256 dealersNumber = xCoordinates.length;
+
+        for (uint256 i = 0; i < dealersNumber; ++i) {
+            if (xCoordinates[i] == targetXCoordinate) continue;
+
+            uint256 xj = xCoordinates[i];
+            numerator = mulmod(numerator, xj, p);
+            uint256 diff;
+            if (xj > targetXCoordinate) {
+                diff = xj - targetXCoordinate;
+            } else {
+                diff = p - (targetXCoordinate - xj);
+            }
+            denominator = mulmod(denominator, diff, p);
+        }
+
+        return mulmod(
+            numerator,
+            _modInverse(denominator, p),
+            p
+        );
+    }
+
+    function _modInverse(uint256 a, uint256 p) private view returns (uint256 result) {
+        require(a != 0, ArithmeticError());
+        return Precompiled.bigModExp(a, p - 2, p);
+    }
+
+    function _isPublicKeyValid(
+        bytes32[2] calldata publicKey,
+        uint256 secretKey,
+        IECDH ecdh
+    )
+        private
+        pure
+        returns (bool valid)
+    {
+        uint256 x;
+        uint256 y;
+        (x, y) = ecdh.publicKey(secretKey);
+        return publicKey[0] == bytes32(x) && publicKey[1] == bytes32(y);
     }
 
     function _hashBroadcastData(

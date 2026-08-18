@@ -19,6 +19,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+// cspell:words IDKR
+
 pragma solidity 0.8.35;
 
 import { EnumerableSet }
@@ -219,6 +221,9 @@ contract NodeRotation is Permissions, INodeRotation {
         _requireFirstDkrRound(dkrId, schainHash);
 
         ILegacySkaleDKG skaleDKG = ILegacySkaleDKG(contractManager.getContract("SkaleDKG"));
+        ISchainsInternal schainsInternal = ISchainsInternal(
+            contractManager.getContract("SchainsInternal")
+        );
 
         // Ensure the committed data belongs to a successfully completed legacy DKG round.
         if (
@@ -229,7 +234,7 @@ contract NodeRotation is Permissions, INodeRotation {
         }
 
         // Reject positions outside the participant slots recorded by legacy DKG.
-        if (indexInGroup >= skaleDKG.getNumberOfNodesInGroup(schainHash)) {
+        if (indexInGroup >= schainsInternal.getNumberOfNodesInGroup(schainHash)) {
             return false;
         }
 
@@ -267,11 +272,10 @@ contract NodeRotation is Permissions, INodeRotation {
             contractManager.getContract("SchainsInternal")
         );
         indexInGroup = schainsInternal.getNodeIndexInGroup(schainHash, nodeIndex);
-        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
 
         // Ensure the preserved group slot belongs to the legacy DKG participant range.
         require(
-            indexInGroup < skaleDKG.getNumberOfNodesInGroup(schainHash),
+            indexInGroup < schainsInternal.getNumberOfNodesInGroup(schainHash),
             PreviousDkgIndexIsInvalid(schainHash, nodeIndex, indexInGroup)
         );
     }
@@ -580,7 +584,7 @@ contract NodeRotation is Permissions, INodeRotation {
             ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
         } else {
             // TODO: Double check if this can be optimized - for now should work
-            // I think it's externaly read twice in the entire process
+            // I think it's externally read twice in the entire process
             uint256[] memory receivers = ISchainsInternal(
                 contractManager.getContract("SchainsInternal")
             ).getNodesInGroup(schainHash);
@@ -594,6 +598,8 @@ contract NodeRotation is Permissions, INodeRotation {
                 _rotations[schainHash].lastSuccessfulDkrId
             );
             _rotations[schainHash].activeDkrId = dkrId;
+            // The function start(...) does not do external calls
+            // slither-disable-next-line reentrancy-benign
             schainForDkr[dkrId] = schainHash;
         }
     }
