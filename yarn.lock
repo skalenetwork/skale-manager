@@ -2525,25 +2525,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@skalenetwork/skale-contracts-ethers-v6@npm:^2.0.0-develop.6":
-  version: 2.0.0-develop.6
-  resolution: "@skalenetwork/skale-contracts-ethers-v6@npm:2.0.0-develop.6"
+"@skalenetwork/skale-contracts-ethers-v6@npm:^2.0.0-develop.7":
+  version: 2.0.0-merge.0
+  resolution: "@skalenetwork/skale-contracts-ethers-v6@npm:2.0.0-merge.0"
   dependencies:
-    "@skalenetwork/skale-contracts": "npm:2.0.0-develop.6"
+    "@skalenetwork/skale-contracts": "npm:2.0.0-merge.0"
     ethers: "npm:^6.13.5"
-  checksum: 10c0/72d9aa8a03fdb7217b45b9aee79444242431589fb3be4cb2b91f62320608464441ee55d787419e702365d0b09d60cc68e2b85284e89a0470faa7b113aeaac898
+  checksum: 10c0/68d1897e1f9d3474f776c2a1d3e8844f4cef22ed46b99193be6189fda0bde1cc13cbae0a4cee7e5eb3c64f0be53c9f68c5342795aee05e4bcc8bf46495d5a3b8
   languageName: node
   linkType: hard
 
-"@skalenetwork/skale-contracts@npm:2.0.0-develop.6":
-  version: 2.0.0-develop.6
-  resolution: "@skalenetwork/skale-contracts@npm:2.0.0-develop.6"
+"@skalenetwork/skale-contracts@npm:2.0.0-merge.0":
+  version: 2.0.0-merge.0
+  resolution: "@skalenetwork/skale-contracts@npm:2.0.0-merge.0"
   dependencies:
     "@renovatebot/pep440": "npm:^4.1.0"
     axios: "npm:^1.4.0"
     dotenv: "npm:^16.5.0"
     semver: "npm:^7.6.0"
-  checksum: 10c0/0de2d0251f4bd5745ba4296d4b2e172bb7d73a1538161b19ea941a383812efb2a187d7b13c11d9fb7989fb6e462730983b00b03cb55f40849564a904e01890d7
+  checksum: 10c0/4a601057a493793580f3348a6973a865f255d8b54a1085335bfee7331f20e27d09ff4cc93b8de6075e32b585bf297bf07d9b0226d10d91811401170d8d7fa80c
   languageName: node
   linkType: hard
 
@@ -2585,9 +2585,9 @@ __metadata:
     "@skalenetwork/ima-interfaces": "npm:2.0.0-develop.67"
     "@skalenetwork/marionette-interfaces": "npm:^0.0.0-main.6"
     "@skalenetwork/paymaster-interfaces": "npm:^1.0.1"
-    "@skalenetwork/skale-contracts-ethers-v6": "npm:^2.0.0-develop.6"
+    "@skalenetwork/skale-contracts-ethers-v6": "npm:^2.0.0-develop.7"
     "@skalenetwork/skale-manager-interfaces": "npm:3.3.0-bite-dkg.10"
-    "@skalenetwork/upgrade-tools": "npm:4.0.0-develop.8"
+    "@skalenetwork/upgrade-tools": "npm:4.0.0-develop.12"
     "@typechain/ethers-v6": "npm:^0.5.1"
     "@typechain/hardhat": "npm:^9.1.0"
     "@types/chai": "npm:^4.3.20"
@@ -2624,9 +2624,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@skalenetwork/upgrade-tools@npm:4.0.0-develop.8":
-  version: 4.0.0-develop.8
-  resolution: "@skalenetwork/upgrade-tools@npm:4.0.0-develop.8"
+"@skalenetwork/upgrade-tools@npm:4.0.0-develop.12":
+  version: 4.0.0-develop.12
+  resolution: "@skalenetwork/upgrade-tools@npm:4.0.0-develop.12"
   dependencies:
     "@nomicfoundation/hardhat-ethers": "npm:^3.0.0"
     "@nomicfoundation/hardhat-verify": "npm:2.1.1"
@@ -2635,13 +2635,13 @@ __metadata:
     "@safe-global/api-kit": "npm:^4.0.1"
     "@safe-global/protocol-kit": "npm:^6.1.2"
     "@safe-global/safe-core-sdk-types": "npm:^5.1.0"
-    "@skalenetwork/skale-contracts-ethers-v6": "npm:^2.0.0-develop.6"
+    "@skalenetwork/skale-contracts-ethers-v6": "npm:^2.0.0-develop.7"
     "@types/mocha": "npm:^9.1.0"
     axios: "npm:^1.4.0"
     ethereumjs-util: "npm:^7.1.4"
     hardhat: "npm:^2.9.9"
     semaphore-async-await: "npm:^1.5.1"
-  checksum: 10c0/f64d28cb92ed0c9d491205c4178b963ea7706ba7a8a808da1d1c96830162052e7261456dd5320a26b052cc51f6fb690ab05c8d7c4064d0717fcd2aedbc0f50c2
+  checksum: 10c0/cfabbb297790f7319a95b7343272f8fdfe581fecdf07e3f663fcb379ea0082cfb796a005e4db4747a453b6ae4981f5d61195a2c66508c7c6bc6aed8867158a87
   languageName: node
   linkType: hard
 
