@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import {calculateGasSpent, contracts, shouldCalculateGas} from "./deploy";
-import {ethers} from "hardhat";
+import {ethers, upgrades} from "hardhat";
 import {Upgrader, Submitter} from "@skalenetwork/upgrade-tools";
 import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6";
-import {SkaleManager} from "../typechain-types";
+import {ContractManager, DKR, SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
 import {Transaction} from "ethers";
 
@@ -57,6 +57,30 @@ class SkaleManagerUpgrader extends Upgrader {
         this.transactions.push(Transaction.from({
             to: await skaleManager.getAddress(),
             data: skaleManager.interface.encodeFunctionData("setVersion", [newVersion])
+        }));
+    }
+
+    deployNewContracts = async () => {
+        const contractManager = await this.instance.getContract("ContractManager") as ContractManager;
+
+        const DKRFactory = await ethers.getContractFactory("DKR");
+        console.log("Deploy DKR");
+        const dkr = await upgrades.deployProxy(
+            DKRFactory,
+            [await ethers.resolveAddress(contractManager)],
+            {
+                initialOwner: await this.getOwner()
+            }
+        ) as unknown as DKR;
+        await dkr.deploymentTransaction()?.wait();
+
+        // Register in the ContractManager
+        this.transactions.push(Transaction.from({
+            to: await contractManager.getAddress(),
+            data: contractManager.interface.encodeFunctionData(
+                "setContractsAddress",
+                ["DKR", await dkr.getAddress()]
+            )
         }));
     }
 
