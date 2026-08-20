@@ -159,7 +159,7 @@ contract DKR is Permissions, IDKR {
     mapping(DkrId dkr => Round round) private _rounds;
 
     /// @notice The ID of the most recently created DKR round
-    DkrId public lastDkrId = NO_DKR_ID;
+    DkrId public lastDkrId;
 
     uint256 public broadcastTimelimit;
     uint256 public alrightTimelimit;
@@ -233,7 +233,7 @@ contract DKR is Permissions, IDKR {
         DkrId previousDkr
     )
         external
-        allow("Rotation")
+        allow("NodeRotation")
         override
         returns (DkrId id)
     {
@@ -697,21 +697,6 @@ contract DKR is Permissions, IDKR {
         }
     }
 
-    function _isPublicKeyValid(
-        bytes32[2] calldata publicKey,
-        uint256 secretKey,
-        IECDH ecdh
-    )
-        private
-        view
-        returns (bool valid)
-    {
-        uint256 x;
-        uint256 y;
-        (x, y) = ecdh.publicKey(secretKey);
-        return publicKey[0] == bytes32(x) && publicKey[1] == bytes32(y);
-    }
-
     function _calculateSum(
         ISkaleDKG.G2Point[] calldata verificationVectorMultiplication
     )
@@ -895,6 +880,21 @@ contract DKR is Permissions, IDKR {
     function _modInverse(uint256 a, uint256 p) private view returns (uint256 result) {
         require(a != 0, ArithmeticError());
         return Precompiled.bigModExp(a, p - 2, p);
+    }
+
+    function _isPublicKeyValid(
+        bytes32[2] calldata publicKey,
+        uint256 secretKey,
+        IECDH ecdh
+    )
+        private
+        pure
+        returns (bool valid)
+    {
+        uint256 x;
+        uint256 y;
+        (x, y) = ecdh.publicKey(secretKey);
+        return publicKey[0] == bytes32(x) && publicKey[1] == bytes32(y);
     }
 
     function _hashBroadcastData(

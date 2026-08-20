@@ -84,6 +84,7 @@ export const contracts = [
     "ConstantsHolder",
     "Nodes",
     "NodeRotation",
+    "DKR",
     "SchainsInternal",
     "Schains",
     "Decryption",
