@@ -121,7 +121,10 @@ async function prepareContractsList(instance: Instance) {
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
     const startBlock = await ethers.provider.getBlockNumber();
-    const contractsToUpgrade = await prepareContractsList(skaleManager);
+    let contractsToUpgrade = await prepareContractsList(skaleManager);
+    // TODO: remove after 1.31.1 release
+    contractsToUpgrade = contractsToUpgrade.filter((contract) => contract !== "DKR");
+    // End of TODO
     const upgrader = new SkaleManagerUpgrader(
         "1.13.1",
         skaleManager,
