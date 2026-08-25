@@ -126,6 +126,13 @@ interface IDKR {
     function setBroadcastTimelimit(uint256 newBroadcastTimelimit) external;
 }
 
+interface IDkrNodeRotation is INodeRotation {
+    function failDkr(uint256 dkrId, uint256 badNode) external;
+    function getActiveDkrId(bytes32 schainHash) external view returns (uint256 dkrId);
+    function getLastSuccessfulDkrId(bytes32 schainHash) external view returns (uint256 dkrId);
+    function schainForDkr(DkrId dkrId) external view returns (bytes32 schainHash);
+}
+
 
 /**
  * @title DKR
@@ -192,6 +199,7 @@ contract DKR is Permissions, IDKR {
     error BroadcastIsNotSent(DkrId id, uint256 node);
     error AlrightNotNeeded(DkrId id, uint256 node);
     error NodeDoesNotExist(uint256 node);
+    error NodeIsNotReceiver(uint256 node);
     error NodeIsNotDealer(uint256 node);
     error NodeIsNotAccused(uint256 node);
     error AccessDenied(address caller);
@@ -279,15 +287,14 @@ contract DKR is Permissions, IDKR {
             secretKeyContribution.length == round.receivers.length(),
             IncorrectNumberOfSecretKeyShares(secretKeyContribution.length, round.receivers.length())
         );
-        if (round.startedAt + broadcastTimelimit <= block.timestamp) {
-            _failure(round, node);
-            return;
-        }
-
         require(
             round.broadcastNotSent.remove(node),
             BroadcastNotNeeded(id, node)
         );
+        if (round.startedAt + broadcastTimelimit <= block.timestamp) {
+            _failure(round, node);
+            return;
+        }
         round.broadcastDataHash[node] = _hashBroadcastData(
             secretKeyContribution,
             verificationVector
@@ -318,15 +325,14 @@ contract DKR is Permissions, IDKR {
         );
         require(round.status == Status.ALRIGHT, NotAlrightPhase(id));
 
-        if (round.startedAt + alrightTimelimit <= block.timestamp) {
-            _failure(round, node);
-            return;
-        }
-
         require(
             round.alrightNotSent.remove(node),
             AlrightNotNeeded(id, node)
         );
+        if (round.startedAt + alrightTimelimit <= block.timestamp) {
+            _failure(round, node);
+            return;
+        }
 
         emit AllDataReceived(id, node);
         if (round.alrightNotSent.length() == 0) {
@@ -347,6 +353,9 @@ contract DKR is Permissions, IDKR {
             contractManager.getNodes().isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // Allow only nodes in the round, but from the distributors only allow those who broadcasted
+        require(round.receivers.contains(node), NodeIsNotReceiver(node));
+        require(!round.broadcastNotSent.contains(node), BroadcastIsNotSent(id, node));
 
         if (round.status == Status.BROADCAST &&
             round.broadcastNotSent.contains(accused) &&
@@ -513,6 +522,10 @@ contract DKR is Permissions, IDKR {
         broadcastTimelimit = newBroadcastTimelimit;
     }
 
+    function _setSuccessfulDkr(DkrId id) internal {
+        _completeAlright(_getRound(id));
+    }
+
     // Private
 
     function _fillEnumerableSet(
@@ -539,6 +552,9 @@ contract DKR is Permissions, IDKR {
         round.status = Status.FAILED;
         round.guiltyNode = guiltyNode;
         emit BadGuy(guiltyNode);
+        IDkrNodeRotation(
+            contractManager.getContract("NodeRotation")
+        ).failDkr(DkrId.unwrap(round.id), guiltyNode);
     }
 
     function _completeBroadcast(Round storage round) private {
@@ -548,6 +564,10 @@ contract DKR is Permissions, IDKR {
 
     function _completeAlright(Round storage round) private {
         round.status = Status.SUCCESS;
+        IDkrNodeRotation nodeRotation = IDkrNodeRotation(
+            contractManager.getContract("NodeRotation")
+        );
+        nodeRotation.finalizeRotation(nodeRotation.schainForDkr(round.id));
     }
 
     function _getPreviousGlobalVerificationVectorTerm(

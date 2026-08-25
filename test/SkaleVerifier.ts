@@ -2,7 +2,9 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {ConstantsHolder,
          ContractManager,
+         DKRTester,
          KeyStorage,
+         NodeRotation,
          Nodes,
          Schains,
          SchainsInternalMock,
@@ -21,6 +23,8 @@ import {deploySkaleVerifier} from "./tools/deploy/skaleVerifier";
 import {deploySkaleManager} from "./tools/deploy/skaleManager";
 import {deployKeyStorage} from "./tools/deploy/keyStorage";
 import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
+import {deployDKRTester} from "./tools/deploy/test/dkrTester";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {assert} from "chai";
@@ -47,9 +51,11 @@ describe("SkaleVerifier", () => {
     let skaleVerifier: SkaleVerifier;
     let validatorService: ValidatorService;
     let nodes: Nodes;
+    let nodeRotation: NodeRotation;
     let keyStorage: KeyStorage;
     let skaleManager: SkaleManager;
     let skaleDKG: SkaleDKGTester;
+    let dkr: DKRTester;
 
     fastBeforeEach(async () => {
         [validator1, owner] = await ethers.getSigners();
@@ -71,6 +77,8 @@ describe("SkaleVerifier", () => {
         skaleDKG = await deploySkaleDKGTester(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
         await contractManager.setContractsAddress("SchainsInternal", schainsInternal);
+        dkr = await deployDKRTester(contractManager);
+        nodeRotation = await deployNodeRotation(contractManager);
 
         await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
         const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
@@ -361,6 +369,10 @@ describe("SkaleVerifier", () => {
             );
             assert(res.should.be.true);
 
+            const establishedPublicKey = await keyStorage.getCommonPublicKey(bobHash);
+            const previousPublicKeysBeforeRotation =
+                await keyStorage.getAllPreviousPublicKeys(bobHash);
+
             await nodes.connect(validator1).createNode(
                 nodeAddress.address,
                 {
@@ -376,20 +388,6 @@ describe("SkaleVerifier", () => {
             await nodes.connect(owner).initExit(0);
             await skaleManager.nodeExit(0);
 
-            await keyStorage.adding(
-                bobHash,
-                {
-                    x: {
-                        a: "8276253263131369565695687329790911140957927205765534740198480597854608202714",
-                        b: "12500085126843048684532885473768850586094133366876833840698567603558300429943"
-                    },
-                    y: {
-                        a: "7025653765868604607777943964159633546920168690664518432704587317074821855333",
-                        b: "14411459380456065006136894392078433460802915485975038137226267466736619639091"
-                    }
-                }
-            );
-
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
                 "16493689853238003409059452483538012733393673636730410820890208241342865935903",
@@ -401,7 +399,20 @@ describe("SkaleVerifier", () => {
             );
             assert(res.should.be.true);
 
-            await skaleDKG.setSuccessfulDKGPublic(bobHash);
+            const dkrId = await nodeRotation.getActiveDkrId(bobHash);
+            dkrId.should.not.equal(0n);
+            await dkr.setSuccessfulDkrPublic(dkrId);
+            (await nodeRotation.getActiveDkrId(bobHash)).should.equal(0n);
+            (await nodeRotation.getLastSuccessfulDkrId(bobHash)).should.equal(dkrId);
+
+            const publicKeyAfterDkr = await keyStorage.getCommonPublicKey(bobHash);
+            publicKeyAfterDkr.x.a.should.equal(establishedPublicKey.x.a);
+            publicKeyAfterDkr.x.b.should.equal(establishedPublicKey.x.b);
+            publicKeyAfterDkr.y.a.should.equal(establishedPublicKey.y.a);
+            publicKeyAfterDkr.y.b.should.equal(establishedPublicKey.y.b);
+            (await keyStorage.getAllPreviousPublicKeys(bobHash)).length
+                .should.equal(previousPublicKeysBeforeRotation.length);
+
             res = await schains.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
                 "16493689853238003409059452483538012733393673636730410820890208241342865935903",
@@ -441,7 +452,7 @@ describe("SkaleVerifier", () => {
                 "16728155475357375553025720334221543875807222325459385994874825666479685652110",
                 "Bob",
             );
-            assert(res.should.be.false);
+            assert(res.should.be.true);
         });
     });
 });
