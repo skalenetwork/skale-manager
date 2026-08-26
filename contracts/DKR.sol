@@ -133,7 +133,6 @@ interface IDkrNodeRotation is INodeRotation {
     function schainForDkr(DkrId dkrId) external view returns (bytes32 schainHash);
 }
 
-
 /**
  * @title DKR
  * @dev Contains functions to manage distributed key re-sharing.
