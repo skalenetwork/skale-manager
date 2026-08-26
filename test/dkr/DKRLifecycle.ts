@@ -48,10 +48,6 @@ const completeActiveDkr = async (fixture: DkrIntegrationFixture, schainHash: str
     return dkrId;
 };
 
-const readPreviousDkrId = async (fixture: DkrIntegrationFixture, dkrId: bigint) => {
-    return fixture.dkr.getPreviousDkrId(dkrId);
-};
-
 const registerNode = async (
     fixture: DkrIntegrationFixture,
     suffix: string
@@ -458,8 +454,8 @@ describe("DKR lifecycle integration", () => {
             const secondInitialId = await fixture.nodeRotation.getActiveDkrId(secondHash);
 
             firstInitialId.should.not.equal(secondInitialId);
-            (await readPreviousDkrId(fixture, firstInitialId)).should.equal(0n);
-            (await readPreviousDkrId(fixture, secondInitialId)).should.equal(0n);
+            (await fixture.dkr.getPreviousDkrId(firstInitialId)).should.equal(0n);
+            (await fixture.dkr.getPreviousDkrId(secondInitialId)).should.equal(0n);
 
             // Complete in the opposite order from round creation.
             await completeActiveDkr(fixture, secondHash);
@@ -500,10 +496,10 @@ describe("DKR lifecycle integration", () => {
 
             new Set([firstInitialId, secondInitialId, firstNextId, secondNextId]).size
                 .should.equal(4);
-            (await readPreviousDkrId(fixture, firstNextId)).should.equal(firstInitialId);
-            (await readPreviousDkrId(fixture, secondNextId)).should.equal(secondInitialId);
-            (await readPreviousDkrId(fixture, firstNextId)).should.not.equal(secondInitialId);
-            (await readPreviousDkrId(fixture, secondNextId)).should.not.equal(firstInitialId);
+            (await fixture.dkr.getPreviousDkrId(firstNextId)).should.equal(firstInitialId);
+            (await fixture.dkr.getPreviousDkrId(secondNextId)).should.equal(secondInitialId);
+            (await fixture.dkr.getPreviousDkrId(firstNextId)).should.not.equal(secondInitialId);
+            (await fixture.dkr.getPreviousDkrId(secondNextId)).should.not.equal(firstInitialId);
 
             // Complete in the opposite order again and retain independent heads.
             await completeActiveDkr(fixture, secondHash);
