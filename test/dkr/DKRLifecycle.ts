@@ -117,7 +117,7 @@ describe("DKR lifecycle integration", () => {
                 .should.equal(successfulIds[2]);
         });
 
-        it("should serialize exits and keep node registration outside the active round", async () => {
+        it("should block new exits during an active DKR and defer newly registered nodes to future rounds", async () => {
             const activeDkrId = await fixture.nodeRotation.getActiveDkrId(fixture.schainHash);
             const originalReceivers = await fixture.schainsInternal.getNodesInGroup(fixture.schainHash);
             const secondLeavingNode = fixture.nodeById(originalReceivers[0]);
@@ -208,7 +208,7 @@ describe("DKR lifecycle integration", () => {
         });
     });
 
-    describe("replacement availability", () => {
+    describe("without nodes to replace", () => {
         let fixture: DkrIntegrationFixture;
 
         fastBeforeEach(async () => {
@@ -258,7 +258,7 @@ describe("DKR lifecycle integration", () => {
         });
     });
 
-    describe("previous successful transcript", () => {
+    describe("with one prior successful round data", () => {
         let fixture: DkrIntegrationFixture;
 
         fastBeforeEach(async () => {
@@ -269,7 +269,7 @@ describe("DKR lifecycle integration", () => {
             });
         });
 
-        it("should adjudicate a later free-term complaint from the previous DKR", async () => {
+        it("should decide the guilty node in a free-term complaint using previous round data", async () => {
             fixture.dealers.length.should.equal(1);
             const firstDealer = fixture.dealers[0];
             const firstDealerPosition = fixture.receivers.findIndex(
@@ -342,6 +342,7 @@ describe("DKR lifecycle integration", () => {
 
     describe("multiple schains", () => {
         let fixture: DkrIntegrationFixture;
+        let secondHash: string;
 
         const createSecondSchainAndStartRotation = async () => {
             const firstGroup = await fixture.schainsInternal.getNodesInGroup(fixture.schainHash);
@@ -387,10 +388,10 @@ describe("DKR lifecycle integration", () => {
                 nodesCount: 14,
                 schainType: SchainType.MEDIUM_TEST
             });
+            secondHash = await createSecondSchainAndStartRotation();
         });
 
-        it("should isolate concurrent rounds and their successful histories", async () => {
-            const secondHash = await createSecondSchainAndStartRotation();
+        it("should isolate state of concurrent rounds and their successful histories", async () => {
 
             const firstDkrId = await fixture.nodeRotation.getActiveDkrId(fixture.schainHash);
             const secondDkrId = await fixture.nodeRotation.getActiveDkrId(secondHash);
@@ -448,8 +449,7 @@ describe("DKR lifecycle integration", () => {
             (await fixture.nodeRotation.getLastSuccessfulDkrId(secondHash)).should.equal(secondRetryId);
         });
 
-        it("should interleave successful rounds without cross-linking schain histories", async () => {
-            const secondHash = await createSecondSchainAndStartRotation();
+        it("should complete successful rounds without ever conflicting schain histories", async () => {
             const firstInitialId = await fixture.nodeRotation.getActiveDkrId(fixture.schainHash);
             const secondInitialId = await fixture.nodeRotation.getActiveDkrId(secondHash);
 

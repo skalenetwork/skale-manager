@@ -380,7 +380,7 @@ describe("DKR integration", () => {
             const newerId = await nodeRotation.getActiveDkrId(schainHash);
             newerId.should.not.equal(staleId);
 
-            // Expected failure: DKR success currently identifies only the schain, so
+            // Unexpected failure: DKR success currently identifies only the schain, so
             // replaying completion of an old round clears the newer active round.
             await chai.expect(dkr.setSuccessfulDkrPublic(staleId)).to.be.reverted;
             (await nodeRotation.getActiveDkrId(schainHash)).should.equal(newerId);
@@ -390,7 +390,7 @@ describe("DKR integration", () => {
             const second = await startSecondSchainRotation();
             const callback = await registerCallbackMock();
 
-            // Expected failure: finalizeRotation has no DKR ID with which to prove
+            // Unexpected failure: finalizeRotation has no DKR ID with which to prove
             // that this callback belongs to the active round of the supplied schain.
             await chai.expect(
                 callback.finalizeRotation(nodeRotation, second.schainHash)
