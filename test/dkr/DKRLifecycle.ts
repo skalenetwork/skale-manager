@@ -351,7 +351,7 @@ describe("DKR lifecycle integration", () => {
             }
 
             const secondName = "dkr-isolation-b";
-            const secondHash = stringKeccak256(secondName);
+            const hash = stringKeccak256(secondName);
             const deposit = await fixture.schains.getSchainPrice(SchainType.MEDIUM_TEST, 5);
             await fixture.schains.addSchain(
                 fixture.owner,
@@ -368,18 +368,18 @@ describe("DKR lifecycle integration", () => {
                     }]
                 )
             );
-            await fixture.skaleDKG.setSuccessfulDKGPublic(secondHash);
-            await fixture.wallets.rechargeSchainWallet(secondHash, {value: ethers.parseEther("1")});
+            await fixture.skaleDKG.setSuccessfulDKGPublic(hash);
+            await fixture.wallets.rechargeSchainWallet(hash, {value: ethers.parseEther("1")});
             for (const node of firstGroup) {
                 await fixture.nodes.removeNodeFromInMaintenance(node);
             }
 
-            const secondOriginalGroup = await fixture.schainsInternal.getNodesInGroup(secondHash);
+            const secondOriginalGroup = await fixture.schainsInternal.getNodesInGroup(hash);
             firstGroup.some(node => secondOriginalGroup.includes(node)).should.be.false;
             const secondOutgoing = fixture.nodeById(secondOriginalGroup[0]);
             await fixture.nodes.initExit(secondOutgoing.id);
             await fixture.skaleManager.nodeExit(secondOutgoing.id);
-            return secondHash;
+            return hash;
         };
 
         fastBeforeEach(async () => {
@@ -392,7 +392,6 @@ describe("DKR lifecycle integration", () => {
         });
 
         it("should isolate state of concurrent rounds and their successful histories", async () => {
-
             const firstDkrId = await fixture.nodeRotation.getActiveDkrId(fixture.schainHash);
             const secondDkrId = await fixture.nodeRotation.getActiveDkrId(secondHash);
             firstDkrId.should.not.equal(0n);
