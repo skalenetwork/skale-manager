@@ -82,6 +82,9 @@ contract KeyStorage is Permissions, IKeyStorage {
     function finalizePublicKey(
         bytes32 schainHash
     ) external override allow("SkaleDKG") {
+        // TODO(DKR/BITE): Decide how to enforce that two schains cannot finalize
+        // the same public key. This needs a deployment-safe migration/backfill plan
+        // before adding a reverse public-key-to-schain index.
         if (!_isSchainsPublicKeyZero(schainHash)) {
             _previousSchainsPublicKeys[schainHash].push(
                 _schainsPublicKeys[schainHash]

@@ -393,6 +393,7 @@ contract DKR is Permissions, IDKR {
             contractManager.getNodes().isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // TODO: Require the complainant to be a receiver and reject self-complaints.
         require(round.dealers.contains(accused), NodeIsNotDealer(accused));
         require(!round.broadcastNotSent.contains(accused), BroadcastIsNotSent(id, accused));
         require(
@@ -422,6 +423,7 @@ contract DKR is Permissions, IDKR {
             nodes.isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // TODO: Reject responses submitted after the complaint deadline.
         _verifyInputData({
             round: round,
             node: node,
@@ -461,6 +463,7 @@ contract DKR is Permissions, IDKR {
             contractManager.getNodes().isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // TODO: Require the complainant to be a receiver and reject self-complaints.
         require(round.dealers.contains(accused), NodeIsNotDealer(accused));
         require(!round.broadcastNotSent.contains(accused), BroadcastIsNotSent(id, accused));
         require(
@@ -490,6 +493,7 @@ contract DKR is Permissions, IDKR {
             nodes.isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // TODO: Reject responses submitted after the complaint deadline.
         _verifyResponseFreeTermInputData({
             round: round,
             node: node,
@@ -524,6 +528,10 @@ contract DKR is Permissions, IDKR {
 
     function _setSuccessfulDkr(DkrId id) internal {
         _completeAlright(_getRound(id));
+    }
+
+    function _getPreviousDkrId(DkrId id) internal view returns (DkrId previousId) {
+        return _getRound(id).previousId;
     }
 
     // Private
@@ -591,6 +599,8 @@ contract DKR is Permissions, IDKR {
                 previousXCoordinates[i] = previousRound.xCoordinate[dealer];
             }
             for (uint256 i = 0; i < previousDealersNumber; ++i) {
+                // TODO: Use the previous dealer's stored x-coordinate here. The
+                // enumerable-set position is not necessarily its round coordinate.
                 uint256 dealerXCoordinate = i + 1;
                 ISkaleDKG.G2Point memory component =
                     previousRoundData[i].verificationVector[previousIndex].scalarMul(
@@ -664,6 +674,8 @@ contract DKR is Permissions, IDKR {
         );
     }
 
+    // TODO(DKR): Require the exact legacy participant count and index later-round
+    // previousRoundData by dealer order rather than by receiver coordinate.
     function _verifyResponseFreeTermInputData(
         Round storage round,
         uint256 node,
