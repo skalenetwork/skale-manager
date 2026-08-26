@@ -190,7 +190,8 @@ contract NodeRotation is Permissions, IDkrNodeRotation {
     }
 
     function finalizeRotation(bytes32 schain) external override allowTwo("SkaleDKG", "DKR") {
-        // TODO(DKR): Bind DKR completion to its round ID and require it to match - split into one for DKR and one for SkaleDKG
+        // TODO(DKR): Bind DKR completion to its round ID and require it to match
+        // Split into one for DKR and one for SkaleDKG
         _clearSet(_rotations[schain].broadcastSenders);
         _clearSet(_rotations[schain].spareBroadcastSenders);
         _rotations[schain].lastSuccessfulDkrId = _rotations[schain].activeDkrId;
