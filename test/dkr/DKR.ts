@@ -8,6 +8,7 @@ import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {
     ConstantsHolder,
     ContractManager,
+    DkrNodeRotationCallbackMock,
     DKRTester,
     NodeRotation,
     Nodes,
@@ -133,7 +134,7 @@ describe("DKR integration", () => {
     };
 
     const registerCallbackMock = async () => {
-        const callback = await ethers.deployContract("DkrNodeRotationCallbackMock");
+        const callback = await ethers.deployContract("DkrNodeRotationCallbackMock") as unknown as DkrNodeRotationCallbackMock;
         await callback.waitForDeployment();
         await contractManager.setContractsAddress("DKR", callback);
         return callback;
@@ -364,8 +365,11 @@ describe("DKR integration", () => {
         it("should ignore an unknown success callback without clearing an active round", async () => {
             const groupBefore = await currentGroup();
             const callback = await registerCallbackMock();
+            const unknownId = dkrId + 1000n;
 
-            await callback.finalizeRotation(nodeRotation, stringKeccak256("unknown-schain"));
+            await chai.expect(
+                callback.successDkr(nodeRotation, unknownId)
+            ).to.be.revertedWithCustomError(nodeRotation, "DkrIsNotActive");
 
             await assertActiveRoundUnchanged(dkrId, groupBefore);
         });
@@ -388,10 +392,8 @@ describe("DKR integration", () => {
             const second = await startSecondSchainRotation();
             const callback = await registerCallbackMock();
 
-            // Unexpected failure: finalizeRotation has no DKR ID with which to prove
-            // that this callback belongs to the active round of the supplied schain.
             await chai.expect(
-                callback.finalizeRotation(nodeRotation, second.schainHash)
+                callback.successDkr(nodeRotation, second.dkrId)
             ).to.be.reverted;
             (await nodeRotation.getActiveDkrId(schainHash)).should.equal(dkrId);
             (await nodeRotation.getActiveDkrId(second.schainHash)).should.equal(second.dkrId);
