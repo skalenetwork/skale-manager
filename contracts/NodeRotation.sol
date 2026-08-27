@@ -87,7 +87,7 @@ contract NodeRotation is Permissions, IDkrNodeRotation {
     mapping (bytes32 schain => bool wait) public waitForNewNode;
 
     /// @notice Maps a DKR round to its schain.
-    mapping (DkrId dkrId => bytes32 schainHash) public override schainForDkr;
+    mapping (DkrId dkrId => bytes32 schainHash) public schainForDkr;
 
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
 
@@ -189,19 +189,18 @@ contract NodeRotation is Permissions, IDkrNodeRotation {
         emit RotationDelaySkipped(schainHash);
     }
 
-    function finalizeRotation(bytes32 schain) external override allowTwo("SkaleDKG", "DKR") {
-        // TODO(DKR): Bind DKR completion to its round ID and require it to match
-        // Split into one for DKR and one for SkaleDKG
-        _clearSet(_rotations[schain].broadcastSenders);
-        _clearSet(_rotations[schain].spareBroadcastSenders);
-        _rotations[schain].lastSuccessfulDkrId = _rotations[schain].activeDkrId;
-        _rotations[schain].activeDkrId = DkrId.wrap(0);
+    function finalizeRotation(bytes32 schain) external override allow("SkaleDKG") {
+        _finalizeRotation(schain);
     }
 
-    function failDkr(uint256 dkrId, uint256 badNode) external override allow("DKR") {
+    function successDkr(DkrId dkrId) external override allow("DKR") {
+        _finalizeRotation(_getSchainForActiveDkr(dkrId));
+    }
+
+    function failDkr(DkrId dkrId, uint256 badNode) external override allow("DKR") {
         _rotateNode(
             badNode,
-            _getSchainForActiveDkr(DkrId.wrap(dkrId)),
+            _getSchainForActiveDkr(dkrId),
             false,
             true
         );
@@ -567,6 +566,13 @@ contract NodeRotation is Permissions, IDkrNodeRotation {
         IConstantsHolder constants = contractManager.getConstantsHolder();
         _rotations[schainHash].nodeIndex = nodeIndex;
         _rotations[schainHash].freezeUntil = block.timestamp + constants.rotationDelay();
+    }
+
+    function _finalizeRotation(bytes32 schain) private {
+        _clearSet(_rotations[schain].broadcastSenders);
+        _clearSet(_rotations[schain].spareBroadcastSenders);
+        _rotations[schain].lastSuccessfulDkrId = _rotations[schain].activeDkrId;
+        _rotations[schain].activeDkrId = DkrId.wrap(0);
     }
 
     /**

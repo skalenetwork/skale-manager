@@ -51,6 +51,7 @@ function _dkrIdNotEquals(DkrId a, DkrId b) pure returns (bool result) {
     return DkrId.unwrap(a) != DkrId.unwrap(b);
 }
 
+// TODO: move to @skalenetwork/skale-manager-interfaces
 interface IDKR {
     enum Status {
         SUCCESS,
@@ -126,11 +127,12 @@ interface IDKR {
     function setBroadcastTimelimit(uint256 newBroadcastTimelimit) external;
 }
 
+// TODO: move to @skalenetwork/skale-manager-interfaces
 interface IDkrNodeRotation is INodeRotation {
-    function failDkr(uint256 dkrId, uint256 badNode) external;
+    function failDkr(DkrId dkrId, uint256 badNode) external;
+    function successDkr(DkrId dkrId) external;
     function getActiveDkrId(bytes32 schainHash) external view returns (uint256 dkrId);
     function getLastSuccessfulDkrId(bytes32 schainHash) external view returns (uint256 dkrId);
-    function schainForDkr(DkrId dkrId) external view returns (bytes32 schainHash);
 }
 
 
@@ -562,7 +564,7 @@ contract DKR is Permissions, IDKR {
         emit BadGuy(guiltyNode);
         IDkrNodeRotation(
             contractManager.getContract("NodeRotation")
-        ).failDkr(DkrId.unwrap(round.id), guiltyNode);
+        ).failDkr(round.id, guiltyNode);
     }
 
     function _completeBroadcast(Round storage round) private {
@@ -575,7 +577,7 @@ contract DKR is Permissions, IDKR {
         IDkrNodeRotation nodeRotation = IDkrNodeRotation(
             contractManager.getContract("NodeRotation")
         );
-        nodeRotation.finalizeRotation(nodeRotation.schainForDkr(round.id));
+        nodeRotation.successDkr(round.id);
     }
 
     function _getPreviousGlobalVerificationVectorTerm(

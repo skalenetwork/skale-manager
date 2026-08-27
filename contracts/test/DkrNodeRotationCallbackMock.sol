@@ -2,11 +2,11 @@
 
 pragma solidity 0.8.35;
 
-import { IDkrNodeRotation } from "../DKR.sol";
+import { IDkrNodeRotation, DkrId } from "../DKR.sol";
 
 interface IDkrNodeRotationCallbackMock {
     function finalizeRotation(IDkrNodeRotation nodeRotation, bytes32 schainHash) external;
-    function failDkr(IDkrNodeRotation nodeRotation, uint256 dkrId, uint256 badNode) external;
+    function failDkr(IDkrNodeRotation nodeRotation, DkrId dkrId, uint256 badNode) external;
 }
 
 /// @dev Test-only DKR used to simulate DKR-originated NodeRotation callbacks.
@@ -17,7 +17,7 @@ contract DkrNodeRotationCallbackMock is IDkrNodeRotationCallbackMock {
 
     function failDkr(
         IDkrNodeRotation nodeRotation,
-        uint256 dkrId,
+        DkrId dkrId,
         uint256 badNode
     )
         external

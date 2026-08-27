@@ -380,8 +380,6 @@ describe("DKR integration", () => {
             const newerId = await nodeRotation.getActiveDkrId(schainHash);
             newerId.should.not.equal(staleId);
 
-            // Unexpected failure: DKR success currently identifies only the schain, so
-            // replaying completion of an old round clears the newer active round.
             await chai.expect(dkr.setSuccessfulDkrPublic(staleId)).to.be.reverted;
             (await nodeRotation.getActiveDkrId(schainHash)).should.equal(newerId);
         });
