@@ -51,6 +51,7 @@ function _dkrIdNotEquals(DkrId a, DkrId b) pure returns (bool result) {
     return DkrId.unwrap(a) != DkrId.unwrap(b);
 }
 
+// TODO: move to @skalenetwork/skale-manager-interfaces
 interface IDKR {
     enum Status {
         SUCCESS,
@@ -126,6 +127,14 @@ interface IDKR {
     function setBroadcastTimelimit(uint256 newBroadcastTimelimit) external;
 }
 
+// TODO: move to @skalenetwork/skale-manager-interfaces
+interface IDkrNodeRotation is INodeRotation {
+    function failDkr(DkrId dkrId, uint256 badNode) external;
+    function successDkr(DkrId dkrId) external;
+    function getActiveDkrId(bytes32 schainHash) external view returns (uint256 dkrId);
+    function getLastSuccessfulDkrId(bytes32 schainHash) external view returns (uint256 dkrId);
+}
+
 
 /**
  * @title DKR
@@ -192,6 +201,7 @@ contract DKR is Permissions, IDKR {
     error BroadcastIsNotSent(DkrId id, uint256 node);
     error AlrightNotNeeded(DkrId id, uint256 node);
     error NodeDoesNotExist(uint256 node);
+    error NodeIsNotReceiver(uint256 node);
     error NodeIsNotDealer(uint256 node);
     error NodeIsNotAccused(uint256 node);
     error AccessDenied(address caller);
@@ -279,15 +289,14 @@ contract DKR is Permissions, IDKR {
             secretKeyContribution.length == round.receivers.length(),
             IncorrectNumberOfSecretKeyShares(secretKeyContribution.length, round.receivers.length())
         );
-        if (round.startedAt + broadcastTimelimit <= block.timestamp) {
-            _failure(round, node);
-            return;
-        }
-
         require(
             round.broadcastNotSent.remove(node),
             BroadcastNotNeeded(id, node)
         );
+        if (round.startedAt + broadcastTimelimit <= block.timestamp) {
+            _failure(round, node);
+            return;
+        }
         round.broadcastDataHash[node] = _hashBroadcastData(
             secretKeyContribution,
             verificationVector
@@ -318,15 +327,14 @@ contract DKR is Permissions, IDKR {
         );
         require(round.status == Status.ALRIGHT, NotAlrightPhase(id));
 
-        if (round.startedAt + alrightTimelimit <= block.timestamp) {
-            _failure(round, node);
-            return;
-        }
-
         require(
             round.alrightNotSent.remove(node),
             AlrightNotNeeded(id, node)
         );
+        if (round.startedAt + alrightTimelimit <= block.timestamp) {
+            _failure(round, node);
+            return;
+        }
 
         emit AllDataReceived(id, node);
         if (round.alrightNotSent.length() == 0) {
@@ -347,6 +355,9 @@ contract DKR is Permissions, IDKR {
             contractManager.getNodes().isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // Allow only nodes in the round, but from the distributors only allow those who broadcasted
+        require(round.receivers.contains(node), NodeIsNotReceiver(node));
+        require(!round.broadcastNotSent.contains(node), BroadcastIsNotSent(id, node));
 
         if (round.status == Status.BROADCAST &&
             round.broadcastNotSent.contains(accused) &&
@@ -384,6 +395,7 @@ contract DKR is Permissions, IDKR {
             contractManager.getNodes().isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // TODO: Require the complainant to be a receiver and reject self-complaints.
         require(round.dealers.contains(accused), NodeIsNotDealer(accused));
         require(!round.broadcastNotSent.contains(accused), BroadcastIsNotSent(id, accused));
         require(
@@ -413,6 +425,7 @@ contract DKR is Permissions, IDKR {
             nodes.isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // TODO: Reject responses submitted after the complaint deadline.
         _verifyInputData({
             round: round,
             node: node,
@@ -452,6 +465,7 @@ contract DKR is Permissions, IDKR {
             contractManager.getNodes().isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // TODO: Require the complainant to be a receiver and reject self-complaints.
         require(round.dealers.contains(accused), NodeIsNotDealer(accused));
         require(!round.broadcastNotSent.contains(accused), BroadcastIsNotSent(id, accused));
         require(
@@ -481,6 +495,7 @@ contract DKR is Permissions, IDKR {
             nodes.isNodeExist(msg.sender, node),
             NodeDoesNotExist(node)
         );
+        // TODO: Reject responses submitted after the complaint deadline.
         _verifyResponseFreeTermInputData({
             round: round,
             node: node,
@@ -513,6 +528,14 @@ contract DKR is Permissions, IDKR {
         broadcastTimelimit = newBroadcastTimelimit;
     }
 
+    function _setSuccessfulDkr(DkrId id) internal {
+        _completeAlright(_getRound(id));
+    }
+
+    function _getPreviousDkrId(DkrId id) internal view returns (DkrId previousId) {
+        return _getRound(id).previousId;
+    }
+
     // Private
 
     function _fillEnumerableSet(
@@ -539,6 +562,9 @@ contract DKR is Permissions, IDKR {
         round.status = Status.FAILED;
         round.guiltyNode = guiltyNode;
         emit BadGuy(guiltyNode);
+        IDkrNodeRotation(
+            contractManager.getContract("NodeRotation")
+        ).failDkr(round.id, guiltyNode);
     }
 
     function _completeBroadcast(Round storage round) private {
@@ -548,6 +574,10 @@ contract DKR is Permissions, IDKR {
 
     function _completeAlright(Round storage round) private {
         round.status = Status.SUCCESS;
+        IDkrNodeRotation nodeRotation = IDkrNodeRotation(
+            contractManager.getContract("NodeRotation")
+        );
+        nodeRotation.successDkr(round.id);
     }
 
     function _getPreviousGlobalVerificationVectorTerm(
@@ -571,6 +601,8 @@ contract DKR is Permissions, IDKR {
                 previousXCoordinates[i] = previousRound.xCoordinate[dealer];
             }
             for (uint256 i = 0; i < previousDealersNumber; ++i) {
+                // TODO: Use the previous dealer's stored x-coordinate here. The
+                // enumerable-set position is not necessarily its round coordinate.
                 uint256 dealerXCoordinate = i + 1;
                 ISkaleDKG.G2Point memory component =
                     previousRoundData[i].verificationVector[previousIndex].scalarMul(
@@ -644,6 +676,8 @@ contract DKR is Permissions, IDKR {
         );
     }
 
+    // TODO(DKR): Require the exact legacy participant count and index later-round
+    // previousRoundData by dealer order rather than by receiver coordinate.
     function _verifyResponseFreeTermInputData(
         Round storage round,
         uint256 node,

@@ -31,7 +31,7 @@ import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { IRandom } from "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
-import { DkrId, IDKR } from "./DKR.sol";
+import { DkrId, IDKR, IDkrNodeRotation } from "./DKR.sol";
 
 import { Permissions } from "./Permissions.sol";
 import { Random } from "./utils/Random.sol";
@@ -48,12 +48,11 @@ interface ILegacySkaleDKG is ISkaleDKG {
     ) external view returns (bytes32 hash);
 }
 
-
 /**
  * @title NodeRotation
  * @dev This contract handles all node rotation functionality.
  */
-contract NodeRotation is Permissions, INodeRotation {
+contract NodeRotation is Permissions, IDkrNodeRotation {
     using EnumerableSet for EnumerableSet.UintSet;
     using Random for IRandom.RandomGenerator;
 
@@ -150,7 +149,7 @@ contract NodeRotation is Permissions, INodeRotation {
         }
         _checkBeforeRotation(schainHash, nodeIndex);
         _startRotation(schainHash, nodeIndex, schainsInternal);
-        rotateNode(nodeIndex, schainHash, true, false);
+        _rotateNode(nodeIndex, schainHash, true, false);
         return (schainsInternal.getActiveSchain(nodeIndex) == bytes32(0) ? true : false, true);
     }
 
@@ -190,11 +189,21 @@ contract NodeRotation is Permissions, INodeRotation {
         emit RotationDelaySkipped(schainHash);
     }
 
-    function finalizeRotation(bytes32 schain) external override allowTwo("SkaleDKG", "DKR") {
-        _clearSet(_rotations[schain].broadcastSenders);
-        _clearSet(_rotations[schain].spareBroadcastSenders);
-        _rotations[schain].lastSuccessfulDkrId = _rotations[schain].activeDkrId;
-        _rotations[schain].activeDkrId = DkrId.wrap(0);
+    function finalizeRotation(bytes32 schain) external override allow("SkaleDKG") {
+        _finalizeRotation(schain);
+    }
+
+    function successDkr(DkrId dkrId) external override allow("DKR") {
+        _finalizeRotation(_getSchainForActiveDkr(dkrId));
+    }
+
+    function failDkr(DkrId dkrId, uint256 badNode) external override allow("DKR") {
+        _rotateNode(
+            badNode,
+            _getSchainForActiveDkr(dkrId),
+            false,
+            true
+        );
     }
 
     /**
@@ -299,6 +308,24 @@ contract NodeRotation is Permissions, INodeRotation {
         });
     }
 
+    function getActiveDkrId(bytes32 schainHash)
+        external
+        view
+        override
+        returns (uint256 dkrId)
+    {
+        return DkrId.unwrap(_rotations[schainHash].activeDkrId);
+    }
+
+    function getLastSuccessfulDkrId(bytes32 schainHash)
+        external
+        view
+        override
+        returns (uint256 dkrId)
+    {
+        return DkrId.unwrap(_rotations[schainHash].lastSuccessfulDkrId);
+    }
+
     /**
      * @dev Returns leaving history for a given node.
      */
@@ -396,6 +423,45 @@ contract NodeRotation is Permissions, INodeRotation {
         allowThree("SkaleDKG", "SkaleManager", "Schains")
         returns (uint256 newNode)
     {
+        return _rotateNode(nodeIndex, schainHash, shouldDelay, isBadNode);
+    }
+
+    /**
+     * @dev Allows SkaleManager, Schains, and SkaleDKG contracts to
+     * pseudo-randomly select a new Node for an Schain.
+     *
+     * Requirements:
+     *
+     * - Schain is active.
+     * - A free node already exists.
+     * - Free space can be allocated from the node.
+     */
+    function selectNodeToGroup(bytes32 schainHash)
+        public
+        override
+        allowThree("SkaleManager", "Schains", "SkaleDKG")
+        returns (uint256 nodeIndex)
+    {
+        return _selectNodeToGroup(schainHash);
+    }
+
+    function isNewNodeFound(bytes32 schainHash) public view override returns (bool found) {
+        return _rotations[schainHash]
+                    .newNodeIndexes.contains(_rotations[schainHash].newNodeIndex) &&
+               _rotations[schainHash]
+                    .previousNodes[_rotations[schainHash].newNodeIndex] ==
+                        _rotations[schainHash].nodeIndex;
+    }
+
+    function _rotateNode(
+        uint256 nodeIndex,
+        bytes32 schainHash,
+        bool shouldDelay,
+        bool isBadNode
+    )
+        private
+        returns (uint256 newNode)
+    {
         ISchainsInternal schainsInternal =
             ISchainsInternal(contractManager.getContract("SchainsInternal"));
         schainsInternal.removeNodeFromSchain(nodeIndex, schainHash);
@@ -422,26 +488,11 @@ contract NodeRotation is Permissions, INodeRotation {
         } else {
             schainsInternal.removeNodeFromExceptions(schainHash, nodeIndex);
         }
-        newNode = selectNodeToGroup(schainHash);
+        newNode = _selectNodeToGroup(schainHash);
         _finishRotation(schainHash, nodeIndex, newNode, shouldDelay);
     }
 
-    /**
-     * @dev Allows SkaleManager, Schains, and SkaleDKG contracts to
-     * pseudo-randomly select a new Node for an Schain.
-     *
-     * Requirements:
-     *
-     * - Schain is active.
-     * - A free node already exists.
-     * - Free space can be allocated from the node.
-     */
-    function selectNodeToGroup(bytes32 schainHash)
-        public
-        override
-        allowThree("SkaleManager", "Schains", "SkaleDKG")
-        returns (uint256 nodeIndex)
-    {
+    function _selectNodeToGroup(bytes32 schainHash) private returns (uint256 nodeIndex) {
         ISchainsInternal schainsInternal =
             ISchainsInternal(contractManager.getContract("SchainsInternal"));
         INodes nodes = INodes(contractManager.getContract("Nodes"));
@@ -461,14 +512,6 @@ contract NodeRotation is Permissions, INodeRotation {
         schainsInternal.addSchainForNode(nodes, nodeIndex, schainHash);
         schainsInternal.setException(schainHash, nodeIndex);
         schainsInternal.setNodeInGroup(schainHash, nodeIndex);
-    }
-
-    function isNewNodeFound(bytes32 schainHash) public view override returns (bool found) {
-        return _rotations[schainHash]
-                    .newNodeIndexes.contains(_rotations[schainHash].newNodeIndex) &&
-               _rotations[schainHash]
-                    .previousNodes[_rotations[schainHash].newNodeIndex] ==
-                        _rotations[schainHash].nodeIndex;
     }
 
 
@@ -523,6 +566,13 @@ contract NodeRotation is Permissions, INodeRotation {
         IConstantsHolder constants = contractManager.getConstantsHolder();
         _rotations[schainHash].nodeIndex = nodeIndex;
         _rotations[schainHash].freezeUntil = block.timestamp + constants.rotationDelay();
+    }
+
+    function _finalizeRotation(bytes32 schain) private {
+        _clearSet(_rotations[schain].broadcastSenders);
+        _clearSet(_rotations[schain].spareBroadcastSenders);
+        _rotations[schain].lastSuccessfulDkrId = _rotations[schain].activeDkrId;
+        _rotations[schain].activeDkrId = DkrId.wrap(0);
     }
 
     /**
@@ -605,6 +655,8 @@ contract NodeRotation is Permissions, INodeRotation {
     }
 
     function _checkBeforeRotation(bytes32 schainHash, uint256 nodeIndex) private {
+        // TODO(DKR): Decide whether the first DKR must wait until the last
+        // successful DKG key has passed rotationDelay and become effective.
         require(
             // Only checks the FIRST DKG after introduction of DKR
             ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash),

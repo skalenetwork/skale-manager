@@ -51,7 +51,7 @@
     "@skalenetwork/marionette-interfaces": "^0.0.0-main.6",
     "@skalenetwork/paymaster-interfaces": "^1.0.1",
     "@skalenetwork/skale-manager-interfaces": "3.3.0-bite-dkg.10",
-    "@skalenetwork/upgrade-tools": "4.0.0-develop.12",
+    "@skalenetwork/upgrade-tools": "4.0.0-develop.13",
     "@typechain/hardhat": "^9.1.0",
     "dotenv": "^17.2.3",
     "ethers": "^6.14.0",

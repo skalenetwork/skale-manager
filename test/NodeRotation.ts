@@ -1,6 +1,6 @@
 import {ethers} from "hardhat";
 import {fastBeforeEach} from "./tools/mocha";
-import {ConstantsHolder, NodeRotation, Nodes, Schains, SchainsInternal, SkaleDKGTester, SkaleManager, ValidatorService, Wallets} from "../typechain-types";
+import {ConstantsHolder, DKR, NodeRotation, Nodes, Schains, SchainsInternal, SkaleDKGTester, SkaleManager, ValidatorService, Wallets} from "../typechain-types";
 import {deployNodes} from "./tools/deploy/nodes";
 import {deployContractManager} from "./tools/deploy/contractManager";
 import {HDNodeWallet, Wallet} from "ethers";
@@ -15,9 +15,10 @@ import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
 import {stringKeccak256} from "./tools/hashes";
 import _ from "underscore";
 import {deploySkaleDKGTester} from "./tools/deploy/test/skaleDKGTester";
-import {skipTime} from "./tools/time";
 import {deployWallets} from "./tools/deploy/wallets";
 import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {deployDKR} from "./tools/deploy/dkr";
+import {skipTime} from "./tools/time";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
@@ -31,6 +32,7 @@ describe("NodeRotation", () => {
     let validatorId: bigint;
 
     let constantsHolder: ConstantsHolder;
+    let dkr: DKR;
     let nodeRotation: NodeRotation;
     let nodes: Nodes;
     let schains: Schains;
@@ -46,6 +48,7 @@ describe("NodeRotation", () => {
         validatorService = await deployValidatorService(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
+        dkr = await deployDKR(contractManager);
         nodes = await deployNodes(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG);
@@ -162,69 +165,111 @@ describe("NodeRotation", () => {
 
                 describe("when not entering node fails DKG", () => {
                     let failingNode: RegisteredNode;
+                    let goodNode: RegisteredNode;
+                    let dkrId: bigint;
+
+                    const verificationVector = Array(11).fill(
+                        {
+                            x: {
+                                a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                                b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417",
+                            },
+                            y: {
+                                a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                                b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                            }
+                        }
+                    ) as {x: {a: string, b: string}, y: {a: string, b: string}}[];
+
+                    let encryptedSecretKeyContribution:
+                        {share: string, publicKey: [string, string]}[];
 
                     fastBeforeEach(async () => {
-                        let node = _.sample(chainNodes.filter(chainNode => chainNode !== exitingNode))
-                        if (node === undefined) {
-                            throw new Error("Can't pick a node");
-                        }
-                        failingNode = node;
-
-                        do {
-                            node = _.sample(chainNodes.filter(
-                                chainNode => ![exitingNode, failingNode, enteringNode].includes(chainNode)
-                            ));
-                            if (node === undefined) {
-                                throw new Error("Can't pick a node");
-                            }
-                        } while (! await nodeRotation.shouldSendBroadcast(schainHash, node.id));
-                        // The good node should be able to send broadcast
-                        const goodNode = node;
-
-                        // farther keys are not valid
-                        const verificationVector = Array(11).fill(
-                            {
-                                x: {
-                                    a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
-                                    b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417",
-                                },
-                                y: {
-                                    a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
-                                    b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
-                                }
-                            }
-                        ) as {x: {a: string, b: string}, y: {a: string, b: string}}[];
-
-                        const encryptedSecretKeyContribution =
-                            Array(chainNodes.length).fill(
+                        encryptedSecretKeyContribution = Array(chainNodes.length).fill(
                             {
                                 share: "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f",
                                 publicKey: [
                                     "0xfdf8101e91bd658fa1cea6fdd75adb8542951ce3d251cdaa78f43493dad730b5",
                                     "0x9d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf"
                                 ]
-                            }) as {share: string, publicKey: [string, string]}[];
-
-                        const rotation = await nodeRotation.getRotation(schainHash);
-                        await skaleDKG.connect(goodNode.wallet).broadcast(
-                            schainHash,
-                            goodNode.id,
-                            verificationVector,
-                            encryptedSecretKeyContribution,
-                            rotation.rotationCounter
+                            }
                         );
 
-                        await skipTime(await constantsHolder.complaintTimeLimit());
+                        const dealers: RegisteredNode[] = [];
+                        for (const node of chainNodes) {
+                            if (
+                                node !== exitingNode &&
+                                await nodeRotation.shouldSendBroadcast(schainHash, node.id)
+                            ) {
+                                dealers.push(node);
+                            }
+                        }
 
-                        await skaleDKG.connect(goodNode.wallet).complaint(schainHash, goodNode.id, failingNode.id);
+                        const node = _.sample(dealers);
+                        if (node === undefined) {
+                            throw new Error("Can't pick a node");
+                        }
+                        failingNode = node;
+
+                        const broadcastingNode = _.sample(dealers.filter(
+                            dealer => dealer !== failingNode
+                        ));
+                        if (broadcastingNode === undefined) {
+                            throw new Error("Can't pick a node");
+                        }
+                        goodNode = broadcastingNode;
+
+                        dkrId = await nodeRotation.getActiveDkrId(schainHash);
                     });
+
+                    const assertFailureRotationTimestamp = async () => {
+                        const exitingNodeFinishTs =
+                            (await nodeRotation.getLeavingHistory(exitingNode.id))[0].finishedRotation;
+                        const failingNodeFinishTs =
+                            (await nodeRotation.getLeavingHistory(failingNode.id))[0].finishedRotation;
+
+                        failingNodeFinishTs.should.be.equal(exitingNodeFinishTs + 1n);
+                    };
 
                     it("a node that fails DKG after node exit " +
                        "should have finish_ts 1 sec bigger than a leaving node", async () => {
-                        const exitingNodeFinishTs = (await nodeRotation.getLeavingHistory(exitingNode.id))[0].finishedRotation;
-                        const failingNodeFinishTs = (await nodeRotation.getLeavingHistory(failingNode.id))[0].finishedRotation;
+                        await dkr.connect(goodNode.wallet).broadcast(
+                            goodNode.id,
+                            dkrId,
+                            verificationVector,
+                            encryptedSecretKeyContribution
+                        );
+                        await skipTime(await dkr.broadcastTimelimit());
+                        await dkr.connect(goodNode.wallet).complaintTimeout(
+                            goodNode.id,
+                            dkrId,
+                            failingNode.id
+                        );
 
-                        failingNodeFinishTs.should.be.equal(exitingNodeFinishTs + 1n);
+                        await assertFailureRotationTimestamp();
+                    })
+
+                    it("should allow a receiver that is not a dealer to report a timeout", async () => {
+                        await skipTime(await dkr.broadcastTimelimit());
+                        await dkr.connect(enteringNode.wallet).complaintTimeout(
+                            enteringNode.id,
+                            dkrId,
+                            failingNode.id
+                        );
+
+                        await assertFailureRotationTimestamp();
+                    })
+
+                    it("should reject a timeout report from a dealer that did not broadcast", async () => {
+                        await skipTime(await dkr.broadcastTimelimit());
+                        await chai.expect(
+                            dkr.connect(failingNode.wallet).complaintTimeout(
+                                failingNode.id,
+                                dkrId,
+                                goodNode.id
+                            )
+                        ).to.be.revertedWithCustomError(dkr, "BroadcastIsNotSent")
+                            .withArgs(dkrId, failingNode.id);
                     })
                 });
             })

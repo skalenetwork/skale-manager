@@ -29,4 +29,12 @@ interface IFieldOperationsTester {
         external
         view
         returns (ISkaleDKG.G2Point memory result);
+
+    function scalarMul(
+        ISkaleDKG.G2Point memory point,
+        uint256 scalar
+    )
+        external
+        view
+        returns (ISkaleDKG.G2Point memory product);
 }

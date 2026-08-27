@@ -1,6 +1,9 @@
+// cspell:words decryptable
+
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {ContractManager,
+         DKR,
          DelegationController,
          KeyStorage,
          Nodes,
@@ -26,6 +29,7 @@ import {deploySkaleDKG} from "./tools/deploy/skaleDKG";
 import {deploySkaleToken} from "./tools/deploy/skaleToken";
 import {deploySlashingTable} from "./tools/deploy/slashingTable";
 import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {deployDKR} from "./tools/deploy/dkr";
 import {deploySkaleManager} from "./tools/deploy/skaleManager";
 import {deployWallets} from "./tools/deploy/wallets";
 import {ethers} from "hardhat";
@@ -34,6 +38,7 @@ import {assert, expect} from "chai";
 import {BytesLike, ContractTransactionResponse, Wallet} from "ethers";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
+import {getBroadcastingNodes} from "./tools/rotation";
 import {schainParametersType, SchainType} from "./tools/types";
 import {fastBeforeEach} from "./tools/mocha";
 
@@ -81,6 +86,7 @@ describe("SkaleDKG", () => {
     let validatorService: ValidatorService;
     let slashingTable: SlashingTable;
     let delegationController: DelegationController;
+    let dkr: DKR;
     let nodes: Nodes;
     let nodeRotation: NodeRotation;
     let skaleManager: SkaleManager;
@@ -118,6 +124,7 @@ describe("SkaleDKG", () => {
         slashingTable = await deploySlashingTable(contractManager);
         delegationController = await deployDelegationController(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
+        dkr = await deployDKR(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         wallets = await deployWallets(contractManager);
 
@@ -418,6 +425,263 @@ describe("SkaleDKG", () => {
 
             await schains.deleteSchainByRoot("d2");
             (await skaleDKG.isChannelOpened(stringKeccak256("d2"))).should.be.false;
+        });
+
+        it.skip("should not allow two schains to finalize the same public key", async () => {
+            // This invariant becomes especially important after BITE: sharing one
+            // public key between schains could make encrypted data cross-chain
+            // decryptable. It is not critical to today's flow, but must never be
+            // possible in that future model. Because the contracts are deployed,
+            // migration/backfilling of a uniqueness index remains TBD.
+
+            // Under assumption that 2/3 of nodes follow the protocol,
+            // receiving of 2 identical public keys is practically impossible.
+            // However the case will be discussed.
+            const schainNames = ["unique-key-a", "unique-key-b"];
+            const deposit = await schains.getSchainPrice(4, 5);
+
+            for (const name of schainNames) {
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.TEST,
+                            nonce: 0,
+                            name,
+                            originator: ethers.ZeroAddress,
+                            options: []
+                        }]
+                    )
+                );
+                await wallets.rechargeSchainWallet(stringKeccak256(name), {
+                    value: ethers.parseEther("1")
+                });
+            }
+
+            const completeUntilLastAlright = async (name: string) => {
+                const schainHash = stringKeccak256(name);
+                const group = await schainsInternal.getNodesInGroup(schainHash);
+                const rotation = await nodeRotation.getRotation(schainHash);
+
+                for (const node of group) {
+                    const nodeIndex = Number(node);
+                    await skaleDKG.connect(validators[nodeIndex].nodeAddress).broadcast(
+                        schainHash,
+                        node,
+                        verificationVectors[nodeIndex],
+                        encryptedSecretKeyContributions[nodeIndex],
+                        rotation.rotationCounter
+                    );
+                }
+                await skaleDKG.connect(validators[Number(group[0])].nodeAddress).alright(
+                    schainHash,
+                    group[0]
+                );
+
+                return {schainHash, lastNode: group[1]};
+            };
+
+            const first = await completeUntilLastAlright(schainNames[0]);
+            await skaleDKG.connect(validators[Number(first.lastNode)].nodeAddress).alright(
+                first.schainHash,
+                first.lastNode
+            );
+
+            const second = await completeUntilLastAlright(schainNames[1]);
+            // Known protocol gap: KeyStorage currently indexes keys only by
+            // schain, so the second completion succeeds instead of reverting.
+            await expect(
+                skaleDKG.connect(validators[Number(second.lastNode)].nodeAddress).alright(
+                    second.schainHash,
+                    second.lastNode
+                )
+            ).to.be.revertedWith("two chains cannot have the same public key");
+        });
+
+        it("should keep distinct public keys isolated between schains", async () => {
+            const alternativeVerificationVector = [{
+                x: {
+                    a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                    b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417"
+                },
+                y: {
+                    a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                    b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                }
+            }];
+            const alternativeEncryptedContributions: {
+                share: string,
+                publicKey: [string, string]
+            }[] = [
+                {
+                    share: "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f",
+                    publicKey: [
+                        "0xfdf8101e91bd658fa1cea6fdd75adb8542951ce3d251cdaa78f43493dad730b5",
+                        "0x9d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf"
+                    ]
+                },
+                {
+                    share: "0x7232f27fdfe521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e1810",
+                    publicKey: [
+                        "0x086ff076abe442563ae9b8938d483ae581f4de2ee54298b3078289bbd85250c8",
+                        "0xdf956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77"
+                    ]
+                }
+            ];
+            const schainNames = ["isolated-key-a", "isolated-key-b"];
+            const deposit = await schains.getSchainPrice(4, 5);
+
+            for (const name of schainNames) {
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.TEST,
+                            nonce: 0,
+                            name,
+                            originator: ethers.ZeroAddress,
+                            options: []
+                        }]
+                    )
+                );
+                await wallets.rechargeSchainWallet(stringKeccak256(name), {
+                    value: ethers.parseEther("1")
+                });
+            }
+
+            const completeDkg = async (name: string, useAlternativeData: boolean) => {
+                const schainHash = stringKeccak256(name);
+                const group = await schainsInternal.getNodesInGroup(schainHash);
+                const rotation = await nodeRotation.getRotation(schainHash);
+                for (const node of group) {
+                    const nodeIndex = Number(node);
+                    await skaleDKG.connect(validators[nodeIndex].nodeAddress).broadcast(
+                        schainHash,
+                        node,
+                        useAlternativeData
+                            ? alternativeVerificationVector
+                            : verificationVectors[nodeIndex],
+                        useAlternativeData
+                            ? alternativeEncryptedContributions
+                            : encryptedSecretKeyContributions[nodeIndex],
+                        rotation.rotationCounter
+                    );
+                }
+                for (const node of group) {
+                    await skaleDKG.connect(validators[Number(node)].nodeAddress).alright(
+                        schainHash,
+                        node
+                    );
+                }
+                return schainHash;
+            };
+
+            const firstHash = await completeDkg(schainNames[0], false);
+            const firstKeyBeforeSecondDkg = await keyStorage.getCommonPublicKey(firstHash);
+            const secondHash = await completeDkg(schainNames[1], true);
+            const firstKeyAfterSecondDkg = await keyStorage.getCommonPublicKey(firstHash);
+            const secondKey = await keyStorage.getCommonPublicKey(secondHash);
+
+            expect(firstKeyAfterSecondDkg).to.deep.equal(firstKeyBeforeSecondDkg);
+            expect(secondKey).not.to.deep.equal(firstKeyAfterSecondDkg);
+            expect(await keyStorage.getAllPreviousPublicKeys(firstHash)).to.be.empty;
+            expect(await keyStorage.getAllPreviousPublicKeys(secondHash)).to.be.empty;
+        });
+
+        it("should keep node rotation on legacy DKG until the initial round completes", async () => {
+            const testSchainName = "unfinished-initial-dkg";
+            const schainHash = stringKeccak256(testSchainName);
+            const deposit = await schains.getSchainPrice(4, 5);
+            await schains.addSchain(
+                validator1.address,
+                deposit,
+                ethers.AbiCoder.defaultAbiCoder().encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: testSchainName,
+                        originator: ethers.ZeroAddress,
+                        options: []
+                    }]
+                )
+            );
+
+            const [exitingNode] = await schainsInternal.getNodesInGroup(schainHash);
+            // freezeSchains validates the initial DKG before the node can even
+            // enter Leaving state, so the rejection correctly occurs at initExit.
+            await expect(nodes.initExit(exitingNode))
+                .to.be.revertedWithCustomError(nodeRotation, "DKGDidNotFinish")
+                .withArgs(schainHash);
+
+            expect(await nodeRotation.getActiveDkrId(schainHash)).to.equal(0n);
+            expect(await skaleDKG.isChannelOpened(schainHash)).to.be.true;
+        });
+
+        it("should not start the first DKR before the initial DKG key becomes effective", async () => {
+            const testSchainName = "immature-initial-dkg";
+            const schainHash = stringKeccak256(testSchainName);
+            const deposit = await schains.getSchainPrice(4, 5);
+            await schains.addSchain(
+                validator1.address,
+                deposit,
+                ethers.AbiCoder.defaultAbiCoder().encode(
+                    [schainParametersType],
+                    [{
+                        lifetime: 5,
+                        typeOfSchain: SchainType.TEST,
+                        nonce: 0,
+                        name: testSchainName,
+                        originator: ethers.ZeroAddress,
+                        options: []
+                    }]
+                )
+            );
+            await wallets.rechargeSchainWallet(schainHash, {value: ethers.parseEther("1")});
+
+            const group = await schainsInternal.getNodesInGroup(schainHash);
+            const rotation = await nodeRotation.getRotation(schainHash);
+            for (const node of group) {
+                const nodeIndex = Number(node);
+                await skaleDKG.connect(validators[nodeIndex].nodeAddress).broadcast(
+                    schainHash,
+                    node,
+                    verificationVectors[nodeIndex],
+                    encryptedSecretKeyContributions[nodeIndex],
+                    rotation.rotationCounter
+                );
+            }
+            for (const node of group) {
+                await skaleDKG.connect(validators[Number(node)].nodeAddress).alright(
+                    schainHash,
+                    node
+                );
+            }
+
+            await nodes.createNode(validators[0].nodeAddress.address, {
+                port: 8545,
+                nonce: 0,
+                ip: "0x7f000099",
+                publicIp: "0x7f000099",
+                publicKey: validatorsPublicKey[0],
+                name: "immature-spare",
+                domainName: "some.domain.name"
+            });
+
+            // Known open design question: NodeRotation currently checks only that
+            // DKG succeeded, not that rotationDelay elapsed and its key took effect.
+            // The maturity guard belongs to freezeSchains/_checkBeforeRotation,
+            // before initExit is allowed to mark the node as Leaving.
+            await expect(nodes.initExit(group[0]))
+                .to.be.revertedWith("DKG key has not become active yet");
+            expect(await nodeRotation.getActiveDkrId(schainHash)).to.equal(0n);
         });
 
         describe("when 2-node schain is created", () => {
@@ -1543,6 +1807,10 @@ describe("SkaleDKG", () => {
 
             assert.equal((await skaleDKG.getNumberOfBroadcasted(stringKeccak256(schainName))).toString(), "0");
             assert.equal((await skaleDKG.getChannelStartedTime(stringKeccak256(schainName))).toString(), timestamp?.toString());
+            // A failed initial DKG is still handled by the legacy retry path.
+            // DKR does not exist for this schain until that initial DKG succeeds.
+            expect(await nodeRotation.getActiveDkrId(stringKeccak256(schainName))).to.equal(0n);
+            expect(await skaleDKG.isChannelOpened(stringKeccak256(schainName))).to.be.true;
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
@@ -1598,6 +1866,29 @@ describe("SkaleDKG", () => {
                 stringKeccak256(schainName),
                 1
             );
+
+            const schainHash = stringKeccak256(schainName);
+            expect(await skaleDKG.isChannelOpened(schainHash)).to.be.false;
+            expect(await skaleDKG.getTimeOfLastSuccessfulDKG(schainHash)).to.be.greaterThan(0n);
+            expect(await nodeRotation.getActiveDkrId(schainHash)).to.equal(0n);
+
+            await nodes.createNode(validators[0].nodeAddress.address, {
+                port: 8545,
+                nonce: 0,
+                ip: "0x7f000004",
+                publicIp: "0x7f000004",
+                publicKey: validatorsPublicKey[0],
+                name: "d204",
+                domainName: "some.domain.name"
+            });
+            await skipTime(43200);
+            await nodes.initExit(1);
+            await skaleManager.nodeExit(1);
+
+            // Once the retried initial DKG is successful and effective, the next
+            // key operation is a DKR round rather than another legacy DKG round.
+            expect(await nodeRotation.getActiveDkrId(schainHash)).not.to.equal(0n);
+            expect(await skaleDKG.isChannelOpened(schainHash)).to.be.false;
         });
 
         it("should process nodeExit 2 times correctly", async () => {
@@ -1708,11 +1999,68 @@ describe("SkaleDKG", () => {
             assert.equal(comPubKey.x.b.toString() !== "0", true);
             assert.equal(comPubKey.y.a.toString() !== "0", true);
             assert.equal(comPubKey.y.b.toString() !== "0", true);
+            const successfulDkgTimestamp =
+                await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName));
+            const previousPublicKeysBeforeRotation =
+                await keyStorage.getAllPreviousPublicKeys(stringKeccak256(schainName));
+            previousPublicKeysBeforeRotation.length.should.equal(0);
+
+            const completeDkr = async (incomingNode: bigint) => {
+                const schainHash = stringKeccak256(schainName);
+                const dkrId = await nodeRotation.getActiveDkrId(schainHash);
+                dkrId.should.not.equal(0n);
+
+                const dealers = await getBroadcastingNodes(
+                    schainHash,
+                    schainsInternal,
+                    nodeRotation
+                );
+                dealers.should.not.be.empty;
+                dealers.should.not.include(incomingNode);
+
+                await expect(
+                    dkr.connect(validators[0].nodeAddress).broadcast(
+                        incomingNode,
+                        dkrId,
+                        verificationVectors[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]]
+                    )
+                ).to.be.revertedWithCustomError(dkr, "BroadcastNotNeeded")
+                    .withArgs(dkrId, incomingNode);
+
+                for (const dealer of dealers) {
+                    await dkr.connect(validators[0].nodeAddress).broadcast(
+                        dealer,
+                        dkrId,
+                        verificationVectors[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]]
+                    );
+                }
+
+                for (const receiver of await schainsInternal.getNodesInGroup(schainHash)) {
+                    await dkr.connect(validators[0].nodeAddress).alright(receiver, dkrId);
+                }
+
+                (await nodeRotation.getActiveDkrId(schainHash)).should.equal(0n);
+                (await nodeRotation.getLastSuccessfulDkrId(schainHash)).should.equal(dkrId);
+                (await skaleDKG.getTimeOfLastSuccessfulDKG(schainHash))
+                    .should.equal(successfulDkgTimestamp);
+
+                const currentPublicKey = await keyStorage.getCommonPublicKey(schainHash);
+                currentPublicKey.x.a.should.equal(comPubKey.x.a);
+                currentPublicKey.x.b.should.equal(comPubKey.x.b);
+                currentPublicKey.y.a.should.equal(comPubKey.y.a);
+                currentPublicKey.y.b.should.equal(comPubKey.y.b);
+                (await keyStorage.getAllPreviousPublicKeys(schainHash)).length
+                    .should.equal(previousPublicKeysBeforeRotation.length);
+
+                return dkrId;
+            };
 
             await nodes.initExit(1);
             await skaleManager.connect(validators[1].nodeAddress).nodeExit(1);
 
-            let prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
+            const prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
             expect(prevPubKey.x.a).to.be.equal(0);
             expect(prevPubKey.x.b).to.be.equal(0);
             expect(prevPubKey.y.a).to.be.equal(1);
@@ -1733,102 +2081,30 @@ describe("SkaleDKG", () => {
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             expect(rotCounter.rotationCounter).to.be.equal(1);
 
-            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
-                stringKeccak256(schainName),
-                0,
-                verificationVectors[indexes[0]],
-                // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContributions[indexes[0]],
-                rotCounter.rotationCounter
-            );
+            // Key re-sharing runs on DKR, so the legacy DKG channel stays closed.
+            expect(await skaleDKG.isChannelOpened(stringKeccak256(schainName))).to.be.false;
+            for (const node of await schainsInternal.getNodesInGroup(stringKeccak256(schainName))) {
+                expect(
+                    await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
+                        stringKeccak256(schainName),
+                        node
+                    )
+                ).to.be.false;
+            }
 
-            // The incoming node does not participate in broadcast
-            await expect(
-                skaleDKG.connect(validators[0].nodeAddress).broadcast(
-                    stringKeccak256(schainName),
-                    2,
-                    verificationVectors[indexes[0]],
-                    encryptedSecretKeyContributions[indexes[0]],
-                    rotCounter.rotationCounter
-                )
-            ).to.be.revertedWithCustomError(
-                await ethers.getContractFactory("SkaleDkgBroadcast"),
-                "NodeShouldNotSendBroadcast"
-            ).withArgs(stringKeccak256(schainName), 2);
-
-            await skaleDKG.connect(validators[0].nodeAddress).alright(
-                stringKeccak256(schainName),
-                0
-            );
-
-            assert.equal(
-                Number(await skaleDKG.getTimeOfLastSuccessfulDKG(stringKeccak256(schainName))),
-                (await ethers.provider.getBlock(resSuccess.blockNumber))?.timestamp
-            );
-
-            await skaleDKG.connect(validators[0].nodeAddress).alright(
-                stringKeccak256(schainName),
-                2
-            );
-
-            prevPubKey = await keyStorage.getPreviousPublicKey(stringKeccak256(schainName));
-            assert.equal(prevPubKey.x.a === comPubKey.x.a, true);
-            assert.equal(prevPubKey.x.b === comPubKey.x.b, true);
-            assert.equal(prevPubKey.y.a === comPubKey.y.a, true);
-            assert.equal(prevPubKey.y.b === comPubKey.y.b, true);
-
-            let allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringKeccak256(schainName));
-            assert.equal(allPrevPubKeys.length === 1, true);
-            assert.equal(prevPubKey.x.a === allPrevPubKeys[0].x.a, true);
-            assert.equal(prevPubKey.x.b === allPrevPubKeys[0].x.b, true);
-            assert.equal(prevPubKey.y.a === allPrevPubKeys[0].y.a, true);
-            assert.equal(prevPubKey.y.b === allPrevPubKeys[0].y.b, true);
+            const firstDkrId = await completeDkr(2n);
 
             await skipTime(43260);
             await nodes.initExit(2);
             await skaleManager.connect(validators[0].nodeAddress).nodeExit(2);
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
-            assert.equal(rotCounter.rotationCounter, 2n);
+            expect(rotCounter.rotationCounter).to.be.equal(2n);
+            expect(await skaleDKG.isChannelOpened(stringKeccak256(schainName))).to.be.false;
 
-            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
-                stringKeccak256(schainName),
-                0,
-                verificationVectors[indexes[0]],
-                // the last symbol is spoiled in parameter below
-                encryptedSecretKeyContributions[indexes[0]],
-                rotCounter.rotationCounter
-            );
-
-            await expect(
-                skaleDKG.connect(validators[0].nodeAddress).broadcast(
-                    stringKeccak256(schainName),
-                    3,
-                    verificationVectors[indexes[0]],
-                    encryptedSecretKeyContributions[indexes[0]],
-                    rotCounter.rotationCounter
-                )
-            ).to.be.revertedWithCustomError(
-                await ethers.getContractFactory("SkaleDkgBroadcast"),
-                "NodeShouldNotSendBroadcast"
-            ).withArgs(stringKeccak256(schainName), 3);
-
-            await skaleDKG.connect(validators[0].nodeAddress).alright(
-                stringKeccak256(schainName),
-                0
-            );
-
-            await skaleDKG.connect(validators[0].nodeAddress).alright(
-                stringKeccak256(schainName),
-                3
-            );
-
-            allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringKeccak256(schainName));
-            assert.equal(allPrevPubKeys.length === 2, true);
-            assert.equal(prevPubKey.x.a === allPrevPubKeys[0].x.a, true);
-            assert.equal(prevPubKey.x.b === allPrevPubKeys[0].x.b, true);
-            assert.equal(prevPubKey.y.a === allPrevPubKeys[0].y.a, true);
-            assert.equal(prevPubKey.y.b === allPrevPubKeys[0].y.b, true);
+            const secondDkrId = await nodeRotation.getActiveDkrId(stringKeccak256(schainName));
+            secondDkrId.should.equal(firstDkrId + 1n);
+            await completeDkr(3n);
         });
 
 

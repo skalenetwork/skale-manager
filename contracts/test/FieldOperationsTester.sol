@@ -43,4 +43,16 @@ contract FieldOperationsTester is IFieldOperationsTester {
         require(value2.isG2(), "Second value not in G2");
         return value1.addG2(value2);
     }
+
+    function scalarMul(
+        ISkaleDKG.G2Point memory point,
+        uint256 scalar
+    )
+        external
+        view
+        override
+        returns (ISkaleDKG.G2Point memory product)
+    {
+        return point.scalarMul(scalar);
+    }
 }
