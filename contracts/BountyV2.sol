@@ -44,16 +44,16 @@ contract BountyV2 is Permissions, IBountyV2 {
     }
 
     // TODO: replace with an array when solidity starts supporting it
-    uint256 public constant YEAR1_BOUNTY = 3850e5 * 1e18;
-    uint256 public constant YEAR2_BOUNTY = 3465e5 * 1e18;
-    uint256 public constant YEAR3_BOUNTY = 3080e5 * 1e18;
-    uint256 public constant YEAR4_BOUNTY = 2695e5 * 1e18;
-    uint256 public constant YEAR5_BOUNTY = 2310e5 * 1e18;
-    uint256 public constant YEAR6_BOUNTY = 1925e5 * 1e18;
-    uint256 public constant YEAR7_BOUNTY = 1440e5 * 1e18;
-    uint256 public constant YEAR8_BOUNTY = 840e5 * 1e18;
-    uint256 public constant YEAR9_BOUNTY = 480e5 * 1e18;
-    uint256 public constant YEAR10_BOUNTY = 12750000 * 1e18;
+    uint256 public constant YEAR1_BOUNTY = 385_000_000 ether;
+    uint256 public constant YEAR2_BOUNTY = 346_500_000 ether;
+    uint256 public constant YEAR3_BOUNTY = 308_000_000 ether;
+    uint256 public constant YEAR4_BOUNTY = 269_500_000 ether;
+    uint256 public constant YEAR5_BOUNTY = 231_000_000 ether;
+    uint256 public constant YEAR6_BOUNTY = 192_500_000 ether;
+    uint256 public constant YEAR7_BOUNTY = 144_000_000 ether;
+    uint256 public constant YEAR8_BOUNTY =  84_000_000 ether;
+    uint256 public constant YEAR9_BOUNTY =  48_000_000 ether;
+    uint256 public constant YEAR10_BOUNTY = 12_750_000 ether;
 
     uint256 public constant EPOCHS_PER_YEAR = 12;
     uint256 public constant SECONDS_PER_DAY = 24 * 60 * 60;
