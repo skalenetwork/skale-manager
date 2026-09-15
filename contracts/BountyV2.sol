@@ -50,6 +50,11 @@ contract BountyV2 is Permissions, IBountyV2 {
     uint256 public constant YEAR4_BOUNTY = 2695e5 * 1e18;
     uint256 public constant YEAR5_BOUNTY = 2310e5 * 1e18;
     uint256 public constant YEAR6_BOUNTY = 1925e5 * 1e18;
+    uint256 public constant YEAR7_BOUNTY = 1440e5 * 1e18;
+    uint256 public constant YEAR8_BOUNTY = 840e5 * 1e18;
+    uint256 public constant YEAR9_BOUNTY = 480e5 * 1e18;
+    uint256 public constant YEAR10_BOUNTY = 12750000 * 1e18;
+
     uint256 public constant EPOCHS_PER_YEAR = 12;
     uint256 public constant SECONDS_PER_DAY = 24 * 60 * 60;
     uint256 public constant BOUNTY_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
@@ -421,23 +426,22 @@ contract BountyV2 is Permissions, IBountyV2 {
         }
         uint256 epochIndex = epoch - firstEpoch;
         uint256 year = epochIndex / EPOCHS_PER_YEAR;
-        if (year >= 6) {
-            uint256 power = (year - 6) / 3 + 1;
-            if (power < 256) {
-                return YEAR6_BOUNTY / 2 ** power / EPOCHS_PER_YEAR;
-            } else {
-                return 0;
-            }
-        } else {
-            uint256[6] memory customBounties = [
+        if (year < 10) {
+            uint256[10] memory customBounties = [
                 YEAR1_BOUNTY,
                 YEAR2_BOUNTY,
                 YEAR3_BOUNTY,
                 YEAR4_BOUNTY,
                 YEAR5_BOUNTY,
-                YEAR6_BOUNTY
+                YEAR6_BOUNTY,
+                YEAR7_BOUNTY,
+                YEAR8_BOUNTY,
+                YEAR9_BOUNTY,
+                YEAR10_BOUNTY
             ];
             return customBounties[year] / EPOCHS_PER_YEAR;
+        } else {
+            return 0;
         }
     }
 
