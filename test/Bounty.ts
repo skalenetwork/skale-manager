@@ -154,6 +154,27 @@ describe("Bounty", () => {
         }
     })
 
+    it("should pay correct bounty amount in total", async () => {
+        const skaleToken = await deploySkaleToken(contractManager);
+        const bounties = [
+            await bountyContract.YEAR1_BOUNTY(),
+            await bountyContract.YEAR2_BOUNTY(),
+            await bountyContract.YEAR3_BOUNTY(),
+            await bountyContract.YEAR4_BOUNTY(),
+            await bountyContract.YEAR5_BOUNTY(),
+            await bountyContract.YEAR6_BOUNTY(),
+            await bountyContract.YEAR7_BOUNTY(),
+            await bountyContract.YEAR8_BOUNTY(),
+            await bountyContract.YEAR9_BOUNTY(),
+            await bountyContract.YEAR10_BOUNTY()
+        ];
+        const firstPart = bounties.slice(0, 6).reduce((acc, b) => acc + b, 0n);
+        const secondPart = bounties.slice(6).reduce((acc, b) => acc + b, 0n);
+        const forTheFoundation = secondPart;
+        const total = firstPart + secondPart;
+        total.should.be.equal(await skaleToken.CAP() * 33n / 100n - forTheFoundation);
+    });
+
     describe("when validator is registered and has active delegations", () => {
         let skaleToken: SkaleToken;
         let delegationController: DelegationController;
