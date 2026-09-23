@@ -19,11 +19,12 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.30;
 
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { ISkaleVerifier } from "@skalenetwork/skale-manager-interfaces/ISkaleVerifier.sol";
 
+import { G1PointIsOutOfRange, PointIsNotInG1 } from "./dkg/DkgErrors.sol";
 import { Permissions } from "./Permissions.sol";
 import { Precompiled } from "./utils/Precompiled.sol";
 import { Fp2Operations } from "./utils/fieldOperations/Fp2Operations.sol";
@@ -37,6 +38,8 @@ import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 contract SkaleVerifier is Permissions, ISkaleVerifier {
     using Fp2Operations for ISkaleDKG.Fp2Point;
     using G2Operations for ISkaleDKG.G2Point;
+
+    error PublicKeyIsNotInG2();
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
@@ -65,7 +68,7 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
         override
         returns (bool valid)
     {
-        require(G1Operations.checkRange(signature), "Signature is not valid");
+        require(G1Operations.checkRange(signature), G1PointIsOutOfRange(signature.a, signature.b));
         if (!_checkHashToGroupWithHelper(
             hash,
             counter,
@@ -78,14 +81,14 @@ contract SkaleVerifier is Permissions, ISkaleVerifier {
         }
 
         uint256 newSignB = G1Operations.negate(signature.b);
-        require(G1Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
-        require(G1Operations.isG1Point(hashA, hashB), "Hash not in G1");
+        require(
+            G1Operations.isG1Point(signature.a, newSignB),
+            PointIsNotInG1(signature.a, newSignB)
+        );
+        require(G1Operations.isG1Point(hashA, hashB), PointIsNotInG1(hashA, hashB));
 
         ISkaleDKG.G2Point memory g2 = G2Operations.getG2Generator();
-        require(
-            G2Operations.isG2(publicKey),
-            "Public Key not in G2"
-        );
+        require(G2Operations.isG2(publicKey), PublicKeyIsNotInG2());
 
         return Precompiled.bn256Pairing({
             x1: signature.a,

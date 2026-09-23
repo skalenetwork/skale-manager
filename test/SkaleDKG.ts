@@ -8,6 +8,11 @@ import {ContractManager,
          SchainsInternalMock,
          Schains,
          SkaleDKG,
+         SkaleDkgAlright,
+         SkaleDkgBroadcast,
+         SkaleDkgComplaint,
+         SkaleDkgPreResponse,
+         SkaleDkgResponse,
          SkaleToken,
          SlashingTable,
          ValidatorService,
@@ -86,6 +91,13 @@ describe("SkaleDKG", () => {
     let skaleManager: SkaleManager;
     let wallets: Wallets;
 
+    // DKG libraries run via delegatecall, so their errors are decoded against SkaleDKG's address
+    let skaleDkgAlright: SkaleDkgAlright;
+    let skaleDkgBroadcast: SkaleDkgBroadcast;
+    let skaleDkgComplaint: SkaleDkgComplaint;
+    let skaleDkgPreResponse: SkaleDkgPreResponse;
+    let skaleDkgResponse: SkaleDkgResponse;
+
     const failedDkgPenalty = 5;
     let validators: {nodeAddress: Wallet}[];
 
@@ -112,6 +124,11 @@ describe("SkaleDKG", () => {
         schainsInternal = await deploySchainsInternalMock(contractManager);
         schains = await deploySchains(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
+        skaleDkgAlright = await ethers.getContractAt("SkaleDkgAlright", skaleDKG);
+        skaleDkgBroadcast = await ethers.getContractAt("SkaleDkgBroadcast", skaleDKG);
+        skaleDkgComplaint = await ethers.getContractAt("SkaleDkgComplaint", skaleDKG);
+        skaleDkgPreResponse = await ethers.getContractAt("SkaleDkgPreResponse", skaleDKG);
+        skaleDkgResponse = await ethers.getContractAt("SkaleDkgResponse", skaleDKG);
         keyStorage = await deployKeyStorage(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -538,7 +555,7 @@ describe("SkaleDKG", () => {
                     verificationVectors[indexes[0]],
                     encryptedSecretKeyContributions[indexes[0]],
                     incorrectRotationCounter
-                ).should.be.eventually.rejectedWith("Incorrect rotation counter");
+                ).should.be.revertedWithCustomError(skaleDkgBroadcast, "IncorrectRotationCounter");
             });
 
             it("should rejected broadcast data from 2 node with incorrect sender", async () => {
@@ -549,7 +566,7 @@ describe("SkaleDKG", () => {
                     verificationVectors[indexes[1]],
                     encryptedSecretKeyContributions[indexes[1]],
                     rotation.rotationCounter
-                ).should.be.eventually.rejectedWith("Node does not exist for message sender");
+                ).should.be.revertedWithCustomError(skaleDKG, "NodeIsNotOwnedBySender");
             });
 
             it("should rejected early complaint after missing broadcast", async () => {
@@ -583,13 +600,11 @@ describe("SkaleDKG", () => {
                     1,
                 );
                 resComplaint.should.be.false;
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
                     1
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Complaint sent too early");
-                await reimbursed(complaint);
+                )).to.be.revertedWithCustomError(skaleDkgComplaint, "ComplaintSentTooEarly");
             });
 
             it("should send complaint after missing broadcast", async () => {
@@ -713,13 +728,11 @@ describe("SkaleDKG", () => {
                 );
                 res.should.be.false;
 
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
                     1
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Has already sent alright");
-                await reimbursed(complaint);
+                )).to.be.revertedWithCustomError(skaleDkgComplaint, "NodeHasAlreadySentAlright");
 
                 await skipTime(1800);
                 res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
@@ -778,7 +791,7 @@ describe("SkaleDKG", () => {
                         verificationVectors[indexes[1]],
                         encryptedSecretKeyContributions[indexes[1]],
                         rotation.rotationCounter
-                    ).should.be.rejectedWith("Incorrect time for broadcast");
+                    ).should.be.revertedWithCustomError(skaleDkgBroadcast, "BroadcastPeriodIsOver");
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
                         stringKeccak256(schainName),
                         0,
@@ -820,7 +833,7 @@ describe("SkaleDKG", () => {
                     await skaleDKG.connect(validators[1].nodeAddress).alright(
                         stringKeccak256(schainName),
                         1
-                    ).should.be.rejectedWith("Incorrect time for alright");
+                    ).should.be.revertedWithCustomError(skaleDkgAlright, "AlrightPeriodIsOver");
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
                         stringKeccak256(schainName),
                         0,
@@ -872,7 +885,7 @@ describe("SkaleDKG", () => {
                         0,
                         secretNumbers[indexes[0]],
                         multipliedShares[indexes[0]]
-                    ).should.be.rejectedWith("Incorrect time for response");
+                    ).should.be.revertedWithCustomError(skaleDkgResponse, "ResponsePeriodIsOver");
                     await skaleDKG.connect(validators[1].nodeAddress).complaint(
                         stringKeccak256(schainName),
                         1,
@@ -1021,7 +1034,7 @@ describe("SkaleDKG", () => {
                     await skaleDKG.connect(validators[0].nodeAddress).alright(
                         stringKeccak256(schainName),
                         1
-                    ).should.be.eventually.rejectedWith("Node does not exist for message sender");
+                    ).should.be.revertedWithCustomError(skaleDKG, "NodeIsNotOwnedBySender");
                 });
 
                 it("should catch successful DKG event", async () => {
@@ -1053,12 +1066,12 @@ describe("SkaleDKG", () => {
                             stringKeccak256(schainName),
                             0,
                             1
-                        )).to.be.revertedWith("Node does not exist for message sender");
+                        )).to.be.revertedWithCustomError(skaleDKG, "NodeIsNotOwnedBySender");
                         await expect(skaleDKG.connect(hacker).complaintBadData(
                             stringKeccak256(schainName),
                             0,
                             1
-                        )).to.be.revertedWith("Node does not exist for message sender");
+                        )).to.be.revertedWithCustomError(skaleDKG, "NodeIsNotOwnedBySender");
                     })
                 });
 
@@ -1084,7 +1097,7 @@ describe("SkaleDKG", () => {
                             stringKeccak256(schainName),
                             1,
                             0
-                        )).to.emit(skaleDKG, "ComplaintError").withArgs("The same complaint rejected");
+                        )).to.be.revertedWithCustomError(skaleDkgComplaint, "ComplaintSentTooEarly");
                     });
 
                     it("should send complaint after missing preResponse", async () => {
@@ -1158,7 +1171,7 @@ describe("SkaleDKG", () => {
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[0]]
-                        ).should.be.eventually.rejectedWith("Have not submitted pre-response data");
+                        ).should.be.revertedWithCustomError(skaleDkgResponse, "PreResponseIsNotSubmitted");
 
                         await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                             stringKeccak256(schainName),
@@ -1166,7 +1179,7 @@ describe("SkaleDKG", () => {
                             verificationVectors[indexes[0]],
                             verificationVectorMultiplication[indexes[0]],
                             badEncryptedSecretKeyContributions[indexes[0]]
-                        ).should.be.eventually.rejectedWith("Broadcasted Data is not correct");
+                        ).should.be.revertedWithCustomError(skaleDkgPreResponse, "BroadcastedDataIsIncorrect");
 
                         await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                             stringKeccak256(schainName),
@@ -1273,7 +1286,7 @@ describe("SkaleDKG", () => {
                     await skaleDKG.connect(validators[1].nodeAddress).alright(
                         stringKeccak256(schainName),
                         1
-                    ).should.be.eventually.rejectedWith("Node has already sent complaint");
+                    ).should.be.revertedWithCustomError(skaleDkgAlright, "NodeHasAlreadySentComplaint");
                 });
 
                 it("should not send 2 complaints from 1 node", async () => {
@@ -1292,7 +1305,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0,
                         1
-                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint has already been processed");
+                    )).to.be.revertedWithCustomError(skaleDkgComplaint, "ComplaintIsAlreadyPending");
                 });
 
                 it("should not send 2 complaints from 2 node", async () => {
@@ -1305,7 +1318,7 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1,
                         0,
-                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint has already been processed");
+                    )).to.be.revertedWithCustomError(skaleDkgComplaint, "ComplaintIsAlreadyPending");
                 });
 
                 describe("when complaint successfully sent", () => {
@@ -1384,6 +1397,164 @@ describe("SkaleDKG", () => {
                         (await skaleToken.getAndUpdateSlashedAmount.staticCall(validator1.address))
                             .should.be.equal(failedDkgPenalty);
                     });
+                });
+            });
+
+            describe("complaint refund invariants", () => {
+                const validator1Id = 1;
+                const validator2Id = 2;
+                let schainHash: string;
+
+                // Outcome-agnostic: a rejected call may either revert or succeed as a no-op.
+                async function attempt(sendTransaction: () => Promise<ContractTransactionResponse>) {
+                    try {
+                        await (await sendTransaction()).wait();
+                    } catch {
+                        // reverted - nothing to refund
+                    }
+                }
+
+                async function broadcastFrom(nodeIndex: number) {
+                    const rotation = await nodeRotation.getRotation(schainHash);
+                    await skaleDKG.connect(validators[nodeIndex].nodeAddress).broadcast(
+                        schainHash,
+                        nodeIndex,
+                        verificationVectors[indexes[nodeIndex]],
+                        encryptedSecretKeyContributions[indexes[nodeIndex]],
+                        rotation.rotationCounter
+                    );
+                }
+
+                async function fundValidatorWallets() {
+                    await wallets.rechargeValidatorWallet(validator1Id, {value: ethers.parseEther("1")});
+                    await wallets.rechargeValidatorWallet(validator2Id, {value: ethers.parseEther("1")});
+                }
+
+                fastBeforeEach(async () => {
+                    schainHash = stringKeccak256(schainName);
+                });
+
+                it("should not drain the schain wallet with early complaints when the accused validator wallet is empty", async () => {
+                    const attacker = validators[1].nodeAddress;
+                    await broadcastFrom(1);
+
+                    const schainBalanceBefore = await wallets.getSchainBalance(schainHash);
+                    const attackerBalanceBefore = await ethers.provider.getBalance(attacker.address);
+
+                    for (let i = 0; i < 5; ++i) {
+                        await attempt(() => skaleDKG.connect(attacker).complaint(schainHash, 1, 0));
+                    }
+
+                    (await wallets.getSchainBalance(schainHash)).should.be.equal(schainBalanceBefore);
+                    (await ethers.provider.getBalance(attacker.address)).should.be.lte(attackerBalanceBefore);
+                });
+
+                it("should not drain the accused validator wallet with early complaints", async () => {
+                    await fundValidatorWallets();
+                    const attacker = validators[1].nodeAddress;
+                    await broadcastFrom(1);
+
+                    const schainBalanceBefore = await wallets.getSchainBalance(schainHash);
+                    const victimWalletBefore = await wallets.getValidatorBalance(validator1Id);
+                    const attackerBalanceBefore = await ethers.provider.getBalance(attacker.address);
+
+                    for (let i = 0; i < 5; ++i) {
+                        await attempt(() => skaleDKG.connect(attacker).complaint(schainHash, 1, 0));
+                    }
+
+                    (await wallets.getSchainBalance(schainHash)).should.be.equal(schainBalanceBefore);
+                    (await wallets.getValidatorBalance(validator1Id)).should.be.equal(victimWalletBefore);
+                    (await ethers.provider.getBalance(attacker.address)).should.be.lte(attackerBalanceBefore);
+                });
+
+                it("should not pay for complaints against a node outside the group", async () => {
+                    await fundValidatorWallets();
+                    const attacker = validators[1].nodeAddress;
+                    const nodeOutsideGroup = 5;
+
+                    const schainBalanceBefore = await wallets.getSchainBalance(schainHash);
+                    const node0WalletBefore = await wallets.getValidatorBalance(validator1Id);
+                    const attackerBalanceBefore = await ethers.provider.getBalance(attacker.address);
+
+                    for (let i = 0; i < 5; ++i) {
+                        await attempt(() => skaleDKG.connect(attacker).complaint(schainHash, 1, nodeOutsideGroup));
+                    }
+
+                    (await wallets.getSchainBalance(schainHash)).should.be.equal(schainBalanceBefore);
+                    (await wallets.getValidatorBalance(validator1Id)).should.be.equal(node0WalletBefore);
+                    (await ethers.provider.getBalance(attacker.address)).should.be.lte(attackerBalanceBefore);
+                });
+
+                it("should not pay for complaints on a closed channel", async () => {
+                    await fundValidatorWallets();
+                    await broadcastFrom(0);
+                    await skipTime(1800);
+                    await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(schainHash, 0, 1))
+                        .to.emit(skaleDKG, "BadGuy").withArgs(1);
+                    (await skaleDKG.isChannelOpened(schainHash)).should.be.false;
+
+                    const attacker = validators[1].nodeAddress;
+                    const schainBalanceBefore = await wallets.getSchainBalance(schainHash);
+                    const node0WalletBefore = await wallets.getValidatorBalance(validator1Id);
+                    const attackerBalanceBefore = await ethers.provider.getBalance(attacker.address);
+
+                    for (let i = 0; i < 5; ++i) {
+                        await attempt(() => skaleDKG.connect(attacker).complaint(schainHash, 1, 0));
+                    }
+
+                    (await wallets.getSchainBalance(schainHash)).should.be.equal(schainBalanceBefore);
+                    (await wallets.getValidatorBalance(validator1Id)).should.be.equal(node0WalletBefore);
+                    (await ethers.provider.getBalance(attacker.address)).should.be.lte(attackerBalanceBefore);
+                });
+
+                it("should not pay for duplicate bad data complaints", async () => {
+                    const attacker = validators[1].nodeAddress;
+                    await broadcastFrom(0);
+                    await broadcastFrom(1);
+                    await expect(skaleDKG.connect(attacker).complaintBadData(schainHash, 1, 0))
+                        .to.emit(skaleDKG, "ComplaintSent");
+
+                    const schainBalanceBefore = await wallets.getSchainBalance(schainHash);
+                    const attackerBalanceBefore = await ethers.provider.getBalance(attacker.address);
+
+                    for (let i = 0; i < 5; ++i) {
+                        await attempt(() => skaleDKG.connect(attacker).complaintBadData(schainHash, 1, 0));
+                    }
+
+                    (await wallets.getSchainBalance(schainHash)).should.be.equal(schainBalanceBefore);
+                    (await ethers.provider.getBalance(attacker.address)).should.be.lte(attackerBalanceBefore);
+                });
+
+                it("should charge the complainer's validator when the complainer is slashed", async () => {
+                    await fundValidatorWallets();
+                    await broadcastFrom(0);
+                    await broadcastFrom(1);
+
+                    const complainerWalletBefore = await wallets.getValidatorBalance(validator1Id);
+                    const accusedWalletBefore = await wallets.getValidatorBalance(validator2Id);
+
+                    // node 0 has not sent alright, so its own complaint slashes it
+                    await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(schainHash, 0, 1))
+                        .to.emit(skaleDKG, "BadGuy").withArgs(0);
+
+                    (await wallets.getValidatorBalance(validator2Id)).should.be.equal(accusedWalletBefore);
+                    (await wallets.getValidatorBalance(validator1Id)).should.be.lt(complainerWalletBefore);
+                });
+
+                it("should refund a valid complaint and charge the slashed node's validator", async () => {
+                    await fundValidatorWallets();
+                    await broadcastFrom(0);
+                    await skipTime(1800);
+
+                    const complainerWalletBefore = await wallets.getValidatorBalance(validator1Id);
+                    const accusedWalletBefore = await wallets.getValidatorBalance(validator2Id);
+
+                    const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(schainHash, 0, 1);
+                    await expect(complaint).to.emit(skaleDKG, "BadGuy").withArgs(1);
+                    await reimbursed(complaint);
+
+                    (await wallets.getValidatorBalance(validator1Id)).should.be.equal(complainerWalletBefore);
+                    (await wallets.getValidatorBalance(validator2Id)).should.be.lt(accusedWalletBefore);
                 });
             });
         });
@@ -1513,13 +1684,11 @@ describe("SkaleDKG", () => {
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
-            const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+            await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256(schainName),
                 2,
                 0
-            );
-            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Node is not in this group");
-            await reimbursed(complaint, "Complaint");
+            )).to.be.revertedWithCustomError(skaleDKG, "NodeIsNotInGroup");
             let res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
                 stringKeccak256(schainName),
                 2
@@ -2204,13 +2373,11 @@ describe("SkaleDKG", () => {
                     complaintNode,
                     accusedNode
                 );
-                const complaint = await skaleDKG.connect(validators[indexToSend].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[indexToSend].nodeAddress).complaint(
                     stringKeccak256("New16NodeSchain"),
                     complaintNode,
                     someNode
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("One complaint is already sent");
-                await reimbursed(complaint);
+                )).to.be.revertedWithCustomError(skaleDkgComplaint, "ComplaintIsAlreadyPending");
 
                 if (accusedNode === 1n) {
                     indexToSend = 1;
@@ -2223,14 +2390,20 @@ describe("SkaleDKG", () => {
                     verificationVectorNew,
                     verificationVectorMultiplication[indexes[indexToSend]],
                     secretKeyContributions
-                ).should.be.eventually.rejectedWith("Incorrect length of multiplied verification vector");
+                ).should.be.revertedWithCustomError(
+                    skaleDkgPreResponse,
+                    "IncorrectVerificationVectorMultiplicationLength"
+                );
                 await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
                     stringKeccak256("New16NodeSchain"),
                     accusedNode,
                     verificationVectorNew,
                     badVerificationVectorMultiplicationNew,
                     secretKeyContributions
-                ).should.be.eventually.rejectedWith("Multiplied verification vector is incorrect");
+                ).should.be.revertedWithCustomError(
+                    skaleDkgPreResponse,
+                    "VerificationVectorMultiplicationIsIncorrect"
+                );
                 const resPreResp = await (await skaleDKG.connect(validators[indexToSend].nodeAddress).preResponse(
                     stringKeccak256("New16NodeSchain"),
                     accusedNode,
@@ -2312,12 +2485,11 @@ describe("SkaleDKG", () => {
                     )
                 );
 
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256("New16NodeSchain"),
                     8,
                     accusedNode
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
+                )).to.be.revertedWithCustomError(skaleDKG, "GroupIsNotCreated");
                 await skaleManager.connect(validator1).deleteSchain("New16NodeSchain");
             });
 
@@ -2384,13 +2556,11 @@ describe("SkaleDKG", () => {
                 // The node is still a part of schain because can't be replaced
                 space.freeSpace.should.be.equal(0);
 
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256("New16NodeSchain"),
                     8,
                     accusedNode
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-                await reimbursed(complaint);
+                )).to.be.revertedWithCustomError(skaleDKG, "GroupIsNotCreated");
 
                 await nodes.createNode(validators[0].nodeAddress.address,
                     {
@@ -2516,13 +2686,11 @@ describe("SkaleDKG", () => {
                     )
                 );
 
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256("New16NodeSchain"),
                     8,
                     accusedNode
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-                await reimbursed(complaint);
+                )).to.be.revertedWithCustomError(skaleDKG, "GroupIsNotCreated");
                 // await nodes.createNode(validators[0].nodeAddress.address,
                 //     {
                 //         port: 8545,

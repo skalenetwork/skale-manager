@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.30;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
@@ -47,6 +47,12 @@ library SkaleDkgBroadcast {
         ISkaleDKG.KeyShare[] secretKeyContribution
     );
 
+    error IncorrectRotationCounter(uint256 expected, uint256 actual);
+    error IncorrectNumberOfVerificationVectors(uint256 expected, uint256 actual);
+    error IncorrectNumberOfSecretKeyShares(uint256 expected, uint256 actual);
+    error BroadcastPeriodIsOver(bytes32 schainHash);
+    error NodeHasAlreadyBroadcasted(uint256 nodeIndex);
+
     /**
      * @dev Broadcasts verification vector and secret key contribution to all
      * other nodes in the group.
@@ -71,25 +77,25 @@ library SkaleDkgBroadcast {
         uint256 rotationCounter
     ) external {
         uint256 n = channels[schainHash].n;
-        uint256 schainRotationCounter = INodeRotation(
-            contractManager.getContract("NodeRotation")
-        ).getRotation(schainHash).rotationCounter;
-        require(schainRotationCounter == rotationCounter, "Incorrect rotation counter");
-        require(verificationVector.length == getT(n), "Incorrect number of verification vectors");
-        require(secretKeyContribution.length == n, "Incorrect number of secret key shares");
-        require(
-            channels[schainHash].startedBlockTimestamp +
-                _getComplaintTimeLimit(contractManager) >
-                block.timestamp,
-            "Incorrect time for broadcast"
-        );
+        _checkBroadcastParameters({
+            schainHash: schainHash,
+            n: n,
+            verificationVectorLength: verificationVector.length,
+            secretKeyContributionLength: secretKeyContribution.length,
+            rotationCounter: rotationCounter,
+            contractManager: contractManager,
+            channels: channels
+        });
         (uint256 index, bool valid) = ISkaleDKG(
             contractManager.getContract("SkaleDKG")
         ).checkAndReturnIndexInGroup(schainHash, nodeIndex, true);
         if (!valid) {
             revert GroupIndexIsInvalid(index);
         }
-        require(!dkgProcess[schainHash].broadcasted[index], "This node has already broadcasted");
+        require(
+            !dkgProcess[schainHash].broadcasted[index],
+            NodeHasAlreadyBroadcasted(nodeIndex)
+        );
         dkgProcess[schainHash].broadcasted[index] = true;
         dkgProcess[schainHash].numberOfBroadcasted++;
         if ( dkgProcess[schainHash].numberOfBroadcasted == channels[schainHash].n ) {
@@ -113,6 +119,38 @@ library SkaleDkgBroadcast {
 
     function getT(uint256 n) public pure returns (uint256 t) {
         return (n * 2 + 1) / 3;
+    }
+
+    function _checkBroadcastParameters(
+        bytes32 schainHash,
+        uint256 n,
+        uint256 verificationVectorLength,
+        uint256 secretKeyContributionLength,
+        uint256 rotationCounter,
+        IContractManager contractManager,
+        mapping(bytes32 => ISkaleDKG.Channel) storage channels
+    ) private view {
+        uint256 schainRotationCounter = INodeRotation(
+            contractManager.getContract("NodeRotation")
+        ).getRotation(schainHash).rotationCounter;
+        require(
+            schainRotationCounter == rotationCounter,
+            IncorrectRotationCounter(schainRotationCounter, rotationCounter)
+        );
+        require(
+            verificationVectorLength == getT(n),
+            IncorrectNumberOfVerificationVectors(getT(n), verificationVectorLength)
+        );
+        require(
+            secretKeyContributionLength == n,
+            IncorrectNumberOfSecretKeyShares(n, secretKeyContributionLength)
+        );
+        require(
+            channels[schainHash].startedBlockTimestamp +
+                _getComplaintTimeLimit(contractManager) >
+                block.timestamp,
+            BroadcastPeriodIsOver(schainHash)
+        );
     }
 
     function _getComplaintTimeLimit(

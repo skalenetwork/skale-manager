@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    ISkaleDKGTester.sol - SKALE Manager
-    Copyright (C) 2018-Present SKALE Labs
-    @author Dmytro Stebaiev
+    DkgErrors.sol - SKALE Manager
+    Copyright (C) 2026-Present SKALE Labs
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -21,7 +20,9 @@
 
 pragma solidity 0.8.30;
 
-interface ISkaleDKGTester {
-    function initializeTester(address contractManagerAddress) external;
-    function setSuccessfulDKGPublic(bytes32 schainHash) external;
-}
+
+error NodeIsNotInGroup(bytes32 schainHash, uint256 nodeIndex);
+error NodeIsNotAccused(uint256 nodeIndex);
+error NodeHasAlreadySentAlright(uint256 nodeIndex);
+error G1PointIsOutOfRange(uint256 x, uint256 y);
+error PointIsNotInG1(uint256 x, uint256 y);

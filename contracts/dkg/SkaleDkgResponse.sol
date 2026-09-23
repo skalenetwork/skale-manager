@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.30;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {ISchainsInternal} from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
@@ -34,6 +34,12 @@ import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstant
 import {G1Operations} from "../utils/fieldOperations/G1Operations.sol";
 import {G2Operations} from "../utils/fieldOperations/G2Operations.sol";
 import {Precompiled} from "../utils/Precompiled.sol";
+import {
+    G1PointIsOutOfRange,
+    NodeIsNotAccused,
+    NodeIsNotInGroup,
+    PointIsNotInG1
+} from "./DkgErrors.sol";
 
 /**
  * @title SkaleDkgResponse
@@ -42,6 +48,9 @@ import {Precompiled} from "../utils/Precompiled.sol";
  */
 library SkaleDkgResponse {
     using G2Operations for ISkaleDKG.G2Point;
+
+    error ResponsePeriodIsOver(bytes32 schainHash);
+    error PreResponseIsNotSubmitted(bytes32 schainHash);
 
     function response(
         bytes32 schainHash,
@@ -55,20 +64,23 @@ library SkaleDkgResponse {
         uint256 index = ISchainsInternal(
             contractManager.getContract("SchainsInternal")
         ).getNodeIndexInGroup(schainHash, fromNodeIndex);
-        require(index < channels[schainHash].n, "Node is not in this group");
+        require(
+            index < channels[schainHash].n,
+            NodeIsNotInGroup(schainHash, fromNodeIndex)
+        );
         require(
             complaints[schainHash].nodeToComplaint == fromNodeIndex,
-            "Not this Node"
+            NodeIsNotAccused(fromNodeIndex)
         );
         require(
             complaints[schainHash].startComplaintBlockTimestamp +
                 _getComplaintTimeLimit(contractManager) >
                 block.timestamp,
-            "Incorrect time for response"
+            ResponsePeriodIsOver(schainHash)
         );
         require(
             complaints[schainHash].isResponse,
-            "Have not submitted pre-response data"
+            PreResponseIsNotSubmitted(schainHash)
         );
         uint256 badNode = _verifyDataAndSlash({
             schainHash: schainHash,
@@ -135,10 +147,10 @@ library SkaleDkgResponse {
         ISkaleDKG.Fp2Point memory g1 = G1Operations.getG1Generator();
         ISkaleDKG.Fp2Point memory share = ISkaleDKG.Fp2Point({a: 0, b: 0});
         (share.a, share.b) = Precompiled.bn256ScalarMul(g1.a, g1.b, secret);
-        require(G1Operations.checkRange(share), "share is not valid");
+        require(G1Operations.checkRange(share), G1PointIsOutOfRange(share.a, share.b));
         share.b = G1Operations.negate(share.b);
 
-        require(G1Operations.isG1(share), "mulShare not in G1");
+        require(G1Operations.isG1(share), PointIsNotInG1(share.a, share.b));
 
         ISkaleDKG.G2Point memory g2 = G2Operations.getG2Generator();
 

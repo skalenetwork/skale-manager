@@ -130,7 +130,7 @@ describe("SkaleVerifier", () => {
                         b: "7025653765868604607777943964159633546920168690664518432704587317074821855333",
                     }
                 }
-            ).should.be.eventually.rejectedWith("Sign not in G1");
+            ).should.be.revertedWithCustomError(skaleVerifier, "PointIsNotInG1");
         });
 
         it("should not verify signatures with invalid counter", async () => {
@@ -204,7 +204,7 @@ describe("SkaleVerifier", () => {
                         b: "7025653765868604607777943964159633546920168690664518432704587317074821855333",
                     }
                 }
-            ).should.be.eventually.rejectedWith("Public Key not in G2");
+            ).should.be.revertedWithCustomError(skaleVerifier, "PublicKeyIsNotInG2");
         });
 
         it("should not verify signatures with invalid hash point", async () => {

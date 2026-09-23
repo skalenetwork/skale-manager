@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.30;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
@@ -29,6 +29,7 @@ import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContract
 import {IConstantsHolder} from "@skalenetwork/skale-manager-interfaces/IConstantsHolder.sol";
 
 import {GroupIndexIsInvalid} from "../CommonErrors.sol";
+import {NodeHasAlreadySentAlright} from "./DkgErrors.sol";
 
 /**
  * @title SkaleDkgAlright
@@ -38,6 +39,10 @@ import {GroupIndexIsInvalid} from "../CommonErrors.sol";
 library SkaleDkgAlright {
     event AllDataReceived(bytes32 indexed schainHash, uint256 nodeIndex);
     event SuccessfulDKG(bytes32 indexed schainHash);
+
+    error BroadcastIsNotFinished(bytes32 schainHash);
+    error AlrightPeriodIsOver(bytes32 schainHash);
+    error NodeHasAlreadySentComplaint(uint256 nodeIndex);
 
     function alright(
         bytes32 schainHash,
@@ -61,23 +66,23 @@ library SkaleDkgAlright {
         uint256 numberOfParticipant = channels[schainHash].n;
         require(
             numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted,
-            "Still Broadcasting phase"
+            BroadcastIsNotFinished(schainHash)
         );
         require(
             startAlrightTimestamp[schainHash] +
                 _getComplaintTimeLimit(contractManager) >
                 block.timestamp,
-            "Incorrect time for alright"
+            AlrightPeriodIsOver(schainHash)
         );
         require(
             complaints[schainHash].fromNodeToComplaint != fromNodeIndex ||
                 (fromNodeIndex == 0 &&
                     complaints[schainHash].startComplaintBlockTimestamp == 0),
-            "Node has already sent complaint"
+            NodeHasAlreadySentComplaint(fromNodeIndex)
         );
         require(
             !dkgProcess[schainHash].completed[index],
-            "Node is already alright"
+            NodeHasAlreadySentAlright(fromNodeIndex)
         );
         dkgProcess[schainHash].completed[index] = true;
         dkgProcess[schainHash].numberOfCompleted++;
