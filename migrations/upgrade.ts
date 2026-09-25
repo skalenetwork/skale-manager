@@ -97,7 +97,7 @@ async function prepareContractsList(instance: Instance) {
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
     const startBlock = await ethers.provider.getBlockNumber();
-    const contractsToUpgrade = await prepareContractsList(skaleManager);
+    const contractsToUpgrade = ["BountyV2"];
     const upgrader = new SkaleManagerUpgrader(
         "1.13.1",
         skaleManager,
