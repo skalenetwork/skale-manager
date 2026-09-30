@@ -67,3 +67,6 @@ typechain-types/
 
 # docs
 docs/api/*
+
+# Items from hardhat fork
+edr-cache/
