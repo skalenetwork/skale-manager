@@ -2,7 +2,7 @@ import chalk from "chalk";
 import {ethers} from "hardhat";
 import {verify} from '@skalenetwork/upgrade-tools';
 import {skaleContracts} from "@skalenetwork/skale-contracts-ethers-v6";
-import {ContractManager} from "../typechain-types";
+import {ContractManager, SkaleToken} from "../typechain-types";
 
 const OWNER_PARAMETER = "OWNER";
 
@@ -17,7 +17,7 @@ async function getSkaleManagerInstance() {
     return await project.getInstance(process.env.TARGET);
 }
 
-async function transferOwnership(skaleToken: any, newOwner: string, currentOwner: string) {
+async function transferOwnership(skaleToken: SkaleToken, newOwner: string, currentOwner: string) {
     const DEFAULT_ADMIN_ROLE = await skaleToken.DEFAULT_ADMIN_ROLE();
 
     console.log(`Granting DEFAULT_ADMIN_ROLE to new owner: ${newOwner}`);
@@ -88,7 +88,7 @@ async function main() {
     await (await skaleToken.grantRole(MINTER_ROLE, l2BridgeAddress)).wait();
 
     const deployerAddress = await deployer.getAddress();
-    await transferOwnership(skaleToken, owner, deployerAddress);
+    await transferOwnership(skaleToken as unknown as SkaleToken, owner, deployerAddress);
 
     console.log("Verify contract");
     const constructorArguments = ethers.AbiCoder.defaultAbiCoder().encode(

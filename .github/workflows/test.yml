@@ -78,9 +78,8 @@ jobs:
           NODE_VERSION: ${{ env.NODE_VERSION }}
         run: ./scripts/test_upgrade.sh
 
-      # TODO: Enable the check after fixing ABI problem
-      # - name: Test transfer ownership
-      #   run: TEST_MODE=true ./scripts/test_change_ownership.sh
+      - name: Test transfer ownership
+        run: TEST_MODE=true ./scripts/test_change_ownership.sh
 
       - name: Run tests
         env:
