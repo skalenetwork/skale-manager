@@ -70,8 +70,7 @@ async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
     const storageLayout = deployment.layout.storage;
     return storageLayout.find((storageItem: { label: string; }) => storageItem.label === "_timeShift") !== undefined;
 }
-// TODO: Remove and use it instead of fixed contract name
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 async function prepareContractsList(instance: Instance) {
     // If skale-manager is deployed not in production mode
     // the smart contract TimeHelpers is replaced
@@ -98,9 +97,9 @@ async function prepareContractsList(instance: Instance) {
 async function main() {
     const skaleManager = await getSkaleManagerInstance();
     const startBlock = await ethers.provider.getBlockNumber();
-    const contractsToUpgrade = ["BountyV2"];
+    const contractsToUpgrade = await prepareContractsList(skaleManager);
     const upgrader = new SkaleManagerUpgrader(
-        "1.13.1",
+        "1.14.0",
         skaleManager,
         contractsToUpgrade
     );
