@@ -44,12 +44,17 @@ contract BountyV2 is Permissions, IBountyV2 {
     }
 
     // TODO: replace with an array when solidity starts supporting it
-    uint256 public constant YEAR1_BOUNTY = 3850e5 * 1e18;
-    uint256 public constant YEAR2_BOUNTY = 3465e5 * 1e18;
-    uint256 public constant YEAR3_BOUNTY = 3080e5 * 1e18;
-    uint256 public constant YEAR4_BOUNTY = 2695e5 * 1e18;
-    uint256 public constant YEAR5_BOUNTY = 2310e5 * 1e18;
-    uint256 public constant YEAR6_BOUNTY = 1925e5 * 1e18;
+    uint256 public constant YEAR1_BOUNTY = 385_000_000 ether;
+    uint256 public constant YEAR2_BOUNTY = 346_500_000 ether;
+    uint256 public constant YEAR3_BOUNTY = 308_000_000 ether;
+    uint256 public constant YEAR4_BOUNTY = 269_500_000 ether;
+    uint256 public constant YEAR5_BOUNTY = 231_000_000 ether;
+    uint256 public constant YEAR6_BOUNTY = 192_500_000 ether;
+    uint256 public constant YEAR7_BOUNTY = 144_000_000 ether;
+    uint256 public constant YEAR8_BOUNTY =  84_000_000 ether;
+    uint256 public constant YEAR9_BOUNTY =  48_000_000 ether;
+    uint256 public constant YEAR10_BOUNTY = 12_750_000 ether;
+
     uint256 public constant EPOCHS_PER_YEAR = 12;
     uint256 public constant SECONDS_PER_DAY = 24 * 60 * 60;
     uint256 public constant BOUNTY_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
@@ -421,23 +426,22 @@ contract BountyV2 is Permissions, IBountyV2 {
         }
         uint256 epochIndex = epoch - firstEpoch;
         uint256 year = epochIndex / EPOCHS_PER_YEAR;
-        if (year >= 6) {
-            uint256 power = (year - 6) / 3 + 1;
-            if (power < 256) {
-                return YEAR6_BOUNTY / 2 ** power / EPOCHS_PER_YEAR;
-            } else {
-                return 0;
-            }
-        } else {
-            uint256[6] memory customBounties = [
+        if (year < 10) {
+            uint256[10] memory customBounties = [
                 YEAR1_BOUNTY,
                 YEAR2_BOUNTY,
                 YEAR3_BOUNTY,
                 YEAR4_BOUNTY,
                 YEAR5_BOUNTY,
-                YEAR6_BOUNTY
+                YEAR6_BOUNTY,
+                YEAR7_BOUNTY,
+                YEAR8_BOUNTY,
+                YEAR9_BOUNTY,
+                YEAR10_BOUNTY
             ];
             return customBounties[year] / EPOCHS_PER_YEAR;
+        } else {
+            return 0;
         }
     }
 

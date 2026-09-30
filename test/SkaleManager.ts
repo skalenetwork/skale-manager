@@ -339,13 +339,13 @@ describe("SkaleManager", () => {
                     308000000,
                     269500000,
                     231000000,
-                    192500000
+                    192500000,
+                    144000000,
+                    84000000,
+                    48000000,
+                    12750000
                 ]
-                for (let bounty = schedule[schedule.length - 1] / 2; bounty > 1; bounty /= 2) {
-                    for (let i = 0; i < 3; ++i) {
-                        schedule.push(bounty);
-                    }
-                }
+                schedule.push(...Array(10).fill(0));
                 let mustBePaid = 0;
                 await nextMonth(contractManager);
                 for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timeLimit; ++year) {
