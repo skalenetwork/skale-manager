@@ -7,7 +7,7 @@ import {SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
 import {Transaction} from "ethers";
 
-async function getSkaleManagerInstance() {
+export async function getSkaleManagerInstance() {
     if (process.env.ABI) {
         console.log("This version of the upgrade script ignores manually provided ABI");
         console.log("Do not set ABI environment variable");
@@ -22,7 +22,7 @@ async function getSkaleManagerInstance() {
     return await project.getInstance(process.env.TARGET);
 }
 
-class SkaleManagerUpgrader extends Upgrader {
+export class SkaleManagerUpgrader extends Upgrader {
     constructor(
         targetVersion: string,
         instance: Instance,
@@ -63,7 +63,7 @@ class SkaleManagerUpgrader extends Upgrader {
     //initialize = async () => {}
 }
 
-async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
+export async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
     const implementationAddress = await getImplementationAddress(ethers.provider, timeHelpersAddress)
     const manifest = await Manifest.forNetwork(ethers.provider);
     const deployment = await manifest.getDeploymentFromAddress(implementationAddress);
@@ -71,7 +71,7 @@ async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
     return storageLayout.find((storageItem: { label: string; }) => storageItem.label === "_timeShift") !== undefined;
 }
 
-async function prepareContractsList(instance: Instance) {
+export async function prepareContractsList(instance: Instance) {
     // If skale-manager is deployed not in production mode
     // the smart contract TimeHelpers is replaced
     // with the TimeHelpersWithDebug.

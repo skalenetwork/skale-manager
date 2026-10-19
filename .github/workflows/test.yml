@@ -87,6 +87,9 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=12288
         run: yarn test
 
+      - name: Test mainnet upgrade
+        run: ./scripts/test_mainnet_upgrade.sh
+
   coverage:
     name: Coverage (${{ matrix.shard.name }})
     runs-on: ubuntu-latest
