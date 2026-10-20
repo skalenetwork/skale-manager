@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.35;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
@@ -38,6 +38,13 @@ import {Precompiled} from "../utils/Precompiled.sol";
  */
 library SkaleDkgPreResponse {
     using G2Operations for ISkaleDKG.G2Point;
+
+    error WrongNode(uint256 node, uint256 expectedNode);
+    error PreResponseWasAlreadySubmitted(bytes32 schainHash);
+    error BroadcastedDataIsNotCorrect(bytes32 schainHash);
+    error IncorrectLengthOfMultipliedVerificationVector(bytes32 schainHash);
+    error MultipliedVerificationVectorIsNotCorrect(bytes32 schainHash);
+    error G1MulIsNotValid();
 
     function preResponse(
         bytes32 schainHash,
@@ -98,21 +105,21 @@ library SkaleDkgPreResponse {
         }
         require(
             complaints[schainHash].nodeToComplaint == fromNodeIndex,
-            "Not this Node"
+            WrongNode(fromNodeIndex, complaints[schainHash].nodeToComplaint)
         );
         require(
             !complaints[schainHash].isResponse,
-            "Already submitted pre response data"
+            PreResponseWasAlreadySubmitted(schainHash)
         );
         require(
             hashedData[schainHash][indexOnSchain] ==
                 skaleDKG.hashData(secretKeyContribution, verificationVector),
-            "Broadcasted Data is not correct"
+            BroadcastedDataIsNotCorrect(schainHash)
         );
         require(
             verificationVector.length ==
                 verificationVectorMultiplication.length,
-            "Incorrect length of multiplied verification vector"
+            IncorrectLengthOfMultipliedVerificationVector(schainHash)
         );
         (index, valid) = skaleDKG.checkAndReturnIndexInGroup(
             schainHash,
@@ -128,7 +135,7 @@ library SkaleDkgPreResponse {
                 verificationVector,
                 verificationVectorMultiplication
             ),
-            "Multiplied verification vector is incorrect"
+            MultipliedVerificationVectorIsNotCorrect(schainHash)
         );
     }
 
@@ -173,7 +180,7 @@ library SkaleDkgPreResponse {
         ISkaleDKG.G2Point memory verificationVector,
         ISkaleDKG.G2Point memory verificationVectorMultiplication
     ) private view returns (bool valid) {
-        require(G1Operations.checkRange(g1Mul), "g1Mul is not valid");
+        require(G1Operations.checkRange(g1Mul), G1MulIsNotValid());
         g1Mul.b = G1Operations.negate(g1Mul.b);
         ISkaleDKG.Fp2Point memory one = G1Operations.getG1Generator();
         return
