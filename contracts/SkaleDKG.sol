@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.35;
 
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { ISlashingTable } from "@skalenetwork/skale-manager-interfaces/ISlashingTable.sol";
@@ -72,31 +72,18 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     mapping(bytes32 => uint256) public override pendingToBeReplaced;
 
-    modifier correctGroup(bytes32 schainHash) {
-        require(channels[schainHash].active, "Group is not created");
-        _;
-    }
+    error GroupIsNotCreated(bytes32 schainHash);
+    error NodeIsNotInGroup(bytes32 schainHash, uint256 node);
+    error SenderIsNotNodeOwner(address sender, uint256 node);
 
-    modifier correctGroupWithoutRevert(bytes32 schainHash) {
-        if (!channels[schainHash].active) {
-            emit ComplaintError("Group is not created");
-        } else {
-            _;
-        }
+    modifier correctGroup(bytes32 schainHash) {
+        require(channels[schainHash].active, GroupIsNotCreated(schainHash));
+        _;
     }
 
     modifier correctNode(bytes32 schainHash, uint256 nodeIndex) {
         (uint256 index, ) = checkAndReturnIndexInGroup(schainHash, nodeIndex, true);
         _;
-    }
-
-    modifier correctNodeWithoutRevert(bytes32 schainHash, uint256 nodeIndex) {
-        (, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
-        if (!check) {
-            emit ComplaintError("Node is not in this group");
-        } else {
-            _;
-        }
     }
 
     modifier onlyNodeOwner(uint256 nodeIndex) {
@@ -189,8 +176,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }))
         onlyNodeOwner(fromNodeIndex)
         correctNode(schainHash, fromNodeIndex)
-        correctGroupWithoutRevert(schainHash)
-        correctNodeWithoutRevert(schainHash, toNodeIndex)
+        correctGroup(schainHash)
+        correctNode(schainHash, toNodeIndex)
     {
         SkaleDkgComplaint.complaintBadData({
             schainHash: schainHash,
@@ -244,8 +231,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }))
         onlyNodeOwner(fromNodeIndex)
         correctNode(schainHash, fromNodeIndex)
-        correctGroupWithoutRevert(schainHash)
-        correctNodeWithoutRevert(schainHash, toNodeIndex)
+        correctGroup(schainHash)
+        correctNode(schainHash, toNodeIndex)
     {
         SkaleDkgComplaint.complaint({
             schainHash: schainHash,
@@ -317,10 +304,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         startAlrightTimestamp[schainHash] = block.timestamp;
     }
 
-    function setBadNode(bytes32 schainHash, uint256 nodeIndex) external override allow("SkaleDKG") {
-        _badNodes[schainHash] = nodeIndex;
-    }
-
     function resetPendingToBeReplaced(bytes32 schainHash) external override allow("Schains") {
         delete pendingToBeReplaced[schainHash];
     }
@@ -339,6 +322,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
         emit BadGuy(badNode);
         emit FailedDKG(schainHash);
+        _setBadNode(schainHash, badNode);
 
         if (schainsInternal.isAnyFreeNode(schainHash)) {
             uint256 newNode = nodeRotation.rotateNode(
@@ -676,14 +660,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         public
         view
         override
-        returns (uint256 groupIndex, bool valid)
+        returns (uint256 indexInGroup, bool valid)
     {
-        uint256 index = ISchainsInternal(contractManager.getContract("SchainsInternal"))
+        indexInGroup = ISchainsInternal(contractManager.getContract("SchainsInternal"))
             .getNodeIndexInGroup(schainHash, nodeIndex);
-        if (index >= channels[schainHash].n && revertCheck) {
-            revert("Node is not in this group");
-        }
-        return (index, index < channels[schainHash].n);
+        valid = indexInGroup < channels[schainHash].n;
+        require(!revertCheck || valid, NodeIsNotInGroup(schainHash, nodeIndex));
     }
 
     function isEveryoneBroadcasted(
@@ -744,6 +726,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
+    function _setBadNode(bytes32 schainHash, uint256 nodeIndex) private {
+        _badNodes[schainHash] = nodeIndex;
+    }
+
     function _refundGasByValidatorToSchain(bytes32 schainHash) private {
         uint256 validatorId = INodes(contractManager.getContract("Nodes"))
          .getValidatorId(_badNodes[schainHash]);
@@ -790,7 +776,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     function _checkMsgSenderIsNodeOwner(uint256 nodeIndex) private view {
         require(
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender),
-            "Node does not exist for message sender"
+            SenderIsNotNodeOwner(msg.sender, nodeIndex)
         );
     }
 

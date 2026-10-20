@@ -2547,10 +2547,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@skalenetwork/skale-manager-interfaces@npm:3.3.0":
-  version: 3.3.0
-  resolution: "@skalenetwork/skale-manager-interfaces@npm:3.3.0"
-  checksum: 10c0/a429d7f14a9074bf732887755e18e2c14a4be65aa0b14e9af717a6779b31663cbfb0f6f91f31b18b8ec8dc4041cf7dc28b944aaf9721178cae8f2ce6933ad57f
+"@skalenetwork/skale-manager-interfaces@npm:3.3.0-revert-complaints.0":
+  version: 3.3.0-revert-complaints.0
+  resolution: "@skalenetwork/skale-manager-interfaces@npm:3.3.0-revert-complaints.0"
+  checksum: 10c0/f6bf3fd2b2c825b0598fd888799598e6c17c5d5ebe166cc6dafaf5330ee5f3c2d40df41705918aaeaebf1e362e6b61237333dccfca1b0e2ff1f1cdbe2ab799db
   languageName: node
   linkType: hard
 
@@ -2586,7 +2586,7 @@ __metadata:
     "@skalenetwork/marionette-interfaces": "npm:^0.0.0-main.6"
     "@skalenetwork/paymaster-interfaces": "npm:^1.0.1"
     "@skalenetwork/skale-contracts-ethers-v6": "npm:^2.0.0-develop.6"
-    "@skalenetwork/skale-manager-interfaces": "npm:3.3.0"
+    "@skalenetwork/skale-manager-interfaces": "npm:3.3.0-revert-complaints.0"
     "@skalenetwork/upgrade-tools": "npm:4.0.0-develop.8"
     "@typechain/ethers-v6": "npm:^0.5.1"
     "@typechain/hardhat": "npm:^9.1.0"

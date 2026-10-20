@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.35;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
@@ -39,6 +39,11 @@ library SkaleDkgAlright {
     event AllDataReceived(bytes32 indexed schainHash, uint256 nodeIndex);
     event SuccessfulDKG(bytes32 indexed schainHash);
 
+    error BroadcastingPhaseIsNotOver(bytes32 schainHash);
+    error IncorrectTimeForAlright(bytes32 schainHash, uint256 timeout);
+    error ComplaintWasSent(bytes32 schainHash, uint256 nodeIndex);
+    error AlrightWasSent(bytes32 schainHash, uint256 nodeIndex);
+
     function alright(
         bytes32 schainHash,
         uint256 fromNodeIndex,
@@ -55,34 +60,34 @@ library SkaleDkgAlright {
             fromNodeIndex,
             true
         );
-        if (!valid) {
-            revert GroupIndexIsInvalid(index);
-        }
-        uint256 numberOfParticipant = channels[schainHash].n;
+        require(valid, GroupIndexIsInvalid(index));
         require(
-            numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted,
-            "Still Broadcasting phase"
+            dkgProcess[schainHash].numberOfBroadcasted == channels[schainHash].n,
+            BroadcastingPhaseIsNotOver(schainHash)
         );
         require(
             startAlrightTimestamp[schainHash] +
                 _getComplaintTimeLimit(contractManager) >
                 block.timestamp,
-            "Incorrect time for alright"
+            IncorrectTimeForAlright(
+                schainHash,
+                startAlrightTimestamp[schainHash] + _getComplaintTimeLimit(contractManager)
+            )
         );
         require(
             complaints[schainHash].fromNodeToComplaint != fromNodeIndex ||
                 (fromNodeIndex == 0 &&
                     complaints[schainHash].startComplaintBlockTimestamp == 0),
-            "Node has already sent complaint"
+            ComplaintWasSent(schainHash, fromNodeIndex)
         );
         require(
             !dkgProcess[schainHash].completed[index],
-            "Node is already alright"
+            AlrightWasSent(schainHash, fromNodeIndex)
         );
         dkgProcess[schainHash].completed[index] = true;
         dkgProcess[schainHash].numberOfCompleted++;
         emit AllDataReceived(schainHash, fromNodeIndex);
-        if (dkgProcess[schainHash].numberOfCompleted == numberOfParticipant) {
+        if (dkgProcess[schainHash].numberOfCompleted == channels[schainHash].n) {
             lastSuccessfulDKG[schainHash] = block.timestamp;
             channels[schainHash].active = false;
             IKeyStorage(contractManager.getContract("KeyStorage"))
