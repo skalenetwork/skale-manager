@@ -77,17 +77,13 @@ library SkaleDkgResponse {
             complaints[schainHash].isResponse,
             PreResponseWasNotSubmitted(schainHash)
         );
-        uint256 badNode = _verifyDataAndSlash({
+        _verifyDataAndSlash({
             schainHash: schainHash,
             secretNumber: secretNumber,
             multipliedShare: multipliedShare,
             contractManager: contractManager,
             complaints: complaints
         });
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).setBadNode(
-            schainHash,
-            badNode
-        );
     }
 
     function _verifyDataAndSlash(
@@ -96,7 +92,7 @@ library SkaleDkgResponse {
         ISkaleDKG.G2Point memory multipliedShare,
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
-    ) private returns (uint256 badNode) {
+    ) private {
         bytes32[2] memory publicKey = INodes(
             contractManager.getContract("Nodes")
         ).getNodePublicKey(complaints[schainHash].fromNodeToComplaint);
@@ -119,7 +115,7 @@ library SkaleDkgResponse {
                 sha256(abi.encodePacked(key))
             );
 
-        badNode = (
+        uint256 badNode = (
             _checkCorrectMultipliedShare(multipliedShare, secret) &&
                 multipliedShare.isEqual(complaints[schainHash].sumOfVerVec)
                 ? complaints[schainHash].fromNodeToComplaint

@@ -304,10 +304,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         startAlrightTimestamp[schainHash] = block.timestamp;
     }
 
-    function setBadNode(bytes32 schainHash, uint256 nodeIndex) external override allow("SkaleDKG") {
-        _badNodes[schainHash] = nodeIndex;
-    }
-
     function resetPendingToBeReplaced(bytes32 schainHash) external override allow("Schains") {
         delete pendingToBeReplaced[schainHash];
     }
@@ -326,6 +322,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
         emit BadGuy(badNode);
         emit FailedDKG(schainHash);
+        _setBadNode(schainHash, badNode);
 
         if (schainsInternal.isAnyFreeNode(schainHash)) {
             uint256 newNode = nodeRotation.rotateNode(
@@ -727,6 +724,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 context.isDebt
             );
         }
+    }
+
+    function _setBadNode(bytes32 schainHash, uint256 nodeIndex) private {
+        _badNodes[schainHash] = nodeIndex;
     }
 
     function _refundGasByValidatorToSchain(bytes32 schainHash) private {

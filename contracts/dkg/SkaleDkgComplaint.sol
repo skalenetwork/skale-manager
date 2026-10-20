@@ -91,7 +91,6 @@ library SkaleDkgComplaint {
                 channels
             );
         }
-        skaleDKG.setBadNode(schainHash, toNodeIndex);
     }
 
     function complaintBadData(

@@ -1098,6 +1098,24 @@ describe("SkaleDKG", () => {
                     await reimbursed(complaint);
                 });
 
+                it("should charge the complaint refund to the slashed complainer's validator", async () => {
+                    const accusedValidatorId = await validatorService.getValidatorId(validator1.address);
+                    const complainerValidatorId = await validatorService.getValidatorId(validator2.address);
+                    const deposit = ethers.parseEther("1");
+                    await wallets.rechargeValidatorWallet(accusedValidatorId, {value: deposit});
+                    await wallets.rechargeValidatorWallet(complainerValidatorId, {value: deposit});
+
+                    const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
+                        stringKeccak256(schainName),
+                        1,
+                        0
+                    );
+                    await expect(complaint).to.emit(skaleDKG, "BadGuy").withArgs(1);
+
+                    (await wallets.getValidatorBalance(accusedValidatorId)).should.be.equal(deposit);
+                    (await wallets.getValidatorBalance(complainerValidatorId)).should.be.lessThan(deposit);
+                });
+
                 describe("when DKG is successful", () => {
                     fastBeforeEach(async () => {
                         await skaleDKG.connect(validators[0].nodeAddress).alright(stringKeccak256(schainName), 0);
