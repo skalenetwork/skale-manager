@@ -159,7 +159,7 @@ contract DKR is Permissions, IDKR {
     mapping(DkrId dkr => Round round) private _rounds;
 
     /// @notice The ID of the most recently created DKR round
-    DkrId public lastDkrId = NO_DKR_ID;
+    DkrId public lastDkrId;
 
     uint256 public broadcastTimelimit;
     uint256 public alrightTimelimit;
@@ -221,6 +221,7 @@ contract DKR is Permissions, IDKR {
         initializer
     {
         Permissions.initialize(contractManagerAddress);
+        lastDkrId = NO_DKR_ID;
         broadcastTimelimit = 30 minutes;
         alrightTimelimit = 30 minutes;
         complaintTimelimit = 30 minutes;
@@ -233,7 +234,7 @@ contract DKR is Permissions, IDKR {
         DkrId previousDkr
     )
         external
-        allow("Rotation")
+        allow("NodeRotation")
         override
         returns (DkrId id)
     {
