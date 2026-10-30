@@ -89,6 +89,27 @@ library G2Operations {
         sum.y.b = (p - sum.y.b) % p;
     }
 
+    function scalarMul(
+        ISkaleDKG.G2Point memory point,
+        uint256 scalar
+    )
+        internal
+        view
+        returns (ISkaleDKG.G2Point memory result)
+    {
+        result = getG2Zero();
+        ISkaleDKG.G2Point memory doubledPoint = point;
+
+        while (scalar > 0) {
+            if (scalar & 1 == 1) {
+                result = addG2(result, doubledPoint);
+            }
+
+            doubledPoint = doubleG2(doubledPoint);
+            scalar >>= 1;
+        }
+    }
+
     function getTWISTB() internal pure returns (ISkaleDKG.Fp2Point memory point) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
