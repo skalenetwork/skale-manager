@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.35;
+pragma solidity 0.8.38;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {ISchainsInternal} from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
@@ -54,7 +54,7 @@ library SkaleDkgResponse {
         bytes32 schainHash,
         uint256 fromNodeIndex,
         uint256 secretNumber,
-        ISkaleDKG.G2Point memory multipliedShare,
+        ISkaleDKG.G2Point calldata multipliedShare,
         IContractManager contractManager,
         mapping(bytes32 => ISkaleDKG.Channel) storage channels,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints

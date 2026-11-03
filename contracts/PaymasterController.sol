@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.38;
 
 import {
     AddressUpgradeable
@@ -62,9 +62,7 @@ contract PaymasterController is IPaymasterController, Permissions {
 
 
     modifier onlyPaymasterSetter() {
-        if (!hasRole(PAYMASTER_SETTER_ROLE, msg.sender)) {
-            revert RoleRequired(PAYMASTER_SETTER_ROLE);
-        }
+        require(hasRole(PAYMASTER_SETTER_ROLE, msg.sender), RoleRequired(PAYMASTER_SETTER_ROLE));
         _;
     }
 
@@ -74,9 +72,7 @@ contract PaymasterController is IPaymasterController, Permissions {
     }
 
     function setImaAddress(address imaAddress) external override onlyPaymasterSetter {
-        if (!imaAddress.isContract()) {
-            revert IsNotContract(imaAddress);
-        }
+        require(imaAddress.isContract(), IsNotContract(imaAddress));
         ima = IMessageProxyForMainnet(imaAddress);
     }
 
@@ -187,18 +183,10 @@ contract PaymasterController is IPaymasterController, Permissions {
         address paymasterAddress,
         bytes32 chainHash
     ) private pure {
-        if (imaAddress == address(0)) {
-            revert MessageProxyForMainnetAddressIsNotSet();
-        }
-        if (marionetteAddress == address(0)) {
-            revert MarionetteAddressIsNotSet();
-        }
-        if (paymasterAddress == address(0)) {
-            revert PaymasterAddressIsNotSet();
-        }
-        if (chainHash == 0) {
-            revert EuropaChainHashIsNotSet();
-        }
+        require(imaAddress != address(0), MessageProxyForMainnetAddressIsNotSet());
+        require(marionetteAddress != address(0), MarionetteAddressIsNotSet());
+        require(paymasterAddress != address(0), PaymasterAddressIsNotSet());
+        require(chainHash != 0, EuropaChainHashIsNotSet());
     }
 
     function _isFreshDeployment (

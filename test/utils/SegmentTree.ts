@@ -1,10 +1,11 @@
-import chai from "chai";
+import chai, {expect} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {deployContractManager} from "../tools/deploy/contractManager";
 import {deploySegmentTreeTester} from "../tools/deploy/test/segmentTreeTester";
 
 import {SegmentTreeTester} from "../../typechain-types";
 import {fastBeforeEach} from "../tools/mocha";
+import {ethers} from "hardhat";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -64,8 +65,12 @@ describe("SegmentTree", () => {
             await segmentTree.addElemInPlaces(128, 150);
             await segmentTree.initTree();
             await segmentTree.getElem(254);
-            await segmentTree.getElem(255).should.be.eventually.rejectedWith("Incorrect index");
-            await segmentTree.getElem(100000000000).should.be.eventually.rejectedWith("Incorrect index");
+            await expect(segmentTree.getElem(255))
+                .to.be.revertedWithCustomError(segmentTree, "IncorrectIndex")
+                .withArgs(255, 255);
+            await expect(segmentTree.getElem(100000000000))
+                .to.be.revertedWithCustomError(segmentTree, "IncorrectIndex")
+                .withArgs(100000000000, 255);
         });
 
         it("should initialize if elements not only at last place", async () => {
@@ -181,8 +186,14 @@ describe("SegmentTree", () => {
                 await segmentTree.addToPlace(38, 16);
                 await segmentTree.addToPlace(99, 16);
                 await segmentTree.removeFromPlace(99, 16);
-                await segmentTree.addToPlace(0, 16).should.be.eventually.rejectedWith("Incorrect place");
-                await segmentTree.removeFromPlace(129, 16).should.be.eventually.rejectedWith("Incorrect place");
+                await expect(segmentTree.addToPlace(0, 16)).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SegmentTree"),
+                    "IncorrectPlace"
+                ).withArgs(0, 128);
+                await expect(segmentTree.removeFromPlace(129, 16)).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SegmentTree"),
+                    "IncorrectPlace"
+                ).withArgs(129, 128);
             });
         });
 
@@ -299,7 +310,10 @@ describe("SegmentTree", () => {
                 (await segmentTree.getRandomElem(100)).should.be.equal(0);
                 (await segmentTree.sumFromPlaceToLast(99)).should.be.equal(150);
                 (await segmentTree.getRandomElem(99)).should.be.equal(99);
-                await segmentTree.getRandomElem(0).should.be.rejectedWith("Incorrect place");
+                await expect(segmentTree.getRandomElem(0)).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SegmentTree"),
+                    "IncorrectPlace"
+                ).withArgs(0, 128);
                 (await segmentTree.getRandomElem(128)).should.be.equal(0);
                 await segmentTree.addToPlace(128, 1000);
                 (await segmentTree.getRandomElem(128)).should.be.equal(128);
@@ -310,8 +324,14 @@ describe("SegmentTree", () => {
                 await segmentTree.addToPlace(127, 1000);
                 (await segmentTree.getRandomElem(128)).should.be.equal(0);
                 (await segmentTree.getRandomElem(127)).should.be.equal(127);
-                await segmentTree.getRandomElem(129).should.be.rejectedWith("Incorrect place");
-                await segmentTree.getRandomElem(100000).should.be.rejectedWith("Incorrect place");
+                await expect(segmentTree.getRandomElem(129)).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SegmentTree"),
+                    "IncorrectPlace"
+                ).withArgs(129, 128);
+                await expect(segmentTree.getRandomElem(100000)).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SegmentTree"),
+                    "IncorrectPlace"
+                ).withArgs(100000, 128);
             });
 
             it("should return and remove random places", async () => {

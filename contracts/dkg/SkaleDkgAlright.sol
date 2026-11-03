@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.35;
+pragma solidity 0.8.38;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
@@ -65,14 +65,11 @@ library SkaleDkgAlright {
             dkgProcess[schainHash].numberOfBroadcasted == channels[schainHash].n,
             BroadcastingPhaseIsNotOver(schainHash)
         );
+        uint256 alrightTimeLimit = startAlrightTimestamp[schainHash] +
+                _getComplaintTimeLimit(contractManager);
         require(
-            startAlrightTimestamp[schainHash] +
-                _getComplaintTimeLimit(contractManager) >
-                block.timestamp,
-            IncorrectTimeForAlright(
-                schainHash,
-                startAlrightTimestamp[schainHash] + _getComplaintTimeLimit(contractManager)
-            )
+            block.timestamp < alrightTimeLimit,
+            IncorrectTimeForAlright(schainHash, alrightTimeLimit)
         );
         require(
             complaints[schainHash].fromNodeToComplaint != fromNodeIndex ||

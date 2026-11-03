@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.35;
+pragma solidity 0.8.38;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IKeyStorage} from "@skalenetwork/skale-manager-interfaces/IKeyStorage.sol";
@@ -129,6 +129,7 @@ library SkaleDkgBroadcast {
     view
     {
         uint256 n = channels[schainHash].n;
+        uint256 t = getT(n);
         uint256 currentRotationCounter = INodeRotation(
             contractManager.getContract("NodeRotation")
         ).getRotation(schainHash).rotationCounter;
@@ -137,8 +138,8 @@ library SkaleDkgBroadcast {
             IncorrectRotationCounter(rotationCounter, currentRotationCounter)
         );
         require(
-            verificationVector.length == getT(n),
-            IncorrectNumberOfVerificationVectors(verificationVector.length, getT(n))
+            verificationVector.length == t,
+            IncorrectNumberOfVerificationVectors(verificationVector.length, t)
         );
         require(
             secretKeyContribution.length == n,

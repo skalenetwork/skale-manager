@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.35;
+pragma solidity 0.8.38;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
@@ -100,9 +100,7 @@ library SkaleDkgPreResponse {
     ) private view returns (uint256 index) {
         (uint256 indexOnSchain, bool valid) = skaleDKG
             .checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
-        if (!valid) {
-            revert GroupIndexIsInvalid(index);
-        }
+        require(valid, GroupIndexIsInvalid(index));
         require(
             complaints[schainHash].nodeToComplaint == fromNodeIndex,
             WrongNode(fromNodeIndex, complaints[schainHash].nodeToComplaint)
@@ -126,9 +124,7 @@ library SkaleDkgPreResponse {
             complaints[schainHash].fromNodeToComplaint,
             true
         );
-        if (!valid) {
-            revert GroupIndexIsInvalid(index);
-        }
+        require(valid, GroupIndexIsInvalid(index));
         require(
             _checkCorrectVectorMultiplication(
                 index,

@@ -400,7 +400,8 @@ describe("NodesFunctionality", () => {
             await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
             await nodes.checkPossibilityCreatingNode(nodeAddress.address)
-                .should.be.revertedWithCustomError(nodes, "MinimumStakingRequirementIsNotMet");
+                .should.be.revertedWithCustomError(nodes, "MinimumStakingRequirementIsNotMet")
+                .withArgs(validatorId);
         });
 
         it("should allow to create node if new epoch is started", async () => {
@@ -411,7 +412,8 @@ describe("NodesFunctionality", () => {
             await nextMonth(contractManager);
 
             await nodes.checkPossibilityCreatingNode(nodeAddress.address)
-                .should.be.revertedWithCustomError(nodes, "MinimumStakingRequirementIsNotMet");
+                .should.be.revertedWithCustomError(nodes, "MinimumStakingRequirementIsNotMet")
+                .withArgs(validatorId);
 
             await constantsHolder.setMSR(amount);
 
@@ -445,7 +447,8 @@ describe("NodesFunctionality", () => {
 
             await nextMonth(contractManager);
             await nodes.checkPossibilityCreatingNode(nodeAddress.address)
-                .should.be.revertedWithCustomError(nodes, "MinimumStakingRequirementIsNotMet");
+                .should.be.revertedWithCustomError(nodes, "MinimumStakingRequirementIsNotMet")
+                .withArgs(validatorId);
 
             await constantsHolder.setMSR(amount);
 
