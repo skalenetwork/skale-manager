@@ -1,9 +1,8 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {ECDH} from "../typechain-types";
-import {ec} from "elliptic";
-
-const secp256k1Curve = new ec("secp256k1");
+import {secp256k1} from "@noble/curves/secp256k1";
+import {toBigInt} from "ethers";
 
 import {deployECDH} from "./tools/deploy/ecdh";
 import {deployContractManager} from "./tools/deploy/contractManager";
@@ -16,6 +15,18 @@ const n = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFF
 const gx = BigInt("0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798");
 const gy = BigInt("0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8");
 const n2 = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141");
+
+const generateKey = () => {
+    const privateKey = secp256k1.utils.randomSecretKey();
+    const publicKey = secp256k1.getPublicKey(privateKey, false);
+    return {
+        privateKey,
+        publicKey,
+        d: toBigInt(privateKey),
+        x: toBigInt(publicKey.slice(1, 33)),
+        y: toBigInt(publicKey.slice(33))
+    };
+}
 
 describe("ECDH", () => {
     let ecdh: ECDH;
@@ -322,11 +333,7 @@ describe("ECDH", () => {
     });
 
     it("Should create a valid public key", async () => {
-        const key = secp256k1Curve.genKeyPair();
-        const priv = key.getPrivate();
-        const d = BigInt("0x" + priv.toString(16));
-        const pubX = BigInt("0x" + key.getPublic().getX().toString(16));
-        const pubY = BigInt("0x" + key.getPublic().getY().toString(16));
+        const {d, x: pubX, y: pubY} = generateKey();
         const result = await ecdh.publicKey(d);
         const pubXCalc = result[0];
         const pubYCalc = result[1];
@@ -335,14 +342,10 @@ describe("ECDH", () => {
     });
 
     it("Key derived in both directions should be the same", async () => {
-        const key1 = secp256k1Curve.genKeyPair();
-        const key2 = secp256k1Curve.genKeyPair();
-        const d1 = BigInt("0x" + key1.getPrivate().toString(16));
-        const d2 = BigInt("0x" + key2.getPrivate().toString(16));
-        const pub1X = BigInt("0x" + key1.getPublic().getX().toString(16));
-        const pub1Y = BigInt("0x" + key1.getPublic().getY().toString(16));
-        const pub2X = BigInt("0x" + key2.getPublic().getX().toString(16));
-        const pub2Y = BigInt("0x" + key2.getPublic().getY().toString(16));
+        const key1 = generateKey();
+        const key2 = generateKey();
+        const {d: d1, x: pub1X, y: pub1Y} = key1;
+        const {d: d2, x: pub2X, y: pub2Y} = key2;
         const result = await ecdh.deriveKey(d1, pub2X, pub2Y);
         const k12x = result[0];
         const k12y = result[1];
@@ -352,15 +355,13 @@ describe("ECDH", () => {
         k12x.should.be.equal(k21x);
         k12y.should.be.equal(k21y);
 
-        const kd = key1.derive(key2.getPublic()).toString(10);
+        const kd = toBigInt(secp256k1.getSharedSecret(key1.privateKey, key2.publicKey).slice(1));
         k12x.should.be.equal(kd);
     });
 
     it("Should follow associative property", async () => {
-        const key1 = secp256k1Curve.genKeyPair();
-        const key2 = secp256k1Curve.genKeyPair();
-        const d1 = BigInt("0x" + key1.getPrivate().toString(16));
-        const d2 = BigInt("0x" + key2.getPrivate().toString(16));
+        const {d: d1} = generateKey();
+        const {d: d2} = generateKey();
         let add12X;
         let add12Y;
         const result = await ecdh.publicKey(d1);

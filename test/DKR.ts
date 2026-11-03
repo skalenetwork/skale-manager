@@ -8,7 +8,13 @@ import {deployNodes} from "./tools/deploy/nodes";
 import {deployValidatorService} from "./tools/deploy/delegation/validatorService";
 import {deploySchains} from "./tools/deploy/schains";
 import {SchainType} from "./tools/types";
-import {registerNodes} from "./tools/nodes";
+import {getSecretKeyShare, NodeData, registerNodes} from "./tools/nodes";
+import {generateKeys} from "./tools/rotation";
+import {deploySchainsInternal} from "./tools/deploy/schainsInternal";
+import {deploySkaleDKG} from "./tools/deploy/skaleDKG";
+import {deployNodeRotation} from "./tools/deploy/nodeRotation";
+import {deployKeyStorage} from "./tools/deploy/keyStorage";
+import {bn254} from "@noble/curves/bn254";
 
 
 const initialFixture = async () => {
@@ -48,7 +54,6 @@ const existingSchainFixture = async () => {
         nodes,
         validatorService
     );
-    console.log(nodesData); // TODO: remove
 
     const schains = await deploySchains(context.contractManager);
     await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), context.owner);
@@ -61,8 +66,22 @@ const existingSchainFixture = async () => {
         schainName,
         context.schainOwner,
         context.schainOwner,
-        []
-    )
+        [],
+        {value: ethers.parseEther("100")}
+    );
+
+    const schainsInternal = await deploySchainsInternal(context.contractManager);
+    const commonPublicKey = await generateKeys(
+        schainHash,
+        nodesData,
+        await deploySkaleDKG(context.contractManager),
+        schainsInternal,
+        await deployNodeRotation(context.contractManager)
+    );
+
+    const groupNodesIds = await schainsInternal.getNodesInGroup(schainHash);
+    const schainNodes = groupNodesIds.map(id => nodesData.find(node => node.id === id) as NodeData);
+    const spareNodes = nodesData.filter(node => !groupNodesIds.includes(node.id));
 
     return {
         ...context,
@@ -71,8 +90,9 @@ const existingSchainFixture = async () => {
         validatorId,
         schainName,
         schainHash,
-        // schainNodes,
-        // spareNodes
+        commonPublicKey,
+        schainNodes,
+        spareNodes
     }
 }
 
@@ -82,6 +102,31 @@ describe("DKR", () => {
         await expect(dkr.connect(hacker).start([1, 2, 3], [3, 4, 5], 2, 5))
             .to.be.revertedWith("Message sender is invalid");
     })
+
+    it("should generate schain keys", async () => {
+        const {contractManager, schainHash, commonPublicKey, schainNodes} = await loadFixture(existingSchainFixture);
+        const keyStorage = await deployKeyStorage(contractManager);
+        const storedPublicKey = await keyStorage.getCommonPublicKey(schainHash);
+        const expected = commonPublicKey.toAffine();
+        expect(storedPublicKey.x.a).to.equal(expected.x.c0);
+        expect(storedPublicKey.x.b).to.equal(expected.x.c1);
+        expect(storedPublicKey.y.a).to.equal(expected.y.c0);
+        expect(storedPublicKey.y.b).to.equal(expected.y.c1);
+
+        // Any t shares recover the common secret key
+        const Fr = bn254.fields.Fr;
+        const shares = schainNodes.map(node => getSecretKeyShare(node, schainHash));
+        const t = Math.floor((shares.length * 2 + 1) / 3);
+        const xs = shares.map((_, index) => BigInt(index + 1)).slice(-t);
+        const secretKey = xs.reduce((sum, x) => {
+            const lagrangeCoefficient = xs.reduce(
+                (product, other) => other === x ? product : Fr.mul(product, Fr.div(other, Fr.sub(other, x))),
+                1n
+            );
+            return Fr.add(sum, Fr.mul(lagrangeCoefficient, shares[Number(x) - 1]));
+        }, 0n);
+        expect(bn254.G2.Point.BASE.multiply(secretKey).equals(commonPublicKey)).to.be.true;
+    });
 
     it("should start keys re-sharing", async () => {
         const {dkr} = await loadFixture(existingSchainFixture);

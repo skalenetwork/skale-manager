@@ -1462,6 +1462,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@noble/curves@npm:1.9.7":
+  version: 1.9.7
+  resolution: "@noble/curves@npm:1.9.7"
+  dependencies:
+    "@noble/hashes": "npm:1.8.0"
+  checksum: 10c0/150014751ebe8ca06a8654ca2525108452ea9ee0be23430332769f06808cddabfe84f248b6dbf836916bc869c27c2092957eec62c7506d68a1ed0a624017c2a3
+  languageName: node
+  linkType: hard
+
 "@noble/hashes@npm:1.2.0, @noble/hashes@npm:~1.2.0":
   version: 1.2.0
   resolution: "@noble/hashes@npm:1.2.0"
@@ -1487,6 +1496,13 @@ __metadata:
   version: 1.7.1
   resolution: "@noble/hashes@npm:1.7.1"
   checksum: 10c0/2f8ec0338ccc92b576a0f5c16ab9c017a3a494062f1fbb569ae641c5e7eab32072f9081acaa96b5048c0898f972916c818ea63cbedda707886a4b5ffcfbf94e3
+  languageName: node
+  linkType: hard
+
+"@noble/hashes@npm:1.8.0":
+  version: 1.8.0
+  resolution: "@noble/hashes@npm:1.8.0"
+  checksum: 10c0/06a0b52c81a6fa7f04d67762e08b2c476a00285858150caeaaff4037356dd5e119f45b2a530f638b77a5eeca013168ec1b655db41bae3236cb2e9d511484fc77
   languageName: node
   linkType: hard
 
@@ -2573,6 +2589,7 @@ __metadata:
   resolution: "@skalenetwork/skale-manager@workspace:."
   dependencies:
     "@eth-optimism/contracts-bedrock": "npm:^0.17.3"
+    "@noble/curves": "npm:1.9.7"
     "@nomicfoundation/hardhat-chai-matchers": "npm:^2.0.0"
     "@nomicfoundation/hardhat-ethers": "npm:^3.1.0"
     "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.0"
@@ -2593,7 +2610,6 @@ __metadata:
     "@types/chai": "npm:^4.3.20"
     "@types/chai-almost": "npm:^1.0.3"
     "@types/chai-as-promised": "npm:^7.1.6"
-    "@types/elliptic": "npm:^6.4.15"
     "@types/mocha": "npm:^9.1.1"
     "@types/node": "npm:^22.7.4"
     "@types/sinon-chai": "npm:^4.0.0"
@@ -2607,7 +2623,6 @@ __metadata:
     chalk: "npm:^5.6.2"
     cspell: "npm:^7.3.8"
     dotenv: "npm:^17.2.3"
-    elliptic: "npm:^6.6.0"
     eslint: "npm:^8.50.0"
     ethers: "npm:^6.14.0"
     hardhat: "npm:^2.26.0"
@@ -3295,7 +3310,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bn.js@npm:*, @types/bn.js@npm:^5.1.0":
+"@types/bn.js@npm:^5.1.0":
   version: 5.1.1
   resolution: "@types/bn.js@npm:5.1.1"
   dependencies:
@@ -3342,15 +3357,6 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/e95ef43e4a6b16bd233343fbff9798cdebded76f0c2f8a740a70bd4ce0608a804b489022765a00bb3447205536e5a032ba76a1a85bd1f050183c0196f91f3741
-  languageName: node
-  linkType: hard
-
-"@types/elliptic@npm:^6.4.15":
-  version: 6.4.15
-  resolution: "@types/elliptic@npm:6.4.15"
-  dependencies:
-    "@types/bn.js": "npm:*"
-  checksum: 10c0/ab1b019d82086b3ab7dc1bd23acbdf070bb2a5ee27d9b6fd1339e4ac9fe79ba9bbfcc7f968ec943ba4ebc3d34590e0ef8b03617600f33903f1f15d66f8eb8397
   languageName: node
   linkType: hard
 
@@ -5220,7 +5226,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"elliptic@npm:^6.5.4, elliptic@npm:^6.6.0":
+"elliptic@npm:^6.5.4":
   version: 6.6.0
   resolution: "elliptic@npm:6.6.0"
   dependencies:
