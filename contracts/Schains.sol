@@ -67,11 +67,11 @@ contract Schains is Permissions, ISchains {
     bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
     error SchainDoesNotExist(bytes32 schainHash);
-    error SchainIsCreatedTooEarly();
-    error SchainLifetimeIsTooSmall();
-    error SenderIsNotTheOwnerOfTheSchain();
-    error DkgWasNotFailed();
-    error NoFreeNodes();
+    error SchainIsCreatedTooEarly(uint256 creationTimestamp);
+    error SchainLifetimeIsTooSmall(uint256 lifetime, uint256 minimalLifetime);
+    error SenderIsNotTheOwnerOfTheSchain(address sender, bytes32 schainHash);
+    error DkgWasNotFailed(bytes32 schainHash);
+    error NoFreeNodes(bytes32 schainHash);
     error SchainNameIsNotAvailable(string schainName);
     error OriginatorIsAContract(address originator);
     error OriginatorIsNotProvided();
@@ -113,8 +113,14 @@ contract Schains is Permissions, ISchains {
         IConstantsHolder constantsHolder = IConstantsHolder(contractManager.getConstantsHolder());
         uint256 schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
         uint256 minSchainLifetime = constantsHolder.minimalSchainLifetime();
-        require(block.timestamp >= schainCreationTimeStamp, SchainIsCreatedTooEarly());
-        require(schainParameters.lifetime >= minSchainLifetime, SchainLifetimeIsTooSmall());
+        require(
+            block.timestamp >= schainCreationTimeStamp,
+            SchainIsCreatedTooEarly(schainCreationTimeStamp)
+        );
+        require(
+            schainParameters.lifetime >= minSchainLifetime,
+            SchainLifetimeIsTooSmall(schainParameters.lifetime, minSchainLifetime)
+        );
         require(
             deposit >= getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime),
             NotEnoughFunds()
@@ -192,7 +198,10 @@ contract Schains is Permissions, ISchains {
         ISchainsInternal schainsInternal =
             ISchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
-        require(schainsInternal.isOwnerAddress(from, schainHash), SenderIsNotTheOwnerOfTheSchain());
+        require(
+            schainsInternal.isOwnerAddress(from, schainHash),
+            SenderIsNotTheOwnerOfTheSchain(from, schainHash)
+        );
 
         _deleteSchain(name, schainsInternal);
     }
@@ -227,10 +236,10 @@ contract Schains is Permissions, ISchains {
         INodeRotation nodeRotation = INodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainHash = keccak256(abi.encodePacked(name));
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        require(!skaleDKG.isLastDKGSuccessful(schainHash), DkgWasNotFailed());
+        require(!skaleDKG.isLastDKGSuccessful(schainHash), DkgWasNotFailed(schainHash));
         ISchainsInternal schainsInternal = ISchainsInternal(
             contractManager.getContract("SchainsInternal"));
-        require(schainsInternal.isAnyFreeNode(schainHash), NoFreeNodes());
+        require(schainsInternal.isAnyFreeNode(schainHash), NoFreeNodes(schainHash));
         uint256 newNodeIndex = nodeRotation.rotateNode(
                 skaleDKG.pendingToBeReplaced(schainHash),
                 schainHash,

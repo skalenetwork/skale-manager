@@ -49,7 +49,7 @@ error SenderHasToBeEqualToRequestedAddress(
     address sender,
     address requestedAddress
 );
-error WrongSignature();
+error WrongSignature(uint256 validatorId, address nodeAddress);
 error NodeAddressIsAValidator(address nodeAddress, uint256 validatorId);
 error AcceptingRequestIsAlreadyEnabled(uint256 validatorId);
 error AcceptingRequestIsAlreadyDisabled(uint256 validatorId);
@@ -282,7 +282,7 @@ contract ValidatorService is Permissions, IValidatorService {
             keccak256(abi.encodePacked(validatorId))
                 .toEthSignedMessageHash()
                 .recover(sig) == nodeAddress,
-            WrongSignature()
+            WrongSignature(validatorId, nodeAddress)
         );
         require(
             _validatorAddressToId[nodeAddress] == 0,

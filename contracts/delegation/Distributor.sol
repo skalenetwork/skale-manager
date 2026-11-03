@@ -54,10 +54,10 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
     ) private _firstUnwithdrawnMonth;
     mapping(uint256 validatorId => uint256 month) private _firstUnwithdrawnMonthForValidator;
 
-    error BountyIsLocked();
-    error DataLengthIsIncorrect();
-    error FeeIsLocked();
-    error ReceiverIsIncorrect();
+    error BountyIsLocked(uint256 unlockTimestamp);
+    error DataLengthIsIncorrect(uint256 length);
+    error FeeIsLocked(uint256 unlockTimestamp);
+    error ReceiverIsIncorrect(address receiver);
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
@@ -100,7 +100,7 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
             constantsHolder.launchTimestamp(),
             constantsHolder.BOUNTY_LOCKUP_MONTHS()
         );
-        require(block.timestamp >= unlockTimestamp, BountyIsLocked());
+        require(block.timestamp >= unlockTimestamp, BountyIsLocked(unlockTimestamp));
 
         uint256 bounty;
         uint256 endMonth;
@@ -143,7 +143,7 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
             constantsHolder.launchTimestamp(),
             constantsHolder.BOUNTY_LOCKUP_MONTHS()
         );
-        require(block.timestamp >= unlockTimestamp, FeeIsLocked());
+        require(block.timestamp >= unlockTimestamp, FeeIsLocked(unlockTimestamp));
 
         // check Validator Exist inside getValidatorId
         uint256 validatorId = validatorService.getValidatorId(msg.sender);
@@ -167,8 +167,8 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         bytes calldata userData,
         bytes calldata
     ) external override allow("SkaleToken") {
-        require(to == address(this), ReceiverIsIncorrect());
-        require(userData.length == 32, DataLengthIsIncorrect());
+        require(to == address(this), ReceiverIsIncorrect(to));
+        require(userData.length == 32, DataLengthIsIncorrect(userData.length));
         uint256 validatorId = abi.decode(userData, (uint256));
         _distributeBounty(amount, validatorId);
     }

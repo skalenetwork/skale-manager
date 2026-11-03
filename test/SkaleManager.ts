@@ -447,7 +447,8 @@ describe("SkaleManager", () => {
                     getPublicKey(nodeAddress), // public key
                     "d2", // name
                     "some.domain.name"
-                ).should.be.revertedWithCustomError(nodesContract, "MinimumStakingRequirementIsNotMet");
+                ).should.be.revertedWithCustomError(nodesContract, "MinimumStakingRequirementIsNotMet")
+                    .withArgs(validatorId);
             });
 
             describe("when developer has SKALE tokens", () => {
@@ -561,7 +562,8 @@ describe("SkaleManager", () => {
 
                     it("should fail to delete schain if sender is not owner of it", async () => {
                         await skaleManager.connect(hacker).deleteSchain("d2")
-                            .should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain");
+                            .should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain")
+                            .withArgs(hacker.address, d2SchainHash);
                     });
 
                     it("should delete schain", async () => {
@@ -600,7 +602,8 @@ describe("SkaleManager", () => {
 
                     it("should fail to delete schain if sender is not owner of it", async () => {
                         await skaleManager.connect(hacker).deleteSchain("d3")
-                            .should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain");
+                            .should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain")
+                            .withArgs(hacker.address, ethers.solidityPackedKeccak256(["string"], ["d3"]));
                     });
 
                     it("should delete schain by root", async () => {

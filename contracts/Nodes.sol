@@ -113,7 +113,7 @@ contract Nodes is Permissions, INodes {
     error NodeIsNotActive(uint256 nodeId);
     error NodeIsNotLeaving(uint256 nodeId);
     error NodeIsNotInMaintenance(uint256 nodeId);
-    error MinimumStakingRequirementIsNotMet();
+    error MinimumStakingRequirementIsNotMet(uint256 validatorId);
     error NodeDoesNotExistForValidator(uint256 validatorId, uint256 nodeId);
     error IpAndPublicIpIsDifferent(bytes4 ip, bytes4 publicIp);
     error SenderIsNotPermitted(address sender);
@@ -387,7 +387,7 @@ contract Nodes is Permissions, INodes {
                 validatorId,
                 validatorToNodeIndexes[validatorId].length
             ),
-            MinimumStakingRequirementIsNotMet()
+            MinimumStakingRequirementIsNotMet(validatorId)
         );
     }
 

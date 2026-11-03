@@ -246,7 +246,8 @@ describe("Delegation", () => {
             5,
             "0x",
             "0x"
-        ).should.be.revertedWithCustomError(distributor, "ReceiverIsIncorrect");
+        ).should.be.revertedWithCustomError(distributor, "ReceiverIsIncorrect")
+            .withArgs(holder2.address);
         await skaleTokenInternalTester.callTokensReceived(
             distributor,
             ethers.ZeroAddress,
@@ -255,7 +256,8 @@ describe("Delegation", () => {
             5,
             "0x", // Data length always must be 32 bytes
             "0x"
-        ).should.be.revertedWithCustomError(distributor, "DataLengthIsIncorrect");
+        ).should.be.revertedWithCustomError(distributor, "DataLengthIsIncorrect")
+            .withArgs(0);
     })
 
     describe("when holders have tokens and validator is registered", () => {
