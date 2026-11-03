@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.35;
+pragma solidity 0.8.38;
 
 interface ISkaleDKGTester {
     function initializeTester(address contractManagerAddress) external;

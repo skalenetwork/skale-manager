@@ -532,13 +532,18 @@ describe("SkaleDKG", () => {
 
             it("should rejected broadcast with incorrect rotation counter", async () => {
                 const incorrectRotationCounter = 1;
-                await skaleDKG.connect(validators[0].nodeAddress).broadcast(
-                    stringKeccak256(schainName),
-                    0,
-                    verificationVectors[indexes[0]],
-                    encryptedSecretKeyContributions[indexes[0]],
-                    incorrectRotationCounter
-                ).should.be.eventually.rejectedWith("Incorrect rotation counter");
+                await expect(
+                    skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
+                        0,
+                        verificationVectors[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]],
+                        incorrectRotationCounter
+                    )
+                ).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SkaleDkgBroadcast"),
+                    "IncorrectRotationCounter"
+                ).withArgs(incorrectRotationCounter, 0);
             });
 
             it("should rejected broadcast data from 2 node with incorrect sender", async () => {
@@ -775,13 +780,18 @@ describe("SkaleDKG", () => {
                     );
                     res.should.be.false;
                     // Simulate front-running complaint
-                    await skaleDKG.connect(validators[1].nodeAddress).broadcast(
-                        stringKeccak256(schainName),
-                        1,
-                        verificationVectors[indexes[1]],
-                        encryptedSecretKeyContributions[indexes[1]],
-                        rotation.rotationCounter
-                    ).should.be.rejectedWith("Incorrect time for broadcast");
+                    await expect(
+                        skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                            stringKeccak256(schainName),
+                            1,
+                            verificationVectors[indexes[1]],
+                            encryptedSecretKeyContributions[indexes[1]],
+                            rotation.rotationCounter
+                        )
+                    ).to.be.revertedWithCustomError(
+                        await ethers.getContractFactory("SkaleDkgBroadcast"),
+                        "IncorrectTimeForBroadcast"
+                    );
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
                         stringKeccak256(schainName),
                         0,
@@ -820,10 +830,15 @@ describe("SkaleDKG", () => {
                     );
                     res.should.be.false;
                     // Simulate front-running complaint
-                    await skaleDKG.connect(validators[1].nodeAddress).alright(
-                        stringKeccak256(schainName),
-                        1
-                    ).should.be.rejectedWith("Incorrect time for alright");
+                    await expect(
+                        skaleDKG.connect(validators[1].nodeAddress).alright(
+                            stringKeccak256(schainName),
+                            1
+                        )
+                    ).to.be.revertedWithCustomError(
+                        await ethers.getContractFactory("SkaleDkgAlright"),
+                        "IncorrectTimeForAlright"
+                    );
                     await skaleDKG.connect(validators[0].nodeAddress).complaint(
                         stringKeccak256(schainName),
                         0,
@@ -870,12 +885,17 @@ describe("SkaleDKG", () => {
                     );
                     res.should.be.false;
                     // Simulate front-running complaint
-                    await skaleDKG.connect(validators[0].nodeAddress).response(
-                        stringKeccak256(schainName),
-                        0,
-                        secretNumbers[indexes[0]],
-                        multipliedShares[indexes[0]]
-                    ).should.be.rejectedWith("Incorrect time for response");
+                    await expect(
+                        skaleDKG.connect(validators[0].nodeAddress).response(
+                            stringKeccak256(schainName),
+                            0,
+                            secretNumbers[indexes[0]],
+                            multipliedShares[indexes[0]]
+                        )
+                    ).to.be.revertedWithCustomError(
+                        await ethers.getContractFactory("SkaleDkgResponse"),
+                        "IncorrectTimeForResponse"
+                    );
                     await skaleDKG.connect(validators[1].nodeAddress).complaint(
                         stringKeccak256(schainName),
                         1,
@@ -1288,10 +1308,15 @@ describe("SkaleDKG", () => {
                         1
                     );
                     res.should.be.false;
-                    await skaleDKG.connect(validators[1].nodeAddress).alright(
-                        stringKeccak256(schainName),
-                        1
-                    ).should.be.eventually.rejectedWith("Node has already sent complaint");
+                    await expect(
+                        skaleDKG.connect(validators[1].nodeAddress).alright(
+                            stringKeccak256(schainName),
+                            1
+                        )
+                    ).to.be.revertedWithCustomError(
+                        await ethers.getContractFactory("SkaleDkgAlright"),
+                        "ComplaintWasSent"
+                    ).withArgs(stringKeccak256(schainName), 1);
                 });
 
                 it("should not send 2 complaints from 1 node", async () => {

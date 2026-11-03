@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.35;
+pragma solidity 0.8.38;
 
 import {ISkaleDKG} from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import {IContractManager} from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
@@ -44,6 +44,7 @@ library SkaleDkgPreResponse {
     error BroadcastedDataIsNotCorrect(bytes32 schainHash);
     error IncorrectLengthOfMultipliedVerificationVector(bytes32 schainHash);
     error MultipliedVerificationVectorIsNotCorrect(bytes32 schainHash);
+    error G1MulIsNotValid();
 
     function preResponse(
         bytes32 schainHash,
@@ -175,7 +176,7 @@ library SkaleDkgPreResponse {
         ISkaleDKG.G2Point memory verificationVector,
         ISkaleDKG.G2Point memory verificationVectorMultiplication
     ) private view returns (bool valid) {
-        require(G1Operations.checkRange(g1Mul), "g1Mul is not valid");
+        require(G1Operations.checkRange(g1Mul), G1MulIsNotValid());
         g1Mul.b = G1Operations.negate(g1Mul.b);
         ISkaleDKG.Fp2Point memory one = G1Operations.getG1Generator();
         return
