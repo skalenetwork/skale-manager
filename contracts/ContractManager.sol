@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.38;
 
 import {
     OwnableUpgradeable
@@ -32,6 +32,7 @@ import { IConstantsHolder } from "@skalenetwork/skale-manager-interfaces/IConsta
 import { IContractManager } from "@skalenetwork/skale-manager-interfaces/IContractManager.sol";
 import { ITimeHelpers } from "@skalenetwork/skale-manager-interfaces/delegation/ITimeHelpers.sol";
 
+import { IsNotContract } from "./CommonErrors.sol";
 import { InitializableWithGap } from "./thirdparty/openzeppelin/InitializableWithGap.sol";
 
 /**
@@ -53,6 +54,10 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
 
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public override contracts;
+
+    error ZeroAddress();
+    error ContractAlreadyAdded(string contractName, address contractAddress);
+    error ContractNotFound(string contractName);
 
     function initialize() external override initializer {
         OwnableUpgradeable.__Ownable_init();
@@ -78,12 +83,15 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
         onlyOwner
     {
         // check newContractsAddress is not equal to zero
-        require(newContractsAddress != address(0), "New address is equal zero");
+        require(newContractsAddress != address(0), ZeroAddress());
         // create hash of contractsName
         bytes32 contractId = keccak256(abi.encodePacked(contractsName));
         // check newContractsAddress is not equal the previous contract's address
-        require(contracts[contractId] != newContractsAddress, "Contract is already added");
-        require(newContractsAddress.isContract(), "Given contract address does not contain code");
+        require(
+            contracts[contractId] != newContractsAddress,
+            ContractAlreadyAdded(contractsName, newContractsAddress)
+        );
+        require(newContractsAddress.isContract(), IsNotContract(newContractsAddress));
         // add newContractsAddress to mapping of actual contract addresses
         contracts[contractId] = newContractsAddress;
         emit ContractUpgraded(contractsName, newContractsAddress);
@@ -147,8 +155,6 @@ contract ContractManager is InitializableWithGap, OwnableUpgradeable, IContractM
         returns (address contractAddress)
     {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
-        if (contractAddress == address(0)) {
-            revert(string.concat(name," contract has not been found"));
-        }
+        require(contractAddress != address(0), ContractNotFound(name));
     }
 }

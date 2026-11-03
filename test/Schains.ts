@@ -1499,7 +1499,8 @@ describe("Schains", () => {
                     await schains.deleteSchain(
                         nodeAddress1.address,
                         "D2",
-                    ).should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain");
+                    ).should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain")
+                        .withArgs(nodeAddress1.address, stringKeccak256("D2"));
                 });
             });
 
@@ -1555,7 +1556,8 @@ describe("Schains", () => {
                     await schains.deleteSchain(
                         nodeAddress1.address,
                         "D2",
-                    ).should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain");
+                    ).should.be.revertedWithCustomError(schains, "SenderIsNotTheOwnerOfTheSchain")
+                        .withArgs(nodeAddress1.address, stringKeccak256("D2"));
                 });
             });
         });

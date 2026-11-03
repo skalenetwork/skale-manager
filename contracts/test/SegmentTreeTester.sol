@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.38;
 
 import { IRandom, Random, SegmentTree } from "../utils/SegmentTree.sol";
 import { ISegmentTreeTester } from "./interfaces/ISegmentTreeTester.sol";
@@ -33,6 +33,8 @@ contract SegmentTreeTester is ISegmentTreeTester {
     SegmentTree.Tree private _tree;
 
     uint256[129] private _places;
+
+    error IncorrectIndex(uint256 index, uint256 length);
 
     function initTree() external override {
         _tree.create(128);
@@ -81,7 +83,7 @@ contract SegmentTreeTester is ISegmentTreeTester {
     }
 
     function getElem(uint256 index) external view override returns (uint256 element) {
-        require(index < _tree.tree.length, "Incorrect index");
+        require(index < _tree.tree.length, IncorrectIndex(index, _tree.tree.length));
         return _tree.tree[index];
     }
 
