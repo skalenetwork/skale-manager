@@ -12,7 +12,7 @@ import {deploySkaleManagerMock} from "./tools/deploy/test/skaleManagerMock";
 import {Wallet} from "ethers";
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
-import {assert} from "chai";
+import {assert, expect} from "chai";
 import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {fastBeforeEach} from "./tools/mocha";
@@ -380,7 +380,10 @@ describe("NodesData", () => {
 
                 (await nodes.spaceOfNodes(0))[0].should.be.equal(126);
 
-                await nodes.addSpaceToNode(0, 3).should.be.eventually.rejectedWith("Incorrect place");
+                await expect(nodes.addSpaceToNode(0, 3)).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SegmentTree"),
+                    "IncorrectPlace"
+                ).withArgs(129, 128);
                 await nodes.addSpaceToNode(0, 2);
 
                 (await nodes.spaceOfNodes(0))[0].should.be.equal(128);

@@ -34,6 +34,8 @@ contract SegmentTreeTester is ISegmentTreeTester {
 
     uint256[129] private _places;
 
+    error IncorrectIndex(uint256 index, uint256 length);
+
     function initTree() external override {
         _tree.create(128);
         for (uint8 i = 1; i <= 128; i++) {
@@ -81,7 +83,7 @@ contract SegmentTreeTester is ISegmentTreeTester {
     }
 
     function getElem(uint256 index) external view override returns (uint256 element) {
-        require(index < _tree.tree.length, "Incorrect index");
+        require(index < _tree.tree.length, IncorrectIndex(index, _tree.tree.length));
         return _tree.tree[index];
     }
 

@@ -64,6 +64,10 @@ library SegmentTree {
         uint256[] tree;
     }
 
+    error SizeIsZero();
+    error SizeIsNotPowerOfTwo(uint256 size);
+    error IncorrectPlace(uint256 place, uint256 size);
+
     /**
      * @dev Allocates storage for segment tree of `size` elements
      *
@@ -73,8 +77,8 @@ library SegmentTree {
      * - `size` must be power of 2
      */
     function create(Tree storage segmentTree, uint256 size) external {
-        require(size > 0, "Size can't be 0");
-        require(size & size - 1 == 0, "Size is not power of 2");
+        require(size > 0, SizeIsZero());
+        require(size & size - 1 == 0, SizeIsNotPowerOfTwo(size));
         segmentTree.tree = new uint256[](size * 2 - 1);
     }
 
@@ -86,9 +90,10 @@ library SegmentTree {
      * - `place` must be in range [1, size]
      */
     function addToPlace(Tree storage self, uint256 place, uint256 delta) external {
-        require(_correctPlace(self, place), "Incorrect place");
+        uint256 size = getSize(self);
+        require(_correctPlace(place, size), IncorrectPlace(place, size));
         uint256 leftBound = 1;
-        uint256 rightBound = getSize(self);
+        uint256 rightBound = size;
         uint256 step = 1;
         self.tree[0] = self.tree[0] + delta;
         while(leftBound < rightBound) {
@@ -113,9 +118,10 @@ library SegmentTree {
      * - initial value of target element must be not less than `delta`
      */
     function removeFromPlace(Tree storage self, uint256 place, uint256 delta) external {
-        require(_correctPlace(self, place), "Incorrect place");
+        uint256 size = getSize(self);
+        require(_correctPlace(place, size), IncorrectPlace(place, size));
         uint256 leftBound = 1;
-        uint256 rightBound = getSize(self);
+        uint256 rightBound = size;
         uint256 step = 1;
         self.tree[0] = self.tree[0] - delta;
         while(leftBound < rightBound) {
@@ -149,9 +155,11 @@ library SegmentTree {
     )
         external
     {
-        require(_correctPlace(self, fromPlace) && _correctPlace(self, toPlace), "Incorrect place");
+        uint256 size = getSize(self);
+        require(_correctPlace(fromPlace, size), IncorrectPlace(fromPlace, size));
+        require(_correctPlace(toPlace, size), IncorrectPlace(toPlace, size));
         uint256 leftBound = 1;
-        uint256 rightBound = getSize(self);
+        uint256 rightBound = size;
         uint256 step = 1;
         uint256 middle = (leftBound + rightBound) / 2;
         uint256 fromPlaceMove = fromPlace > toPlace ? toPlace : fromPlace;
@@ -210,11 +218,12 @@ library SegmentTree {
         view
         returns (uint256 position)
     {
-        require(_correctPlace(self, place), "Incorrect place");
+        uint256 size = getSize(self);
+        require(_correctPlace(place, size), IncorrectPlace(place, size));
 
         uint256 vertex = 1;
         uint256 leftBound = 0;
-        uint256 rightBound = getSize(self);
+        uint256 rightBound = size;
         uint256 currentFrom = place - 1;
         uint256 currentSum = sumFromPlaceToLast(self, place);
         if (currentSum == 0) {
@@ -259,12 +268,13 @@ library SegmentTree {
         view
         returns (uint256 sum)
     {
-        require(_correctPlace(self, place), "Incorrect place");
+        uint256 size = getSize(self);
+        require(_correctPlace(place, size), IncorrectPlace(place, size));
         if (place == 1) {
             return self.tree[0];
         }
         uint256 leftBound = 1;
-        uint256 rightBound = getSize(self);
+        uint256 rightBound = size;
         uint256 step = 1;
         while(leftBound < rightBound) {
             uint256 middle = (leftBound + rightBound) / 2;
@@ -292,10 +302,10 @@ library SegmentTree {
     }
 
     /**
-     * @dev Checks if `place` is valid position in segment tree
+     * @dev Checks if `place` is valid position in segment tree of `size` elements
      */
-    function _correctPlace(Tree storage self, uint256 place) private view returns (bool correct) {
-        return place >= 1 && place <= getSize(self);
+    function _correctPlace(uint256 place, uint256 size) private pure returns (bool correct) {
+        return place >= 1 && place <= size;
     }
 
     /**
