@@ -65,14 +65,11 @@ library SkaleDkgAlright {
             dkgProcess[schainHash].numberOfBroadcasted == channels[schainHash].n,
             BroadcastingPhaseIsNotOver(schainHash)
         );
+        uint256 alrightTimeLimit = startAlrightTimestamp[schainHash] +
+                _getComplaintTimeLimit(contractManager);
         require(
-            startAlrightTimestamp[schainHash] +
-                _getComplaintTimeLimit(contractManager) >
-                block.timestamp,
-            IncorrectTimeForAlright(
-                schainHash,
-                startAlrightTimestamp[schainHash] + _getComplaintTimeLimit(contractManager)
-            )
+            block.timestamp < alrightTimeLimit,
+            IncorrectTimeForAlright(schainHash, alrightTimeLimit)
         );
         require(
             complaints[schainHash].fromNodeToComplaint != fromNodeIndex ||
