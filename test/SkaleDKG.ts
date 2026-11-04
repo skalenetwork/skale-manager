@@ -1311,6 +1311,97 @@ describe("SkaleDKG", () => {
                             badMultipliedShares[indexes[0]]
                         )).to.emit(skaleDKG, "BadGuy").withArgs(0);
                     });
+
+                    describe("when accused node sent preResponse", () => {
+                        fastBeforeEach(async () => {
+                            await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                                stringKeccak256(schainName),
+                                0,
+                                verificationVectors[indexes[0]],
+                                verificationVectorMultiplication[indexes[0]],
+                                encryptedSecretKeyContributions[indexes[0]]
+                            );
+                            // free node 2 replaces the node found guilty
+                            await nodes.createNode(validators[0].nodeAddress.address,
+                                {
+                                    port: 8545,
+                                    nonce: 0,
+                                    ip: "0x7f000003",
+                                    publicIp: "0x7f000003",
+                                    publicKey: validatorsPublicKey[0],
+                                    name: "d203",
+                                    domainName: "some.domain.name"
+                                });
+                        });
+
+                        it("should allow preResponse in channel reopened after response", async () => {
+                            const schainHash = stringKeccak256(schainName);
+                            const response = await skaleDKG.connect(validators[0].nodeAddress).response(
+                                schainHash,
+                                0,
+                                secretNumbers[indexes[0]],
+                                multipliedShares[indexes[0]]
+                            );
+                            await response.should.emit(skaleDKG, "BadGuy").withArgs(1);
+                            await response.should.emit(skaleDKG, "NewGuy").withArgs(2);
+
+                            const rotation = await nodeRotation.getRotation(schainHash);
+                            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                                schainHash,
+                                0,
+                                verificationVectors[indexes[0]],
+                                encryptedSecretKeyContributions[indexes[0]],
+                                rotation.rotationCounter
+                            );
+                            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                                schainHash,
+                                2,
+                                verificationVectors[indexes[1]],
+                                encryptedSecretKeyContributions[indexes[1]],
+                                rotation.rotationCounter
+                            );
+                            await skaleDKG.connect(validators[0].nodeAddress).complaintBadData(schainHash, 2, 0);
+
+                            (await skaleDKG.connect(validators[0].nodeAddress).isResponsePossible(schainHash, 0))
+                                .should.be.false;
+                            (await skaleDKG.connect(validators[0].nodeAddress).isPreResponsePossible(schainHash, 0))
+                                .should.be.true;
+                        });
+
+                        it("should allow preResponse in channel reopened after missing response", async () => {
+                            const schainHash = stringKeccak256(schainName);
+                            await skipTime(1800);
+                            const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
+                                schainHash,
+                                1,
+                                0
+                            );
+                            await complaint.should.emit(skaleDKG, "BadGuy").withArgs(0);
+                            await complaint.should.emit(skaleDKG, "NewGuy").withArgs(2);
+
+                            const rotation = await nodeRotation.getRotation(schainHash);
+                            await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                                schainHash,
+                                2,
+                                verificationVectors[indexes[0]],
+                                encryptedSecretKeyContributions[indexes[0]],
+                                rotation.rotationCounter
+                            );
+                            await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                                schainHash,
+                                1,
+                                verificationVectors[indexes[1]],
+                                encryptedSecretKeyContributions[indexes[1]],
+                                rotation.rotationCounter
+                            );
+                            await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(schainHash, 1, 2);
+
+                            (await skaleDKG.connect(validators[0].nodeAddress).isResponsePossible(schainHash, 2))
+                                .should.be.false;
+                            (await skaleDKG.connect(validators[0].nodeAddress).isPreResponsePossible(schainHash, 2))
+                                .should.be.true;
+                        });
+                    });
                 });
             });
 
