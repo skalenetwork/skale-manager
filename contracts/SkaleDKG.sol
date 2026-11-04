@@ -750,9 +750,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete dkgProcess[schainHash].broadcasted;
         dkgProcess[schainHash].broadcasted = new bool[](len);
         dkgProcess[schainHash].completed = new bool[](len);
+        delete complaints[schainHash];
         complaints[schainHash].fromNodeToComplaint = type(uint256).max;
         complaints[schainHash].nodeToComplaint = type(uint256).max;
-        delete complaints[schainHash].startComplaintBlockTimestamp;
         delete dkgProcess[schainHash].numberOfBroadcasted;
         delete dkgProcess[schainHash].numberOfCompleted;
         channels[schainHash].startedBlockTimestamp = block.timestamp;
