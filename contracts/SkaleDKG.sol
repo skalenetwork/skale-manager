@@ -81,26 +81,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
 
-    modifier correctGroupWithoutRevert(bytes32 schainHash) {
-        if (!channels[schainHash].active) {
-            emit ComplaintError("Group is not created");
-        } else {
-            _;
-        }
-    }
-
     modifier correctNode(bytes32 schainHash, uint256 nodeIndex) {
         (uint256 index, ) = checkAndReturnIndexInGroup(schainHash, nodeIndex, true);
         _;
-    }
-
-    modifier correctNodeWithoutRevert(bytes32 schainHash, uint256 nodeIndex) {
-        (, bool check) = checkAndReturnIndexInGroup(schainHash, nodeIndex, false);
-        if (!check) {
-            emit ComplaintError("Node is not in this group");
-        } else {
-            _;
-        }
     }
 
     modifier onlyNodeOwner(uint256 nodeIndex) {
@@ -193,8 +176,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }))
         onlyNodeOwner(fromNodeIndex)
         correctNode(schainHash, fromNodeIndex)
-        correctGroupWithoutRevert(schainHash)
-        correctNodeWithoutRevert(schainHash, toNodeIndex)
+        correctGroup(schainHash)
+        correctNode(schainHash, toNodeIndex)
     {
         SkaleDkgComplaint.complaintBadData({
             schainHash: schainHash,
@@ -248,8 +231,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }))
         onlyNodeOwner(fromNodeIndex)
         correctNode(schainHash, fromNodeIndex)
-        correctGroupWithoutRevert(schainHash)
-        correctNodeWithoutRevert(schainHash, toNodeIndex)
+        correctGroup(schainHash)
+        correctNode(schainHash, toNodeIndex)
     {
         SkaleDkgComplaint.complaint({
             schainHash: schainHash,
@@ -321,10 +304,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         startAlrightTimestamp[schainHash] = block.timestamp;
     }
 
-    function setBadNode(bytes32 schainHash, uint256 nodeIndex) external override allow("SkaleDKG") {
-        _badNodes[schainHash] = nodeIndex;
-    }
-
     function resetPendingToBeReplaced(bytes32 schainHash) external override allow("Schains") {
         delete pendingToBeReplaced[schainHash];
     }
@@ -343,6 +322,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
         emit BadGuy(badNode);
         emit FailedDKG(schainHash);
+        _setBadNode(schainHash, badNode);
 
         if (schainsInternal.isAnyFreeNode(schainHash)) {
             uint256 newNode = nodeRotation.rotateNode(
@@ -744,6 +724,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 context.isDebt
             );
         }
+    }
+
+    function _setBadNode(bytes32 schainHash, uint256 nodeIndex) private {
+        _badNodes[schainHash] = nodeIndex;
     }
 
     function _refundGasByValidatorToSchain(bytes32 schainHash) private {

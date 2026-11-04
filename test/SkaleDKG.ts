@@ -591,13 +591,42 @@ describe("SkaleDKG", () => {
                     1,
                 );
                 resComplaint.should.be.false;
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
                     1
+                )).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SkaleDkgComplaint"),
+                    "ComplaintSentTooEarly"
                 );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Complaint sent too early");
-                await reimbursed(complaint);
+            });
+
+            it("should not let a node drain the schain wallet with rejected complaints", async () => {
+                const schainHash = stringKeccak256(schainName);
+                const attacker = validators[0].nodeAddress;
+                const rotation = await nodeRotation.getRotation(schainHash);
+                await skaleDKG.connect(attacker).broadcast(
+                    schainHash,
+                    0,
+                    verificationVectors[indexes[0]],
+                    encryptedSecretKeyContributions[indexes[0]],
+                    rotation.rotationCounter
+                );
+                const schainBalanceBefore = await wallets.getSchainBalance(schainHash);
+                const attackerBalanceBefore = await ethers.provider.getBalance(attacker.address);
+
+                // The refund scales with tx.gasprice, which the attacker chooses
+                const gasPrice = ethers.parseUnits("100000", "gwei");
+                for (let i = 0; i < 10; ++i) {
+                    await expect(skaleDKG.connect(attacker).complaint(schainHash, 0, 1, {gasPrice}))
+                        .to.be.revertedWithCustomError(
+                            await ethers.getContractFactory("SkaleDkgComplaint"),
+                            "ComplaintSentTooEarly"
+                        );
+                }
+
+                (await wallets.getSchainBalance(schainHash)).should.be.equal(schainBalanceBefore);
+                (await ethers.provider.getBalance(attacker.address)).should.be.at.most(attackerBalanceBefore);
             });
 
             it("should send complaint after missing broadcast", async () => {
@@ -721,13 +750,14 @@ describe("SkaleDKG", () => {
                 );
                 res.should.be.false;
 
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256(schainName),
                     0,
                     1
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Has already sent alright");
-                await reimbursed(complaint);
+                )).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SkaleDkgComplaint"),
+                    "NodeHasSentAlright"
+                ).withArgs(stringKeccak256(schainName), 0);
 
                 await skipTime(1800);
                 res = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
@@ -1068,6 +1098,24 @@ describe("SkaleDKG", () => {
                     await reimbursed(complaint);
                 });
 
+                it("should charge the complaint refund to the slashed complainer's validator", async () => {
+                    const accusedValidatorId = await validatorService.getValidatorId(validator1.address);
+                    const complainerValidatorId = await validatorService.getValidatorId(validator2.address);
+                    const deposit = ethers.parseEther("1");
+                    await wallets.rechargeValidatorWallet(accusedValidatorId, {value: deposit});
+                    await wallets.rechargeValidatorWallet(complainerValidatorId, {value: deposit});
+
+                    const complaint = await skaleDKG.connect(validators[1].nodeAddress).complaint(
+                        stringKeccak256(schainName),
+                        1,
+                        0
+                    );
+                    await expect(complaint).to.emit(skaleDKG, "BadGuy").withArgs(1);
+
+                    (await wallets.getValidatorBalance(accusedValidatorId)).should.be.equal(deposit);
+                    (await wallets.getValidatorBalance(complainerValidatorId)).should.be.lessThan(deposit);
+                });
+
                 describe("when DKG is successful", () => {
                     fastBeforeEach(async () => {
                         await skaleDKG.connect(validators[0].nodeAddress).alright(stringKeccak256(schainName), 0);
@@ -1112,7 +1160,10 @@ describe("SkaleDKG", () => {
                             stringKeccak256(schainName),
                             1,
                             0
-                        )).to.emit(skaleDKG, "ComplaintError").withArgs("The same complaint rejected");
+                        )).to.be.revertedWithCustomError(
+                            await ethers.getContractFactory("SkaleDkgComplaint"),
+                            "SameComplaintRejected"
+                        );
                     });
 
                     it("should send complaint after missing preResponse", async () => {
@@ -1335,7 +1386,10 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         0,
                         1
-                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint is processed");
+                    )).to.be.revertedWithCustomError(
+                        await ethers.getContractFactory("SkaleDkgComplaint"),
+                        "FirstComplaintHasAlreadyBeenProcessed"
+                    ).withArgs(stringKeccak256(schainName));
                 });
 
                 it("should not send 2 complaints from 2 node", async () => {
@@ -1348,7 +1402,10 @@ describe("SkaleDKG", () => {
                         stringKeccak256(schainName),
                         1,
                         0,
-                    )).to.emit(skaleDKG, "ComplaintError").withArgs("First complaint is processed");
+                    )).to.be.revertedWithCustomError(
+                        await ethers.getContractFactory("SkaleDkgComplaint"),
+                        "FirstComplaintHasAlreadyBeenProcessed"
+                    ).withArgs(stringKeccak256(schainName));
                 });
 
                 describe("when complaint successfully sent", () => {
@@ -1556,13 +1613,12 @@ describe("SkaleDKG", () => {
 
             rotCounter = await nodeRotation.getRotation(stringKeccak256(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
-            const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+            await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                 stringKeccak256(schainName),
                 2,
                 0
-            );
-            await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Node is not in this group");
-            await reimbursed(complaint, "Complaint");
+            )).to.be.revertedWithCustomError(skaleDKG, "NodeIsNotInGroup")
+                .withArgs(stringKeccak256(schainName), 0);
             let res = await skaleDKG.connect(validators[0].nodeAddress).isBroadcastPossible(
                 stringKeccak256(schainName),
                 2
@@ -2247,13 +2303,14 @@ describe("SkaleDKG", () => {
                     complaintNode,
                     accusedNode
                 );
-                const complaint = await skaleDKG.connect(validators[indexToSend].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[indexToSend].nodeAddress).complaint(
                     stringKeccak256("New16NodeSchain"),
                     complaintNode,
                     someNode
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("One complaint is already sent");
-                await reimbursed(complaint);
+                )).to.be.revertedWithCustomError(
+                    await ethers.getContractFactory("SkaleDkgComplaint"),
+                    "ComplaintIsAlreadySent"
+                ).withArgs(stringKeccak256("New16NodeSchain"), accusedNode);
 
                 if (accusedNode === 1n) {
                     indexToSend = 1;
@@ -2365,12 +2422,12 @@ describe("SkaleDKG", () => {
                     )
                 );
 
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256("New16NodeSchain"),
                     8,
                     accusedNode
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
+                )).to.be.revertedWithCustomError(skaleDKG, "GroupIsNotCreated")
+                    .withArgs(stringKeccak256("New16NodeSchain"));
                 await skaleManager.connect(validator1).deleteSchain("New16NodeSchain");
             });
 
@@ -2437,13 +2494,12 @@ describe("SkaleDKG", () => {
                 // The node is still a part of schain because can't be replaced
                 space.freeSpace.should.be.equal(0);
 
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256("New16NodeSchain"),
                     8,
                     accusedNode
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-                await reimbursed(complaint);
+                )).to.be.revertedWithCustomError(skaleDKG, "GroupIsNotCreated")
+                    .withArgs(stringKeccak256("New16NodeSchain"));
 
                 await nodes.createNode(validators[0].nodeAddress.address,
                     {
@@ -2569,13 +2625,12 @@ describe("SkaleDKG", () => {
                     )
                 );
 
-                const complaint = await skaleDKG.connect(validators[0].nodeAddress).complaint(
+                await expect(skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringKeccak256("New16NodeSchain"),
                     8,
                     accusedNode
-                );
-                await expect(complaint).to.emit(skaleDKG, "ComplaintError").withArgs("Group is not created");
-                await reimbursed(complaint);
+                )).to.be.revertedWithCustomError(skaleDKG, "GroupIsNotCreated")
+                    .withArgs(stringKeccak256("New16NodeSchain"));
                 // await nodes.createNode(validators[0].nodeAddress.address,
                 //     {
                 //         port: 8545,
