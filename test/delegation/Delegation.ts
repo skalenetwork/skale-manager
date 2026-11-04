@@ -524,6 +524,37 @@ describe("Delegation", () => {
             await skaleToken.connect(bountyAddress).transfer(holder2.address, balance);
         });
 
+        it("should slash undelegation scheduled after a newer delegation starts", async () => {
+            await constantsHolder.setLaunchTimestamp(await currentTime());
+
+            await delegationController.connect(holder1).delegate(validatorId, ethers.parseEther("100"), 2, "First delegation");
+            const delegationId1 = 0;
+            await delegationController.connect(validator).acceptPendingDelegation(delegationId1);
+
+            await nextMonth(contractManager);
+
+            // undelegation ends in 2 months, new delegation starts in 1 month
+            await delegationController.connect(holder1).requestUndelegation(delegationId1);
+            await delegationController.connect(holder2).delegate(validatorId, ethers.parseEther("80"), 2, "Second delegation");
+            await delegationController.connect(validator).acceptPendingDelegation(1);
+
+            // slash 50%
+            await punisher.slash(validatorId, ethers.parseEther("50"));
+
+            await nextMonth(contractManager, 2);
+            (await delegationController.getState(delegationId1)).should.be.equal(State.COMPLETED);
+
+            await skaleManagerMock.payBounty(validatorId, 100);
+
+            await nextMonth(contractManager);
+
+            (await distributor.connect(validator).getEarnedFeeAmount.staticCall())[0].should.be.equal(15);
+            (await distributor.connect(holder1).getAndUpdateEarnedBountyAmount.staticCall(
+                validatorId))[0].should.be.equal(0);
+            (await distributor.connect(holder2).getAndUpdateEarnedBountyAmount.staticCall(
+                validatorId))[0].should.be.equal(85);
+        });
+
         it("should be possible to distribute bounty across thousands of holders", async () => {
             let holdersAmount = 1000;
             if (process.env.CI) {

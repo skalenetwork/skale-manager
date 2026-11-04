@@ -51,7 +51,7 @@ library PartialDifferences {
         // month => value
         mapping(uint256 => uint256) value;
         uint256 firstUnprocessedMonth;
-        uint256 lastChangedMonth;
+        uint256 lastUnprocessedMonth;
     }
 
     struct Value {
@@ -61,7 +61,7 @@ library PartialDifferences {
         mapping(uint256 => uint256) subtractDiff;
         uint256 value;
         uint256 firstUnprocessedMonth;
-        uint256 lastChangedMonth;
+        uint256 lastUnprocessedMonth;
     }
 
     // functions for sequence
@@ -79,8 +79,8 @@ library PartialDifferences {
             sequence.firstUnprocessedMonth = month;
         }
         sequence.addDiff[month] = sequence.addDiff[month] + diff;
-        if (sequence.lastChangedMonth != month) {
-            sequence.lastChangedMonth = month;
+        if (month > sequence.lastUnprocessedMonth) {
+            sequence.lastUnprocessedMonth = month;
         }
     }
 
@@ -97,8 +97,8 @@ library PartialDifferences {
             sequence.firstUnprocessedMonth = month;
         }
         sequence.subtractDiff[month] = sequence.subtractDiff[month] + diff;
-        if (sequence.lastChangedMonth != month) {
-            sequence.lastChangedMonth = month;
+        if (month > sequence.lastUnprocessedMonth) {
+            sequence.lastUnprocessedMonth = month;
         }
     }
 
@@ -155,7 +155,7 @@ library PartialDifferences {
             (sequence.value[month] * reducingCoefficient.numerator) /
             reducingCoefficient.denominator;
 
-        for (uint256 i = month + 1; i <= sequence.lastChangedMonth; ++i) {
+        for (uint256 i = month + 1; i <= sequence.lastUnprocessedMonth; ++i) {
             sequence.subtractDiff[i] =
                 (sequence.subtractDiff[i] * reducingCoefficient.numerator) /
                 reducingCoefficient.denominator;
@@ -175,10 +175,10 @@ library PartialDifferences {
         );
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
-            sequence.lastChangedMonth = month;
+            sequence.lastUnprocessedMonth = month;
         }
-        if (month > sequence.lastChangedMonth) {
-            sequence.lastChangedMonth = month;
+        if (month > sequence.lastUnprocessedMonth) {
+            sequence.lastUnprocessedMonth = month;
         }
 
         if (month >= sequence.firstUnprocessedMonth) {
@@ -199,10 +199,10 @@ library PartialDifferences {
         );
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
-            sequence.lastChangedMonth = month;
+            sequence.lastUnprocessedMonth = month;
         }
-        if (month > sequence.lastChangedMonth) {
-            sequence.lastChangedMonth = month;
+        if (month > sequence.lastUnprocessedMonth) {
+            sequence.lastUnprocessedMonth = month;
         }
 
         if (month >= sequence.firstUnprocessedMonth) {
@@ -345,7 +345,7 @@ library PartialDifferences {
         }
         sequence.value = newValue;
 
-        for (uint256 i = month + 1; i <= sequence.lastChangedMonth; ++i) {
+        for (uint256 i = month + 1; i <= sequence.lastUnprocessedMonth; ++i) {
             uint256 newDiff = (sequence.subtractDiff[i] *
                 reducingCoefficient.numerator) /
                 reducingCoefficient.denominator;
@@ -384,7 +384,7 @@ library PartialDifferences {
             return values;
         }
         uint256 begin = sequence.firstUnprocessedMonth - 1;
-        uint256 end = sequence.lastChangedMonth + 1;
+        uint256 end = sequence.lastUnprocessedMonth + 1;
         if (end <= begin) {
             end = begin + 1;
         }
@@ -429,7 +429,7 @@ library PartialDifferences {
             return values;
         }
         uint256 begin = sequence.firstUnprocessedMonth - 1;
-        uint256 end = sequence.lastChangedMonth + 1;
+        uint256 end = sequence.lastUnprocessedMonth + 1;
         if (end <= begin) {
             end = begin + 1;
         }
