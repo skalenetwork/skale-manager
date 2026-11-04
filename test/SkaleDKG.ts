@@ -1139,6 +1139,16 @@ describe("SkaleDKG", () => {
                 });
 
                 describe("when 2 node sent incorrect complaint", () => {
+                    // complaint data of a newly opened channel, every ComplaintData field must be listed
+                    const openedChannelComplaint = [
+                        ethers.MaxUint256,
+                        ethers.MaxUint256,
+                        0n,
+                        false,
+                        ethers.ZeroHash,
+                        [[0n, 0n], [0n, 0n]]
+                    ];
+
                     fastBeforeEach(async () => {
                         await reimbursed(
                             await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
@@ -1181,6 +1191,8 @@ describe("SkaleDKG", () => {
                         );
                         await expect(complaint).to.emit(skaleDKG, "BadGuy").withArgs(0);
                         await reimbursed(complaint);
+                        (await skaleDKG.complaints(stringKeccak256(schainName)))
+                            .should.be.deep.equal(openedChannelComplaint);
                     });
 
                     it("should send complaint after missing response", async () => {
@@ -1344,6 +1356,8 @@ describe("SkaleDKG", () => {
                             );
                             await response.should.emit(skaleDKG, "BadGuy").withArgs(1);
                             await response.should.emit(skaleDKG, "NewGuy").withArgs(2);
+                            (await skaleDKG.complaints(schainHash))
+                                .should.be.deep.equal(openedChannelComplaint);
 
                             const rotation = await nodeRotation.getRotation(schainHash);
                             await skaleDKG.connect(validators[0].nodeAddress).broadcast(
@@ -1378,6 +1392,8 @@ describe("SkaleDKG", () => {
                             );
                             await complaint.should.emit(skaleDKG, "BadGuy").withArgs(0);
                             await complaint.should.emit(skaleDKG, "NewGuy").withArgs(2);
+                            (await skaleDKG.complaints(schainHash))
+                                .should.be.deep.equal(openedChannelComplaint);
 
                             const rotation = await nodeRotation.getRotation(schainHash);
                             await skaleDKG.connect(validators[0].nodeAddress).broadcast(
