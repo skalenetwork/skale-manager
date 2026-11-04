@@ -754,6 +754,34 @@ describe("Delegation", () => {
                         validatorId))[0].should.be.equal(0);
                 });
 
+                for (const requester of ["holder", "validator"]) {
+                    it(`should fully undelegate slashed tokens when ${requester} requests undelegation`, async () => {
+                        const delegationId = 2;
+                        // slash 50%
+                        await punisher.slash(validatorId, (delegatedAmount1 + delegatedAmount2 + delegatedAmount3) / 2);
+
+                        await delegationController.connect(requester === "holder" ? holder3 : validator)
+                            .requestUndelegation(delegationId);
+                        await delegationController.processAllSlashes(holder3.address);
+
+                        await nextMonth(contractManager, 2);
+                        (await delegationController.getState(delegationId)).should.be.equal(State.COMPLETED);
+
+                        (await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                            holder3.address)).should.be.equal(0);
+                        (await tokenState.getAndUpdateLockedAmount.staticCall(holder3.address))
+                            .should.be.equal(delegatedAmount3 / 2);
+
+                        let delegatedByHolders = 0n;
+                        for (const holder of [holder1, holder2, holder3]) {
+                            delegatedByHolders += await delegationController.getAndUpdateDelegatedAmount.staticCall(
+                                holder.address);
+                        }
+                        (await delegationController.getAndUpdateDelegatedToValidatorNow.staticCall(validatorId))
+                            .should.be.equal(delegatedByHolders);
+                    });
+                }
+
                 it("should reduce delegated amount immediately after slashing", async () => {
                     await delegationController.connect(holder1).getAndUpdateDelegatedAmount(holder1.address);
 

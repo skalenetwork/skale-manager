@@ -386,7 +386,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
             delegations[delegationId].holder,
             delegations[delegationId].validatorId
         );
-        processAllSlashes(msg.sender);
+        processAllSlashes(delegations[delegationId].holder);
         delegations[delegationId].finished = _calculateDelegationEndMonth(
             delegationId
         );
