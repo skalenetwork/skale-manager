@@ -426,9 +426,9 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         uint256 initialEffectiveDelegated =
             _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth);
         uint256[] memory initialSubtractions = new uint256[](0);
-        if (currentMonth < _effectiveDelegatedToValidator[validatorId].lastChangedMonth) {
+        if (currentMonth < _effectiveDelegatedToValidator[validatorId].lastUnprocessedMonth) {
             initialSubtractions = new uint256[](
-                _effectiveDelegatedToValidator[validatorId].lastChangedMonth - currentMonth
+                _effectiveDelegatedToValidator[validatorId].lastUnprocessedMonth - currentMonth
             );
             for (uint256 i = 0; i < initialSubtractions.length; ++i) {
                 initialSubtractions[i] =

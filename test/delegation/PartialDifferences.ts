@@ -23,7 +23,7 @@ describe("PartialDifferences", () => {
         let sequence = await partialDifferencesTester.latestSequence();
 
         (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 1)).should.be.equal(0);
-        await partialDifferencesTester.reduceSequence(sequence, 1, 2, 2);
+        await partialDifferencesTester.reduceSequence(sequence, 1, 2, 2); // Slashing empty sequence
 
         await partialDifferencesTester.addToSequence(sequence, 5e7, 1);
         await partialDifferencesTester.subtractFromSequence(sequence, 3e7, 3);
@@ -44,7 +44,7 @@ describe("PartialDifferences", () => {
         (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 2)).should.be.equal(25e6);
         (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 3)).should.be.equal(1e7);
         (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 4)).should.be.equal(4e7);
-        (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 5)).should.be.equal(0);
+        (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 5)).should.be.equal(15e6);
 
         await partialDifferencesTester.createSequence();
         sequence = await partialDifferencesTester.latestSequence();
@@ -53,5 +53,26 @@ describe("PartialDifferences", () => {
         await partialDifferencesTester.getAndUpdateSequenceItem(sequence, 1);
         await partialDifferencesTester.reduceSequence(sequence, 1, 2, 1);
         (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 1)).should.be.equal(0);
+    });
+
+    it("should reduce changes scheduled before a change in an earlier month", async () => {
+        for (const subtractFirst of [true, false]) {
+            await partialDifferencesTester.createSequence();
+            const sequence = await partialDifferencesTester.latestSequence();
+            await partialDifferencesTester.addToSequence(sequence, 1e8, 1);
+            if (subtractFirst) {
+                await partialDifferencesTester.subtractFromSequence(sequence, 1e8, 3);
+                await partialDifferencesTester.addToSequence(sequence, 8e7, 2);
+            } else {
+                await partialDifferencesTester.addToSequence(sequence, 8e7, 2);
+                await partialDifferencesTester.subtractFromSequence(sequence, 1e8, 3);
+            }
+
+            await partialDifferencesTester.reduceSequence(sequence, 1, 2, 1);
+
+            (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 1)).should.be.equal(5e7);
+            (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 2)).should.be.equal(13e7);
+            (await partialDifferencesTester.getAndUpdateSequenceItem.staticCall(sequence, 3)).should.be.equal(8e7);
+        }
     });
 });
