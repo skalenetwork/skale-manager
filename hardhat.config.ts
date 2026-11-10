@@ -1,4 +1,5 @@
-import {task, HardhatUserConfig} from "hardhat/config";
+import {task, subtask, HardhatUserConfig} from "hardhat/config";
+import {TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE} from "hardhat/builtin-tasks/task-names";
 import "@nomicfoundation/hardhat-chai-matchers";
 import "@nomicfoundation/hardhat-verify";
 import "@openzeppelin/hardhat-upgrades";
@@ -22,6 +23,27 @@ task("erc1820", "Deploy ERC1820 contract", async (_, {ethers}) => {
   }
 });
 
+
+// solidity-coverage compiles every file without the optimizer and traces every executed opcode
+// in memory, including in files it does not instrument. Unoptimized ECDH runs millions of extra
+// opcodes per call and makes coverage run out of memory. Files in thirdparty/ are not
+// instrumented (see .solcover.js), so compiling them with the optimizer does not change coverage.
+subtask(TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE).setAction(
+  async (args: {file: {sourceName: string}}, hre, runSuper) => {
+    const job = await runSuper(args);
+    const coverageIsRunning = (hre as unknown as {__SOLIDITY_COVERAGE_RUNNING?: boolean}).__SOLIDITY_COVERAGE_RUNNING;
+    if (coverageIsRunning && typeof job === "object" && args.file.sourceName.startsWith("contracts/thirdparty/")) {
+      // the config object is shared between jobs, so replace it instead of changing it
+      const compilationJob = job as {solidityConfig: {settings: {optimizer: object}}};
+      const {settings} = compilationJob.solidityConfig;
+      compilationJob.solidityConfig = {
+        ...compilationJob.solidityConfig,
+        settings: {...settings, optimizer: {...settings.optimizer, enabled: true}}
+      };
+    }
+    return job;
+  }
+);
 
 task("accounts", "Prints the list of accounts", async (_, {ethers}) => {
   const accounts = await ethers.getSigners();
