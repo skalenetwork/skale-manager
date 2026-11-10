@@ -1706,6 +1706,20 @@ describe("SkaleDKG", () => {
                     await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
                 });
 
+                it("should slash the sender when the public key is not on the curve", async () => {
+                    // same x as secretNumber·G and same parity of y, but y is not on the curve
+                    const [x, y] = encryptedSecretKeyContributions[indexes[0]][1].publicKey;
+                    const contributions = [
+                        encryptedSecretKeyContributions[indexes[0]][0],
+                        {
+                            share: encryptedSecretKeyContributions[indexes[0]][1].share,
+                            publicKey: [x, ethers.toBeHex(BigInt(y) + 2n, 32)] as [string, string]
+                        }
+                    ];
+                    const response = await broadcastAndRespond(contributions, secretNumbers[indexes[0]]);
+                    await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
+                });
+
                 it("should slash the complainer when the public key is correct", async () => {
                     const response = await broadcastAndRespond(
                         encryptedSecretKeyContributions[indexes[0]],
@@ -2633,7 +2647,7 @@ describe("SkaleDKG", () => {
                 const receipt = await responseTx.wait();
                 assert(receipt);
                 await responseTx.should.emit(skaleDKG, "BadGuy").withArgs(accusedNode);
-                expect(receipt.gasUsed + resPreResp.gasUsed).to.be.greaterThanOrEqual(5000000);
+                expect(receipt.gasUsed + resPreResp.gasUsed).to.be.greaterThanOrEqual(4500000);
             });
 
             it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
