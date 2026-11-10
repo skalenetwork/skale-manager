@@ -68,7 +68,7 @@ library SkaleDkgPreResponse {
             hashedData: hashedData
         });
         _processPreResponse(
-            secretKeyContribution[index].share,
+            secretKeyContribution[index],
             schainHash,
             verificationVectorMultiplication,
             complaints
@@ -76,12 +76,15 @@ library SkaleDkgPreResponse {
     }
 
     function _processPreResponse(
-        bytes32 share,
+        ISkaleDKG.KeyShare memory keyShare,
         bytes32 schainHash,
         ISkaleDKG.G2Point[] memory verificationVectorMultiplication,
         mapping(bytes32 => ISkaleDKG.ComplaintData) storage complaints
     ) private {
-        complaints[schainHash].keyShare = share;
+        complaints[schainHash].keyShare = keyShare.share;
+        // The complainer decrypts its share with this public key.
+        // Keep it to check in the response that it matches the revealed secret number.
+        complaints[schainHash].keySharePublicKey = keyShare.publicKey;
         complaints[schainHash].sumOfVerVec = _calculateSum(
             verificationVectorMultiplication
         );
