@@ -43,12 +43,6 @@ import {Precompiled} from "../utils/Precompiled.sol";
 library SkaleDkgResponse {
     using G2Operations for ISkaleDKG.G2Point;
 
-    // secp256k1 field modulus and group order
-    uint256 private constant _SECP256K1_P =
-        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
-    uint256 private constant _SECP256K1_N =
-        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
-
     error NodeIsNotInGroup(uint256 node);
     error WrongNode(uint256 node, uint256 expectedNode);
     error IncorrectTimeForResponse();
@@ -122,7 +116,11 @@ library SkaleDkgResponse {
             );
 
         uint256 badNode = (
-            _checkCorrectPublicKey(secretNumber, complaints[schainHash].keySharePublicKey) &&
+            _checkCorrectPublicKey(
+                contractManager,
+                secretNumber,
+                complaints[schainHash].keySharePublicKey
+            ) &&
                 _checkCorrectMultipliedShare(multipliedShare, secret) &&
                 multipliedShare.isEqual(complaints[schainHash].sumOfVerVec)
                 ? complaints[schainHash].fromNodeToComplaint
@@ -137,33 +135,16 @@ library SkaleDkgResponse {
     // The complainer decrypts its share with the public key given in the broadcast.
     // It gets the same key as the contract only if that public key is secretNumber·G.
     function _checkCorrectPublicKey(
+        IContractManager contractManager,
         uint256 secretNumber,
         bytes32[2] memory keySharePublicKey
-    ) private pure returns (bool correct) {
-        uint256 x = uint256(keySharePublicKey[0]);
-        uint256 y = uint256(keySharePublicKey[1]);
-        // ecrecover accepts only 0 < x < n
-        if (x == 0 || x >= _SECP256K1_N || y >= _SECP256K1_P) {
-            return false;
-        }
-        // (x, y) must be on the curve y² = x³ + 7
-        if (
-            mulmod(y, y, _SECP256K1_P) !=
-            addmod(mulmod(mulmod(x, x, _SECP256K1_P), x, _SECP256K1_P), 7, _SECP256K1_P)
-        ) {
-            return false;
-        }
-        // ecrecover(hash, v, r, s) returns the address of r⁻¹·(s·R - hash·G), where R is the
-        // curve point with x coordinate r and y parity v. Here R is (x, y), because (x, y) is
-        // on the curve and v is the parity of y. With r = s = x and hash = x·secretNumber the
-        // result is R - secretNumber·G. It is the point at infinity, returned as address(0),
-        // only if (x, y) == secretNumber·G.
-        return ecrecover(
-            bytes32(mulmod(x, secretNumber, _SECP256K1_N)),
-            uint8(27 + (y & 1)),
-            bytes32(x),
-            bytes32(x)
-        ) == address(0);
+    ) private view returns (bool correct) {
+        (uint256 x, uint256 y) = IECDH(contractManager.getContract("ECDH")).publicKey(secretNumber);
+        // ECDH returns (0, 0) for 0. It is not a curve point, so no node can decrypt with it.
+        return
+            (x != 0 || y != 0) &&
+            x == uint256(keySharePublicKey[0]) &&
+            y == uint256(keySharePublicKey[1]);
     }
 
     function _checkCorrectMultipliedShare(
