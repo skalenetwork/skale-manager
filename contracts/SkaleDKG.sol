@@ -630,26 +630,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         override
         returns (bytes32 hash)
     {
-        bytes memory data;
-        for (uint256 i = 0; i < secretKeyContribution.length; i++) {
-            data = abi.encodePacked(
-                data,
-                secretKeyContribution[i].publicKey,
-                secretKeyContribution[i].share
-            );
-        }
-        for (uint256 i = 0; i < verificationVector.length; i++) {
-            // Named arguments cannot be used for functions that take arbitrary parameters
-            // solhint-disable-next-line func-named-parameters
-            data = abi.encodePacked(
-                data,
-                verificationVector[i].x.a,
-                verificationVector[i].x.b,
-                verificationVector[i].y.a,
-                verificationVector[i].y.b
-            );
-        }
-        return keccak256(data);
+        return keccak256(abi.encode(secretKeyContribution, verificationVector));
     }
 
     function checkAndReturnIndexInGroup(

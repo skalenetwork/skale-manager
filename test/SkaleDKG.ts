@@ -314,6 +314,33 @@ describe("SkaleDKG", () => {
         let schainName = "";
         const delegatedAmount = 1e7;
 
+        const secretKeyContributions16 = Array.from({length: 16}, () => encryptedSecretKeyContributions[0][0]);
+        const verificationVector16 = Array.from({length: 11}, (_, i) => verificationVectors[i % 2][0]);
+
+        // the first points of the verification vector are moved to the end of the shares,
+        // 3 points make 4 shares and abi.encodePacked sees the same bytes
+        const reCut = (pointsToMove: number) => {
+            const words = verificationVector16.slice(0, pointsToMove)
+                .flatMap(point => [point.x.a, point.x.b, point.y.a, point.y.b])
+                .map(word => ethers.toBeHex(word, 32));
+            const movedShares: {share: string, publicKey: [string, string]}[] = [];
+            for (let i = 0; i < words.length; i += 3) {
+                movedShares.push({publicKey: [words[i], words[i + 1]], share: words[i + 2]});
+            }
+            return {
+                shares: [...secretKeyContributions16, ...movedShares],
+                vector: verificationVector16.slice(pointsToMove)
+            };
+        };
+
+        it("should hash a re-cut of the data differently", async () => {
+            for (const cut of [3, 6, 9]) {
+                const {shares, vector} = reCut(cut);
+                (await skaleDKG.hashData(shares, vector))
+                    .should.not.be.equal(await skaleDKG.hashData(secretKeyContributions16, verificationVector16));
+            }
+        });
+
         fastBeforeEach(async () => {
             validatorsPublicKey = [getPublicKey(nodeAddress1), getPublicKey(nodeAddress2)];
 
@@ -2010,6 +2037,53 @@ describe("SkaleDKG", () => {
                         }
                     );
                 }
+            });
+
+            it("should reject preResponse with re-cut broadcasted data", async () => {
+                const schainHash = stringKeccak256("New16NodeSchain");
+                await schains.addSchain(
+                    validator1.address,
+                    await schains.getSchainPrice(3, 5),
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [schainParametersType],
+                        [{
+                            lifetime: 5,
+                            typeOfSchain: SchainType.LARGE,
+                            nonce: 0,
+                            name: "New16NodeSchain",
+                            originator: ethers.ZeroAddress,
+                            options: []
+                        }]
+                    ));
+                await wallets.connect(owner).rechargeSchainWallet(schainHash, {value: 1e20.toString()});
+                const rotation = await nodeRotation.getRotation(schainHash);
+                for (let i = 0; i < 16; i++) {
+                    await skaleDKG.connect(validators[i === 1 ? 1 : 0].nodeAddress).broadcast(
+                        schainHash,
+                        i,
+                        verificationVector16,
+                        secretKeyContributions16,
+                        rotation.rotationCounter
+                    );
+                }
+                const [complaintNode, accusedNode] = [...await schainsInternal.getNodesInGroup(schainHash)];
+                await skaleDKG.connect(validators[complaintNode === 1n ? 1 : 0].nodeAddress).complaintBadData(
+                    schainHash,
+                    complaintNode,
+                    accusedNode
+                );
+
+                // the accuser is at group index 0, so the multiplied verification vector equals the vector
+                const {shares, vector} = reCut(3);
+                const skaleDkgPreResponse = await ethers.getContractFactory("SkaleDkgPreResponse");
+                await expect(skaleDKG.connect(validators[accusedNode === 1n ? 1 : 0].nodeAddress).preResponse(
+                    schainHash,
+                    accusedNode,
+                    vector,
+                    vector,
+                    shares
+                )).to.be.revertedWithCustomError(skaleDkgPreResponse, "BroadcastedDataIsNotCorrect")
+                    .withArgs(schainHash);
             });
 
             it("16 nodes schain test", async () => {
