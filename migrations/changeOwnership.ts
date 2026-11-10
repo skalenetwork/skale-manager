@@ -60,7 +60,7 @@ async function main() {
         submitter,
         rolesToCheck: [
             "LOCKER_MANAGER_ROLE",
-            "BOUNTY_REDUCTION_ROLE",
+            "BOUNTY_REDUCTION_MANAGER_ROLE",
             "CONSTANTS_HOLDER_MANAGER_ROLE",
             "DEBUGGER_ROLE",
             "COMPLIANCE_ROLE",
