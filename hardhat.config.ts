@@ -24,26 +24,19 @@ task("erc1820", "Deploy ERC1820 contract", async (_, {ethers}) => {
 });
 
 
-// solidity-coverage compiles every file without the optimizer and traces every executed opcode
-// in memory, including in files it does not instrument. Unoptimized ECDH runs millions of extra
-// opcodes per call and makes coverage run out of memory. Files in thirdparty/ are not
-// instrumented (see .solcover.js), so compiling them with the optimizer does not change coverage.
-subtask(TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE).setAction(
-  async (args: {file: {sourceName: string}}, hre, runSuper) => {
-    const job = await runSuper(args);
-    const coverageIsRunning = (hre as unknown as {__SOLIDITY_COVERAGE_RUNNING?: boolean}).__SOLIDITY_COVERAGE_RUNNING;
-    if (coverageIsRunning && typeof job === "object" && args.file.sourceName.startsWith("contracts/thirdparty/")) {
-      // the config object is shared between jobs, so replace it instead of changing it
-      const compilationJob = job as {solidityConfig: {settings: {optimizer: object}}};
-      const {settings} = compilationJob.solidityConfig;
-      compilationJob.solidityConfig = {
-        ...compilationJob.solidityConfig,
-        settings: {...settings, optimizer: {...settings.optimizer, enabled: true}}
-      };
-    }
-    return job;
+// solidity-coverage turns the optimizer off for every file and keeps every executed opcode in memory
+// including in files it does not instrument and are excluded. 
+// 
+// Unoptimized ECDH and other components make CI run out of memory (or use it up unnecessarily).
+// thirdparty/ is not instrumented (see .solcover.js), so keep the optimizer on there.
+subtask<{file: {sourceName: string}}>(TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE, async ({file}, _, runSuper) => {
+  const job = await runSuper();
+  if (file.sourceName.startsWith("contracts/thirdparty/") && job.solidityConfig?.settings.optimizer.enabled === false) {
+    job.solidityConfig = structuredClone(job.solidityConfig); // deep copy (file is shared between jobs)
+    job.solidityConfig.settings.optimizer.enabled = true;     // turn on optimizer for thirdparty/
   }
-);
+  return job;
+});
 
 task("accounts", "Prints the list of accounts", async (_, {ethers}) => {
   const accounts = await ethers.getSigners();
