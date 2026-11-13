@@ -411,7 +411,9 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
      * may force the SKALE Manager to reduce the number of nodes a validator is
      * operating so the validator can meet the Minimum Staking Requirement.
      *
-     * Emits a {SlashingEvent}.
+     * A slash of 0 takes nothing, so it is not recorded for holders to process.
+     *
+     * Emits a {Confiscated} event.
      *
      * See {Punisher}.
      */
@@ -419,6 +421,10 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         uint256 validatorId,
         uint256 amount
     ) external override allow("Punisher") {
+        emit Confiscated(validatorId, amount);
+        if (amount == 0) {
+            return;
+        }
         uint256 currentMonth = _getCurrentMonth();
         FractionUtils.Fraction memory coefficient =
             _delegatedToValidator[validatorId].reduceValue(amount, currentMonth);
@@ -462,7 +468,6 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
                 currentMonth + i + 1
             );
         }
-        emit Confiscated(validatorId, amount);
     }
 
     /**
@@ -491,6 +496,7 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
         address holder,
         uint256 validatorId
     ) external override returns (uint256 amount) {
+        processAllSlashes(holder);
         return
             _getAndUpdateDelegatedByHolderToValidator(
                 holder,
@@ -930,6 +936,11 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
             slashingSignals = new SlashingSignal[](end - index);
             uint256 begin = index;
             for (; index < end; ++index) {
+                FractionUtils.Fraction storage coefficient = _slashes[index].reducingCoefficient;
+                if (coefficient.numerator == coefficient.denominator) {
+                    // A slash of 0 recorded by a previous version. It changes nothing.
+                    continue;
+                }
                 uint256 validatorId = _slashes[index].validatorId;
                 uint256 month = _slashes[index].month;
                 uint256 oldValue = _getAndUpdateDelegatedByHolderToValidator(
