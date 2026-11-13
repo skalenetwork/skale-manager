@@ -28,9 +28,10 @@ import {deploySkaleToken} from "../tools/deploy/skaleToken";
 import {State} from "../tools/types";
 import {deployNodes} from "../tools/deploy/nodes";
 import {deploySlashingTable} from "../tools/deploy/slashingTable";
+import {deployTimeHelpers} from "../tools/deploy/delegation/timeHelpers";
 import {deployTimeHelpersWithDebug} from "../tools/deploy/test/timeHelpersWithDebug";
 import {deploySkaleManager} from "../tools/deploy/skaleManager";
-import {ethers} from "hardhat";
+import {artifacts, ethers} from "hardhat";
 import {SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
 import {deploySkaleManagerMock} from "../tools/deploy/test/skaleManagerMock";
 import {assert, expect} from "chai";
@@ -41,6 +42,29 @@ chai.should();
 chai.use(chaiAsPromised);
 
 const allowedDelegationPeriods = [2n, 6n, 12n];
+
+// Previous versions recorded slashes of 0. The current one does not,
+// so write such a record to the storage directly.
+async function recordSlashOfZero(delegationController: DelegationController, validatorId: bigint, month: bigint) {
+    const source = "contracts/delegation/DelegationController.sol";
+    const buildInfo = await artifacts.getBuildInfo(`${source}:DelegationController`);
+    const contract = buildInfo?.output.contracts[source].DelegationController as unknown as
+        {storageLayout: {storage: {label: string, slot: string}[]}};
+    const slashes = contract.storageLayout.storage.find((variable) => variable.label === "_slashes");
+    assert(slashes);
+    const slot = BigInt(slashes.slot);
+    const address = await delegationController.getAddress();
+    const setStorage = async (position: bigint, value: bigint) => await ethers.provider.send(
+        "hardhat_setStorageAt", [address, ethers.toQuantity(position), ethers.toBeHex(value, 32)]);
+
+    const length = BigInt(await ethers.provider.getStorage(address, slot));
+    const record = BigInt(ethers.keccak256(ethers.toBeHex(slot, 32))) + 4n * length;
+    // SlashingEvent {reducingCoefficient: {numerator, denominator}, validatorId, month}
+    for (const [index, value] of [1n, 1n, validatorId, month].entries()) {
+        await setStorage(record + BigInt(index), value);
+    }
+    await setStorage(slot, length + 1n);
+}
 
 describe("Delegation", () => {
     let owner: SignerWithAddress;
@@ -820,6 +844,61 @@ describe("Delegation", () => {
 
                     (await delegationController.connect(holder1).getAndUpdateDelegatedAmount.staticCall(holder1.address))
                         .should.be.equal(delegatedAmount1 - 1);
+                });
+
+                it("should not freeze a holder if someone reads its delegation after a slash", async () => {
+                    await punisher.slash(validatorId, 10);
+                    await nextMonth(contractManager);
+
+                    // anyone can call it for any holder
+                    await delegationController.connect(holder1).getAndUpdateDelegatedByHolderToValidatorNow(
+                        holder3.address, validatorId);
+
+                    await skaleToken.connect(holder3).transfer(owner.address, 1);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(holder3.address))
+                        .should.be.equal(delegatedAmount3 - 5);
+                });
+
+                it("should not make holders process a slash of 0", async () => {
+                    await expect(punisher.slash(validatorId, 0))
+                        .to.emit(punisher, "Slash").withArgs(validatorId, 0)
+                        .to.emit(delegationController, "Confiscated").withArgs(validatorId, 0);
+
+                    (await delegationController.hasUnprocessedSlashes(holder3.address)).should.be.equal(false);
+                });
+
+                it("should release a holder frozen by a slash of 0 from a previous version", async () => {
+                    // In previous versions anyone could move the balance of a holder past a recorded slash.
+                    // Recreate it: move the balance to the next month, then record a slash in the passed one.
+                    const slashMonth = await (await deployTimeHelpers(contractManager)).getCurrentMonth();
+                    await nextMonth(contractManager);
+                    await delegationController.getAndUpdateDelegatedByHolderToValidatorNow(holder3.address, validatorId);
+                    await recordSlashOfZero(delegationController, validatorId, slashMonth);
+                    // a later slash must still be applied
+                    await punisher.slash(validatorId, 10);
+
+                    await skaleToken.connect(holder3).transfer(owner.address, 1);
+                    (await delegationController.hasUnprocessedSlashes(holder3.address)).should.be.equal(false);
+                    (await delegationController.getAndUpdateDelegatedAmount.staticCall(holder3.address))
+                        .should.be.equal(delegatedAmount3 - 5);
+                });
+
+                it("should not freeze a validator if someone reads its bond after a slash", async () => {
+                    const bond = 1e7;
+                    await skaleToken.mint(validator.address, defaultAmount, "0x", "0x");
+                    await delegationController.connect(validator).delegate(validatorId, bond, 2, "D2 is even");
+                    await delegationController.connect(validator).acceptPendingDelegation(3);
+                    await nextMonth(contractManager);
+
+                    // the validator has a half of all delegations
+                    await punisher.slash(validatorId, 10);
+                    await nextMonth(contractManager);
+
+                    (await validatorService.connect(holder1).getAndUpdateBondAmount.staticCall(validatorId))
+                        .should.be.equal(bond - 5);
+                    await validatorService.connect(holder1).getAndUpdateBondAmount(validatorId);
+
+                    await skaleToken.connect(validator).transfer(owner.address, 1);
                 });
 
                 it("should not consume extra gas for slashing calculation if holder has never delegated", async () => {
