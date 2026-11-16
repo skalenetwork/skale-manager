@@ -936,9 +936,10 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
             slashingSignals = new SlashingSignal[](end - index);
             uint256 begin = index;
             for (; index < end; ++index) {
+                // Skip slashes of 0 recorded by previous versions. They change nothing.
+                // Can be removed after 1.15.0 is in production if no holder is found frozen.
                 FractionUtils.Fraction storage coefficient = _slashes[index].reducingCoefficient;
                 if (coefficient.numerator == coefficient.denominator) {
-                    // A slash of 0 recorded by a previous version. It changes nothing.
                     continue;
                 }
                 uint256 validatorId = _slashes[index].validatorId;
