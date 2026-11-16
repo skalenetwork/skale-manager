@@ -1,4 +1,5 @@
-import {task, HardhatUserConfig} from "hardhat/config";
+import {task, subtask, HardhatUserConfig} from "hardhat/config";
+import {TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE} from "hardhat/builtin-tasks/task-names";
 import "@nomicfoundation/hardhat-chai-matchers";
 import "@nomicfoundation/hardhat-verify";
 import "@openzeppelin/hardhat-upgrades";
@@ -22,6 +23,20 @@ task("erc1820", "Deploy ERC1820 contract", async (_, {ethers}) => {
   }
 });
 
+
+// solidity-coverage turns the optimizer off for every file and keeps every executed opcode in memory
+// including in files it does not instrument and are excluded. 
+// 
+// Unoptimized ECDH and other components make CI run out of memory (or use it up unnecessarily).
+// thirdparty/ is not instrumented (see .solcover.js), so keep the optimizer on there.
+subtask<{file: {sourceName: string}}>(TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE, async ({file}, _, runSuper) => {
+  const job = await runSuper();
+  if (file.sourceName.startsWith("contracts/thirdparty/") && job.solidityConfig?.settings.optimizer.enabled === false) {
+    job.solidityConfig = structuredClone(job.solidityConfig); // deep copy (file is shared between jobs)
+    job.solidityConfig.settings.optimizer.enabled = true;     // turn on optimizer for thirdparty/
+  }
+  return job;
+});
 
 task("accounts", "Prints the list of accounts", async (_, {ethers}) => {
   const accounts = await ethers.getSigners();

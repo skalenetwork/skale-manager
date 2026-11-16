@@ -36,6 +36,7 @@ import {getPublicKey, getValidatorIdSignature} from "./tools/signatures";
 import {stringKeccak256} from "./tools/hashes";
 import {schainParametersType, SchainType} from "./tools/types";
 import {fastBeforeEach} from "./tools/mocha";
+import {ec} from "elliptic";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -1618,6 +1619,99 @@ describe("SkaleDKG", () => {
                         (await skaleToken.getAndUpdateSlashedAmount.staticCall(validator1.address))
                             .should.be.equal(failedDkgPenalty);
                     });
+                });
+            });
+
+            describe("when node 0 gives node 1 a wrong decryption public key", () => {
+                // Node 0 encrypts node 1's share correctly, but the public key it gives node 1
+                // to decrypt that share is not secretNumber·G. Node 1 cannot read its share and
+                // complains. Node 0 still answers the complaint correctly, so the contract must
+                // also check that node 1 was given the right key, or it punishes node 1.
+                const broadcastAndRespond = async (
+                    contributions: {share: string, publicKey: [string, string]}[],
+                    secretNumber: string
+                ) => {
+                    const rotation = await nodeRotation.getRotation(stringKeccak256(schainName));
+                    await skaleDKG.connect(validators[0].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
+                        0,
+                        verificationVectors[indexes[0]],
+                        contributions,
+                        rotation.rotationCounter
+                    );
+                    await skaleDKG.connect(validators[1].nodeAddress).broadcast(
+                        stringKeccak256(schainName),
+                        1,
+                        verificationVectors[indexes[1]],
+                        encryptedSecretKeyContributions[indexes[1]],
+                        rotation.rotationCounter
+                    );
+                    await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
+                        stringKeccak256(schainName),
+                        1,
+                        0
+                    );
+                    await skaleDKG.connect(validators[0].nodeAddress).preResponse(
+                        stringKeccak256(schainName),
+                        0,
+                        verificationVectors[indexes[0]],
+                        verificationVectorMultiplication[indexes[0]],
+                        contributions
+                    );
+                    return skaleDKG.connect(validators[0].nodeAddress).response(
+                        stringKeccak256(schainName),
+                        0,
+                        secretNumber,
+                        multipliedShares[indexes[0]]
+                    );
+                };
+
+                it("should slash the sender when the public key is not secretNumber·G", async () => {
+                    const contributions = [
+                        encryptedSecretKeyContributions[indexes[0]][0],
+                        {
+                            // the share is encrypted with secretNumber, the public key is another point
+                            share: encryptedSecretKeyContributions[indexes[0]][1].share,
+                            publicKey: encryptedSecretKeyContributions[indexes[1]][0].publicKey
+                        }
+                    ];
+                    const response = await broadcastAndRespond(contributions, secretNumbers[indexes[0]]);
+                    await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
+                });
+
+                it("should slash the sender when it uses 0 as secretNumber", async () => {
+                    // ECDH maps 0 to (0, 0), and (0, 0) is not a point node 1 can decrypt with.
+                    // Re-encrypt node 1's share with the key the contract derives from 0.
+                    const secp256k1 = new ec("secp256k1");
+                    const node1PublicKey = secp256k1.keyFromPublic({
+                        x: ethers.hexlify(validatorsPublicKey[indexes[1]][0]).slice(2),
+                        y: ethers.hexlify(validatorsPublicKey[indexes[1]][1]).slice(2)
+                    }).getPublic();
+                    const sharedX = secp256k1
+                        .keyFromPrivate(BigInt(secretNumbers[indexes[0]]).toString(16), "hex")
+                        .derive(node1PublicKey);
+                    const honestKey = ethers.sha256(ethers.toBeHex(BigInt(`0x${sharedX.toString(16)}`), 32));
+                    const zeroKey = ethers.sha256(ethers.ZeroHash);
+                    const share = ethers.toBeHex(
+                        BigInt(encryptedSecretKeyContributions[indexes[0]][1].share) ^
+                            BigInt(honestKey) ^
+                            BigInt(zeroKey),
+                        32
+                    );
+                    const contributions = [
+                        encryptedSecretKeyContributions[indexes[0]][0],
+                        {share, publicKey: [ethers.ZeroHash, ethers.ZeroHash] as [string, string]}
+                    ];
+                    const response = await broadcastAndRespond(contributions, "0");
+                    await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(0);
+                });
+
+                it("should slash the complainer when the public key is correct", async () => {
+                    const response = await broadcastAndRespond(
+                        encryptedSecretKeyContributions[indexes[0]],
+                        secretNumbers[indexes[0]]
+                    );
+                    await expect(response).to.emit(skaleDKG, "BadGuy").withArgs(1);
                 });
             });
         });

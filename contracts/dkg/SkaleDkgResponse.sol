@@ -116,7 +116,12 @@ library SkaleDkgResponse {
             );
 
         uint256 badNode = (
-            _checkCorrectMultipliedShare(multipliedShare, secret) &&
+            _checkCorrectPublicKey(
+                contractManager,
+                secretNumber,
+                complaints[schainHash].keySharePublicKey
+            ) &&
+                _checkCorrectMultipliedShare(multipliedShare, secret) &&
                 multipliedShare.isEqual(complaints[schainHash].sumOfVerVec)
                 ? complaints[schainHash].fromNodeToComplaint
                 : complaints[schainHash].nodeToComplaint
@@ -125,6 +130,21 @@ library SkaleDkgResponse {
             schainHash,
             badNode
         );
+    }
+
+    // The complainer decrypts its share with the public key given in the broadcast.
+    // It gets the same key as the contract only if that public key is secretNumber·G.
+    function _checkCorrectPublicKey(
+        IContractManager contractManager,
+        uint256 secretNumber,
+        bytes32[2] memory keySharePublicKey
+    ) private view returns (bool correct) {
+        (uint256 x, uint256 y) = IECDH(contractManager.getContract("ECDH")).publicKey(secretNumber);
+        // ECDH returns (0, 0) for 0. It is not a curve point, so no node can decrypt with it.
+        return
+            (x != 0 || y != 0) &&
+            x == uint256(keySharePublicKey[0]) &&
+            y == uint256(keySharePublicKey[1]);
     }
 
     function _checkCorrectMultipliedShare(
