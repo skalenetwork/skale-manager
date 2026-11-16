@@ -867,6 +867,8 @@ describe("Delegation", () => {
                     (await delegationController.hasUnprocessedSlashes(holder3.address)).should.be.equal(false);
                 });
 
+                // Can be removed together with the skip of slashes of 0 in DelegationController,
+                // after 1.15.0 is in production if no holder is found frozen. recordSlashOfZero goes with it.
                 it("should release a holder frozen by a slash of 0 from a previous version", async () => {
                     // In previous versions anyone could move the balance of a holder past a recorded slash.
                     // Recreate it: move the balance to the next month, then record a slash in the passed one.
