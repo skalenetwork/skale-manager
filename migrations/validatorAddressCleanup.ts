@@ -31,7 +31,7 @@ import chalk from "chalk";
 import {ethers} from "hardhat";
 import {BaseContract, Contract, Filter, JsonRpcProvider, Log, Provider, getAddress} from "ethers";
 import {createInterface} from "node:readline/promises";
-import { isLocalNetwork } from "./deploy";
+import {isLocalNetwork} from "./deploy";
 
 // Deployment block of the ValidatorService proxy of each known skale-manager instance
 const DEPLOYMENT_BLOCKS = new Map<string, number>([
