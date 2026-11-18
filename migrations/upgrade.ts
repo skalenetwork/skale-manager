@@ -6,6 +6,7 @@ import {skaleContracts, Instance} from "@skalenetwork/skale-contracts-ethers-v6"
 import {SkaleManager} from "../typechain-types";
 import {Manifest, getImplementationAddress} from "@openzeppelin/upgrades-core";
 import {Transaction} from "ethers";
+import {NodeAddressEntry, collectValidatorAddressNodeEntries} from "./validatorAddressCleanup";
 
 async function getSkaleManagerInstance() {
     if (process.env.ABI) {
@@ -27,6 +28,7 @@ class SkaleManagerUpgrader extends Upgrader {
         targetVersion: string,
         instance: Instance,
         contractNamesToUpgrade: string[],
+        private nodeAddressEntries: NodeAddressEntry[],
         submitter?: Submitter) {
             super(
                 {
@@ -60,7 +62,16 @@ class SkaleManagerUpgrader extends Upgrader {
         }));
     }
 
-    //initialize = async () => {}
+    initialize = async () => {
+        const validatorService = await this.instance.getContract("ValidatorService");
+        const validatorServiceAddress = await validatorService.getAddress();
+        for (const {validatorId, address} of this.nodeAddressEntries) {
+            this.transactions.push(Transaction.from({
+                to: validatorServiceAddress,
+                data: validatorService.interface.encodeFunctionData("removeNodeAddress", [validatorId, address])
+            }));
+        }
+    }
 }
 
 async function timeHelpersWithDebugIsUsed(timeHelpersAddress: string) {
@@ -98,10 +109,14 @@ async function main() {
     const skaleManager = await getSkaleManagerInstance();
     const startBlock = await ethers.provider.getBlockNumber();
     const contractsToUpgrade = await prepareContractsList(skaleManager);
+    const nodeAddressEntries = await collectValidatorAddressNodeEntries(
+        await skaleManager.getContract("ValidatorService")
+    );
     const upgrader = new SkaleManagerUpgrader(
         "1.14.0",
         skaleManager,
-        contractsToUpgrade
+        contractsToUpgrade,
+        nodeAddressEntries
     );
     await upgrader.upgrade();
 

@@ -193,9 +193,127 @@ describe("ValidatorService", () => {
                 .withArgs(validator1);
         });
 
+        it("should not make the validator address a node address", async () => {
+            (await validatorService.getValidatorIdByNodeAddressWithoutRevert(validator1)).should.be.equal(0);
+            await validatorService.getValidatorIdByNodeAddress(validator1)
+                .should.be.revertedWithCustomError(validatorService, "NodeAddressIsNotAssignedToValidator")
+                .withArgs(validator1);
+        });
+
+        it("should not register a validator from a linked node address", async () => {
+            const numberOfValidators = await validatorService.numberOfValidators();
+            await validatorService.connect(nodeAddress).registerValidator(
+                "Node",
+                "Node address as a validator",
+                500,
+                100)
+                .should.be.revertedWithCustomError(validatorService, "AddressIsAlreadyInUse")
+                .withArgs(nodeAddress);
+            (await validatorService.numberOfValidators()).should.be.equal(numberOfValidators);
+            (await validatorService.getValidatorIdByNodeAddress(nodeAddress)).should.be.equal(1);
+        });
+
+        it("should not change the validator address to a linked node address", async () => {
+            await validatorService.connect(validator1).requestForNewAddress(nodeAddress.address);
+            await validatorService.connect(nodeAddress).confirmNewAddress(1)
+                .should.be.revertedWithCustomError(validatorService, "AddressIsAlreadyInUse")
+                .withArgs(nodeAddress);
+            (await validatorService.getValidator(1)).validatorAddress.should.be.equal(validator1.address);
+        });
+
         describe("when validator requests for a new address", () => {
             fastBeforeEach(async () => {
                 await validatorService.connect(validator1).requestForNewAddress(validator3.address);
+            });
+
+            it("should not confirm the new address if another validator linked it as a node address", async () => {
+                await validatorService.connect(validator2).registerValidator(
+                    "Second Validator",
+                    "Links the requested address",
+                    500,
+                    100);
+                await validatorService.connect(validator2).linkNodeAddress(
+                    validator3.address,
+                    await getValidatorIdSignature(2, validator3)
+                );
+                await validatorService.connect(validator3).confirmNewAddress(1)
+                    .should.be.revertedWithCustomError(validatorService, "AddressIsAlreadyInUse")
+                    .withArgs(validator3);
+                (await validatorService.getValidatorIdByNodeAddress(validator3)).should.be.equal(2);
+            });
+
+            it("should move every validator permission to the new address", async () => {
+                const validatorId = 1;
+                await validatorService.connect(validator3).confirmNewAddress(validatorId);
+
+                // the old address has nothing left
+                (await validatorService.validatorAddressExists(validator1)).should.be.false;
+                (await validatorService.getValidatorIdByNodeAddressWithoutRevert(validator1)).should.be.equal(0);
+                await validatorService.connect(validator1).setValidatorName("Old")
+                    .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                    .withArgs(validator1);
+
+                // the new address is the validator address, and not a node address
+                (await validatorService.getValidatorId(validator3)).should.be.equal(validatorId);
+                (await validatorService.getValidatorIdByNodeAddressWithoutRevert(validator3)).should.be.equal(0);
+                await validatorService.connect(validator3).unlinkNodeAddress(validator3)
+                    .should.be.revertedWithCustomError(validatorService, "NoPermissionsToUnlinkNode")
+                    .withArgs(validatorId, validator3);
+                await validatorService.connect(validator3).setValidatorName("New");
+                (await validatorService.getValidator(validatorId)).name.should.be.equal("New");
+                await validatorService.connect(validator3).linkNodeAddress(
+                    holder.address,
+                    await getValidatorIdSignature(validatorId, holder)
+                );
+
+                // node addresses linked before the change stay linked
+                (await validatorService.getValidatorIdByNodeAddress(nodeAddress)).should.be.equal(validatorId);
+                (await validatorService.getNodeAddresses(validatorId))
+                    .should.be.deep.equal([nodeAddress.address, holder.address]);
+            });
+
+            it("should allow to register a validator from the old address", async () => {
+                await validatorService.connect(validator3).confirmNewAddress(1);
+                await validatorService.connect(validator1).registerValidator(
+                    "Reused",
+                    "Old validator address",
+                    500,
+                    100);
+                (await validatorService.getValidatorId(validator1)).should.be.equal(2);
+                await validatorService.connect(validator3).linkNodeAddress(
+                    validator1.address,
+                    await getValidatorIdSignature(1, validator1)
+                )
+                    .should.be.revertedWithCustomError(validatorService, "NodeAddressIsAValidator")
+                    .withArgs(validator1, 2);
+            });
+
+            it("should allow to link the old address as a node address", async () => {
+                await validatorService.connect(validator3).confirmNewAddress(1);
+                await validatorService.connect(validator3).linkNodeAddress(
+                    validator1.address,
+                    await getValidatorIdSignature(1, validator1)
+                );
+                (await validatorService.getValidatorIdByNodeAddress(validator1)).should.be.equal(1);
+                await validatorService.connect(validator1).registerValidator(
+                    "Reused",
+                    "Old validator address",
+                    500,
+                    100)
+                    .should.be.revertedWithCustomError(validatorService, "AddressIsAlreadyInUse")
+                    .withArgs(validator1);
+            });
+
+            it("should allow to change the validator address back", async () => {
+                const validatorId = 1;
+                await validatorService.connect(validator3).confirmNewAddress(validatorId);
+                await validatorService.connect(validator3).requestForNewAddress(validator1.address);
+                await validatorService.connect(validator1).confirmNewAddress(validatorId);
+
+                (await validatorService.getValidatorId(validator1)).should.be.equal(validatorId);
+                (await validatorService.validatorAddressExists(validator3)).should.be.false;
+                (await validatorService.getValidatorIdByNodeAddressWithoutRevert(validator1)).should.be.equal(0);
+                (await validatorService.getValidatorIdByNodeAddressWithoutRevert(validator3)).should.be.equal(0);
             });
 
             it("should reject when hacker tries to change validator address", async () => {

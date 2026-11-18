@@ -193,6 +193,34 @@ describe("SkaleManager", () => {
             (await nodesContract.getNodePort(0)).should.be.equal(8545);
         });
 
+        it("should not create a node from an address that is not linked to a validator", async () => {
+            const unlinkedAddress = new Wallet(Wallet.createRandom().privateKey, ethers.provider);
+            await owner.sendTransaction({to: unlinkedAddress.address, value: ethers.parseEther("1")});
+            await skaleManager.connect(unlinkedAddress).createNode(
+                8545, // port
+                0, // nonce
+                "0x7f000001", // ip
+                "0x7f000001", // public ip
+                getPublicKey(unlinkedAddress), // public key
+                "d2", // name
+                "some.domain.name")
+                .should.be.revertedWithCustomError(validatorService, "NodeAddressIsNotAssignedToValidator")
+                .withArgs(unlinkedAddress.address);
+        });
+
+        it("should not create a node from the validator address", async () => {
+            await skaleManager.connect(validator).createNode(
+                8545, // port
+                0, // nonce
+                "0x7f000001", // ip
+                "0x7f000001", // public ip
+                getPublicKey(validator), // public key
+                "d2", // name
+                "some.domain.name")
+                .should.be.revertedWithCustomError(validatorService, "NodeAddressIsNotAssignedToValidator")
+                .withArgs(validator.address);
+        });
+
         it("should not allow to create node if validator became untrusted", async () => {
             await nextMonth(contractManager);
             await constantsHolder.setMSR(100);
@@ -232,6 +260,40 @@ describe("SkaleManager", () => {
                 await wallets.rechargeValidatorWallet(validatorId, {value: ethers.parseEther('5.0')});
             });
 
+            it("should keep linked node addresses and nodes working after the validator address changes", async () => {
+                const newValidatorAddress = new Wallet(Wallet.createRandom().privateKey, ethers.provider);
+                await owner.sendTransaction({to: newValidatorAddress.address, value: ethers.parseEther("1")});
+                await validatorService.connect(validator).requestForNewAddress(newValidatorAddress.address);
+                await validatorService.connect(newValidatorAddress).confirmNewAddress(validatorId);
+
+                // the linked node address can still create nodes for the validator
+                await skaleManager.connect(nodeAddress).createNode(
+                    8546, // port
+                    0, // nonce
+                    "0x7f000002", // ip
+                    "0x7f000002", // public ip
+                    getPublicKey(nodeAddress), // public key
+                    "d3", // name
+                    "some.domain.name");
+                (await nodesContract.getValidatorId(1)).should.be.equal(validatorId);
+
+                // the node created before the change still gets its bounty
+                await nextMonth(contractManager);
+                await skipTime(await bountyContract.nodeCreationWindowSeconds());
+                await skaleManager.connect(nodeAddress).getBounty(0);
+
+                // the new validator address manages the nodes, the old one does not
+                await nodesContract.connect(validator).setNodeInMaintenance(0)
+                    .should.be.revertedWithCustomError(validatorService, "ValidatorAddressDoesNotExist")
+                    .withArgs(validator.address);
+                await nodesContract.connect(newValidatorAddress).setNodeInMaintenance(0);
+                await nodesContract.initExit(1);
+                await skaleManager.connect(validator).nodeExit(1)
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
+                await skaleManager.connect(newValidatorAddress).nodeExit(1);
+                await nodesContract.isNodeLeft(1).should.be.eventually.true;
+            });
+
             it("should fail to init exiting of someone else's node", async () => {
                 await nodesContract.initExit(0);
                 await skaleManager.connect(hacker).nodeExit(0)
@@ -256,24 +318,6 @@ describe("SkaleManager", () => {
                 await nodesContract.initExit(0);
                 await skaleManager.connect(nodeAddress).nodeExit(0);
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
-            });
-
-            it("should create and remove node from validator address", async () => {
-                (await validatorService.getValidatorIdByNodeAddress(validator.address)).should.be.equal(1);
-                await skaleManager.connect(validator).createNode(
-                    8545, // port
-                    0, // nonce
-                    "0x7f000002", // ip
-                    "0x7f000002", // public ip
-                    getPublicKey(validator), // public key
-                    "d3", // name
-                    "some.domain.name"
-                );
-                await nodesContract.initExit(1);
-                await skaleManager.connect(validator).nodeExit(1);
-
-                await nodesContract.isNodeLeft(1).should.be.eventually.true;
-                (await validatorService.getValidatorIdByNodeAddress(validator.address)).should.be.equal(1);
             });
 
             it("should pay bounty if Node is In Active state", async () => {
