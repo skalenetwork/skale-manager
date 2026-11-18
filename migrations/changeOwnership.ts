@@ -2,6 +2,10 @@ import {skaleContracts} from "@skalenetwork/skale-contracts-ethers-v6";
 import {calculateGasSpent, contracts, shouldCalculateGas} from "./deploy";
 import {ethers} from "hardhat";
 import {EoaSubmitter, InstanceAdmin, InstanceAdminOptions, SafeSubmitter} from "@skalenetwork/upgrade-tools";
+import {promises as fs} from "fs";
+
+// Ethereum mainnet and Base: always use the published ABI there
+const PRODUCTION_CHAIN_IDS = [1n, 8453n];
 
 async function main() {
     const contractsWithOwnershipToChange = contracts;
@@ -50,6 +54,14 @@ async function main() {
     const network = await skaleContracts.getNetworkByProvider(ethers.provider);
     const project = network.getProject("skale-manager");
     const instance = await project.getInstance(process.env.TARGET);
+    // A local ABI file (from scripts/generateAbi.ts) for a version that is not published yet
+    if (process.env.ABI_FILE) {
+        const {chainId} = await ethers.provider.getNetwork();
+        if (PRODUCTION_CHAIN_IDS.includes(chainId)) {
+            throw new Error(`ABI_FILE is not allowed on chain ${chainId}, the published ABI must be used`);
+        }
+        instance.abi = JSON.parse(await fs.readFile(process.env.ABI_FILE, "utf-8"));
+    }
     await instance.getContract("SkaleToken"); // to ensure that the instance is initialized correctly
     const configs: InstanceAdminOptions = {
         newOwner,
