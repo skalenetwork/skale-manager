@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -e -o pipefail
 
 HARDHAT_NODE_SESSION="hardhat-node"
 yarn pm2 start "yarn hardhat node" --name "$HARDHAT_NODE_SESSION"
@@ -26,6 +26,11 @@ echo "SkaleManager deployed at: $SKALE_MANAGER_ADDRESS"
 
 # The deployed version is not published yet, so use the ABI of this checkout
 ABI_FILE=$(yarn hardhat run scripts/generateAbi.ts | grep "Save to" | awk '{print $NF}')
+
+if [ ! -f "$ABI_FILE" ]; then
+    echo "ABI file was not generated"
+    exit 1
+fi
 
 echo "Using ABI file: $ABI_FILE"
 
