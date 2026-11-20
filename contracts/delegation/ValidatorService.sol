@@ -609,6 +609,7 @@ contract ValidatorService is Permissions, IValidatorService {
      * Requirements:
      *
      * - Address is not already in use by another validator.
+     * - Address is not a node address of any validator.
      */
     function _setValidatorAddress(
         uint256 validatorId,
@@ -618,12 +619,12 @@ contract ValidatorService is Permissions, IValidatorService {
             return;
         }
         require(
-            _validatorAddressToId[validatorAddress] == 0,
+            _validatorAddressToId[validatorAddress] == 0 &&
+            _nodeAddressToValidatorId[validatorAddress] == 0,
             AddressIsAlreadyInUse(validatorAddress)
         );
         address oldAddress = validators[validatorId].validatorAddress;
         delete _validatorAddressToId[oldAddress];
-        _nodeAddressToValidatorId[validatorAddress] = validatorId;
         validators[validatorId].validatorAddress = validatorAddress;
         _validatorAddressToId[validatorAddress] = validatorId;
     }

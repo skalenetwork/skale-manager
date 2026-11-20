@@ -111,6 +111,11 @@ async function main() {
         console.log("NOTE: This calculation includes cost of upgradeAndCall transactions!!");
         console.log(`Gas spent for the upgrade: ${gasSpent}`);
     }
+
+    // 1.15.0 only: remove together with migrations/postUpgrade.ts after this release
+    console.log(chalk.yellow(
+        "WARNING: once the upgrade is executed, run migrations/postUpgrade.ts with the same TARGET"
+    ));
 }
 
 if (require.main === module) {
