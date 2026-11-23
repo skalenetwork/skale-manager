@@ -146,10 +146,7 @@ library PartialDifferences {
         if (sequence.firstUnprocessedMonth == 0) {
             return;
         }
-        uint256 value = getAndUpdateValueInSequence(sequence, month);
-        if (value.approximatelyEqual(0)) {
-            return;
-        }
+        getAndUpdateValueInSequence(sequence, month);
 
         sequence.value[month] =
             (sequence.value[month] * reducingCoefficient.numerator) /
@@ -259,7 +256,8 @@ library PartialDifferences {
             return FractionUtils.createFraction(0);
         }
         uint256 value = getAndUpdateValue(sequence, month);
-        if (value.approximatelyEqual(0)) {
+
+        if (value == 0) {
             return FractionUtils.createFraction(0);
         }
 
@@ -329,10 +327,7 @@ library PartialDifferences {
         if (sequence.firstUnprocessedMonth == 0) {
             return;
         }
-        uint256 value = getAndUpdateValue(sequence, month);
-        if (value.approximatelyEqual(0)) {
-            return;
-        }
+        getAndUpdateValue(sequence, month);
 
         uint256 newValue = (sequence.value * reducingCoefficient.numerator) /
             reducingCoefficient.denominator;

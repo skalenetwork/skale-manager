@@ -224,7 +224,7 @@ contract Distributor is Permissions, IERC777Recipient, IDistributor {
         for (uint256 i = startMonth; i < endMonth; ++i) {
             uint256 effectiveDelegatedToValidator = delegationController
                 .getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
-            if (effectiveDelegatedToValidator.muchGreater(0)) {
+            if (effectiveDelegatedToValidator > 0) {
                 earned =
                     earned +
                     (_bountyPaid[validatorId][i] *
