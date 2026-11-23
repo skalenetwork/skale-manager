@@ -938,8 +938,9 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
             for (; index < end; ++index) {
                 // Skip slashes of 0 recorded by previous versions. They change nothing.
                 // Can be removed after 1.15.0 is in production if no holder is found frozen.
-                FractionUtils.Fraction storage coefficient = _slashes[index].reducingCoefficient;
-                if (coefficient.numerator == coefficient.denominator) {
+                FractionUtils.Fraction storage reducingCoefficient =
+                    _slashes[index].reducingCoefficient;
+                if (reducingCoefficient.numerator == reducingCoefficient.denominator) {
                     continue;
                 }
                 uint256 validatorId = _slashes[index].validatorId;
@@ -949,28 +950,27 @@ contract DelegationController is Permissions, ILocker, IDelegationController {
                     validatorId,
                     month
                 );
-                if (oldValue.muchGreater(0)) {
-                    _delegatedByHolderToValidator[holder][validatorId]
-                        .reduceValueByCoefficientAndUpdateSum(
-                            _delegatedByHolder[holder],
-                            _slashes[index].reducingCoefficient,
+
+                _delegatedByHolderToValidator[holder][validatorId]
+                    .reduceValueByCoefficientAndUpdateSum(
+                        _delegatedByHolder[holder],
+                        reducingCoefficient,
+                        month
+                    );
+                _effectiveDelegatedByHolderToValidator[holder][validatorId]
+                    .reduceSequence(
+                        reducingCoefficient,
+                        month
+                    );
+                slashingSignals[index - begin].holder = holder;
+                slashingSignals[index - begin].penalty = oldValue
+                    .boundedSub(
+                        _getAndUpdateDelegatedByHolderToValidator(
+                            holder,
+                            validatorId,
                             month
-                        );
-                    _effectiveDelegatedByHolderToValidator[holder][validatorId]
-                        .reduceSequence(
-                            _slashes[index].reducingCoefficient,
-                            month
-                        );
-                    slashingSignals[index - begin].holder = holder;
-                    slashingSignals[index - begin].penalty = oldValue
-                        .boundedSub(
-                            _getAndUpdateDelegatedByHolderToValidator(
-                                holder,
-                                validatorId,
-                                month
-                            )
-                        );
-                }
+                        )
+                    );
             }
             _firstUnprocessedSlashByHolder[holder] = end;
         }
