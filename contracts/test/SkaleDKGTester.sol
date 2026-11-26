@@ -41,4 +41,8 @@ contract SkaleDKGTester is SkaleDKG, ISkaleDKGTester {
         }
         emit SuccessfulDKG(schainHash);
     }
+
+    function setSuccessfulDKGTimestampPublic(bytes32 schainHash) external override {
+        lastSuccessfulDKG[schainHash] = block.timestamp;
+    }
 }

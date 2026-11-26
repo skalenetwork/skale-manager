@@ -19,6 +19,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+// cspell:words IDKR
+
 pragma solidity 0.8.35;
 
 import { EnumerableSet }
@@ -29,9 +31,22 @@ import { INodes } from "@skalenetwork/skale-manager-interfaces/INodes.sol";
 import { ISchainsInternal } from "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
 import { ISkaleDKG } from "@skalenetwork/skale-manager-interfaces/ISkaleDKG.sol";
 import { IRandom } from "@skalenetwork/skale-manager-interfaces/utils/IRandom.sol";
+import { DkrId, IDKR } from "./DKR.sol";
 
 import { Permissions } from "./Permissions.sol";
 import { Random } from "./utils/Random.sol";
+
+
+interface ILegacySkaleDKG is ISkaleDKG {
+    /// @notice Returns the hash committed by a group member during legacy DKG.
+    /// @param schainHash Hash of the schain.
+    /// @param indexInGroup Position of the member in the legacy DKG group.
+    /// @return hash Hash of the broadcast data.
+    function hashedData(
+        bytes32 schainHash,
+        uint256 indexInGroup
+    ) external view returns (bytes32 hash);
+}
 
 
 /**
@@ -62,6 +77,8 @@ contract NodeRotation is Permissions, INodeRotation {
         mapping (uint256 => uint256) indexInLeavingHistory;
         EnumerableSet.UintSet broadcastSenders;
         EnumerableSet.UintSet spareBroadcastSenders;
+        DkrId lastSuccessfulDkrId;
+        DkrId activeDkrId;
     }
 
     mapping (bytes32 schain => RotationWithPreviousNodes rotation) private _rotations;
@@ -69,6 +86,9 @@ contract NodeRotation is Permissions, INodeRotation {
     mapping (uint256 nodeIndex => INodeRotation.LeavingHistory[] history ) public leavingHistory;
 
     mapping (bytes32 schain => bool wait) public waitForNewNode;
+
+    /// @notice Maps a DKR round to its schain.
+    mapping (DkrId dkrId => bytes32 schainHash) public schainForDkr;
 
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
 
@@ -90,6 +110,11 @@ contract NodeRotation is Permissions, INodeRotation {
     error CouldNotRemoveSpaceFromNode(uint256 node);
     error NewNodeWasAlreadyAdded(bytes32 schainHash, uint256 node);
     error DKGDidNotFinish(bytes32 schainHash);
+    error DKRDidNotFinish(bytes32 schainHash);
+    error DkrIsNotActive(uint256 dkrId, bytes32 schainHash);
+    error DkrIsNotFirstRound(uint256 dkrId, bytes32 schainHash);
+    error NodeWasNotInPreviousDkg(bytes32 schainHash, uint256 node);
+    error PreviousDkgIndexIsInvalid(bytes32 schainHash, uint256 node, uint256 indexInGroup);
     error OccupiedByRotation(bytes32 schainHash, uint256 node);
 
     modifier onlyDebugger() {
@@ -150,6 +175,11 @@ contract NodeRotation is Permissions, INodeRotation {
         delete _rotations[schainHash].newNodeIndex;
         delete _rotations[schainHash].freezeUntil;
         delete _rotations[schainHash].rotationCounter;
+        _rotations[schainHash].activeDkrId = DkrId.wrap(0);
+        _rotations[schainHash].lastSuccessfulDkrId = DkrId.wrap(0);
+        _clearSet(_rotations[schainHash].broadcastSenders);
+        _clearSet(_rotations[schainHash].spareBroadcastSenders);
+        delete waitForNewNode[schainHash];
     }
 
     /**
@@ -160,35 +190,94 @@ contract NodeRotation is Permissions, INodeRotation {
         emit RotationDelaySkipped(schainHash);
     }
 
-    function finalizeRotation(bytes32 schain) external override allow("SkaleDKG") {
+    function finalizeRotation(bytes32 schain) external override allowTwo("SkaleDKG", "DKR") {
         _clearSet(_rotations[schain].broadcastSenders);
         _clearSet(_rotations[schain].spareBroadcastSenders);
+        _rotations[schain].lastSuccessfulDkrId = _rotations[schain].activeDkrId;
+        _rotations[schain].activeDkrId = DkrId.wrap(0);
     }
 
+    /**
+     * @notice Verifies broadcast data inherited from the last legacy DKG round.
+     * @param nextDkr ID of the DKR round consuming the legacy data.
+     * @param indexInGroup Position of the broadcaster in the legacy DKG group.
+     * @param secretKeyContribution Encrypted secret-key contributions.
+     * @param verificationVector Verification vector published by the broadcaster.
+     * @return valid Whether the supplied data matches the legacy DKG commitment.
+     */
     function isValidData(
-        uint256 /* nextDkr */,
-        uint256 /* nodeIndex */,
-        ISkaleDKG.KeyShare[] calldata /* secretKeyContribution */,
-        ISkaleDKG.G2Point[] calldata /* verificationVector */
+        uint256 nextDkr,
+        uint256 indexInGroup,
+        ISkaleDKG.KeyShare[] calldata secretKeyContribution,
+        ISkaleDKG.G2Point[] calldata verificationVector
     )
         external
         view
         override
         returns (bool valid)
     {
-        revert("Not implemented");
+        DkrId dkrId = DkrId.wrap(nextDkr);
+        bytes32 schainHash = _getSchainForActiveDkr(dkrId);
+        _requireFirstDkrRound(dkrId, schainHash);
+
+        ILegacySkaleDKG skaleDKG = ILegacySkaleDKG(contractManager.getContract("SkaleDKG"));
+        ISchainsInternal schainsInternal = ISchainsInternal(
+            contractManager.getContract("SchainsInternal")
+        );
+
+        // Ensure the committed data belongs to a successfully completed legacy DKG round.
+        if (
+            skaleDKG.getTimeOfLastSuccessfulDKG(schainHash) == 0 ||
+            !skaleDKG.isLastDKGSuccessful(schainHash)
+        ) {
+            return false;
+        }
+
+        // Reject positions outside the participant slots recorded by legacy DKG.
+        if (indexInGroup >= schainsInternal.getNumberOfNodesInGroup(schainHash)) {
+            return false;
+        }
+
+        // Authenticate the supplied broadcast against its legacy DKG commitment.
+        return skaleDKG.hashedData(schainHash, indexInGroup) ==
+            skaleDKG.hashData(secretKeyContribution, verificationVector);
     }
 
+    /**
+     * @notice Returns a node's position in the legacy DKG group.
+     * @param nextDkr ID of the first DKR round following legacy DKG.
+     * @param nodeIndex ID of a dealer carried over from the legacy DKG group.
+     * @return indexInGroup Position of the dealer in the legacy DKG group.
+     */
     function getPreviousNodeIndex(
-        uint256 /* nextDkr */,
-        uint256 /* nodeIndex */
+        uint256 nextDkr,
+        uint256 nodeIndex
     )
         external
         view
         override
-        returns (uint256 nodeIndex)
+        returns (uint256 indexInGroup)
     {
-        revert("Not implemented");
+        DkrId dkrId = DkrId.wrap(nextDkr);
+        bytes32 schainHash = _getSchainForActiveDkr(dkrId);
+        _requireFirstDkrRound(dkrId, schainHash);
+
+        // Require the node to be a dealer inherited from the legacy DKG group.
+        require(
+            _rotations[schainHash].broadcastSenders.contains(nodeIndex),
+            NodeWasNotInPreviousDkg(schainHash, nodeIndex)
+        );
+
+        ISchainsInternal schainsInternal = ISchainsInternal(
+            contractManager.getContract("SchainsInternal")
+        );
+        indexInGroup = schainsInternal.getNodeIndexInGroup(schainHash, nodeIndex);
+
+        // Ensure the preserved group slot belongs to the legacy DKG participant range.
+        require(
+            indexInGroup < schainsInternal.getNumberOfNodesInGroup(schainHash),
+            PreviousDkgIndexIsInvalid(schainHash, nodeIndex, indexInGroup)
+        );
     }
 
     /**
@@ -246,6 +335,7 @@ contract NodeRotation is Permissions, INodeRotation {
             _rotations[schainHash].freezeUntil >= block.timestamp;
     }
 
+
     function isSchainCreation(
         bytes32 schainHash
     )
@@ -254,8 +344,9 @@ contract NodeRotation is Permissions, INodeRotation {
         override
         returns (bool schainCreation)
     {
-        return _rotations[schainHash].broadcastSenders.length() == 0;
+        return _areBroadcastSendersEmpty(schainHash);
     }
+
 
     function shouldSendBroadcast(
         bytes32 schainHash,
@@ -391,14 +482,18 @@ contract NodeRotation is Permissions, INodeRotation {
     )
         private
     {
-        if(_rotations[schainHash].broadcastSenders.length() != 0) {
-            revert PreviousRotationIsNotComplete(schainHash);
-        }
+        require(
+            _areBroadcastSendersEmpty(schainHash),
+            PreviousRotationIsNotComplete(schainHash)
+        );
+
         _rotations[schainHash].newNodeIndex = nodeIndex;
         waitForNewNode[schainHash] = true;
         uint256[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
         uint256 groupSize = nodesInGroup.length;
         uint256 broadcastSendersNumber = _getT(groupSize);
+
+        // Remove for block when upgrading to V3.B
         for (uint256 i = 0; i < groupSize; ++i) {
             if (nodesInGroup[i] == nodeIndex) {
                 nodesInGroup[i] = nodesInGroup[groupSize - 1];
@@ -413,6 +508,7 @@ contract NodeRotation is Permissions, INodeRotation {
                 BroadcastSenderIsAlreadyAdded(schainHash, nodesInGroup[i])
             );
         }
+        // Remove -1 when upgrading to V3.B
         for (uint256 i = broadcastSendersNumber; i < groupSize - 1; ++i) {
             require(
                 _rotations[schainHash].spareBroadcastSenders.add(
@@ -436,7 +532,8 @@ contract NodeRotation is Permissions, INodeRotation {
         bytes32 schainHash,
         uint256 nodeIndex,
         uint256 newNodeIndex,
-        bool shouldDelay)
+        bool shouldDelay
+    )
         private
     {
         // During skaled config generation skale-admin relies on a fact that
@@ -477,13 +574,45 @@ contract NodeRotation is Permissions, INodeRotation {
         _rotations[schainHash].indexInLeavingHistory[nodeIndex] =
             leavingHistory[nodeIndex].length - 1;
         delete waitForNewNode[schainHash];
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
+
+        _triggerKeyRotation(schainHash);
+    }
+
+    function _triggerKeyRotation(bytes32 schainHash) private {
+        if (_areBroadcastSendersEmpty(schainHash)) {
+            // First DKG is started after schain creation - "Edge case"
+            ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
+        } else {
+            // TODO: Double check if this can be optimized - for now should work
+            // I think it's externally read twice in the entire process
+            uint256[] memory receivers = ISchainsInternal(
+                contractManager.getContract("SchainsInternal")
+            ).getNodesInGroup(schainHash);
+
+            DkrId dkrId = IDKR(
+                contractManager.getContract("DKR")
+            ).start(
+                _rotations[schainHash].broadcastSenders.values(),
+                receivers,
+                _getT(receivers.length),
+                _rotations[schainHash].lastSuccessfulDkrId
+            );
+            _rotations[schainHash].activeDkrId = dkrId;
+            // The function start(...) does not do external calls
+            // slither-disable-next-line reentrancy-benign
+            schainForDkr[dkrId] = schainHash;
+        }
     }
 
     function _checkBeforeRotation(bytes32 schainHash, uint256 nodeIndex) private {
         require(
+            // Only checks the FIRST DKG after introduction of DKR
             ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash),
             DKGDidNotFinish(schainHash)
+        );
+        require(
+            _rotations[schainHash].activeDkrId == DkrId.wrap(0), // Possibly check lastSuccessful
+            DKRDidNotFinish(schainHash) // TODO new error
         );
         if (_rotations[schainHash].freezeUntil < block.timestamp) {
             _startWaiting(schainHash, nodeIndex);
@@ -502,6 +631,31 @@ contract NodeRotation is Permissions, INodeRotation {
         for (uint256 i = 0; i < len; ++i) {
             assert(set.remove(set.at(0)));
         }
+    }
+
+
+    function _areBroadcastSendersEmpty(bytes32 schainHash) private view returns (bool empty) {
+        return _rotations[schainHash].broadcastSenders.length() == 0;
+    }
+
+    function _getSchainForActiveDkr(DkrId dkrId) private view returns (bytes32 schainHash) {
+        schainHash = schainForDkr[dkrId];
+
+        // Reject an unknown, unmapped, or stale DKR round.
+        require(
+            dkrId != DkrId.wrap(0) &&
+                schainHash != bytes32(0) &&
+                _rotations[schainHash].activeDkrId == dkrId,
+            DkrIsNotActive(DkrId.unwrap(dkrId), schainHash)
+        );
+    }
+
+    function _requireFirstDkrRound(DkrId dkrId, bytes32 schainHash) private view {
+        // Legacy DKG data can only be consumed by the first DKR round.
+        require(
+            _rotations[schainHash].lastSuccessfulDkrId == DkrId.wrap(0),
+            DkrIsNotFirstRound(DkrId.unwrap(dkrId), schainHash)
+        );
     }
 
     function _getT(uint256 n) private pure returns (uint256 t) {

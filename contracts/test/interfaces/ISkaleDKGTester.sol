@@ -24,4 +24,5 @@ pragma solidity 0.8.35;
 interface ISkaleDKGTester {
     function initializeTester(address contractManagerAddress) external;
     function setSuccessfulDKGPublic(bytes32 schainHash) external;
+    function setSuccessfulDKGTimestampPublic(bytes32 schainHash) external;
 }

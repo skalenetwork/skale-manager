@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.35;
 
 import {
     AddressUpgradeable
@@ -35,7 +35,6 @@ import { IKeyStorage } from "@skalenetwork/skale-manager-interfaces/IKeyStorage.
 import { INodeRotation } from "@skalenetwork/skale-manager-interfaces/INodeRotation.sol";
 import { IWallets } from "@skalenetwork/skale-manager-interfaces/IWallets.sol";
 
-import { G2Operations } from "./utils/fieldOperations/G2Operations.sol";
 import { NotEnoughFunds, RoleRequired } from "./CommonErrors.sol";
 import { PaymasterController } from "./PaymasterController.sol";
 import { Permissions } from "./Permissions.sol";
@@ -79,6 +78,7 @@ contract Schains is Permissions, ISchains {
     error OptionIsAlreadySet(string optionName);
     error OptionRemovingError(bytes32 optionHash);
     error OptionIsNotSet(bytes32 schainHash, bytes32 optionHash);
+    error FirstDKGNeverSucceeded(bytes32 schainHash);
 
     modifier schainExists(ISchainsInternal schainsInternal, bytes32 schainHash) {
         if(!schainsInternal.isSchainExist(schainHash)) {
@@ -274,27 +274,17 @@ contract Schains is Permissions, ISchains {
         returns (bool valid)
     {
         ISkaleVerifier skaleVerifier = ISkaleVerifier(contractManager.getContract("SkaleVerifier"));
-        ISkaleDKG.G2Point memory publicKey = G2Operations.getG2Zero();
         bytes32 schainHash = keccak256(abi.encodePacked(schainName));
-        if (
-            INodeRotation(contractManager.getContract("NodeRotation")).isNewNodeFound(schainHash) &&
-            INodeRotation(
-                contractManager.getContract("NodeRotation")
-            ).isRotationInProgress(schainHash) &&
-            ISkaleDKG(contractManager.getContract("SkaleDKG")).isLastDKGSuccessful(schainHash)
-        ) {
-            publicKey = IKeyStorage(
-                contractManager.getContract("KeyStorage")
-            ).getPreviousPublicKey(
-                schainHash
-            );
-        } else {
-            publicKey = IKeyStorage(
-                contractManager.getContract("KeyStorage")
-            ).getCommonPublicKey(
-                schainHash
-            );
-        }
+
+        require(
+            _getSkaleDkg().getTimeOfLastSuccessfulDKG(schainHash) != 0,
+            FirstDKGNeverSucceeded(schainHash)
+        );
+
+        ISkaleDKG.G2Point memory publicKey = IKeyStorage(
+            contractManager.getContract("KeyStorage")
+        ).getCommonPublicKey(schainHash);
+
         return skaleVerifier.verify({
             signature: ISkaleDKG.Fp2Point({
                 a: signatureA,
@@ -427,7 +417,7 @@ contract Schains is Permissions, ISchains {
             numberOfNodes,
             partOfNode
         );
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
+        _getSkaleDkg().openChannel(schainHash);
 
         emit SchainNodes(
             schainName,
@@ -571,6 +561,10 @@ contract Schains is Permissions, ISchains {
             revert OptionIsNotSet(schainHash, optionHash);
         }
         return _options[schainHash][optionHash].value;
+    }
+
+    function _getSkaleDkg() private view returns (ISkaleDKG skaleDkg) {
+        return ISkaleDKG(contractManager.getContract("SkaleDKG"));
     }
 
     function _checkOriginator(address from, SchainParameters memory schainParameters) private view {
